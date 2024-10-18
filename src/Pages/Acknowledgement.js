@@ -13,7 +13,7 @@ const Acknowledgement = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
 
-    fetch(`https://goldquestreact.onrender.com/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
+    fetch(`https://octopus-app-www87.ondigitalocean.app/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
       .then(response => response.json())
       .then(data => {
         if (data.status && data.customers && Array.isArray(data.customers.data)) {
@@ -25,6 +25,37 @@ const Acknowledgement = () => {
       })
       .catch(error => console.error(error));
   }, [setTotalResults]);
+
+  const sendApproval = (id) => {
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      "admin_id": admin_id,
+      "_token": storedToken,
+      "customer_id": id
+    });
+
+    const requestOptions = {
+      method: "PUT",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    fetch("https://octopus-app-www87.ondigitalocean.app/acknowledgement/send-notification", requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        console.log(result);
+        fetchEmails();
+      }
+      )
+
+      .catch((error) => console.error(error));
+
+  }
 
   useEffect(() => {
     fetchEmails();
@@ -59,15 +90,17 @@ const Acknowledgement = () => {
             </tr>
           </thead>
           <tbody>
+            
             {paginated.map((email, index) => (
               <tr key={index}>
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{index + 1}</td>
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
+
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{/* Case Received Date */}</td>
                 <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
-                  <button className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200" type='button'>Send Approval</button>
+                  <button className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200" type='button' onClick={() => sendApproval(email.id)} >Send Approval</button>
                 </td>
               </tr>
             ))}

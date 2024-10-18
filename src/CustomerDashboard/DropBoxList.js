@@ -117,7 +117,7 @@ const DropBoxList = () => {
                                     <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                         {report.photo ? (
                                             <img
-                                                src={`https://goldquestreact.onrender.com/${report.photo}`}
+                                                src={`https://octopus-app-www87.ondigitalocean.app/${report.photo}`}
                                                 alt={report.photo}
                                                 className='h-20 w-20 rounded-full'
                                             />
@@ -132,7 +132,7 @@ const DropBoxList = () => {
                                     <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                         {report.attach_documents ? (
                                             <img
-                                                src={`https://goldquestreact.onrender.com/${report.attach_documents}`}
+                                                src={`https://octopus-app-www87.ondigitalocean.app/${report.attach_documents}`}
                                                 alt={report.attach_documents}
                                                 className='h-20 w-20 rounded-full'
                                             />

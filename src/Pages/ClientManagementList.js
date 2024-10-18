@@ -138,7 +138,7 @@ const ClientManagementList = () => {
               return;
             }
       
-            fetch(`https://goldquestreact.onrender.com/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+            fetch(`https://octopus-app-www87.ondigitalocean.app/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ const ClientManagementList = () => {
               return;
             }
       
-            fetch(`https://goldquestreact.onrender.com/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+            fetch(`https://octopus-app-www87.ondigitalocean.app/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -325,20 +325,20 @@ const ClientManagementList = () => {
                                                     <>
                                                         {service.price ? (
                                                             <>
-                                                                <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
+                                                                <p className='whitespace-nowrap capitalize text-left border-green-500'>Service: {service.serviceTitle}</p>
                                                                 <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
                                                             </>
                                                         ) : (
                                                             <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
                                                         )}
                                 
-                                                        {service.packages && Object.keys(service.packages).length > 0 ? (
+                                                        {/* {service.packages && Object.keys(service.packages).length > 0 ? (
                                                             <p className='whitespace-nowrap capitalize text-left'>
                                                                 Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
                                                             </p>
                                                         ) : (
                                                             <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
-                                                        )}
+                                                        )} */}
                                                     </>
                                                 </div>
                                             ))}

@@ -72,6 +72,7 @@ const Pagination = () => {
             {pageNumbers.map((page) => (
               <button
                 key={page}
+                type='button'
                 onClick={() => handlePageClick(page)}
                 aria-current={page === currentItem ? 'page' : undefined}
                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${page === currentItem ? 'bg-green-500 text-white' : 'text-gray-900'} ring-1 ring-inset ring-gray-300 hover:bg-green-900 focus:z-20 focus:outline-offset-0`}
@@ -84,6 +85,7 @@ const Pagination = () => {
               disabled={currentItem === totalPages} 
               className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
               aria-label="Next page"
+              type='button'
             >
               <span className="sr-only">Next</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
