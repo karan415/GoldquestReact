@@ -45,7 +45,6 @@ const ClientManagement = () => {
   });
 
   const handleFileChange = (fileName, e) => {
-    alert(fileName);
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
 
     // Assuming `file` is the state variable holding the files
@@ -214,7 +213,6 @@ const ClientManagement = () => {
       const data = await response.json();
       const customerInsertId = data.data.customerId;
       const password=data.password;
-      alert(password)
       setInsertId(customerInsertId)
 
       Swal.fire({

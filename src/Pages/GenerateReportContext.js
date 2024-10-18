@@ -64,12 +64,12 @@ const GenerateReportProvider = ({ children }) => {
             },
         },
     });
+
     const [annexure, setAnnexure] = useState({});
+
     const handleInputChange2 = (e) => {
         const { name, value } = e.target;
-        setAnnexure((prevInput) => (
-            { ...prevInput, [name]: value}
-        ))
+        setAnnexure((prevInput) => ({ ...prevInput, [name]: value }));
     };
 
     const handleInputChange = (e) => {
@@ -122,8 +122,32 @@ const GenerateReportProvider = ({ children }) => {
         }
     };
 
+    // Function to send report data
+    const sendReport = async () => {
+        try {
+            const response = await fetch('YOUR_API_ENDPOINT', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const result = await response.json();
+            console.log('Success:', result);
+            // Handle success (e.g., update UI or reset form)
+        } catch (error) {
+            console.error('Error sending report:', error);
+            // Handle error (e.g., show error message to user)
+        }
+    };
+
     return (
-        <GenerateReportContext.Provider value={{ formData, setFormData, handleInputChange, handleInputChange2, annexure, setAnnexure }}>
+        <GenerateReportContext.Provider value={{ formData, setFormData, handleInputChange, handleInputChange2, annexure, setAnnexure, sendReport }}>
             {children}
         </GenerateReportContext.Provider>
     );

@@ -34,8 +34,8 @@ const CandidateApplications = () => {
     const [errors, setErrors] = useState({});
     const [serviceHeadings, setServiceHeadings] = useState([]);
     const [selectedStatuses, setSelectedStatuses] = useState(Array(serviceHeadings.length).fill(''));
+    console.log(formData);
 
-    // Handle status changes
     const handleSelectChange = (index, value) => {
         const updatedStatuses = [...selectedStatuses];
         updatedStatuses[index] = value;
@@ -258,7 +258,6 @@ const CandidateApplications = () => {
     };
 
 
-
     const annexureValues = useCallback((application_id, db_name) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
@@ -316,18 +315,21 @@ const CandidateApplications = () => {
                 },
             }
         )
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
+            .then((res) => {
+                if (!res.ok) {
+                    return res.text().then(text => {
                         const errorData = JSON.parse(text);
                         Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                         throw new Error(text);
                     });
                 }
-                return response.json();
+                return res.json();
             })
             .then(data => {
+
+                console.log('data', data.application)
                 const applications = data.application;
+                console.log('applications', applications);
                 Object.entries(applications).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
                     if (input) {
@@ -335,6 +337,7 @@ const CandidateApplications = () => {
                     }
                 });
                 const cmtData = data.CMTData;
+                console.log('cmtData', cmtData);
 
                 Object.entries(cmtData).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
@@ -343,9 +346,10 @@ const CandidateApplications = () => {
                     }
                 });
 
-                setFormData(prevFormData => ({
-                    updated_json: {
-                        month_year: applications.month_year || prevFormData.updated_json.month_year || '',
+
+                setFormData(prevFormData => {
+                    const updated_json = {
+                        month_year: prevFormData.updated_json.month_year || applications.month_year || '',
                         initiation_date: applications.initiation_date || prevFormData.updated_json.initiation_date || '',
                         organization_name: applications.organization_name || prevFormData.updated_json.organization_name || '',
                         verification_purpose: applications.verification_purpose || prevFormData.updated_json.verification_purpose || '',
@@ -400,9 +404,17 @@ const CandidateApplications = () => {
                             qc_done_by: cmtData.qc_done_by || prevFormData.updated_json.insuffDetails?.qc_done_by || '',
                             delay_reason: cmtData.delay_reason || prevFormData.updated_json.insuffDetails?.delay_reason || ''
                         }
-                    }
-                }));
-
+                    };
+                
+                    return {
+                        ...prevFormData,
+                        updated_json // Return the updated_json as part of the new state
+                    };
+                });
+                
+                // Optionally log the updated_json
+                console.log(formData.updated_json);
+                
 
 
                 setDisabledFields({
@@ -430,12 +442,6 @@ const CandidateApplications = () => {
             .finally(() => setLoading(false));
     }, [application_id, branch_id]);
 
-    useEffect(() => {
-        // Call the functions to fetch data
-        fetchServices();
-        annexureValues(application_id); // Make sure to pass necessary parameters
-        fetchClients();
-    }, [fetchServices, fetchClients, annexureValues, application_id, service_id]);
 
 
     const handleFileChange = (fileName, e, selectedDb) => {
@@ -449,7 +455,12 @@ const CandidateApplications = () => {
         }));
     };
 
+    useEffect(() => {
 
+        fetchServices();
+        annexureValues(application_id);
+        fetchClients();
+    }, [fetchServices, fetchClients, annexureValues, application_id, service_id]);
     const uploadCustomerLogo = async (email_status) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
@@ -463,7 +474,7 @@ const CandidateApplications = () => {
             customerLogoFormData.append('application_id', application_id);
             customerLogoFormData.append('email_status', email_status || 0);
             customerLogoFormData.append('branch_id', branch_id);
-            customerLogoFormData.append('customer_code', formData.updated_json.employee_id);
+            customerLogoFormData.append('customer_code', formData.employee_id);
 
             // Check if selectedFiles is not empty
             if (value.selectedFiles.length > 0) {
@@ -515,15 +526,15 @@ const CandidateApplications = () => {
         const mainAnnexureData = allInputDetails.reduce((acc, { db_table, inputDetails }) => {
             acc[db_table] = inputDetails.reduce((inputAcc, { name, value }) => {
                 inputAcc[name] = value !== undefined ? value : '';
-                return inputAcc; 
+                return inputAcc;
             }, {});
 
             const serviceIndex = serviceHeadings.findIndex(heading => heading.heading.replace(/ /g, '').toLowerCase() === db_table.replace(/_/g, '').toLowerCase());
 
             console.log('Current db_table:', db_table);
-            console.log('Service Index:', serviceIndex); 
+            console.log('Service Index:', serviceIndex);
 
-          
+
             if (serviceIndex !== -1) {
                 acc[db_table].status = selectedStatuses[serviceIndex] || ''; // Use selected status or empty string
             } else {
@@ -581,7 +592,6 @@ const CandidateApplications = () => {
                 const parsedData = JSON.parse(result);
 
                 const email_status = parsedData.email_status;
-                alert(email_status)
 
                 Swal.fire('Success!', 'Application updated successfully.', 'success');
 

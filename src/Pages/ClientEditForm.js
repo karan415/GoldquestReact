@@ -5,8 +5,8 @@ import ServicesEditForm from './ServicesEditForm';
 
 export const ClientEditForm = () => {
     const options = useMemo(() => countryList().getData(), []);
-    const { clientData, handleClientChange, handleClientSubmit } = useEditClient();
-    
+    const { clientData, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
+
     // Initialize newEmails safely
     let newEmails = [];
     try {
@@ -26,6 +26,19 @@ export const ClientEditForm = () => {
         updatedEmails[index] = value;
         handleClientChange({ target: { name: 'emails', value: JSON.stringify(updatedEmails) } });
     };
+
+    const handleFileChange = (fileName, e) => {
+
+        const selectedFiles = Array.from(e.target.files); 
+        setFiles((prevFiles) => {
+            return {
+                ...prevFiles,
+                [fileName]: selectedFiles,
+            };
+        });
+    };
+
+
     return (
         <>
             <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md' >
@@ -210,30 +223,30 @@ export const ClientEditForm = () => {
                         name="agr_upload"
                         id="agr_upload"
                         className="border w-full rounded-md p-2 mt-2 outline-none"
-                        onChange={handleClientChange}
+                        onChange={(e) => handleFileChange('agr_upload', e)}
                     />
                 </div>
                 <div className="mb-4">
-                <label className="text-gray-500" htmlFor="agr_upload">Emails</label>
-                <div className="flex gap-3 flex-wrap">
-                {newEmails.length > 0 ? (
-                    newEmails.map((email, index) => (
-                        <input
-                            key={index}
-                            type="email"
-                            name={`email-${index}`}
-                            id={`email-${index}`}
-                            value={email}
-                            className="border w-3/12 rounded-md p-2 mt-2 outline-none"
-                            onChange={(e) => handleEmailChange(index, e.target.value)}
-                        />
-                    ))
-                ) : (
-                    <p>No emails available</p>
-                )}
-            </div>
-              
-            </div>
+                    <label className="text-gray-500" htmlFor="agr_upload">Emails</label>
+                    <div className="flex gap-3 flex-wrap">
+                        {newEmails.length > 0 ? (
+                            newEmails.map((email, index) => (
+                                <input
+                                    key={index}
+                                    type="email"
+                                    name={`email-${index}`}
+                                    id={`email-${index}`}
+                                    value={email}
+                                    className="border w-3/12 rounded-md p-2 mt-2 outline-none"
+                                    onChange={(e) => handleEmailChange(index, e.target.value)}
+                                />
+                            ))
+                        ) : (
+                            <p>No emails available</p>
+                        )}
+                    </div>
+
+                </div>
 
                 <div className="mb-4">
                     <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
@@ -249,7 +262,7 @@ export const ClientEditForm = () => {
                                     type="file"
                                     name="custom_logo"
                                     id="custom_logo"
-                                    onChange={handleClientChange}
+                                    onChange={(e) => handleFileChange('custom_logo', e)}
                                     className="border w-full rounded-md p-2 mt-2 outline-none"
                                 />
                             </div>
@@ -312,7 +325,7 @@ export const ClientEditForm = () => {
                         Submit
                     </button>
                 </div>
-                
+
 
             </form>
         </>

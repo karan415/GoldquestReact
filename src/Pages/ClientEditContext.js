@@ -1,11 +1,13 @@
 import React, { createContext, useState, useContext } from 'react';
 import Swal from 'sweetalert2';
 import { useData } from './DataContext';
-import { useApi } from '../ApiContext'; 
+import { useApi } from '../ApiContext';
+import axios from 'axios';
 const ClientEditContext = createContext();
 
 
 export const ClientEditProvider = ({ children }) => {
+    const [files, setFiles] = useState([]);
     const API_URL = useApi();
     const [clientData, setClientData] = useState({
         company_name: '',
@@ -29,10 +31,45 @@ export const ClientEditProvider = ({ children }) => {
         custom_address: '',
         additional_login: 'No',
         username: '',
-        services:[] ,
+        services: [],
     });
 
-    const {fetchData}=useData()
+    const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
+
+
+        const fileCount = Object.keys(files).length;
+        for (const [index, [key, value]] of Object.entries(files).entries()) {
+            const customerLogoFormData = new FormData();
+            customerLogoFormData.append('admin_id', admin_id);
+            customerLogoFormData.append('_token', storedToken);
+            customerLogoFormData.append('customer_code', clientData.client_code);
+            customerLogoFormData.append('customer_id', customerInsertId);
+            for (const file of value) {
+                customerLogoFormData.append('images', file);
+                customerLogoFormData.append('upload_category', key);
+            }
+            if (fileCount === (index + 1)) {
+                customerLogoFormData.append('company_name', clientData.company_name);
+            }
+
+            try {
+                await axios.post(
+                    `${API_URL}/customer/upload`,
+                    customerLogoFormData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    }
+                );
+            } catch (err) {
+                Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
+            }
+        }
+    };
+
+    const { fetchData } = useData();
+
     const handleClientChange = (e, index) => {
         const { name, value, type, files } = e.target;
         setClientData(prevData => ({
@@ -79,11 +116,14 @@ export const ClientEditProvider = ({ children }) => {
             }
             fetchData();
             const data = contentType.includes("application/json") ? await response.json() : {};
+            const customerInsertId = clientData.customer_id;
             const newToken = data._token || data.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+            uploadCustomerLogo(admin_id, storedToken, customerInsertId);
             Swal.fire('Success!', 'Branch updated successfully.', 'success');
+          
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
             Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
@@ -92,7 +132,7 @@ export const ClientEditProvider = ({ children }) => {
 
 
     return (
-        <ClientEditContext.Provider value={{ clientData, setClientData, handleClientChange, handleClientSubmit }}>
+        <ClientEditContext.Provider value={{ clientData, setClientData, handleClientChange, handleClientSubmit, setFiles, files }}>
             {children}
         </ClientEditContext.Provider>
     );
