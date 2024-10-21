@@ -1,6 +1,7 @@
 {
   "name": "myapp6",
   "version": "0.1.0",
+  "homepage": "/",
   "private": true,
   "dependencies": {
     "@canvasjs/react-charts": "^1.0.2",
