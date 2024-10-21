@@ -1,21 +1,34 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import SearchBar from './SearchBar';
-import Pagination from './Pagination';
-import PaginationContext from './PaginationContext';
 import { Link } from 'react-router-dom';
 import { useData } from './DataContext';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const ExternalLoginData = () => {
-  const { currentItem, showPerPage } = useContext(PaginationContext);
   const { listData, fetchData, toggleAccordion, branches, openAccordionId } = useData();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const startIndex = (currentItem - 1) * showPerPage;
-  const endIndex = startIndex + showPerPage;
-  const paginatedData = listData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(listData.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = listData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const showPrev = () => {
+    if (currentPage > 1) handlePageChange(currentPage - 1);
+  };
+
+  const showNext = () => {
+    if (currentPage < totalPages) handlePageChange(currentPage + 1);
+  };
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
@@ -31,16 +44,16 @@ const ExternalLoginData = () => {
                 <th className="py-3 px-4 border-b text-white text-left uppercase">Client Code</th>
                 <th className="py-3 px-4 border-b text-white text-left uppercase">Company Name</th>
                 <th className="py-3 px-4 border-b text-white text-left uppercase">Mobile</th>
-                <th className="py-3 px-4 border-b text-white text-center uppercase ">Action</th>
+                <th className="py-3 px-4 border-b text-white text-center uppercase">Action</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((item, index) => (
+              {currentItems.map((item, index) => (
                 <React.Fragment key={item.main_id}>
                   <tr className='border'>
                     <td className="py-3 px-4 border-b text-left whitespace-nowrap capitalize">
                       <input type="checkbox" className="me-2" />
-                      {index + 1}
+                      {index + 1 + indexOfFirstItem}
                     </td>
                     <td className="py-3 px-4 border-b text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
                     <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.name}</td>
@@ -79,9 +92,39 @@ const ExternalLoginData = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+            <button
+              onClick={showPrev}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              aria-label="Previous page"
+            >
+              <MdArrowBackIosNew />
+            </button>
+            <div className="flex items-center">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}                        >
+
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={showNext}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              aria-label="Next page"
+            >
+              <MdArrowForwardIos />
+            </button>
+          </div>
         </div>
       )}
-      <Pagination />
     </div>
   );
 };
