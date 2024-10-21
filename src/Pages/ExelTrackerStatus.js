@@ -134,7 +134,7 @@ const ExelTrackerStatus = () => {
 
 
     const handleDownloadPdf = async (id, branch_id) => {
-        alert(`${id} - ${branch_id}`);
+       
 
         if (!id || !branch_id) {
             return Swal.fire('Error!', 'Something is missing', 'error');
@@ -147,7 +147,7 @@ const ExelTrackerStatus = () => {
 
         try {
             const response = await fetch(
-                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+                `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
                 {
                     method: 'GET',
                     headers: {
@@ -179,8 +179,8 @@ const ExelTrackerStatus = () => {
                         redirect: "follow",
                     };
 
-                    const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                    const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+                    const serviceInfoUrl = `https://goldquestreact.onrender.com/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                    const applicationServiceUrl = `https://goldquestreact.onrender.com/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
 
                     const [serviceResponse, applicationResponse] = await Promise.all([
                         fetch(serviceInfoUrl, requestOptions),
@@ -216,7 +216,7 @@ const ExelTrackerStatus = () => {
             await Promise.all(
                 servicesArray.map(async (serviceId) => {
                     const response = await fetch(
-                        `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                        `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
                         {
                             method: 'GET',
                             headers: {
@@ -248,7 +248,7 @@ const ExelTrackerStatus = () => {
 
                     if (parsedJson.db_table && parsedJson.heading) {
                         const annexureHeading = parsedJson.heading;
-                        const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+                        const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
 
                         const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
                         if (!annexureResponse.ok) {
@@ -343,7 +343,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://goldquestreact.onrender.com/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -449,7 +449,7 @@ const ExelTrackerStatus = () => {
                     </table>
                 </div>
             </div>
-            <div className=''>
+            <div className='opacity-0'>
 
                 <div ref={printRef} style={{ padding: '70px', backgroundColor: '#fff', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
                     <img src="https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1" alt="" style={{ width: '200px' }} />
@@ -675,7 +675,7 @@ const ExelTrackerStatus = () => {
                                                             input.value.split(',').map((url, index) => (
                                                                 <img
                                                                     key={index}
-                                                                    src={`https://octopus-app-www87.ondigitalocean.app/${url.trim()}`}
+                                                                    src={`https://goldquestreact.onrender.com/${url.trim()}`}
                                                                     alt={`Image ${index + 1}`}
                                                                     style={{ width: '50px', height: '50px', marginLeft: '10px' }} // Adjust styles as needed
                                                                 />
