@@ -14,7 +14,6 @@ import TatDelay from '../Pages/TatDelay'; // TAT Delay component
 import Acknowledgement from '../Pages/Acknowledgement'; // Acknowledgement component
 import UpdatePassword from '../Pages/UpdatePassword'; // Update Password component
 import Invoice from '../Pages/Invoice'; // Invoice component
-import CustomerLogin from "../Pages/CustomerLogin"; // Customer Login component
 import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component
@@ -26,7 +25,6 @@ const tabComponents = {
   profile: <ClientManagement />,
   package_management: <PackageManagement />,
   service_management: <ServiceMangement />,
-  customer_login: <CustomerLogin />,
   internal_login: <InternalLogin />,
   report: <Reports />,
   external: <ExternalLogin />,
