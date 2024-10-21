@@ -1,25 +1,37 @@
 import React, { useEffect, useState, useContext } from 'react';
-import PaginationContext from './PaginationContext';
-import Pagination from './Pagination';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { useService } from './ServiceContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 const ServiceList = () => {
-    const {showPerPage } = useContext(PaginationContext);
     const API_URL = useApi();
-    const [paginated, setPaginated] = useState([]);
-    const [currentPage] = useState(1);
-    const { editService,fetchData,loading,data, error} = useService();
+    const { editService, fetchData, loading, data, error } = useService();
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    useEffect(() => {
-        const start = (currentPage - 1) * showPerPage;
-        const end = start + showPerPage;
-        setPaginated(data.slice(start, end));
-    }, [data, currentPage, showPerPage]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const showPrev = () => {
+        if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+
+    const showNext = () => {
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
+
 
     const handleEditService = (service) => {
         editService(service);
@@ -99,8 +111,8 @@ const ServiceList = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {paginated.length > 0 ?
-                        (paginated.map((item, index) => (
+                    {currentItems.length > 0 ?
+                        (currentItems.map((item, index) => (
                             <tr key={item.index}>
                                 <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
@@ -132,7 +144,34 @@ const ServiceList = () => {
                         )}
                 </tbody>
             </table>
-            {paginated.length > 0 && <Pagination />}
+            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                <button
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page"
+                >
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index + 1}
+                            onClick={() => handlePageChange(index + 1)}
+                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page"
+                >
+                    <MdArrowForwardIos />
+                </button>
+            </div>
         </div>
     );
 };
