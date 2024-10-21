@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import SearchBar from './SearchBar';
+
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const Acknowledgement = () => {
@@ -7,8 +7,9 @@ const Acknowledgement = () => {
   const itemsPerPage = 10;
   const [emailsData, setEmailsData] = useState([]);
   const [loading, setLoading] = useState(false); // Loading state
-  const [paginated, setPaginated] = useState([]);
 
+
+  const [searchTerm, setSearchTerm] = useState('');
   const fetchEmails = useCallback(() => {
     setLoading(true); // Start loading
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -55,10 +56,17 @@ const Acknowledgement = () => {
       .catch((error) => console.error(error));
   };
 
-  const totalPages = Math.ceil(emailsData.length / itemsPerPage);
+  const filteredItems = emailsData.filter(item => {
+    return (
+      item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) || ''
+     )
+});
+
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = emailsData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -76,14 +84,48 @@ const Acknowledgement = () => {
     fetchEmails();
   }, [fetchEmails]);
 
+
+  
+
   return (
     <div className='p-4 md:py-16'>
       <div className="text-center">
         <h2 className='md:text-4xl text-2xl font-bold pb-8 md:pb-4'>Acknowledgement Emails</h2>
       </div>
-      <SearchBar />
+      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+      <div className="col">
+          <form action="">
+              <div className="flex gap-5 justify-between">
+                  <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                      <option value="100">Show 100 Rows</option>
+                      <option value="200">200 Rows</option>
+                      <option value="300">300 Rows</option>
+                      <option value="400">400 Rows</option>
+                      <option value="500">500 Rows</option>
+                  </select>
+                  <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+              </div>
+          </form>
+      </div>
+      <div className="col md:flex justify-end ">
+          <form action="">
+              <div className="flex md:items-stretch items-center  gap-3">
+                  <input
+                      type="search"
+                      className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                      placeholder='Search by Client Code, Company Name, or Client Spoc'
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+              </div>
+          </form>
+      </div>
+
+  </div>
       <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-4">
-        {loading ? ( // Show loading indicator
+
+        {loading ? (
           <div className="text-center py-4">
             <p>Loading...</p>
           </div>
@@ -96,7 +138,7 @@ const Acknowledgement = () => {
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Company Name</th>
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Application Count</th>
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Case RCVD Date</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Send Approvals</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Send Notification</th>
               </tr>
             </thead>
             <tbody>
@@ -106,9 +148,9 @@ const Acknowledgement = () => {
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
-                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{/* Case Received Date */}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{ }</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
-                    <button className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200" type='button' onClick={() => sendApproval(email.id)} >Send Approval</button>
+                    <button className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200" type='button' onClick={() => sendApproval(email.id)} >Send </button>
                   </td>
                 </tr>
               ))}
