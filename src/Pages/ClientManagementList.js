@@ -16,7 +16,7 @@ const ClientManagementList = () => {
     const API_URL = useApi();
     const { setClientData } = useEditClient();
     const { setBranchEditData } = useEditBranch();
-    const { currentItem, showPerPage } = useContext(PaginationContext);
+    const { currentItem, showPerPage,setTotalResults } = useContext(PaginationContext);
     const {loading, error, listData, fetchData,toggleAccordion,branches,openAccordionId,isOpen,setIsOpen} =useData();
     const [paginated, setPaginated] = useState([]);
     const [showAllServicesState, setShowAllServicesState] = useState({});
@@ -28,14 +28,12 @@ const ClientManagementList = () => {
     }, [fetchData]);
 
 
-    useEffect(() => {
+       useEffect(() => {
+      setTotalResults(listData.length);
       const startIndex = (currentItem - 1) * showPerPage;
       const endIndex = startIndex + showPerPage;
-  
-      const paginatedData = listData.slice(startIndex, endIndex);
-      
-      setPaginated(paginatedData);
-  }, [currentItem, listData, showPerPage]);
+      setPaginated(listData.slice(startIndex, endIndex));
+  }, [currentItem, setTotalResults, listData, showPerPage]);
   
 
     const toggleShowAllServices = (id) => {
