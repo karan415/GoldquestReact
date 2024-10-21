@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
-import PaginationContext from './PaginationContext';
-import Pagination from './Pagination';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Multiselect from 'multiselect-react-dropdown';
 import { useClient } from './ClientManagementContext';
 import { useApi } from '../ApiContext';
 
+
 const ClientManagementData = () => {
     const [selectedServices, setSelectedServices] = useState({});
-    const [selectedData, setSelectedData] = useState([]);
+    const [, setSelectedData] = useState([]);
     const API_URL = useApi();
     const { setClientData, validationsErrors, setValidationsErrors } = useClient();
     const [service, setService] = useState([]);
@@ -17,7 +17,27 @@ const ClientManagementData = () => {
     const [loading, setLoading] = useState(false);
     const [selectedPackages, setSelectedPackages] = useState({});
     const [priceData, setPriceData] = useState({});
-    const { setTotalResults, currentItem, showPerPage } = useContext(PaginationContext);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const itemsPerPage = 10;
+
+    const totalPages = Math.ceil(paginated.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = paginated.slice(indexOfFirstItem, indexOfLastItem);
+
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const showPrev = () => {
+        if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+
+    const showNext = () => {
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
 
     const fetchServices = useCallback(async () => {
         setLoading(true);
@@ -94,37 +114,34 @@ const ClientManagementData = () => {
 
     useEffect(() => {
         const updatedServiceData = service.map((item) => {
-            
+
             const packageObject = (selectedPackages[item.service_id] || []).reduce((acc, pkgId) => {
                 const pkg = packageList.find(p => p.id === pkgId);
                 if (pkg) {
-                    acc[pkg.id] = pkg.title; 
+                    acc[pkg.id] = pkg.title;
                 }
                 return acc;
             }, {});
-    
+
             return {
                 serviceId: item.service_id,
                 serviceTitle: item.service_title,
                 price: priceData[item.service_id]?.price || '',
-                packages: packageObject, 
+                packages: packageObject,
             };
         });
         const filteredSelectedData = updatedServiceData.filter(item => selectedServices[item.serviceId]);
-       
-       console.log('filteredSelectedData',filteredSelectedData);
-       console.log('updatedServiceData',updatedServiceData)
+
+        console.log('filteredSelectedData', filteredSelectedData);
+        console.log('updatedServiceData', updatedServiceData)
         setClientData(filteredSelectedData);
         setSelectedData(updatedServiceData);
-    
+
         if (validateServices()) {
-            setTotalResults(updatedServiceData.length);
-            const startIndex = (currentItem - 1) * showPerPage;
-            const endIndex = startIndex + showPerPage;
-            setPaginated(updatedServiceData.slice(startIndex, endIndex)); 
+            setPaginated(updatedServiceData);
         }
-    }, [currentItem, showPerPage, service, selectedPackages, priceData, selectedServices, setTotalResults, setClientData, packageList]);
-    
+    }, [service, selectedPackages, priceData, selectedServices, setClientData, packageList]);
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error}</p>;
 
@@ -162,7 +179,7 @@ const ClientManagementData = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {paginated.map((item) => (
+                    {currentItems.map((item) => (
                         <tr key={item.serviceId}>
                             <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
                                 <input
@@ -197,7 +214,38 @@ const ClientManagementData = () => {
                     ))}
                 </tbody>
             </table>
-            {paginated.length > 0 && <Pagination />}
+            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                <button
+                    type='button'
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page"
+                >
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            type='button'
+                            key={index + 1}
+                            onClick={() => handlePageChange(index + 1)}
+                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    type='button'
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page"
+                >
+                    <MdArrowForwardIos />
+                </button>
+            </div>
         </div>
     );
 };
