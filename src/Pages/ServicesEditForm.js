@@ -100,9 +100,18 @@ const ServiceEditForm = () => {
             return acc;
         }, {});
         setSelectedServices(initialSelectedServices);
+
+
+        setClientData(prev => ({ ...prev, services: prefilledData }));
         console.log('serviceData-before-change', updatedServiceData);
     }, [serviceData, clientData.services, priceData, setTotalResults]);
-    console.log('selectedServices',selectedServices)
+    console.log('selectedServices',selectedServices);
+
+
+console.log('paginated',paginated);
+console.log('selectedPackages',selectedPackages)
+
+
    
     const handleCheckboxChange = (serviceId) => {
         console.log("Current Selection Before Change:", selectedServices);
@@ -116,50 +125,48 @@ const ServiceEditForm = () => {
             };
     
             console.log("Updated Selection:", updatedSelection);
+        
     
-            // Update paginated services based on selection
             const updatedServices = paginated.map(service => {
-                // Retrieve packages and ensure they are in the desired format
                 let packages = selectedPackages[service.service_id] || service.packages || {};
     
-                // Ensure packages are always formatted as an object with titles
                 if (Array.isArray(packages)) {
                     packages = Object.fromEntries(
                         packages.map(pkgId => {
                             const pkg = packageList.find(p => p.id === pkgId);
-                            return [pkgId.toString(), pkg ? pkg.title : pkgId]; // Convert ID to string for consistent key format
+                            return [pkgId.toString(), pkg ? pkg.title : pkgId]; 
                         })
                     );
                 }
     
                 if (updatedSelection[service.service_id]) {
-                    // Service is selected
+                 
                     return {
                         serviceId: service.service_id,
                         serviceTitle: service.service_title,
                         price: priceData[service.service_id]?.price || service.price || '',
-                        packages, // Keep as an object with titles
+                        packages, 
                     };
                 } else {
-                    // Service is deselected
+                    
                     return {
                         serviceId: service.service_id,
                         serviceTitle: service.service_title,
-                        price: '', // Clear price
-                        packages: {}, // Clear packages
+                        price: '',
+                        packages: {}, 
                     };
                 }
             });
     
-            // Filter out services that are not selected
+        
             const filteredServices = updatedServices.filter(service => updatedSelection[service.serviceId]);
     
             console.log("Filtered Services:", filteredServices);
     
-            // Update client data with the new services array
+            
             setClientData(prev => ({ ...prev, services: filteredServices }));
     
-            // Alert details for the selected/deselected service
+            
             const serviceDetails = paginated.find(service => service.service_id === serviceId);
             if (serviceDetails) {
                 const details = `
@@ -168,60 +175,51 @@ const ServiceEditForm = () => {
                     Price: ${priceData[serviceId]?.price || serviceDetails.price || ''}
                     Packages: ${JSON.stringify(isCurrentlySelected ? selectedPackages[serviceId] || {} : {})}
                 `;
-                // alert(details);
+               
             }
     
-            return updatedSelection; // Return the updated selection state
+            return updatedSelection; 
         });
     };
     
     
-    // const handlePackageChange = (selectedList, serviceId) => {
-    //     const updatedPackages = selectedList.map(item => item.id);
-    //     console.log("Selected Packages for service:", serviceId, updatedPackages);
+ 
+    function updateServicePackages(obj, serviceID, serviceList) {
+        // Iterate over the services to find the matching serviceId
+        let serviceFound = false;
     
-    //     // Alert the selected packages
-    //     alert(`Selected packages for service ${serviceId}: ${updatedPackages.join(', ')}`);
+        for (let service of obj.services) {
+            if (service.serviceId === serviceID) {
+                // Convert serviceList into key-value pairs where id is the key and name is the value
+                let newPackages = {};
+                serviceList.forEach((item) => {
+                    newPackages[item.id] = item.name;
+                });
     
-    //     // Update the selected packages state
-    //     setSelectedPackages((prev) => ({
-    //         ...prev,
-    //         [serviceId]: updatedPackages, // Update only the packages for the specific service
-    //     }));
+                // Update the service packages
+                service.packages = {
+                    ...service.packages, // Retain existing packages
+                    ...newPackages      // Merge new packages
+                };
+                serviceFound = true;
+                break; // Exit loop once service is found and updated
+            }
+        }
     
-    //     setClientData((prev) => {
-    //         const updatedServices = Array.isArray(prev.services) ? prev.services : [];
-    //         return updatedServices.map(service => {
-    //             if (service.serviceId === serviceId) {
-    //                 // Create a packages object based on the selected list
-    //                 const packages = selectedList.reduce((acc, item) => {
-    //                     acc[item.id] = item.name; // Create a key-value pair
-    //                     return acc;
-    //                 }, {});
+        if (!serviceFound) {
+            console.log("Service not found.");
+        } else {
+            console.log("Service updated successfully.");
+        }
     
-    //                 // Return the service with updated packages, keeping price and serviceId intact
-    //                 return { ...service, packages }; 
-    //             }
-    //             return service; // Return the unchanged service for others
-    //         });
-    //     });
-    // };
-    
+        return obj;
+    }
+
+
+
     const handlePackageChange = (selectedList, serviceId) => {
-        console.log('selectedList')
-        const updatedPackages = selectedList.map(item => item.id);
-        
-        // Alert the selected packages
-        // alert(`Selected packages for service ${serviceId}: ${updatedPackages.join(', ')}`);
-        
-        // Update only the selected packages state
-        setSelectedPackages(prev => ({
-            ...prev,
-            [serviceId]: updatedPackages, // Update only the packages for the specific service
-        }));
-    
-        // If you want to update client data or services later based on this change,
-        // you can add that logic here, but only if necessary.
+        let updatedObj = updateServicePackages(clientData, serviceId, selectedList);
+        setClientData(updatedObj);
     };
     
   
