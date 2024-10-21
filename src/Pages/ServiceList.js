@@ -5,10 +5,9 @@ import { useService } from './ServiceContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 const ServiceList = () => {
-    const {showPerPage } = useContext(PaginationContext);
+    const {showPerPage ,setTotalResults,currentItem} = useContext(PaginationContext);
     const API_URL = useApi();
     const [paginated, setPaginated] = useState([]);
-    const [currentPage] = useState(1);
     const { editService,fetchData,loading,data, error} = useService();
 
     useEffect(() => {
@@ -16,11 +15,16 @@ const ServiceList = () => {
     }, [fetchData]);
 
     useEffect(() => {
-        const start = (currentPage - 1) * showPerPage;
-        const end = start + showPerPage;
-        setPaginated(data.slice(start, end));
-    }, [data, currentPage, showPerPage]);
-
+        setTotalResults(data.length);
+        const startIndex = (currentItem - 1) * showPerPage;
+        const endIndex = startIndex + showPerPage;
+        setPaginated(data.slice(startIndex, endIndex));
+    }, [currentItem, setTotalResults, data, showPerPage]);
+    
+    const handleEditService = (service) => {
+        editService(service);
+        fetchData();
+    };
     const handleEditService = (service) => {
         editService(service);
         fetchData();
