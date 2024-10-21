@@ -5,22 +5,36 @@ import { usePackage } from './PackageContext';
 import Swal from 'sweetalert2';
 import SearchBar from './SearchBar';
 import { useApi } from '../ApiContext';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const PackageManagementList = () => {
-    const { currentItem, showPerPage } = useContext(PaginationContext);
-    const { editPackage,data,loading,fetchData ,error,setError} = usePackage();
-    const [paginatedData, setPaginatedData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const { editPackage, data, loading, fetchData, error, setError } = usePackage();
+
     const API_URL = useApi();
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    useEffect(() => {
-        if (Array.isArray(data)) {
-            const startIndex = (currentItem - 1) * showPerPage;
-            const endIndex = startIndex + showPerPage;
-            setPaginatedData(data.slice(startIndex, endIndex));
-        }
-    }, [data, currentItem, showPerPage]);
+    
+    const itemsPerPage = 10;
+    
+    
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    
+    const handlePageChange = (pageNumber) => {
+      setCurrentPage(pageNumber);
+    };
+    
+    const showPrev = () => {
+      if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+    
+    const showNext = () => {
+      if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
 
     const handleEdit = (pkg) => {
         editPackage(pkg);
@@ -28,7 +42,7 @@ const PackageManagementList = () => {
 
 
 
-    
+
     const handleDelete = (packageId) => {
         Swal.fire({
             title: 'Are you sure?',
@@ -41,20 +55,20 @@ const PackageManagementList = () => {
             if (result.isConfirmed) {
                 const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
                 const storedToken = localStorage.getItem("_token");
-    
+
                 if (!admin_id || !storedToken) {
                     console.error("Admin ID or token is missing.");
                     Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
                     return;
                 }
-    
+
                 const requestOptions = {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 };
-    
+
                 fetch(`${API_URL}/package/delete?id=${packageId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => {
                         if (!response.ok) {
@@ -67,14 +81,14 @@ const PackageManagementList = () => {
                         return response.json();
                     })
                     .then((result) => {
-                        const newToken = result._token || result.token; 
+                        const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("_token", newToken);
                         }
                         setError(null); // Reset error state
                         // Refresh data after deletion
                         Swal.fire('Deleted!', 'Your package has been deleted.', 'success');
-                        fetchData(); 
+                        fetchData();
                     })
                     .catch((error) => {
                         console.error('Fetch error:', error);
@@ -84,7 +98,7 @@ const PackageManagementList = () => {
             }
         });
     };
-    
+
 
     return (
         <>
@@ -101,11 +115,11 @@ const PackageManagementList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedData.length > 0 ? (
-                            paginatedData.map((item, index) => (
+                        {currentItems.length > 0 ? (
+                            currentItems.map((item, index) => (
                                 <tr key={item.id}>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
-                                        {(currentItem - 1) * showPerPage + index + 1}
+                                        { index + 1}
                                     </td>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
                                         {item.title}
@@ -141,7 +155,37 @@ const PackageManagementList = () => {
                 </table>
             </div>
             {loading && <div className="text-center">Loading...</div>}
-            {paginatedData.length > 0 ? (<Pagination />) : ('')}
+            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2" >
+                <button
+                    type="button"
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page" >
+                <MdArrowBackIosNew />
+            </button>
+            <div className="flex items-center" >
+                {
+                    Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            type="button"
+                            key={index + 1}
+                            onClick={() => handlePageChange(index + 1)}
+                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+            </div>
+            <button
+                type="button"
+                onClick={showNext}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                aria-label="Next page">
+            <MdArrowForwardIos />
+        </button>
+            </div>
 
         </>
     );
