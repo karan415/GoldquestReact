@@ -118,7 +118,7 @@ const ClientManagementData = () => {
         setSelectedData(updatedServiceData);
     
         if (validateServices()) {
-            setTotalResults(filteredSelectedData.length);
+            setTotalResults(updatedServiceData.length);
             const startIndex = (currentItem - 1) * showPerPage;
             const endIndex = startIndex + showPerPage;
             setPaginated(updatedServiceData.slice(startIndex, endIndex)); 
