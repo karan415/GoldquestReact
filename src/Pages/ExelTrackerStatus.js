@@ -449,7 +449,7 @@ const ExelTrackerStatus = () => {
                     </table>
                 </div>
             </div>
-            <div className=''>
+            <div className='opacity-o'>
 
                 <div ref={printRef} style={{ padding: '70px', backgroundColor: '#fff', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
                     <img src="https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1" alt="" style={{ width: '200px' }} />
