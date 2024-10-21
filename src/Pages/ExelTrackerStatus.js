@@ -728,8 +728,6 @@ const ExelTrackerStatus = () => {
 
         </>
 
-
-
     );
 };
 
