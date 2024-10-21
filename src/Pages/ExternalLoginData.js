@@ -1,27 +1,31 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import SearchBar from './SearchBar';
 import Pagination from './Pagination';
-import PaginationContext from './PaginationContext';
 import { Link } from 'react-router-dom';
 import { useData } from './DataContext';
 
 const ExternalLoginData = () => {
-  const { currentItem, showPerPage } = useContext(PaginationContext);
   const { listData, fetchData, toggleAccordion, branches, openAccordionId } = useData();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // Set your desired page size
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const startIndex = (currentItem - 1) * showPerPage;
-  const endIndex = startIndex + showPerPage;
-  const paginatedData = listData.slice(startIndex, endIndex);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const indexOfLastItem = currentPage * pageSize;
+  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const currentItems = listData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
       <SearchBar />
       {listData.length === 0 ? (
-        <p className='text-center'>Loading...</p>
+        <p className='text-center'>No data found</p>
       ) : (
         <div className="overflow-x-auto py-6 px-4">
           <table className="min-w-full">
@@ -35,12 +39,12 @@ const ExternalLoginData = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedData.map((item, index) => (
+              {currentItems.map((item, index) => (
                 <React.Fragment key={item.main_id}>
                   <tr className='border'>
                     <td className="py-3 px-4 border-b text-left whitespace-nowrap capitalize">
                       <input type="checkbox" className="me-2" />
-                      {index + 1}
+                      {indexOfFirstItem + index + 1}
                     </td>
                     <td className="py-3 px-4 border-b text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
                     <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.name}</td>
@@ -81,7 +85,14 @@ const ExternalLoginData = () => {
           </table>
         </div>
       )}
-      <Pagination />
+      {listData.length > 0 && (
+        <Pagination
+          totalItems={listData.length}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 };
