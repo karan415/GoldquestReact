@@ -1,25 +1,23 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import PaginationContext from './PaginationContext';
 import SearchBar from './SearchBar';
-import Pagination from './Pagination';
 import { Link } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel'; // Import BranchContextExel
-
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ClientMasterTrackerList = () => {
-    const { setBranchId } = useContext(BranchContextExel); 
-    const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
+    const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
     const { handleTabChange } = useSidebar();
-    const [paginated, setPaginated] = useState([]);
     const [loading, setLoading] = useState(false);
     const [, setError] = useState(null);
     const [data, setData] = useState([]);
     const [branches, setBranches] = useState({});
     const [expandedClient, setExpandedClient] = useState(null); // State to track expanded client
+    const [currentPage, setCurrentPage] = useState(1);
 
+    const itemsPerPage = 10;
     const fetchClient = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
@@ -56,14 +54,13 @@ const ClientMasterTrackerList = () => {
                     localStorage.setItem("_token", newToken);
                 }
                 setData(data.customers || []);
-                setTotalResults(data.totalResults || 0);
             })
             .catch((error) => {
                 console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
-    }, [setTotalResults]);
+    }, [setData]);
 
     const handleBranches = useCallback((id) => {
         setLoading(true);
@@ -97,6 +94,7 @@ const ClientMasterTrackerList = () => {
                     localStorage.setItem("_token", newToken);
                 }
                 setBranches(prev => ({ ...prev, [id]: data.customers || [] }));
+
                 setExpandedClient(prev => (prev === id ? null : id)); // Toggle branches visibility
             })
             .catch((error) => {
@@ -110,12 +108,25 @@ const ClientMasterTrackerList = () => {
         fetchClient();
     }, [fetchClient]);
 
-    useEffect(() => {
-        setTotalResults(data.length);
-        const startIndex = (currentItem - 1) * showPerPage;
-        const endIndex = startIndex + showPerPage;
-        setPaginated(data.slice(startIndex, endIndex));
-    }, [currentItem, setTotalResults, data, showPerPage]);
+
+
+
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const showPrev = () => {
+        if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+
+    const showNext = () => {
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
 
     const handleClick = (branch_id) => {
         setBranchId(branch_id); // Set branch_id in context
@@ -140,8 +151,8 @@ const ClientMasterTrackerList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginated.length > 0 ? (
-                                paginated.map((item, index) => (
+                            {currentItems.length > 0 ? (
+                                currentItems.map((item, index) => (
                                     <tr key={index}>
                                         <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                                             <input type="checkbox" className='me-2' />
@@ -157,7 +168,7 @@ const ClientMasterTrackerList = () => {
                                                 onClick={() => handleBranches(item.main_id)}>
                                                 {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                             </button>
-                                            
+
                                             <Link to=''>
                                                 <button className='bg-green-600 hover:bg-green-200 rounded-md p-2 text-white'>Check In</button>
                                             </Link>
@@ -184,7 +195,38 @@ const ClientMasterTrackerList = () => {
                         {loading && <div className="text-center">Loading...</div>}
                     </table>
                 </div>
-                <Pagination />
+                <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                    <button
+                        type='button'
+                        onClick={showPrev}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Previous page"
+                    >
+                        <MdArrowBackIosNew />
+                    </button>
+                    <div className="flex items-center">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                type="button"
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={showNext}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Next page"
+                    >
+                        <MdArrowForwardIos />
+                    </button>
+                </div>  
             </div>
         </>
     );

@@ -4,7 +4,7 @@ import Pagination from './Pagination';
 import Multiselect from 'multiselect-react-dropdown';
 import { useEditClient } from './ClientEditContext';
 import { useApi } from '../ApiContext';
-
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ServiceEditForm = () => {
     const [selectedServices, setSelectedServices] = useState({});
     const [serviceData, setServiceData] = useState([]);
@@ -14,9 +14,29 @@ const ServiceEditForm = () => {
     const [error, setError] = useState(null);
     const [selectedPackages, setSelectedPackages] = useState({});
     const [priceData, setPriceData] = useState({});
-    const { setTotalResults } = useContext(PaginationContext);
+    const [currentPage, setCurrentPage] = useState(1);
+
     const { clientData, setClientData } = useEditClient();
     const API_URL = useApi();
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(paginated.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = paginated.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const showPrev = () => {
+        if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+
+    const showNext = () => {
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
+
+
 
     const fetchServices = useCallback(async () => {
         setLoading(true);
@@ -75,12 +95,12 @@ const ServiceEditForm = () => {
         } catch (error) {
             console.error('Error parsing PrefilledData:', error);
         }
-    
+
         // Ensure prefilledData is an array
         if (!Array.isArray(prefilledData)) {
             prefilledData = [];
         }
-    
+
         const updatedServiceData = serviceData.map(item => {
             const prefilledService = prefilledData.find(service => service.serviceId === item.service_id) || {};
             return {
@@ -89,10 +109,9 @@ const ServiceEditForm = () => {
                 packages: prefilledService.packages || {},
             };
         });
-    
+
         setPaginated(updatedServiceData);
-        setTotalResults(updatedServiceData.length);
-    
+
         const initialSelectedServices = updatedServiceData.reduce((acc, item) => {
             if (prefilledData.some(service => service.serviceId === item.service_id)) {
                 acc[item.service_id] = true;
@@ -104,69 +123,73 @@ const ServiceEditForm = () => {
 
         setClientData(prev => ({ ...prev, services: prefilledData }));
         console.log('serviceData-before-change', updatedServiceData);
-    }, [serviceData, clientData.services, priceData, setTotalResults]);
-    console.log('selectedServices',selectedServices);
+
+        
 
 
-console.log('paginated',paginated);
-console.log('selectedPackages',selectedPackages)
+    }, [serviceData, clientData.services, priceData,]);
+    console.log('selectedServices', selectedServices);
 
 
-   
+    console.log('paginated', paginated);
+    console.log('selectedPackages', selectedPackages)
+
+
+
     const handleCheckboxChange = (serviceId) => {
         console.log("Current Selection Before Change:", selectedServices);
-        
+
         setSelectedServices((prev) => {
             const isCurrentlySelected = !!prev[serviceId];
-    
+
             const updatedSelection = {
                 ...prev,
                 [serviceId]: !isCurrentlySelected,
             };
-    
+
             console.log("Updated Selection:", updatedSelection);
-        
-    
+
+
             const updatedServices = paginated.map(service => {
                 let packages = selectedPackages[service.service_id] || service.packages || {};
-    
+
                 if (Array.isArray(packages)) {
                     packages = Object.fromEntries(
                         packages.map(pkgId => {
                             const pkg = packageList.find(p => p.id === pkgId);
-                            return [pkgId.toString(), pkg ? pkg.title : pkgId]; 
+                            return [pkgId.toString(), pkg ? pkg.title : pkgId];
                         })
                     );
                 }
-    
+
                 if (updatedSelection[service.service_id]) {
-                 
+
                     return {
                         serviceId: service.service_id,
                         serviceTitle: service.service_title,
                         price: priceData[service.service_id]?.price || service.price || '',
-                        packages, 
+                        packages,
                     };
                 } else {
-                    
+
                     return {
                         serviceId: service.service_id,
                         serviceTitle: service.service_title,
                         price: '',
-                        packages: {}, 
+                        packages: {},
                     };
                 }
             });
-    
-        
+
+
             const filteredServices = updatedServices.filter(service => updatedSelection[service.serviceId]);
-    
+
             console.log("Filtered Services:", filteredServices);
-    
-            
+
+
             setClientData(prev => ({ ...prev, services: filteredServices }));
-    
-            
+
+
             const serviceDetails = paginated.find(service => service.service_id === serviceId);
             if (serviceDetails) {
                 const details = `
@@ -175,19 +198,18 @@ console.log('selectedPackages',selectedPackages)
                     Price: ${priceData[serviceId]?.price || serviceDetails.price || ''}
                     Packages: ${JSON.stringify(isCurrentlySelected ? selectedPackages[serviceId] || {} : {})}
                 `;
-               
+
             }
-    
-            return updatedSelection; 
+
+            return updatedSelection;
         });
     };
-    
-    
- 
+
+
     function updateServicePackages(obj, serviceID, serviceList) {
         // Iterate over the services to find the matching serviceId
         let serviceFound = false;
-    
+
         for (let service of obj.services) {
             if (service.serviceId === serviceID) {
                 // Convert serviceList into key-value pairs where id is the key and name is the value
@@ -195,7 +217,7 @@ console.log('selectedPackages',selectedPackages)
                 serviceList.forEach((item) => {
                     newPackages[item.id] = item.name;
                 });
-    
+
                 // Update the service packages
                 service.packages = {
                     ...service.packages, // Retain existing packages
@@ -205,13 +227,13 @@ console.log('selectedPackages',selectedPackages)
                 break; // Exit loop once service is found and updated
             }
         }
-    
+
         if (!serviceFound) {
             console.log("Service not found.");
         } else {
             console.log("Service updated successfully.");
         }
-    
+
         return obj;
     }
 
@@ -221,30 +243,30 @@ console.log('selectedPackages',selectedPackages)
         let updatedObj = updateServicePackages(clientData, serviceId, selectedList);
         setClientData(updatedObj);
     };
-    
-  
+
+
     const handleChange = (e, serviceId) => {
         const { name, value } = e.target;
         console.log(`Changing ${name} for service ${serviceId} to ${value}`);
-    
+
         setPriceData(prev => ({ ...prev, [serviceId]: { [name]: value } }));
-    
+
         setClientData(prev => {
             console.log("Current Client Data Services:", prev.services); // Log current services
-    
+
             const updatedServices = (Array.isArray(prev.services) ? prev.services : []).map(service => {
                 if (service.serviceId === serviceId) {
                     return { ...service, price: value };
                 }
                 return service;
             });
-    
+
             console.log("Updated Client Data Services:", updatedServices);
             return { ...prev, services: updatedServices };
         });
     };
-    
-  
+
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error}</p>;
 
@@ -259,16 +281,16 @@ console.log('selectedPackages',selectedPackages)
                     </tr>
                 </thead>
                 <tbody>
-                    {paginated.map((item) => (
+                    {currentItems.map((item) => (
                         <tr key={item.service_id}>
                             <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
-                            <input
-                            type="checkbox"
-                            className='me-2'
-                            checked={!!selectedServices[item.service_id]} // Ensure this is derived directly from state
-                            onChange={() => handleCheckboxChange(item.service_id)}
-                        />
-                         {item.service_title}
+                                <input
+                                    type="checkbox"
+                                    className='me-2'
+                                    checked={!!selectedServices[item.service_id]} // Ensure this is derived directly from state
+                                    onChange={() => handleCheckboxChange(item.service_id)}
+                                />
+                                {item.service_title}
                             </td>
                             <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
                                 <input
@@ -293,7 +315,38 @@ console.log('selectedPackages',selectedPackages)
                     ))}
                 </tbody>
             </table>
-            {paginated.length > 0 && <Pagination />}
+            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                <button
+                    type="button"
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page"
+                >
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            type="button"
+                            key={index + 1}
+                            onClick={() => handlePageChange(index + 1)}
+                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+                <button
+                   type="button"
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page"
+                >
+                    <MdArrowForwardIos />
+                </button>
+            </div>
         </div>
     );
 };

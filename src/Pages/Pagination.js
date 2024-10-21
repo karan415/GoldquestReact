@@ -1,20 +1,20 @@
-import React, { useContext } from 'react';
+import React, { useContext ,useCallback} from 'react';
 import PaginationContext from './PaginationContext';
 
 const Pagination = () => {
   const { currentItem, setCurrentItem, showPerPage, totalResults, totalPages} = useContext(PaginationContext);
 
-  const showNext = () => {
+  const showNext = useCallback(() => {
     if (currentItem < totalPages) {
-      setCurrentItem(currentItem + 1);
+        setCurrentItem((prev) => prev + 1);
     }
-  };
+}, [currentItem, totalPages]);
 
-  const showPrev = () => {
+const showPrev = useCallback(() => {
     if (currentItem > 1) {
-      setCurrentItem(currentItem - 1);
+        setCurrentItem((prev) => prev - 1);
     }
-  };
+}, [currentItem]);
 
   const handlePageClick = (page) => {
     setCurrentItem(page);
@@ -61,6 +61,7 @@ const Pagination = () => {
             <button 
               onClick={showPrev} 
               disabled={currentItem === 1} 
+                type='button'
               className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
               aria-label="Previous page"
             >
@@ -71,6 +72,7 @@ const Pagination = () => {
             </button>
             {pageNumbers.map((page) => (
               <button
+                type='button'
                 key={page}
                 onClick={() => handlePageClick(page)}
                 aria-current={page === currentItem ? 'page' : undefined}
@@ -80,7 +82,8 @@ const Pagination = () => {
               </button>
             ))}
             <button 
-              onClick={showNext}   
+              onClick={showNext}  
+              type='button' 
               disabled={currentItem === totalPages} 
               className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
               aria-label="Next page"

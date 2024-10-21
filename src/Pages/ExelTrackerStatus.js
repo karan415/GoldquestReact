@@ -134,7 +134,7 @@ const ExelTrackerStatus = () => {
 
 
     const handleDownloadPdf = async (id, branch_id) => {
-        alert(`${id} - ${branch_id}`);
+       
 
         if (!id || !branch_id) {
             return Swal.fire('Error!', 'Something is missing', 'error');
@@ -449,7 +449,7 @@ const ExelTrackerStatus = () => {
                     </table>
                 </div>
             </div>
-            <div className=''>
+            <div className='opacity-0'>
 
                 <div ref={printRef} style={{ padding: '70px', backgroundColor: '#fff', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
                     <img src="https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1" alt="" style={{ width: '200px' }} />
