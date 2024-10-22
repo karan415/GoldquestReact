@@ -1,14 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import SearchBar from './SearchBar';
-import { Link } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
-import { BranchContextExel } from './BranchContextExel'; // Import BranchContextExel
+import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ClientMasterTrackerList = () => {
-    const [selectedStatus, setSelectedStatus] = useState('');
-
+    const [searchTerm, setSearchTerm] = useState('');
     const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
     const { handleTabChange } = useSidebar();
@@ -16,26 +13,29 @@ const ClientMasterTrackerList = () => {
     const [, setError] = useState(null);
     const [data, setData] = useState([]);
     const [branches, setBranches] = useState({});
-    const [expandedClient, setExpandedClient] = useState(null); // State to track expanded client
+    const [expandedClient, setExpandedClient] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [options,setOptions] = useState([]);
-
-    //for searching
-
-    const [searchTerm, setSearchTerm] = useState('');
-
-
-    const itemsPerPage = 10;
-    const fetchClient = useCallback(() => {
+    const [options, setOptions] = useState([]);
+    const [itemsPerPage, setItemPerPage] = useState(10)
+    const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
         setError(null);
+        let queryParams;
+        if (selected) {
+            queryParams = new URLSearchParams({
+                admin_id: admin_id || '',
+                _token: storedToken || '',
+                filter_status: selected || '',
+            }).toString();
+        } else {
+            queryParams = new URLSearchParams({
+                admin_id: admin_id || '',
+                _token: storedToken || ''
+            }).toString();
+        }
 
-        const queryParams = new URLSearchParams({
-            admin_id: admin_id || '',
-            _token: storedToken || ''
-        }).toString();
         fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -117,25 +117,55 @@ const ClientMasterTrackerList = () => {
     }, [fetchClient]);
 
 
+    const fetchSelectOptions = useCallback(() => {
+        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+        const storedToken = localStorage.getItem("_token");
 
-    // Search logic
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+
+        fetch(`${API_URL}/client-master-tracker/filter-options?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then((result) => {
+                console.log(result);
+                setOptions(result.filterOptions);
+            })
+            .catch((error) => console.error('Error fetching options:', error));
+    }, []);
+
+
+    useEffect(() => {
+        fetchSelectOptions();
+    }, [fetchSelectOptions])
+
+
+
     const filteredItems = data.filter(item => {
         return (
             item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase())
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+
         );
     });
 
-  
 
-    // Log the filtered items to the console
+
+    // const filteredOptions = filteredItems.filter(item =>
+    //     item.status.toLowerCase().includes(selectedStatus.toLowerCase())
+    // );
+
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -149,26 +179,106 @@ const ClientMasterTrackerList = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
     };
 
+
+    const renderPagination = () => {
+        const pageNumbers = [];
+
+        // Handle pagination with ellipsis
+        if (totalPages <= 5) {
+            // If there are 5 or fewer pages, show all page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.push(i);
+            }
+        } else {
+            // Always show the first page
+            pageNumbers.push(1);
+
+            // Show ellipsis if current page is greater than 3
+            if (currentPage > 3) {
+                pageNumbers.push('...');
+            }
+
+            // Show two pages around the current page
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pageNumbers.includes(i)) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            // Show ellipsis if current page is less than total pages - 2
+            if (currentPage < totalPages - 2) {
+                pageNumbers.push('...');
+            }
+
+            // Always show the last page
+            if (!pageNumbers.includes(totalPages)) {
+                pageNumbers.push(totalPages);
+            }
+        }
+
+        // Log to verify page numbers
+        console.log(pageNumbers);
+
+        return pageNumbers.map((number, index) => (
+            number === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+            ) : (
+                <button
+                    type="button"
+                    key={`page-${number}`} // Unique key for page buttons
+                    onClick={() => handlePageChange(number)}
+                    className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                >
+                    {number}
+                </button>
+            )
+        ));
+    };
+
     const handleClick = (branch_id) => {
         setBranchId(branch_id); // Set branch_id in context
         handleTabChange('tracker_status');
     };
 
+    const handleStatusChange = (event) => {
+        const selected = event.target.value;
+        fetchClient(selected);
 
+    };
+    const handleSelectChange = (e) => {
 
+        const selectedValue = e.target.value;
+        setItemPerPage(selectedValue)
+
+    }
 
 
     return (
         <>
             <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
 
-             
+                <div className='flex gap-4 justify-end p-4'>
+                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+                        <option value="">Select Any Status</option>
+                        {options.map((item, index) => {
+                            return item.status !== 'closed' ? (
+                                <option key={index} value={item.status}>
+                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                </option>
+                            ) : null;
+                        })}
+
+                    </select>
+                </div>
                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                    <option value="100">Show 100 Rows</option>
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                    <option value="10">10 Rows</option>
+                                    <option value="20">20 Rows</option>
+                                    <option value="50">50 Rows</option>
+                                    <option value="100">100 Rows</option>
                                     <option value="200">200 Rows</option>
                                     <option value="300">300 Rows</option>
                                     <option value="400">400 Rows</option>
@@ -213,7 +323,7 @@ const ClientMasterTrackerList = () => {
                                     <tr key={index}>
                                         <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                                             <input type="checkbox" className='me-2' />
-                                            {index + 1}
+                                            {index + 1 + (currentPage - 1) * itemsPerPage}
                                         </td>
                                         <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
                                         <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
@@ -225,9 +335,8 @@ const ClientMasterTrackerList = () => {
                                                 onClick={() => handleBranches(item.main_id)}>
                                                 {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                             </button>
-                                        
+
                                             <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2'>Delete</button>
-                                            <button className='bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white'>Excel</button>
                                             {expandedClient === item.main_id && (
                                                 branches[item.main_id]?.map((branch, branchIndex) => (
                                                     <tr key={branchIndex} className='w-full'>
@@ -260,16 +369,7 @@ const ClientMasterTrackerList = () => {
                         <MdArrowBackIosNew />
                     </button>
                     <div className="flex items-center">
-                        {Array.from({ length: totalPages }, (_, index) => (
-                            <button
-                                type="button"
-                                key={index + 1}
-                                onClick={() => handlePageChange(index + 1)}
-                                className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
+                        {renderPagination()}
                     </div>
                     <button
                         type="button"

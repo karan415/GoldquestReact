@@ -1,7 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback, } from 'react';
-import PaginationContext from './PaginationContext'
-import SearchBar from './SearchBar';
-import Pagination from './Pagination';
+import React, { useEffect, useState, } from 'react';
 import Swal from 'sweetalert2';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
@@ -13,6 +10,8 @@ import { useData } from './DataContext';
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ClientManagementList = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+
   const API_URL = useApi();
   const { setClientData } = useEditClient();
   const { setBranchEditData } = useEditBranch();
@@ -22,13 +21,29 @@ const ClientManagementList = () => {
   const toggleAccordions = (id) => {
     setIsOpen((prevId) => (prevId === id ? null : id));
   };
+  const handleSelectChange = (e) => {
+    const checkedStatus = e.target.value;
+    setItemPerPage(checkedStatus);
+  }
+
+  const filteredItems = listData.filter(item => {
+    return (
+      item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.contact_person_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.address.toLowerCase().includes(searchTerm.toLowerCase())
+
+    );
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(listData.length / itemsPerPage);
+  const [itemsPerPage, setItemPerPage] = useState(10);
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = listData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -279,193 +294,237 @@ const ClientManagementList = () => {
     });
   };
 
+
+
+
+
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-      <SearchBar />
+      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+        <div className="col">
+          <form action="">
+            <div className="flex gap-5 justify-between">
+              <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                <option value="10">10 Rows</option>
+                <option value="20">20 Rows</option>
+                <option value="50">50 Rows</option>
+                <option value="200">200 Rows</option>
+                <option value="300">300 Rows</option>
+                <option value="400">400 Rows</option>
+                <option value="500">500 Rows</option>
+              </select>
+              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+            </div>
+          </form>
+        </div>
+        <div className="col md:flex justify-end ">
+          <form action="">
+            <div className="flex md:items-stretch items-center  gap-3">
+              <input
+                type="search"
+                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
       <div className="overflow-x-auto py-6 px-4">
-        <table className="min-w-full">
-          <thead>
-            <tr className='bg-green-500'>
-              <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Name of Client Spoc</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Date of Service Agreement</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Contact Person</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Mobile</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Services</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Address</th>
-              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((item, index) => {
-              const services = JSON.parse(item.services); // Parse services from JSON
-              const showAllServices = showAllServicesState[item.main_id] || false; // Determine if all services should be shown
+        {
+          currentItems.length > 0 ? (
+            <>
+              <table className="min-w-full">
+                <thead>
+                  <tr className='bg-green-500'>
+                    <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Name of Client Spoc</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Date of Service Agreement</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Contact Person</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Mobile</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Services</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Address</th>
+                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.map((item, index) => {
+                    const services = JSON.parse(item.services); // Parse services from JSON
+                    const showAllServices = showAllServicesState[item.main_id] || false; // Determine if all services should be shown
 
-              // Check if services array is valid and has at least one item
-              const result = Array.isArray(services) && services.length > 0 ? services : [];
+                    // Check if services array is valid and has at least one item
+                    const result = Array.isArray(services) && services.length > 0 ? services : [];
 
-              // Determine the services to display based on the showAllServices flag
-              const displayedServices = showAllServices ? result : result.slice(0, 1);
-              return (
-                <tr key={item.main_id}>
-                  <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
-                    <input type="checkbox" className="me-2" />
-                    {index + 1}
-                  </td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name}</td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact}</td>
-                  <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
-                    {new Date(item.agreement_date).toLocaleString()}
-                  </td>
+                    // Determine the services to display based on the showAllServices flag
+                    const displayedServices = showAllServices ? result : result.slice(0, 1);
+                    return (
+                      <tr key={item.main_id}>
+                        <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
+                          <input type="checkbox" className="me-2" />
+                          {index + 1}
+                        </td>
+                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
+                        <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name}</td>
+                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact}</td>
+                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
+                          {new Date(item.agreement_date).toLocaleString()}
+                        </td>
 
-                  <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
-                  <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
-                  <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
-                    <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
-                      {result.length > 0 ? (
-                        <div>
-                          {displayedServices.map((service, idx) => (
-                            <div key={idx} className='flex gap-3'>
-                              <>
-                                {service.price ? (
-                                  <>
-                                    <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
-                                    <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
-                                  </>
-                                ) : (
-                                  <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
+                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
+                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
+                        <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
+                          <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
+                            {result.length > 0 ? (
+                              <div>
+                                {displayedServices.map((service, idx) => (
+                                  <div key={idx} className='flex gap-3'>
+                                    <>
+                                      {service.price ? (
+                                        <>
+                                          <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
+                                          <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
+                                        </>
+                                      ) : (
+                                        <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
+                                      )}
+
+                                      {service.packages && Object.keys(service.packages).length > 0 ? (
+                                        <p className='whitespace-nowrap capitalize text-left'>
+                                          Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
+                                        </p>
+                                      ) : (
+                                        <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
+                                      )}
+                                    </>
+                                  </div>
+                                ))}
+
+                                {result.length > 1 && !showAllServices && (
+                                  <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
+                                    Show more
+                                  </button>
                                 )}
-
-                                {service.packages && Object.keys(service.packages).length > 0 ? (
-                                  <p className='whitespace-nowrap capitalize text-left'>
-                                    Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
-                                  </p>
-                                ) : (
-                                  <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
+                                {showAllServices && (
+                                  <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
+                                    Show less
+                                  </button>
                                 )}
-                              </>
-                            </div>
-                          ))}
-
-                          {result.length > 1 && !showAllServices && (
-                            <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
-                              Show more
-                            </button>
-                          )}
-                          {showAllServices && (
-                            <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
-                              Show less
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <p className='whitespace-nowrap capitalize'>No services available.</p>
-                      )}
-                    </td>
-
-                  </td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
-                  <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap capitalize fullwidth">
-                    <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
-                    <Popup className='w-full' trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
-                      position="right center"
-                      onOpen={() => setClientData({
-                        customer_id: item.id || '',
-                        emails: item.emails || '',
-                        clientData: item.clientData || '',
-                        client_standard: item.client_standard || '',
-                        additional_login: item.additional_login || '',
-                        tat: item.tat_days || '',
-                        state: item.state || '',
-                        gstin: item.gst_number || '',
-                        address: item.address || '',
-                        username: item.username || '',
-                        state_code: item.state_code || '',
-                        agr_upload: item.agr_upload || '',
-                        client_spoc: item.single_point_of_contact || '',
-                        client_code: item.client_unique_id || '',
-                        company_name: item.name || '',
-                        mobile_number: item.mobile || '',
-                        contact_person: item.contact_person_name || '',
-                        date_agreement: item.agreement_date || '',
-                        agreement_period: item.agreement_duration || '',
-                        name_of_escalation: item.escalation_point_contact || '',
-                        custom_template: item.custom_template || '',
-                        custom_logo: item.custom_logo || '',
-                        custom_address: item.custom_address || '',
-                        services: item.services || [],
-
-                      })}
-                    >
-                      <ClientEditForm />
-                    </Popup>
-                    <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
-                    {item.branch_count > 1 ? (
-                      <button
-                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                        onClick={() => toggleAccordion(item.main_id)}
-                      >
-                        View Branches
-                      </button>
-
-                    ) : ('')}
-
-                    {openAccordionId === item.main_id && (
-                      branches.map((branch) => {
-                        const isActive = branch.status === 0;
-                        const isBlocked = branch.status === 1;
-
-                        return (
-                          <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
-                            <div
-                              className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
-                              id={branch.id}
-                              onClick={() => toggleAccordions(branch.id)}
-                            >
-                              <h3 className="branch_name">{branch.name}</h3>
-                            </div>
-                            {isOpen === branch.id && (
-                              <div className="accordion_body">
-                                <ul className='flex gap-2 items-center'>
-                                  <li>{branch.email}</li>
-                                  <Popup
-                                    trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
-                                    position="right center"
-                                    onOpen={() => setBranchEditData({
-                                      id: branch.id,
-                                      name: branch.name,
-                                      email: branch.email
-                                    })}
-                                  >
-                                    <BranchEditForm />
-                                  </Popup>
-                                  <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
-                                  {isActive && (
-                                    <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
-                                  )}
-                                  {isBlocked && (
-                                    <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2" onClick={() => unblockBranch(branch.id)}>Unblock</button>
-                                  )}
-                                </ul>
                               </div>
+                            ) : (
+                              <p className='whitespace-nowrap capitalize'>No services available.</p>
                             )}
-                          </div>
-                        )
-                      })
-                    )}
+                          </td>
+
+                        </td>
+                        <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
+                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap capitalize fullwidth">
+                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+                          <Popup className='w-full' trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
+                            position="right center"
+                            onOpen={() => setClientData({
+                              customer_id: item.id || '',
+                              emails: item.emails || '',
+                              clientData: item.clientData || '',
+                              client_standard: item.client_standard || '',
+                              additional_login: item.additional_login || '',
+                              tat: item.tat_days || '',
+                              state: item.state || '',
+                              gstin: item.gst_number || '',
+                              address: item.address || '',
+                              username: item.username || '',
+                              state_code: item.state_code || '',
+                              agr_upload: item.agr_upload || '',
+                              client_spoc: item.single_point_of_contact || '',
+                              client_code: item.client_unique_id || '',
+                              company_name: item.name || '',
+                              mobile_number: item.mobile || '',
+                              contact_person: item.contact_person_name || '',
+                              date_agreement: item.agreement_date || '',
+                              agreement_period: item.agreement_duration || '',
+                              name_of_escalation: item.escalation_point_contact || '',
+                              custom_template: item.custom_template || '',
+                              custom_logo: item.custom_logo || '',
+                              custom_address: item.custom_address || '',
+                              services: item.services || [],
+
+                            })}
+                          >
+                            <ClientEditForm />
+                          </Popup>
+                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                          {item.branch_count > 1 ? (
+                            <button
+                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                              onClick={() => toggleAccordion(item.main_id)}
+                            >
+                              View Branches
+                            </button>
+
+                          ) : ('')}
+
+                          {openAccordionId === item.main_id && (
+                            branches.map((branch) => {
+                              const isActive = branch.status === 0;
+                              const isBlocked = branch.status === 1;
+
+                              return (
+                                <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
+                                  <div
+                                    className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
+                                    id={branch.id}
+                                    onClick={() => toggleAccordions(branch.id)}
+                                  >
+                                    <h3 className="branch_name">{branch.name}</h3>
+                                  </div>
+                                  {isOpen === branch.id && (
+                                    <div className="accordion_body">
+                                      <ul className='flex gap-2 items-center'>
+                                        <li>{branch.email}</li>
+                                        <Popup
+                                          trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
+                                          position="right center"
+                                          onOpen={() => setBranchEditData({
+                                            id: branch.id,
+                                            name: branch.name,
+                                            email: branch.email
+                                          })}
+                                        >
+                                          <BranchEditForm />
+                                        </Popup>
+                                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
+                                        {isActive && (
+                                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
+                                        )}
+                                        {isBlocked && (
+                                          <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2" onClick={() => unblockBranch(branch.id)}>Unblock</button>
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })
+                          )}
 
 
 
-                  </td>
-                </tr>
+                        </td>
+                      </tr>
 
-              );
-            })}
-          </tbody>
-        </table>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
+          ) : (
+            <p className='text-center'>No Client Found</p>
+          )
+        }
         {loading && <p>Loading...</p>}
         {error && <p>{error}</p>}
         {listData.length === 0 && !loading && <p>No clients found.</p>}

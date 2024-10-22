@@ -1,44 +1,48 @@
-import React, { useContext, useEffect, useState } from 'react';
-import PaginationContext from './PaginationContext';
-import Pagination from './Pagination';
+import React, { useEffect, useState } from 'react';
 import { usePackage } from './PackageContext';
 import Swal from 'sweetalert2';
-import SearchBar from './SearchBar';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const PackageManagementList = () => {
+    const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const { editPackage, data, loading, fetchData, error, setError } = usePackage();
-
+    const [searchTerm, setSearchTerm] = useState('');
     const API_URL = useApi();
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+    const filteredItems = data.filter(item => {
+        return (
+            item.title.toLowerCase().includes(searchTerm.toLowerCase()) 
+        );
+    });
 
-    
-    const itemsPerPage = 10;
-    
-    
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-    
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
     const handlePageChange = (pageNumber) => {
-      setCurrentPage(pageNumber);
+        setCurrentPage(pageNumber);
     };
-    
+
     const showPrev = () => {
-      if (currentPage > 1) handlePageChange(currentPage - 1);
+        if (currentPage > 1) handlePageChange(currentPage - 1);
     };
-    
+
     const showNext = () => {
-      if (currentPage < totalPages) handlePageChange(currentPage + 1);
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
     };
 
     const handleEdit = (pkg) => {
         editPackage(pkg);
     };
+    const handleSelectChange = (e) => {
+        const checkedStatus = e.target.value;
+        setItemPerPage(checkedStatus);
+    }
 
 
 
@@ -104,7 +108,39 @@ const PackageManagementList = () => {
         <>
             <div className="overflow-x-auto py-4 px-4">
                 {error && <div className="text-red-500 text-center">{error}</div>}
-                <SearchBar />
+                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                    <div className="col">
+                        <form action="">
+                            <div className="flex gap-5 justify-between">
+                            <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                            <option value="10">10 Rows</option>
+                            <option value="20">20 Rows</option>
+                            <option value="50">50 Rows</option>
+                            <option value="200">200 Rows</option>
+                            <option value="300">300 Rows</option>
+                            <option value="400">400 Rows</option>
+                            <option value="500">500 Rows</option>
+                        </select>
+                                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div className="col md:flex justify-end ">
+                        <form action="">
+                            <div className="flex md:items-stretch items-center  gap-3">
+                                <input
+                                    type="search"
+                                    className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                    placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
                 <table className="min-w-full">
                     <thead>
                         <tr className='bg-green-500'>
@@ -119,7 +155,7 @@ const PackageManagementList = () => {
                             currentItems.map((item, index) => (
                                 <tr key={item.id}>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
-                                        { index + 1}
+                                        {index + 1}
                                     </td>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
                                         {item.title}
@@ -162,29 +198,29 @@ const PackageManagementList = () => {
                     disabled={currentPage === 1}
                     className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     aria-label="Previous page" >
-                <MdArrowBackIosNew />
-            </button>
-            <div className="flex items-center" >
-                {
-                    Array.from({ length: totalPages }, (_, index) => (
-                        <button
-                            type="button"
-                            key={index + 1}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
-            </div>
-            <button
-                type="button"
-                onClick={showNext}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                aria-label="Next page">
-            <MdArrowForwardIos />
-        </button>
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center" >
+                    {
+                        Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                type="button"
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                </div>
+                <button
+                    type="button"
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page">
+                    <MdArrowForwardIos />
+                </button>
             </div>
 
         </>

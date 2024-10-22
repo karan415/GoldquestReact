@@ -12,7 +12,7 @@ const ServiceMangement = () => {
            <ServiceForm/>
           </div>
           <div className="md:col-span-3 bg-white shadow-md rounded-md  p-3 ">
-            <SearchBar />
+         
             <ServiceList />
           </div>
         </div>

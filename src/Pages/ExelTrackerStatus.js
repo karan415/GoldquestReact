@@ -3,10 +3,14 @@ import { useApi } from '../ApiContext';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
+import { useSidebar } from '../Sidebar/SidebarContext';
+
 import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ExelTrackerStatus = () => {
+    const { handleTabChange } = useSidebar();
+    const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [allInputDetails, setAllInputDetails] = useState([]);
@@ -22,7 +26,6 @@ const ExelTrackerStatus = () => {
     const [error, setError] = useState(null);
     const [serviceHeadings, setServiceHeadings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
     const navigate = useNavigate();
     const { branch_id, setApplicationId, setServiceId } = useContext(BranchContextExel);
     const API_URL = useApi();
@@ -341,7 +344,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`${API_URL}/client-master-tracker/filter-options?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`${API_URL}/client-master-tracker/branch-filter-options?branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -485,6 +488,16 @@ const ExelTrackerStatus = () => {
         ));
     };
 
+
+    const handleSelectChange = (e) => {
+
+        const selectedValue = e.target.value;
+        setItemPerPage(selectedValue)
+    }
+
+    const goBack = () => {
+        handleTabChange('client_master');
+    }
     return (
         <>
             <div className='p-3 my-14'>
@@ -493,12 +506,13 @@ const ExelTrackerStatus = () => {
                 <div className='flex gap-4 justify-end p-4'>
                     <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
                         {options.map((item, index) => {
-                            return (
-                                <>
-                                    <option value={item.status}>{item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}</option>
-                                </>
-                            )
+                            return item.status !== 'closed' ? (
+                                <option key={index} value={item.status}>
+                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                </option>
+                            ) : null;
                         })}
+
 
                     </select>
                 </div>
@@ -507,8 +521,11 @@ const ExelTrackerStatus = () => {
                         <div className="col">
                             <form action="">
                                 <div className="flex gap-5 justify-between">
-                                    <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                        <option value="100">Show 100 Rows</option>
+                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                        <option value="10">10 Rows</option>
+                                        <option value="20">20 Rows</option>
+                                        <option value="50">50 Rows</option>
+                                        <option value="100">100 Rows</option>
                                         <option value="200">200 Rows</option>
                                         <option value="300">300 Rows</option>
                                         <option value="400">400 Rows</option>
@@ -573,6 +590,7 @@ const ExelTrackerStatus = () => {
                                                     >
                                                         {expandedRows === index ? "Hide Details" : "View More"}
                                                     </button>
+                                                    <button onClick={goBack} className="bg-green-500 mx-2 hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
                                                 </td>
                                             </tr>
                                             {expandedRows === index && (
@@ -603,6 +621,7 @@ const ExelTrackerStatus = () => {
 
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">
                                                                             <button className="bg-red-500 hover:bg-red-400 text-white rounded-md p-3">Delete</button>
+
                                                                         </td>
                                                                     </tr>
                                                                 </tbody>

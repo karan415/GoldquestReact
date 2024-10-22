@@ -6,19 +6,31 @@ import { useApi } from '../ApiContext';
 const ServiceList = () => {
     const API_URL = useApi();
     const { editService, fetchData, loading, data, error } = useService();
-
+    const [itemsPerPage, setItemPerPage] = useState(10);
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredItems = data.filter(item => {
+        return (
+            item.title.toLowerCase().includes(searchTerm.toLowerCase())
+
+        );
+    });
+    const handleSelectChange = (e) => {
+        const checkedStatus = e.target.value;
+        setItemPerPage(checkedStatus);
+    }
 
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -101,6 +113,41 @@ const ServiceList = () => {
         <div className='overflow-auto'>
             {loading && <p>Loading...</p>}
             {error && <p>{error}</p>}
+
+
+            <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                <div className="col">
+                    <form action="">
+                        <div className="flex gap-5 justify-between">
+                            <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                <option value="10">10 Rows</option>
+                                <option value="20">20 Rows</option>
+                                <option value="50">50 Rows</option>
+                                <option value="200">200 Rows</option>
+                                <option value="300">300 Rows</option>
+                                <option value="400">400 Rows</option>
+                                <option value="500">500 Rows</option>
+                            </select>
+                            <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                        </div>
+                    </form>
+                </div>
+                <div className="col md:flex justify-end ">
+                    <form action="">
+                        <div className="flex md:items-stretch items-center  gap-3">
+                            <input
+                                type="search"
+                                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
             <table className="min-w-full">
                 <thead>
                     <tr className='bg-green-500'>
