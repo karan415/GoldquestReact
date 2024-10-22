@@ -57,7 +57,7 @@ const CandidateApplications = () => {
         Promise.all(
             servicesArray.map(serviceId => {
                 return fetch(
-                    `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: 'GET',
                         headers: {
@@ -104,7 +104,7 @@ const CandidateApplications = () => {
                         });
 
                         if (parsedJson.db_table && parsedJson.db_table.trim() !== '') {
-                            const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${application_id}&db_table=${parsedJson.db_table}&admin_id=${admin_id}&_token=${storedToken}`;
+                            const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${application_id}&db_table=${parsedJson.db_table}&admin_id=${admin_id}&_token=${storedToken}`;
 
                             return fetch(annexureURL)
                                 .then(annexureResponse => {
@@ -266,7 +266,7 @@ const CandidateApplications = () => {
             redirect: "follow"
         };
 
-        const url = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${application_id}&db_table=${db_name}&admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${application_id}&db_table=${db_name}&admin_id=${admin_id}&_token=${storedToken}`;
 
         return fetch(url, requestOptions)
             .then((response) => {
@@ -302,7 +302,7 @@ const CandidateApplications = () => {
         }
 
         fetch(
-            `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${application_id}&branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`,
+            `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${application_id}&branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`,
             {
                 method: 'GET',
                 headers: {
@@ -486,7 +486,7 @@ const CandidateApplications = () => {
 
             try {
                 await axios.post(
-                    `https://goldquestreact.onrender.com/client-master-tracker/upload`,
+                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/upload`,
                     customerLogoFormData,
                     {
                         headers: {
@@ -569,7 +569,7 @@ const CandidateApplications = () => {
             body: raw,
         };
 
-        fetch(`https://goldquestreact.onrender.com/client-master-tracker/generate-report`, requestOptions)
+        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`, requestOptions)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

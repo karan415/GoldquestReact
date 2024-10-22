@@ -46,7 +46,7 @@ const App = () => {
                         <DropBoxProvider>
                           <PackageProvider>
                             <ServiceProvider>
-                              <Router basename='/demo/Goldquest'>
+                              <Router basename='/'>
                                 <Routes>
                                   <Route path='/' element={<Admin><Render /></Admin>} />
                                   <Route path='/customer-login' element={<CustomerLogin />} />

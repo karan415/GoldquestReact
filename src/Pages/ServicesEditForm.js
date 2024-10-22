@@ -122,18 +122,35 @@ const ServiceEditForm = () => {
 
 
         setClientData(prev => ({ ...prev, services: prefilledData }));
+<<<<<<< HEAD
        
+=======
+        console.log('serviceData-before-change', updatedServiceData);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
         
 
 
     }, [serviceData, clientData.services, priceData,]);
+<<<<<<< HEAD
    
 
 
 
 
     const handleCheckboxChange = (serviceId) => {
+=======
+    console.log('selectedServices', selectedServices);
+
+
+    console.log('paginated', paginated);
+    console.log('selectedPackages', selectedPackages)
+
+
+
+    const handleCheckboxChange = (serviceId) => {
+        console.log("Current Selection Before Change:", selectedServices);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
         setSelectedServices((prev) => {
             const isCurrentlySelected = !!prev[serviceId];
@@ -142,7 +159,12 @@ const ServiceEditForm = () => {
                 ...prev,
                 [serviceId]: !isCurrentlySelected,
             };
+<<<<<<< HEAD
 
+=======
+
+            console.log("Updated Selection:", updatedSelection);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
 
             const updatedServices = paginated.map(service => {
@@ -178,7 +200,12 @@ const ServiceEditForm = () => {
 
 
             const filteredServices = updatedServices.filter(service => updatedSelection[service.serviceId]);
+<<<<<<< HEAD
 
+=======
+
+            console.log("Filtered Services:", filteredServices);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
 
             setClientData(prev => ({ ...prev, services: filteredServices }));
@@ -241,10 +268,18 @@ const ServiceEditForm = () => {
 
     const handleChange = (e, serviceId) => {
         const { name, value } = e.target;
+<<<<<<< HEAD
+=======
+        console.log(`Changing ${name} for service ${serviceId} to ${value}`);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
         setPriceData(prev => ({ ...prev, [serviceId]: { [name]: value } }));
 
         setClientData(prev => {
+<<<<<<< HEAD
+=======
+            console.log("Current Client Data Services:", prev.services); // Log current services
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
             const updatedServices = (Array.isArray(prev.services) ? prev.services : []).map(service => {
                 if (service.serviceId === serviceId) {
@@ -253,6 +288,10 @@ const ServiceEditForm = () => {
                 return service;
             });
 
+<<<<<<< HEAD
+=======
+            console.log("Updated Client Data Services:", updatedServices);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
             return { ...prev, services: updatedServices };
         });
     };

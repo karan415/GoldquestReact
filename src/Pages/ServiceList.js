@@ -6,12 +6,17 @@ import { useApi } from '../ApiContext';
 const ServiceList = () => {
     const API_URL = useApi();
     const { editService, fetchData, loading, data, error } = useService();
+<<<<<<< HEAD
     const [itemsPerPage, setItemPerPage] = useState(10);
+=======
+
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
     const [currentPage, setCurrentPage] = useState(1);
+<<<<<<< HEAD
 
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -31,6 +36,15 @@ const ServiceList = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+=======
+    const itemsPerPage = 10;
+
+
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -222,5 +236,6 @@ const ServiceList = () => {
         </div>
     );
 };
+
 
 export default ServiceList;

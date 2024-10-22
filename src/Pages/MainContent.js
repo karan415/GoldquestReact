@@ -13,7 +13,11 @@ import ExelTracker from '../Pages/ExelTracker'; // Excel Tracker component
 import TatDelay from '../Pages/TatDelay'; // TAT Delay component
 import Acknowledgement from '../Pages/Acknowledgement'; // Acknowledgement component
 import UpdatePassword from '../Pages/UpdatePassword'; // Update Password component
+<<<<<<< HEAD
 import Invoice from './CreateInvoice'; // Invoice component
+=======
+import Invoice from '../Pages/Invoice'; // Invoice component
+>>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component

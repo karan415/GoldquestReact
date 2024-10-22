@@ -34,6 +34,8 @@ export const ClientEditProvider = ({ children }) => {
         services: [],
     });
 
+  console.log('clientData',clientData)
+
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
 
 
