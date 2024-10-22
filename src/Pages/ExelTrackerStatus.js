@@ -9,15 +9,9 @@ import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ExelTrackerStatus = () => {
-<<<<<<< HEAD
     const { handleTabChange } = useSidebar();
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
-=======
-    const [selectedStatus, setSelectedStatus] = useState('');
-
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const [searchTerm, setSearchTerm] = useState('');
     const [allInputDetails, setAllInputDetails] = useState([]);
     const [parentCustomer, setParentCustomer] = useState([]);
@@ -32,20 +26,12 @@ const ExelTrackerStatus = () => {
     const [error, setError] = useState(null);
     const [serviceHeadings, setServiceHeadings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-<<<<<<< HEAD
-=======
-    const itemsPerPage = 10;
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const navigate = useNavigate();
     const { branch_id, setApplicationId, setServiceId } = useContext(BranchContextExel);
     const API_URL = useApi();
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-<<<<<<< HEAD
     const [options, setOptions] = useState([]);
-=======
-    const [options,setOptions] = useState([]);
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const requestOptions = {
         method: "GET",
         redirect: "follow",
@@ -352,27 +338,17 @@ const ExelTrackerStatus = () => {
     const fetchSelectOptions = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
         const requestOptions = {
             method: "GET",
             redirect: "follow"
         };
-<<<<<<< HEAD
 
         fetch(`${API_URL}/client-master-tracker/branch-filter-options?branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-=======
-    
-        fetch(`${API_URL}/client-master-tracker/filter-options?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-<<<<<<< HEAD
                 return response.json();
             })
             .then((result) => {
@@ -387,23 +363,7 @@ const ExelTrackerStatus = () => {
         fetchSelectOptions();
     }, [fetchSelectOptions])
 
-=======
-                return response.json(); 
-            })
-            .then((result) =>{
-                console.log(result);
-                setOptions(result.filterOptions);
-            } )
-            .catch((error) => console.error('Error fetching options:', error));
-    }, []);
-    
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
-    useEffect(() => {
-        fetchSelectOptions();
-    }, [fetchSelectOptions])
-
- 
 
     const fetchCustomers = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -434,105 +394,11 @@ const ExelTrackerStatus = () => {
 
         fetchCustomers();
     }, [fetchCustomers]);
-<<<<<<< HEAD
 
     const handleStatusChange = (event) => {
         setSelectedStatus(event.target.value);
     };
-=======
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
-  const handleStatusChange = (event) => {
-        setSelectedStatus(event.target.value);
-    };
-
-    const filteredOptions = options.filter(item =>
-        item.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-
-    const filteredItems = applicationData.filter(item => {
-        return (
-            item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
-
-
-
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
-    const showPrev = () => {
-        if (currentPage > 1) handlePageChange(currentPage - 1);
-    };
-
-    const showNext = () => {
-        if (currentPage < totalPages) handlePageChange(currentPage + 1);
-    };
-
-// Pagination display logic
-const renderPagination = () => {
-    const pageNumbers = [];
-
-    // Handle pagination with ellipsis
-    if (totalPages <= 5) {
-        // If there are 5 or fewer pages, show all page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            pageNumbers.push(i);
-        }
-    } else {
-        // Always show the first page
-        pageNumbers.push(1);
-
-        // Show ellipsis if current page is greater than 3
-        if (currentPage > 3) {
-            pageNumbers.push('...');
-        }
-
-        // Show two pages around the current page
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            if (!pageNumbers.includes(i)) {
-                pageNumbers.push(i);
-            }
-        }
-
-        // Show ellipsis if current page is less than total pages - 2
-        if (currentPage < totalPages - 2) {
-            pageNumbers.push('...');
-        }
-
-        // Always show the last page
-        if (!pageNumbers.includes(totalPages)) {
-            pageNumbers.push(totalPages);
-        }
-    }
-
-    // Log to verify page numbers
-    console.log(pageNumbers); 
-
-     return pageNumbers.map((number, index) => (
-        number === '...' ? (
-            <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
-        ) : (
-            <button
-                type="button"
-                key={`page-${number}`} // Unique key for page buttons
-                onClick={() => handlePageChange(number)}
-                className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-            >
-                {number}
-            </button>
-        )
-    ));
-};
 
     const filteredItems = applicationData.filter(item => {
         return (
@@ -634,7 +500,6 @@ const renderPagination = () => {
     }
     return (
         <>
-<<<<<<< HEAD
             <div className='p-3 my-14'>
                 {loading && <div className="loader">Loading...</div>}
                 {error && <div>Error: {error}</div>}
@@ -647,111 +512,10 @@ const renderPagination = () => {
                                 </option>
                             ) : null;
                         })}
-=======
-            <div>
-                {loading && <div className="loader">Loading...</div>} {/* Your loading spinner here */}
-                {error && <div>Error: {error}</div>}
-                  <select  id="" name='status' onChange={handleStatusChange}   className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0' >
-                {options.map((item,index)=>{
-                    return(
-                        <>
-                        <option   value={item.status}>{item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}</option>
-                        </>
-                    )
-                })}
-                  
-                </select>
-                 
-                <div className="overflow-x-auto my-14 mx-4 bg-white shadow-md rounded-md">
-                    <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-                        <div className="col">
-                            <form action="">
-                                <div className="flex gap-5 justify-between">
-                                    <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                        <option value="100">Show 100 Rows</option>
-                                        <option value="200">200 Rows</option>
-                                        <option value="300">300 Rows</option>
-                                        <option value="400">400 Rows</option>
-                                        <option value="500">500 Rows</option>
-                                    </select>
-                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div className="col md:flex justify-end ">
-                            <form action="">
-                                <div className="flex md:items-stretch items-center  gap-3">
-                                    <input
-                                        type="search"
-                                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                        placeholder='Search by Client Code, Company Name, or Client Spoc'
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
-                                </div>
-                            </form>
-                        </div>
-
-                    </div>
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className='bg-green-500'>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">SL NO</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Application ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Initiation Date</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Download Status</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Overall Status</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Report Data</th>
-                                <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((item, index) => (
-                                <React.Fragment key={item.id}>
-                                    <tr>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <input type="checkbox" className='me-2' />     {index + 1 + (currentPage - 1) * itemsPerPage}
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.application_id}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <button
-                                                className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white"
-                                                onClick={() => handleToggle(index, item.services, item.id)}
-                                            >
-                                                {expandedRows === index ? "Hide Details" : "View More"}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {expandedRows === index && (
-                                        <tr>
-                                            <td colSpan="9" className="p-0">
-                                                <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
-                                                    <table className="min-w-full max-w-full bg-gray-100">
-                                                        <thead>
-                                                            <tr>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                    <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
-                                                                ))}
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
 
                     </select>
                 </div>
-<<<<<<< HEAD
                 <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
@@ -876,8 +640,6 @@ const renderPagination = () => {
                         <><p className='text-center p-5'>No Data Available</p></>
                     )}
                 </div>
-=======
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                 <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
                     <button
                         type='button'

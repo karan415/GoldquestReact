@@ -7,18 +7,13 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ExternalLoginData = () => {
   const { listData, fetchData, toggleAccordion, branches, openAccordionId } = useData();
   const [currentPage, setCurrentPage] = useState(1);
-<<<<<<< HEAD
   const [itemsPerPage, setItemPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-=======
-  const itemsPerPage = 10;
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-<<<<<<< HEAD
 
   const handleSelectChange = (e) => {
     const checkedStatus = e.target.value;
@@ -39,12 +34,6 @@ const filteredItems = listData.filter(item => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-=======
-  const totalPages = Math.ceil(listData.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = listData.slice(indexOfFirstItem, indexOfLastItem);
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -94,14 +83,13 @@ const filteredItems = listData.filter(item => {
 
             </div>
       {listData.length === 0 ? (
-        <p className='text-center'>Loading.....</p>
+        <p className='text-center'>Loading...</p>
       ) : (
         <div className="overflow-x-auto py-6 px-4">
          {currentItems.length > 0 ?(
           <>
           
           <table className="min-w-full">
-<<<<<<< HEAD
           <thead>
             <tr className='bg-green-500 border'>
               <th className="py-3 px-4 border-b text-white text-left uppercase">SL</th>
@@ -146,24 +134,6 @@ const filteredItems = listData.filter(item => {
                       >
                         Go
                       </Link>
-=======
-            <thead>
-              <tr className='bg-green-500 border'>
-                <th className="py-3 px-4 border-b text-white text-left uppercase">SL</th>
-                <th className="py-3 px-4 border-b text-white text-left uppercase">Client Code</th>
-                <th className="py-3 px-4 border-b text-white text-left uppercase">Company Name</th>
-                <th className="py-3 px-4 border-b text-white text-left uppercase">Mobile</th>
-                <th className="py-3 px-4 border-b text-white text-center uppercase">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((item, index) => (
-                <React.Fragment key={item.main_id}>
-                  <tr className='border'>
-                    <td className="py-3 px-4 border-b text-left whitespace-nowrap capitalize">
-                      <input type="checkbox" className="me-2" />
-                      {index + 1 + indexOfFirstItem}
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                     </td>
                     <td className="py-2 px-4 border-b whitespace-nowrap text-center">
                       <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">Delete</button>
@@ -199,32 +169,6 @@ const filteredItems = listData.filter(item => {
                   {index + 1}
                 </button>
               ))}
-<<<<<<< HEAD
-=======
-            </tbody>
-          </table>
-
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-            <button
-              onClick={showPrev}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              aria-label="Previous page"
-            >
-              <MdArrowBackIosNew />
-            </button>
-            <div className="flex items-center">
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}                        >
-
-                  {index + 1}
-                </button>
-              ))}
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
             </div>
             <button
               onClick={showNext}

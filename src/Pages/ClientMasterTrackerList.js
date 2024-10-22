@@ -1,5 +1,4 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { useApi } from '../ApiContext';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
@@ -7,18 +6,6 @@ import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ClientMasterTrackerList = () => {
     const [searchTerm, setSearchTerm] = useState('');
-=======
-import SearchBar from './SearchBar';
-import { Link } from 'react-router-dom';
-import { useApi } from '../ApiContext';
-import Swal from 'sweetalert2';
-import { useSidebar } from '../Sidebar/SidebarContext';
-import { BranchContextExel } from './BranchContextExel'; // Import BranchContextExel
-import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
-const ClientMasterTrackerList = () => {
-    const [selectedStatus, setSelectedStatus] = useState('');
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
     const { handleTabChange } = useSidebar();
@@ -26,25 +13,11 @@ const ClientMasterTrackerList = () => {
     const [, setError] = useState(null);
     const [data, setData] = useState([]);
     const [branches, setBranches] = useState({});
-<<<<<<< HEAD
     const [expandedClient, setExpandedClient] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [options, setOptions] = useState([]);
     const [itemsPerPage, setItemPerPage] = useState(10)
     const fetchClient = useCallback((selected) => {
-=======
-    const [expandedClient, setExpandedClient] = useState(null); // State to track expanded client
-    const [currentPage, setCurrentPage] = useState(1);
-    const [options,setOptions] = useState([]);
-
-    //for searching
-
-    const [searchTerm, setSearchTerm] = useState('');
-
-
-    const itemsPerPage = 10;
-    const fetchClient = useCallback(() => {
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
@@ -144,7 +117,6 @@ const ClientMasterTrackerList = () => {
     }, [fetchClient]);
 
 
-<<<<<<< HEAD
     const fetchSelectOptions = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
@@ -189,32 +161,12 @@ const ClientMasterTrackerList = () => {
     //     item.status.toLowerCase().includes(selectedStatus.toLowerCase())
     // );
 
-=======
-
-    // Search logic
-    const filteredItems = data.filter(item => {
-        return (
-            item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
-
-  
-
-    // Log the filtered items to the console
-    console.log('Filtered Items:', filteredItems);
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -226,7 +178,6 @@ const ClientMasterTrackerList = () => {
     const showNext = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
     };
-<<<<<<< HEAD
 
 
     const renderPagination = () => {
@@ -283,15 +234,12 @@ const ClientMasterTrackerList = () => {
             )
         ));
     };
-=======
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
     const handleClick = (branch_id) => {
         setBranchId(branch_id); // Set branch_id in context
         handleTabChange('tracker_status');
     };
 
-<<<<<<< HEAD
     const handleStatusChange = (event) => {
         const selected = event.target.value;
         fetchClient(selected);
@@ -303,17 +251,12 @@ const ClientMasterTrackerList = () => {
         setItemPerPage(selectedValue)
 
     }
-=======
-
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
 
 
     return (
         <>
             <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
 
-<<<<<<< HEAD
                 <div className='flex gap-4 justify-end p-4'>
                     <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
                         <option value="">Select Any Status</option>
@@ -327,23 +270,15 @@ const ClientMasterTrackerList = () => {
 
                     </select>
                 </div>
-=======
-             
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-<<<<<<< HEAD
                                 <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
                                     <option value="100">100 Rows</option>
-=======
-                                <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                    <option value="100">Show 100 Rows</option>
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                                     <option value="200">200 Rows</option>
                                     <option value="300">300 Rows</option>
                                     <option value="400">400 Rows</option>
@@ -400,11 +335,7 @@ const ClientMasterTrackerList = () => {
                                                 onClick={() => handleBranches(item.main_id)}>
                                                 {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                             </button>
-<<<<<<< HEAD
 
-=======
-                                        
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                                             <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2'>Delete</button>
                                             {expandedClient === item.main_id && (
                                                 branches[item.main_id]?.map((branch, branchIndex) => (
@@ -438,20 +369,7 @@ const ClientMasterTrackerList = () => {
                         <MdArrowBackIosNew />
                     </button>
                     <div className="flex items-center">
-<<<<<<< HEAD
                         {renderPagination()}
-=======
-                        {Array.from({ length: totalPages }, (_, index) => (
-                            <button
-                                type="button"
-                                key={index + 1}
-                                onClick={() => handlePageChange(index + 1)}
-                                className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                     </div>
                     <button
                         type="button"

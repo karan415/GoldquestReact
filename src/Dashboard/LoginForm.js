@@ -161,10 +161,7 @@ const LoginForm = () => {
         </p>
       </div>
     
-<<<<<<< HEAD
      
-=======
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
       {message && <p className="text-red-500 text-center mt-4">{message}</p>}
     </div>
   );
