@@ -8,8 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ExelTrackerStatus = () => {
     const [selectedStatus, setSelectedStatus] = useState('');
-
-
     const [searchTerm, setSearchTerm] = useState('');
     const [allInputDetails, setAllInputDetails] = useState([]);
     const [parentCustomer, setParentCustomer] = useState([]);
@@ -30,7 +28,7 @@ const ExelTrackerStatus = () => {
     const API_URL = useApi();
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-    const [options,setOptions] = useState([]);
+    const [options, setOptions] = useState([]);
     const requestOptions = {
         method: "GET",
         redirect: "follow",
@@ -337,32 +335,32 @@ const ExelTrackerStatus = () => {
     const fetchSelectOptions = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-    
+
         const requestOptions = {
             method: "GET",
             redirect: "follow"
         };
-    
+
         fetch(`${API_URL}/client-master-tracker/filter-options?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                return response.json(); 
+                return response.json();
             })
-            .then((result) =>{
+            .then((result) => {
                 console.log(result);
                 setOptions(result.filterOptions);
-            } )
+            })
             .catch((error) => console.error('Error fetching options:', error));
     }, []);
-    
+
 
     useEffect(() => {
         fetchSelectOptions();
     }, [fetchSelectOptions])
 
- 
+
 
     const fetchCustomers = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -394,13 +392,9 @@ const ExelTrackerStatus = () => {
         fetchCustomers();
     }, [fetchCustomers]);
 
-  const handleStatusChange = (event) => {
+    const handleStatusChange = (event) => {
         setSelectedStatus(event.target.value);
     };
-
-    const filteredOptions = options.filter(item =>
-        item.status.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
 
     const filteredItems = applicationData.filter(item => {
@@ -413,10 +407,15 @@ const ExelTrackerStatus = () => {
 
 
 
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    const filteredOptions = filteredItems.filter(item =>
+        item.status.toLowerCase().includes(selectedStatus.toLowerCase())
+    );
+
+
+    const totalPages = Math.ceil(filteredOptions.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredOptions.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -430,79 +429,80 @@ const ExelTrackerStatus = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
     };
 
-// Pagination display logic
-const renderPagination = () => {
-    const pageNumbers = [];
 
-    // Handle pagination with ellipsis
-    if (totalPages <= 5) {
-        // If there are 5 or fewer pages, show all page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            pageNumbers.push(i);
-        }
-    } else {
-        // Always show the first page
-        pageNumbers.push(1);
+    const renderPagination = () => {
+        const pageNumbers = [];
 
-        // Show ellipsis if current page is greater than 3
-        if (currentPage > 3) {
-            pageNumbers.push('...');
-        }
-
-        // Show two pages around the current page
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            if (!pageNumbers.includes(i)) {
+        // Handle pagination with ellipsis
+        if (totalPages <= 5) {
+            // If there are 5 or fewer pages, show all page numbers
+            for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
+            }
+        } else {
+            // Always show the first page
+            pageNumbers.push(1);
+
+            // Show ellipsis if current page is greater than 3
+            if (currentPage > 3) {
+                pageNumbers.push('...');
+            }
+
+            // Show two pages around the current page
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pageNumbers.includes(i)) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            // Show ellipsis if current page is less than total pages - 2
+            if (currentPage < totalPages - 2) {
+                pageNumbers.push('...');
+            }
+
+            // Always show the last page
+            if (!pageNumbers.includes(totalPages)) {
+                pageNumbers.push(totalPages);
             }
         }
 
-        // Show ellipsis if current page is less than total pages - 2
-        if (currentPage < totalPages - 2) {
-            pageNumbers.push('...');
-        }
+        // Log to verify page numbers
+        console.log(pageNumbers);
 
-        // Always show the last page
-        if (!pageNumbers.includes(totalPages)) {
-            pageNumbers.push(totalPages);
-        }
-    }
-
-    // Log to verify page numbers
-    console.log(pageNumbers); 
-
-     return pageNumbers.map((number, index) => (
-        number === '...' ? (
-            <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
-        ) : (
-            <button
-                type="button"
-                key={`page-${number}`} // Unique key for page buttons
-                onClick={() => handlePageChange(number)}
-                className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-            >
-                {number}
-            </button>
-        )
-    ));
-};
+        return pageNumbers.map((number, index) => (
+            number === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+            ) : (
+                <button
+                    type="button"
+                    key={`page-${number}`} // Unique key for page buttons
+                    onClick={() => handlePageChange(number)}
+                    className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                >
+                    {number}
+                </button>
+            )
+        ));
+    };
 
     return (
         <>
-            <div>
-                {loading && <div className="loader">Loading...</div>} {/* Your loading spinner here */}
+            <div className='p-3 my-14'>
+                {loading && <div className="loader">Loading...</div>}
                 {error && <div>Error: {error}</div>}
-                  <select  id="" name='status' onChange={handleStatusChange}   className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0' >
-                {options.map((item,index)=>{
-                    return(
-                        <>
-                        <option   value={item.status}>{item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}</option>
-                        </>
-                    )
-                })}
-                  
-                </select>
-                 
-                <div className="overflow-x-auto my-14 mx-4 bg-white shadow-md rounded-md">
+                <div className='flex gap-4 justify-end p-4'>
+                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+                        {options.map((item, index) => {
+                            return (
+                                <>
+                                    <option value={item.status}>{item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}</option>
+                                </>
+                            )
+                        })}
+
+                    </select>
+                </div>
+                <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
@@ -534,85 +534,92 @@ const renderPagination = () => {
                         </div>
 
                     </div>
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className='bg-green-500'>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">SL NO</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Application ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Initiation Date</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Download Status</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Overall Status</th>
-                                <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Report Data</th>
-                                <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.map((item, index) => (
-                                <React.Fragment key={item.id}>
-                                    <tr>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <input type="checkbox" className='me-2' />     {index + 1 + (currentPage - 1) * itemsPerPage}
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.application_id}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                            <button
-                                                className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white"
-                                                onClick={() => handleToggle(index, item.services, item.id)}
-                                            >
-                                                {expandedRows === index ? "Hide Details" : "View More"}
-                                            </button>
-                                        </td>
+                    {currentItems.length > 0 ? (
+                        <>
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className='bg-green-500'>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">SL NO</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Application ID</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Initiation Date</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Download Status</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Overall Status</th>
+                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Report Data</th>
+                                        <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
                                     </tr>
-                                    {expandedRows === index && (
-                                        <tr>
-                                            <td colSpan="9" className="p-0">
-                                                <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
-                                                    <table className="min-w-full max-w-full bg-gray-100">
-                                                        <thead>
-                                                            <tr>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                    <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
-                                                                ))}
+                                </thead>
+                                <tbody>
+                                    {currentItems.map((item, index) => (
+                                        <React.Fragment key={item.id}>
+                                            <tr>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    <input type="checkbox" className='me-2' />     {index + 1 + (currentPage - 1) * itemsPerPage}
+                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.application_id}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
+                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    <button
+                                                        className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white"
+                                                        onClick={() => handleToggle(index, item.services, item.id)}
+                                                    >
+                                                        {expandedRows === index ? "Hide Details" : "View More"}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {expandedRows === index && (
+                                                <tr>
+                                                    <td colSpan="9" className="p-0">
+                                                        <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
+                                                            <table className="min-w-full max-w-full bg-gray-100">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
+                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
+                                                                            <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
+                                                                        ))}
 
-                                                                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
-                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
-                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
-                                                                {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                    <td key={index} className=" py-3 px-4 border-b whitespace-nowrap capitalize">{value?.status || 'N/A'}</td>
-                                                                ))}
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
+                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
+                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
+                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
+                                                                            <td key={index} className=" py-3 px-4 border-b whitespace-nowrap capitalize">{value?.status || 'N/A'}</td>
+                                                                        ))}
 
-                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize">
-                                                                    <button className="bg-red-500 hover:bg-red-400 text-white rounded-md p-3">Delete</button>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </React.Fragment>
-                            ))}
-                        </tbody>
-                    </table>
+                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">
+                                                                            <button className="bg-red-500 hover:bg-red-400 text-white rounded-md p-3">Delete</button>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                        </>) : (
+
+                        <><p className='text-center p-5'>No Data Available</p></>
+                    )}
                 </div>
                 <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
                     <button

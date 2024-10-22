@@ -122,22 +122,18 @@ const ServiceEditForm = () => {
 
 
         setClientData(prev => ({ ...prev, services: prefilledData }));
-        console.log('serviceData-before-change', updatedServiceData);
+       
 
         
 
 
     }, [serviceData, clientData.services, priceData,]);
-    console.log('selectedServices', selectedServices);
+   
 
-
-    console.log('paginated', paginated);
-    console.log('selectedPackages', selectedPackages)
 
 
 
     const handleCheckboxChange = (serviceId) => {
-        console.log("Current Selection Before Change:", selectedServices);
 
         setSelectedServices((prev) => {
             const isCurrentlySelected = !!prev[serviceId];
@@ -147,7 +143,6 @@ const ServiceEditForm = () => {
                 [serviceId]: !isCurrentlySelected,
             };
 
-            console.log("Updated Selection:", updatedSelection);
 
 
             const updatedServices = paginated.map(service => {
@@ -184,7 +179,6 @@ const ServiceEditForm = () => {
 
             const filteredServices = updatedServices.filter(service => updatedSelection[service.serviceId]);
 
-            console.log("Filtered Services:", filteredServices);
 
 
             setClientData(prev => ({ ...prev, services: filteredServices }));
@@ -247,12 +241,10 @@ const ServiceEditForm = () => {
 
     const handleChange = (e, serviceId) => {
         const { name, value } = e.target;
-        console.log(`Changing ${name} for service ${serviceId} to ${value}`);
 
         setPriceData(prev => ({ ...prev, [serviceId]: { [name]: value } }));
 
         setClientData(prev => {
-            console.log("Current Client Data Services:", prev.services); // Log current services
 
             const updatedServices = (Array.isArray(prev.services) ? prev.services : []).map(service => {
                 if (service.serviceId === serviceId) {
@@ -261,7 +253,6 @@ const ServiceEditForm = () => {
                 return service;
             });
 
-            console.log("Updated Client Data Services:", updatedServices);
             return { ...prev, services: updatedServices };
         });
     };

@@ -216,11 +216,11 @@ const ClientForm = () => {
                     icon: "success",
                     confirmButtonText: "Ok"
                 });
-                console.log('step-1');
+               
                 if (fileCount !== 0) {
                     await uploadCustomerLogo(insertedId, new_application_id);
                 }
-                console.log('step-2');
+               
             } catch (error) {
                 console.error("There was an error!", error);
             } finally {

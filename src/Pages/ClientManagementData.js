@@ -132,8 +132,7 @@ const ClientManagementData = () => {
         });
         const filteredSelectedData = updatedServiceData.filter(item => selectedServices[item.serviceId]);
 
-        console.log('filteredSelectedData', filteredSelectedData);
-        console.log('updatedServiceData', updatedServiceData)
+  
         setClientData(filteredSelectedData);
         setSelectedData(updatedServiceData);
 

@@ -19,12 +19,10 @@ const Invoice = () => {
     }
   };
 
-  console.log('imageUrl',image.imageUrl)
-  console.log('imageUrl',image)
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(image.media_file); 
+ 
   };
 
   return (

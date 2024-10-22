@@ -160,22 +160,8 @@ const LoginForm = () => {
           </button>
         </p>
       </div>
-      <div className="flex items-center justify-between my-4">
-        <div className="w-1/4 border-t border-gray-300"></div>
-        <div className="w-1/2 text-center text-gray-500">or login with</div>
-        <div className="w-1/4 border-t border-gray-300"></div>
-      </div>
-      <div className="flex justify-center gap-4">
-        <button className="bg-white border border-blue-500 rounded-sm p-3 w-4/12 text-center">
-          <FaGoogle className="h-6 w-6 text-blue-700 m-auto" />
-        </button>
-        <button className="bg-white border border-blue-500 rounded-sm p-3 w-4/12 text-center">
-          <FaFacebook className="h-6 w-6 text-gray-700 m-auto" />
-        </button>
-        <button className="bg-white border border-blue-500 rounded-sm p-3 w-4/12 text-center">
-          <FaApple className="h-6 w-6 text-black-700 m-auto" />
-        </button>
-      </div>
+    
+     
       {message && <p className="text-red-500 text-center mt-4">{message}</p>}
     </div>
   );

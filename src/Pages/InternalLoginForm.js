@@ -35,7 +35,7 @@ const InternalLoginForm = () => {
         e.preventDefault();
         const validateError = Validate();
         if (Object.keys(validateError).length === 0) {
-            console.log(data);
+           
             setError({});
         } else {
             setError(validateError);

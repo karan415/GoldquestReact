@@ -155,10 +155,6 @@ const ClientManagement = () => {
   }, [handleFocusOut]);
 
 
-  console.log('insertId', insertId);
-
-
-
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
@@ -225,7 +221,6 @@ const ClientManagement = () => {
       // Resetting input fields
       resetFormFields();
 
-      console.log('Customer Insert ID:', customerInsertId);
 
       await uploadCustomerLogo(adminData.id, token, customerInsertId,password);
 

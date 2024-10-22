@@ -130,7 +130,6 @@ const ClientMasterTrackerList = () => {
   
 
     // Log the filtered items to the console
-    console.log('Filtered Items:', filteredItems);
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;

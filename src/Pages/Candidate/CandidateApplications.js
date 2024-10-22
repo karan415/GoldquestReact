@@ -34,7 +34,7 @@ const CandidateApplications = () => {
     const [errors, setErrors] = useState({});
     const [serviceHeadings, setServiceHeadings] = useState([]);
     const [selectedStatuses, setSelectedStatuses] = useState(Array(serviceHeadings.length).fill(''));
-    console.log(formData);
+   
 
     const handleSelectChange = (index, value) => {
         const updatedStatuses = [...selectedStatuses];
@@ -43,13 +43,8 @@ const CandidateApplications = () => {
     };
 
     const isAllCompleted = selectedStatuses.length > 0 && selectedStatuses.every(status => status.includes("completed"));
-    console.log('All Completed:', isAllCompleted);
 
-    useEffect(() => {
-        console.log("Selected Statuses: ", selectedStatuses);
-        console.log("Is All Completed: ", isAllCompleted);
-    }, [selectedStatuses]); // Log whenever selected statuses change
-
+ 
     const fetchServices = useCallback(() => {
         const servicesArray = service_id ? service_id.split(',').map(Number) : [];
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -327,9 +322,7 @@ const CandidateApplications = () => {
             })
             .then(data => {
 
-                console.log('data', data.application)
                 const applications = data.application;
-                console.log('applications', applications);
                 Object.entries(applications).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
                     if (input) {
@@ -337,7 +330,6 @@ const CandidateApplications = () => {
                     }
                 });
                 const cmtData = data.CMTData;
-                console.log('cmtData', cmtData);
 
                 Object.entries(cmtData).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
@@ -411,9 +403,7 @@ const CandidateApplications = () => {
                         updated_json // Return the updated_json as part of the new state
                     };
                 });
-                
-                // Optionally log the updated_json
-                console.log(formData.updated_json);
+              
                 
 
 
@@ -521,7 +511,7 @@ const CandidateApplications = () => {
 
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
-        console.log('allInputDetails', allInputDetails)
+      
 
         const mainAnnexureData = allInputDetails.reduce((acc, { db_table, inputDetails }) => {
             acc[db_table] = inputDetails.reduce((inputAcc, { name, value }) => {
@@ -531,8 +521,6 @@ const CandidateApplications = () => {
 
             const serviceIndex = serviceHeadings.findIndex(heading => heading.heading.replace(/ /g, '').toLowerCase() === db_table.replace(/_/g, '').toLowerCase());
 
-            console.log('Current db_table:', db_table);
-            console.log('Service Index:', serviceIndex);
 
 
             if (serviceIndex !== -1) {
