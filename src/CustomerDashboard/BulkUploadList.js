@@ -5,7 +5,6 @@ import Pagination from '../Pages/Pagination';
 const BulkUploadList = () => {
   const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
 
-  // Memoized bulkList to avoid unnecessary re-renders
   const bulkList = useMemo(() => [
     {
       sl: "",

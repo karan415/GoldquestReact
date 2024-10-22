@@ -44,6 +44,8 @@ const CandidateForm = () => {
         }
     };
 
+
+
     useEffect(() => {
         const storedBranchData = JSON.parse(localStorage.getItem("branch"));
         const branch_token = localStorage.getItem("branch_token");
@@ -91,7 +93,7 @@ const CandidateForm = () => {
         if (!input.email) {
             NewErr.email = 'This is required';
         } else {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(input.email)) {
                 NewErr.email = 'Invalid email format';
             }
@@ -124,7 +126,7 @@ const CandidateForm = () => {
                 mobile_number: input.mobile_number,
                 email: input.email,
                 package: input.package,
-                services: servicesString, 
+                services: servicesString,
                 candidate_application_id: input.candidate_application_id
             });
 
@@ -226,9 +228,9 @@ const CandidateForm = () => {
                                                 <input
                                                     type="checkbox"
                                                     name="services"
-                                                    value={item.serviceId}
+                                                    value={String(item.serviceId)}
                                                     onChange={handleChange}
-                                                    checked={input.services.includes(item.serviceId)}
+                                                    checked={input.services.includes(String(item.serviceId))}
                                                 />
                                                 <div className='font-bold'>{item.serviceTitle}</div>
                                             </li>

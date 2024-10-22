@@ -22,8 +22,6 @@ const ClientForm = () => {
         services: [],
         package: [],
         client_application_id: '',
-        attach_documents: 'abc.png',
-        photo: 'xyz.png',
     });
 
     const { selectedDropBox, fetchClientDrop, services, uniquePackages } = useContext(DropBoxContext);
@@ -73,19 +71,26 @@ const ClientForm = () => {
 
     const handleChange = (event) => {
         const { name, value, checked } = event.target;
-
+    
+        console.log('Checked:', checked);
+        console.log('Value:', value);
+        console.log('Current Services:', clientInput.services);
+    
         if (name === 'services') {
             setClientInput(prev => {
                 const updatedServices = checked
-                    ? [...prev.services, value] // Add the value
-                    : prev.services.filter(serviceId => serviceId !== value); // Remove the value
-
+                    ? [...prev.services, value]
+                    : prev.services.filter(serviceId => serviceId !== value);
+    
+                console.log('Updated Services:', updatedServices);
                 return { ...prev, services: updatedServices };
             });
         } else {
             setClientInput(prev => ({ ...prev, [name]: value }));
         }
     };
+    
+    
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -299,18 +304,19 @@ const ClientForm = () => {
                                 <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
                                 {services.length > 0 ? (
                                     <ul>
-                                        {services.map((item) => (
-                                            <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(item.serviceId) ? 'selected' : ''}`}>
-                                                <input
-                                                    type="checkbox"
-                                                    name="services"
-                                                    value={item.serviceId}
-                                                    onChange={handleChange}
-                                                    checked={clientInput.services.includes(item.serviceId)}
+                                    {services.map((item) => (
+                                        <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(item.serviceId) ? 'selected' : ''}`}>
+                                            <input
+                                                type="checkbox"
+                                                name="services"
+                                                value={String(item.serviceId)}
+                                                onChange={handleChange}
+                                                checked={clientInput.services.includes(String(item.serviceId))}
                                                 />
-                                                <div className='font-bold'>{item.serviceTitle}</div>
-                                            </li>
-                                        ))}
+                                            <div className='font-bold'>{item.serviceTitle}</div>
+                                        </li>
+                                    ))}
+                                    
                                     </ul>
                                 ) : (
                                     <p>No services available</p>
