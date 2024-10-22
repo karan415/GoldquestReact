@@ -83,7 +83,7 @@ const filteredItems = listData.filter(item => {
 
             </div>
       {listData.length === 0 ? (
-        <p className='text-center'>Loading...</p>
+        <p className='text-center'>Loading.....</p>
       ) : (
         <div className="overflow-x-auto py-6 px-4">
          {currentItems.length > 0 ?(
