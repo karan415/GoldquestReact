@@ -7,6 +7,8 @@ import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel'; // Import BranchContextExel
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ClientMasterTrackerList = () => {
+    const [selectedStatus, setSelectedStatus] = useState('');
+
     const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
     const { handleTabChange } = useSidebar();
@@ -16,6 +18,12 @@ const ClientMasterTrackerList = () => {
     const [branches, setBranches] = useState({});
     const [expandedClient, setExpandedClient] = useState(null); // State to track expanded client
     const [currentPage, setCurrentPage] = useState(1);
+    const [options,setOptions] = useState([]);
+
+    //for searching
+
+    const [searchTerm, setSearchTerm] = useState('');
+
 
     const itemsPerPage = 10;
     const fetchClient = useCallback(() => {
@@ -110,11 +118,25 @@ const ClientMasterTrackerList = () => {
 
 
 
+    // Search logic
+    const filteredItems = data.filter(item => {
+        return (
+            item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+
+    // Log the filtered items to the console
+    console.log('Filtered Items:', filteredItems);
+
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -133,10 +155,46 @@ const ClientMasterTrackerList = () => {
         handleTabChange('tracker_status');
     };
 
+
+
+
+
     return (
         <>
             <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-                <SearchBar />
+
+             
+                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                    <div className="col">
+                        <form action="">
+                            <div className="flex gap-5 justify-between">
+                                <select name="" id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                    <option value="100">Show 100 Rows</option>
+                                    <option value="200">200 Rows</option>
+                                    <option value="300">300 Rows</option>
+                                    <option value="400">400 Rows</option>
+                                    <option value="500">500 Rows</option>
+                                </select>
+                                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div className="col md:flex justify-end ">
+                        <form action="">
+                            <div className="flex md:items-stretch items-center  gap-3">
+                                <input
+                                    type="search"
+                                    className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                    placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
 
                 <div className="overflow-x-auto py-6 px-4">
                     <table className="min-w-full">
@@ -168,10 +226,7 @@ const ClientMasterTrackerList = () => {
                                                 onClick={() => handleBranches(item.main_id)}>
                                                 {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                             </button>
-
-                                            <Link to=''>
-                                                <button className='bg-green-600 hover:bg-green-200 rounded-md p-2 text-white'>Check In</button>
-                                            </Link>
+                                        
                                             <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2'>Delete</button>
                                             <button className='bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white'>Excel</button>
                                             {expandedClient === item.main_id && (
@@ -226,7 +281,7 @@ const ClientMasterTrackerList = () => {
                     >
                         <MdArrowForwardIos />
                     </button>
-                </div>  
+                </div>
             </div>
         </>
     );

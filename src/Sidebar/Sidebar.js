@@ -26,7 +26,6 @@ const tabNames = {
   },
   package_management: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Package Management</>),
   service_management: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Service Management</>),
-  customer_login: (<><RiCustomerServiceFill className="h-6 w-6 mr-3 text-gray-600" />Customer Login</>),
   internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
   report: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
