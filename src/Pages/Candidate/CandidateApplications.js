@@ -34,7 +34,7 @@ const CandidateApplications = () => {
     const [errors, setErrors] = useState({});
     const [serviceHeadings, setServiceHeadings] = useState([]);
     const [selectedStatuses, setSelectedStatuses] = useState(Array(serviceHeadings.length).fill(''));
-   
+
 
     const handleSelectChange = (index, value) => {
         const updatedStatuses = [...selectedStatuses];
@@ -44,7 +44,7 @@ const CandidateApplications = () => {
 
     const isAllCompleted = selectedStatuses.length > 0 && selectedStatuses.every(status => status.includes("completed"));
 
- 
+
     const fetchServices = useCallback(() => {
         const servicesArray = service_id ? service_id.split(',').map(Number) : [];
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -397,14 +397,14 @@ const CandidateApplications = () => {
                             delay_reason: cmtData.delay_reason || prevFormData.updated_json.insuffDetails?.delay_reason || ''
                         }
                     };
-                
+
                     return {
                         ...prevFormData,
                         updated_json // Return the updated_json as part of the new state
                     };
                 });
-              
-                
+
+
 
 
                 setDisabledFields({
@@ -511,7 +511,7 @@ const CandidateApplications = () => {
 
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
-      
+
 
         const mainAnnexureData = allInputDetails.reduce((acc, { db_table, inputDetails }) => {
             acc[db_table] = inputDetails.reduce((inputAcc, { name, value }) => {

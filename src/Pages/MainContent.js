@@ -13,11 +13,12 @@ import ExelTracker from '../Pages/ExelTracker'; // Excel Tracker component
 import TatDelay from '../Pages/TatDelay'; // TAT Delay component
 import Acknowledgement from '../Pages/Acknowledgement'; // Acknowledgement component
 import UpdatePassword from '../Pages/UpdatePassword'; // Update Password component
-import Invoice from '../Pages/Invoice'; // Invoice component
+import Invoice from './CreateInvoice'; // Invoice component
 import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component
 import ExelTrackerStatus from './ExelTrackerStatus'; // Excel Tracker Status component
+import CreateInvoice from './CreateInvoice';
 
 // Mapping tab keys to their respective components
 const tabComponents = {
@@ -38,7 +39,8 @@ const tabComponents = {
   add_clients: <ClientManagement />,
   active_clients: <ClientManagementList />,
   inactive_clients: <InactiveClients />,
-  tracker_status: <ExelTrackerStatus />
+  tracker_status: <ExelTrackerStatus />,
+  generate_invoice: <CreateInvoice />
 };
 
 const MainContent = () => {

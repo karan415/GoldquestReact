@@ -7,6 +7,11 @@
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
 }
+.select-search-container {
+    width: 100%;
+}
+
+.select-search-container input.select-search-input {border-radius: 6px;background: #f7f6fb;}
 .react-datepicker-wrapper {
     width: 100%;
 }

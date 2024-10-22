@@ -26,6 +26,7 @@ const tabNames = {
   },
   package_management: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Package Management</>),
   service_management: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Service Management</>),
+  generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
   internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
   report: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
@@ -37,7 +38,6 @@ const tabNames = {
   invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
   email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
   tracker_status: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Tracker Status</>),
-  generate_report: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Genrate report</>),
 
 };
 

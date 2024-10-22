@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './index.css';
+import './App.css';
 import Render from './Pages/Render';
 import ForgotPassword from './Pages/ForgotPassword';
 import CustomerLogin from './CustomerDashboard/CustomerLogin';
@@ -28,6 +28,9 @@ import CandidateMain from './Pages/Candidate/CandidateMain';
 import GenerateReportProvider from './Pages/GenerateReportContext';
 import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
+import PdfTableGenerator from './Pages/PdfTableGenerator';
+import 'react-select-search/style.css'
+
 const App = () => {
   return (
     <GenerateReportProvider>
@@ -57,6 +60,7 @@ const App = () => {
                                   <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
                                   <Route path='/background_form' element={<BackgroundForm />} />
                                   <Route path='/digital_form' element={<DigitalAddressVerification />} />
+                                  <Route path='/PDF' element={<PdfTableGenerator />} />
                                 </Routes>
                               </Router>
                             </ServiceProvider>
