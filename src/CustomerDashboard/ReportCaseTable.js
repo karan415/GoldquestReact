@@ -12,7 +12,7 @@ const ReportCaseTable = () => {
     const [loading, setLoading] = useState(false); // Add loading state
     const [expandedRows, setExpandedRows] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-
+console.log('serviceTitle',serviceTitle)
     useEffect(() => {
         setLoading(true); // Set loading to true before fetching data
         fetchClientDrop().finally(() => setLoading(false)); // Set loading to false after fetching

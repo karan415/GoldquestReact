@@ -336,7 +336,6 @@ const ClientMasterTrackerList = () => {
                                                 {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                             </button>
 
-                                            <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2'>Delete</button>
                                             {expandedClient === item.main_id && (
                                                 branches[item.main_id]?.map((branch, branchIndex) => (
                                                     <tr key={branchIndex} className='w-full'>
