@@ -50,6 +50,7 @@ console.log('serviceTitle',serviceTitle)
                 const serviceHeading = {};
                 
                 results.forEach(serviceTitle => {
+                    console.log('serviceTitle',serviceTitle)
                     if (typeof serviceTitle === 'object' && serviceTitle !== null) {
                         const hasHeading = serviceTitle.hasOwnProperty('heading');
                         const hasAnnexureData = serviceTitle.annexureData && typeof serviceTitle.annexureData === 'object';

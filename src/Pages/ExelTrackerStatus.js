@@ -36,7 +36,6 @@ const ExelTrackerStatus = () => {
         method: "GET",
         redirect: "follow",
     };
-    console.log('dbHeadingsStatus', dbHeadingsStatus)
 
     const fetchApplications = useCallback(() => {
         setLoading(true);
@@ -95,24 +94,16 @@ const ExelTrackerStatus = () => {
                             const parsedDb = parsedData.db_table;
                             const parsedDbHeading = parsedData.heading;
 
-                            // Initialize serviceHeadings as a Set
-                            if (!serviceHeadings || !Array.isArray(serviceHeadings)) {
-                                serviceHeadings = new Set();
+                            // Initialize or update serviceHeadings
+                            if (!serviceHeadings[parsedDb]) {
+                                serviceHeadings[parsedDb] = [];
                             }
-
-                            // Add heading to the Set
-                            serviceHeadings.add(parsedDbHeading);
-
-                            // Convert Set back to an array if needed
-                            const uniqueHeadings = Array.from(serviceHeadings);
-
-                            console.log('serviceHeadings', uniqueHeadings);
+                            serviceHeadings[parsedDb].push(parsedDbHeading); // Push heading
 
                             const newToken = result._token || result.token;
                             if (newToken) localStorage.setItem("_token", newToken);
                             return parsedDb;
                         })
-
                         .catch(error => console.error('Fetch error:', error));
                 })
             ).then(parsedDbs => {
@@ -541,8 +532,6 @@ const ExelTrackerStatus = () => {
                                         <option value="500">500 Rows</option>
                                     </select>
                                     <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-                                    <button onClick={goBack} className="bg-green-500 mx-2 hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
-
                                 </div>
                             </form>
                         </div>
@@ -601,6 +590,7 @@ const ExelTrackerStatus = () => {
                                                     >
                                                         {expandedRows === index ? "Hide Details" : "View More"}
                                                     </button>
+                                                    <button onClick={goBack} className="bg-green-500 mx-2 hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
                                                 </td>
                                             </tr>
                                             {expandedRows === index && (
@@ -613,8 +603,8 @@ const ExelTrackerStatus = () => {
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                        {serviceHeadings[item.id]?.map((value, index) => (
-                                                                            <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value.graduation || 'N/A'}</th>
+                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
+                                                                            <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
                                                                         ))}
 
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
