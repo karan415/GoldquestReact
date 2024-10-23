@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 
 const Logout = () => {
+ 
     const API_URL= useApi();
     const navigate = useNavigate();
     const handleLogout = async () => {
@@ -19,11 +20,10 @@ const Logout = () => {
                 throw new Error('Logout failed');
             }
 
+            localStorage.removeItem("branch");
+            localStorage.removeItem("branch_token");
 
-            localStorage.removeItem("admin");
-            localStorage.removeItem("_token");
-
-
+  
             navigate('/customer-login');
         } catch (error) {
             console.error('Error during logout:', error);

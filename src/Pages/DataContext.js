@@ -62,6 +62,7 @@ export const DataProvider = ({ children }) => {
     }, []);
 
     const toggleAccordion = useCallback((id) => {
+        setBranches([]);
         setOpenAccordionId((prevId) => (prevId === id ? null : id));
         setLoading(true);
         setIsOpen(null)

@@ -65,7 +65,7 @@ const Sidebar = () => {
     <div className="w-full md:w-1/5 flex flex-col bg-white ">
       <div className="px-3">
         <div className="flex flex-col px-3 md:py-8 p-2">
-          <h2 className="w-full text-green-600 md:text-5xl text-2xl text-left font-bold md:pb-6 pb-2 font-poppins">GoldQuest.</h2>
+          <h2 className="w-full text-green-600 md:text-4xl text-2xl text-left font-bold md:pb-6 pb-2 font-poppins">GoldQuest.</h2>
           <div className='md:hidden sm:block'>
             <div className='flex items-center justify-between border-b p-3'>
               <div>Menu</div>

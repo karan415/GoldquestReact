@@ -532,6 +532,8 @@ const ExelTrackerStatus = () => {
                                         <option value="500">500 Rows</option>
                                     </select>
                                     <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                                    <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
+
                                 </div>
                             </form>
                         </div>
@@ -590,7 +592,6 @@ const ExelTrackerStatus = () => {
                                                     >
                                                         {expandedRows === index ? "Hide Details" : "View More"}
                                                     </button>
-                                                    <button onClick={goBack} className="bg-green-500 mx-2 hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
                                                 </td>
                                             </tr>
                                             {expandedRows === index && (

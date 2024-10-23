@@ -59,6 +59,8 @@ const LoginForm = () => {
 
             const adminData = response.data.adminData;
             const _token = response.data.token;
+            
+
 
             localStorage.setItem('admin', JSON.stringify(adminData));
             localStorage.setItem('_token', _token);

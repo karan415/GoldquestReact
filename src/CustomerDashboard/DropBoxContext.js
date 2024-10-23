@@ -130,6 +130,13 @@ export const DropBoxProvider = ({ children }) => {
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
         }
     }, [API_URL, branchId, token]);
+
+
+useEffect(()=>{
+    fetchServices();
+    fetchClient();
+    fetchClientDrop()
+},[fetchServices,fetchClient,fetchClientDrop])
   
 
     return (

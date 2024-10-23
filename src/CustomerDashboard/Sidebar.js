@@ -13,7 +13,7 @@ import ReportAndCase from './ReportAndCase';
 import BulkUpload from './BulkUpload';
 import UpdatePassword from '../Pages/UpdatePassword';
 import EscalationMatrix from './EscalationMatrix';
-import Header from '../Dashboard/Header';
+import CustomerHeader from './CustomerHeader';
 import ClientDropBox from "./ClientDropBox";
 import CandidateDropBox from "./CandidateDropBox";
 import Logout from './Logout'
@@ -32,13 +32,13 @@ const tabComponents = {
 const tabNames = {
   dashboard: (<><HomeIcon className="h-6 w-6 mr-3 text-gray-600" />DashBoard</>),
   employee_management: (<><UserIcon className="h-6 w-6 mr-3 text-gray-600" />Employee Management</>),
-  add_user: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Add User</>),
+  // add_user: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Add User</>),
   report_case: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Report & Case Status</>),
   dropbox: (<><FaDropbox className="h-6 w-6 mr-3 text-gray-600" />Client DropBox</>),
   Candidate: (<><AiFillDropboxCircle className="h-6 w-6 mr-3 text-gray-600" />Candidate DropBox</>),
-  bulkupload: (<><MdDashboardCustomize className="h-6 w-6 mr-3 text-gray-600" />Bulk Upload</>),
-  update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
-  escalation: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Escalation Matrix</>),
+  // bulkupload: (<><MdDashboardCustomize className="h-6 w-6 mr-3 text-gray-600" />Bulk Upload</>),
+  // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
+  // escalation: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Escalation Matrix</>),
 };
 
 const Sidebar = () => {
@@ -91,7 +91,7 @@ const Sidebar = () => {
           </div>
         </div>
         <div className="w-full md:w-4/5 flex flex-col">
-          <Header />
+          <CustomerHeader />
           {tabComponents[activeTab]}
         </div>
       </div>
