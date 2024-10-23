@@ -5,20 +5,18 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 
 const CustomerLoginForm = () => {
-
-   useEffect(()=>{
-    localStorage.removeItem("branch");
-    localStorage.removeItem("branch_token");
-   })
+    useEffect(() => {
+        localStorage.removeItem("branch");
+        localStorage.removeItem("branch_token");
+    }, []);
 
     const API_URL = useApi();
-    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+    const [showPassword, setShowPassword] = useState(false);
     const location = useLocation();
     const query = new URLSearchParams(location.search);
     const emailFromQuery = query.get('email') || '';
     const navigate = useNavigate();
 
-    // Manage both email and password in the input state
     const [input, setInput] = useState({
         email: emailFromQuery,
         password: '',
@@ -32,40 +30,34 @@ const CustomerLoginForm = () => {
         }));
     }, [emailFromQuery]);
 
-    // Function to fetch password from the API
-    const getPassword = (email) => {
+    const getPassword = async (email) => {
         const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
         const storedToken = localStorage.getItem('_token');
-        const requestOptions = {
-            method: "GET",
-            redirect: "follow"
-        };
 
-        fetch(`${API_URL}/customer/fetch-branch-password?branch_email=${email}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-            .then((response) => response.json()) 
-            .then((result) => {
+        try {
+            const response = await fetch(`${API_URL}/customer/fetch-branch-password?branch_email=${email}&admin_id=${admin_id}&_token=${storedToken}`);
+            const result = await response.json();
+            if (result.password) {
                 setInput(prev => ({
                     ...prev,
-                    password: result.password 
+                    password: result.password
                 }));
-            })
-            .catch((error) => console.error('Error:', error));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     useEffect(() => {
         if (input.email) {
-            getPassword(input.email); // Fetch the password when the email changes
+            getPassword(input.email);
         }
     }, [input.email]);
 
     const validations = () => {
         const newErrors = {};
-        if (!input.email) {
-            newErrors.email = 'This field is required!';
-        }
-        if (!input.password) {
-            newErrors.password = 'This field is required!';
-        }
+        if (!input.email) newErrors.email = 'This field is required!';
+        if (!input.password) newErrors.password = 'This field is required!';
         return newErrors;
     };
 
@@ -76,7 +68,7 @@ const CustomerLoginForm = () => {
         }));
     };
 
-    const handleSubmitForm = (e) => {
+    const handleSubmitForm = async (e) => {
         e.preventDefault();
         const validateError = validations();
 
@@ -89,55 +81,51 @@ const CustomerLoginForm = () => {
                 "password": input.password,
             });
 
-            const requestOptions = {
-                method: "POST",
-                headers: myHeaders,
-                body: raw,
-                redirect: "follow"
-            };
+            try {
+                const response = await fetch(`${API_URL}/branch/login`, {
+                    method: "POST",
+                    headers: myHeaders,
+                    body: raw,
+                });
+                const result = await response.json();
 
-            fetch(`${API_URL}/branch/login`, requestOptions)
-                .then(res => res.json())
-                .then(response => {
-                    if (!response.status) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: `An error occurred: ${response.message}`,
-                            icon: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                        const newToken = response.branch_token || response.token;
-                        if (newToken) {
-                            localStorage.setItem("branch_token", newToken);
-                        }
-                    } else {
-                        const branchData = response.branchData;
-                        const branch_token = response.token;
-
-                        localStorage.setItem('branch', JSON.stringify(branchData));
-                        localStorage.setItem('branch_token', branch_token);
-
-                        Swal.fire({
-                            title: "Success",
-                            text: 'Login Successful',
-                            icon: "success",
-                            confirmButtonText: "Ok"
-                        });
-
-                        navigate('/customer-dashboard', { state: { from: location }, replace: true });
-                        setError({});
-                    }
-                })
-                .catch(error => {
+                if (!result.status) {
                     Swal.fire({
                         title: 'Error!',
-                        text: `Error: ${error.response?.data?.message || error.message}`,
+                        text: `An error occurred: ${result.message}`,
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
-                    console.error('Login failed:', error);
-                });
+                    const newToken = result.branch_token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
+                } else {
+                    const branchData = result.branchData;
+                    const branch_token = result.token;
 
+                    localStorage.setItem('branch', JSON.stringify(branchData));
+                    localStorage.setItem('branch_token', branch_token);
+
+                    Swal.fire({
+                        title: "Success",
+                        text: 'Login Successful',
+                        icon: "success",
+                        confirmButtonText: "Ok"
+                    });
+
+                    navigate('/customer-dashboard', { state: { from: location }, replace: true });
+                    setError({});
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: `Error: ${error.message}`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+                console.error('Login failed:', error);
+            }
         } else {
             setError(validateError);
         }
@@ -147,8 +135,9 @@ const CustomerLoginForm = () => {
         <div className="w-full md:max-w-7xl mx-auto p-4">
             <form onSubmit={handleSubmitForm} aria-live="polite">
                 <div className="mb-3">
-                    <label htmlFor="email" className='d-block '>Enter Your Email:</label>
-                    <input type="email"
+                    <label htmlFor="email" className='d-block'>Enter Your Email:</label>
+                    <input
+                        type="email"
                         name="email"
                         id="EmailId"
                         onChange={handleChange}
@@ -157,8 +146,9 @@ const CustomerLoginForm = () => {
                     {error.email && <p className='text-red-500'>{error.email}</p>}
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="Password" className='d-block '>Enter Your Password:</label>
-                    <input type={showPassword ? "text" : "password"} // Toggling input type
+                    <label htmlFor="Password" className='d-block'>Enter Your Password:</label>
+                    <input
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         id="YourPassword"
                         onChange={handleChange}
@@ -166,18 +156,15 @@ const CustomerLoginForm = () => {
                         className='outline-none p-3 border mt-3 w-full rounded-md' />
                     {error.password && <p className='text-red-500'>{error.password}</p>}
                 </div>
-
-                {/* Checkbox to toggle password visibility */}
                 <div className="mb-3">
                     <label className="inline-flex items-center">
                         <input
                             type="checkbox"
-                            onChange={() => setShowPassword(!showPassword)} // Toggle show/hide password
+                            onChange={() => setShowPassword(!showPassword)}
                             className="form-checkbox" />
                         <span className="ml-2">Show Password</span>
                     </label>
                 </div>
-
                 <div className="flex items-center justify-between mb-4">
                     <label className="block text-gray-700 text-sm font-bold">
                         <input className="mr-2 leading-tight" type="checkbox" />
@@ -213,7 +200,6 @@ const CustomerLoginForm = () => {
                 </button>
             </div>
         </div>
-
     );
 };
 
