@@ -4,16 +4,10 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const PackageManagementList = () => {
-<<<<<<< HEAD
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const { editPackage, data, loading, fetchData, error, setError } = usePackage();
     const [searchTerm, setSearchTerm] = useState('');
-=======
-    const [currentPage, setCurrentPage] = useState(1);
-    const { editPackage, data, loading, fetchData, error, setError } = usePackage();
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const API_URL = useApi();
     useEffect(() => {
         fetchData();
@@ -24,7 +18,6 @@ const PackageManagementList = () => {
         );
     });
 
-<<<<<<< HEAD
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -41,27 +34,6 @@ const PackageManagementList = () => {
 
     const showNext = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
-=======
-    
-    const itemsPerPage = 10;
-    
-    
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-    
-    const handlePageChange = (pageNumber) => {
-      setCurrentPage(pageNumber);
-    };
-    
-    const showPrev = () => {
-      if (currentPage > 1) handlePageChange(currentPage - 1);
-    };
-    
-    const showNext = () => {
-      if (currentPage < totalPages) handlePageChange(currentPage + 1);
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     };
 
     const handleEdit = (pkg) => {
@@ -75,10 +47,6 @@ const PackageManagementList = () => {
 
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
     const handleDelete = (packageId) => {
         Swal.fire({
             title: 'Are you sure?',
@@ -187,11 +155,7 @@ const PackageManagementList = () => {
                             currentItems.map((item, index) => (
                                 <tr key={item.id}>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
-<<<<<<< HEAD
                                         {index + 1}
-=======
-                                        { index + 1}
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
                                     </td>
                                     <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
                                         {item.title}
@@ -234,7 +198,6 @@ const PackageManagementList = () => {
                     disabled={currentPage === 1}
                     className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     aria-label="Previous page" >
-<<<<<<< HEAD
                     <MdArrowBackIosNew />
                 </button>
                 <div className="flex items-center" >
@@ -258,31 +221,6 @@ const PackageManagementList = () => {
                     aria-label="Next page">
                     <MdArrowForwardIos />
                 </button>
-=======
-                <MdArrowBackIosNew />
-            </button>
-            <div className="flex items-center" >
-                {
-                    Array.from({ length: totalPages }, (_, index) => (
-                        <button
-                            type="button"
-                            key={index + 1}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
-            </div>
-            <button
-                type="button"
-                onClick={showNext}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                aria-label="Next page">
-            <MdArrowForwardIos />
-        </button>
->>>>>>> b0df1336d1b775e3b31451caf2a46aad21d16092
             </div>
 
         </>
