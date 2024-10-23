@@ -33,9 +33,9 @@ const tabComponents = {
   exel_tracker: <ExelTracker />,
   tat_delay: <TatDelay />,
   Acknowledgement: <Acknowledgement />,
-  update_password: <UpdatePassword />,
-  invoice: <Invoice />,
-  email_temp: <EmailTemplate />,
+  // update_password: <UpdatePassword />,
+  // invoice: <Invoice />,
+  // email_temp: <EmailTemplate />,
   add_clients: <ClientManagement />,
   active_clients: <ClientManagementList />,
   inactive_clients: <InactiveClients />,
@@ -44,12 +44,12 @@ const tabComponents = {
 };
 
 const MainContent = () => {
-  const { activeTab } = useSidebar(); 
+  const { activeTab } = useSidebar();
 
   return (
-    <div className="w-full md:w-4/5 flex flex-col">
-      <Header /> 
-      {tabComponents[activeTab] || <DashBoard />} 
+    <div className="w-full md:w-4/5 flex flex-col items-stretch">
+      <Header />
+      {tabComponents[activeTab] || <DashBoard />}
     </div>
   );
 };

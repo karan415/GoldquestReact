@@ -30,16 +30,16 @@ const tabNames = {
   generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
 
   internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
-  report: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
+  // report: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
   client_master: (<><MdOutlineTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Client Master Tracker</>),
-  exel_tracker: (<><MdTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Exel Tracker</>),
-  tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />Tat Delay Notification</>),
+  // exel_tracker: (<><MdTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Exel Tracker</>),
+  // tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />Tat Delay Notification</>),
   Acknowledgement: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgement Email</>),
-  update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
-  invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
-  email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
-  tracker_status: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Tracker Status</>),
+  // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
+  // invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
+  // email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
+  // tracker_status: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Tracker Status</>),
 
 };
 
@@ -62,11 +62,10 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-full md:w-1/5 flex flex-col bg-white">
+    <div className="w-full md:w-1/5 flex flex-col bg-white ">
       <div className="px-3">
         <div className="flex flex-col px-3 md:py-8 p-2">
           <h2 className="w-full text-green-600 md:text-5xl text-2xl text-left font-bold md:pb-6 pb-2 font-poppins">GoldQuest.</h2>
-          <p className="text-gray-400 text-lg md:mb-7 mb-2 text-left w-full">Background Verification Tracking System.</p>
           <div className='md:hidden sm:block'>
             <div className='flex items-center justify-between border-b p-3'>
               <div>Menu</div>
