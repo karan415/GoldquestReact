@@ -918,7 +918,7 @@ const ExelTrackerStatus = () => {
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
                                                                         {serviceHeadings[item.id]?.map((value, index) => (
                                                                             <th key={index} className="service-th py-3 px-4 border-b text-left uppercase whitespace-nowrap">
-                                                                                {value || 'Initiated'}
+                                                                                {value || 'NIL'}
                                                                             </th>
                                                                         ))}
 
