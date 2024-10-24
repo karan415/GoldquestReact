@@ -140,8 +140,6 @@ const ExelTrackerStatus = () => {
 
 
     const handleDownloadPdf = async (id, branch_id) => {
-
-
         if (!id || !branch_id) {
             return Swal.fire('Error!', 'Something is missing', 'error');
         }

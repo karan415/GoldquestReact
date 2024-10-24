@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const ReportCaseTable = () => {
+    const [options, setOptions] = useState([]);
+    const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10);
     const API_URL = useApi();
@@ -12,7 +14,7 @@ const ReportCaseTable = () => {
     const [loading, setLoading] = useState(false); // Add loading state
     const [expandedRows, setExpandedRows] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-console.log('serviceTitle',serviceTitle)
+    console.log('serviceTitle', serviceTitle)
     useEffect(() => {
         setLoading(true); // Set loading to true before fetching data
         fetchClientDrop().finally(() => setLoading(false)); // Set loading to false after fetching
@@ -48,25 +50,25 @@ console.log('serviceTitle',serviceTitle)
         Promise.all(fetchPromises)
             .then(results => {
                 const serviceHeading = {};
-                
+
                 results.forEach(serviceTitle => {
-                    console.log('serviceTitle',serviceTitle)
+                    console.log('serviceTitle', serviceTitle)
                     if (typeof serviceTitle === 'object' && serviceTitle !== null) {
                         const hasHeading = serviceTitle.hasOwnProperty('heading');
                         const hasAnnexureData = serviceTitle.annexureData && typeof serviceTitle.annexureData === 'object';
-                
+
                         const entry = {
                             heading: hasHeading ? serviceTitle.heading || '' : '',
                             status: hasAnnexureData ? serviceTitle.annexureData.status || '' : ''
                         };
-                
+
                         if (!serviceHeading[id]) {
                             serviceHeading[id] = [];
                         }
                         serviceHeading[id].push(entry);
                     }
                 });
-                
+
                 setServiceTitle(serviceHeading);
             })
             .catch(error => {
@@ -75,6 +77,71 @@ console.log('serviceTitle',serviceTitle)
             .finally(() => setLoading(false)); // End loading after fetching
     };
 
+    // const handleToggleNext = useCallback((index, services, branch_id, id) => {
+    //     if (!admin_id || !storedToken || !id) {
+    //         console.error("Missing required parameters");
+    //         return;
+    //     }
+
+    //     const newExpandedRow = expandedRows === index ? null : index;
+    //     setExpandedRows(newExpandedRow);
+
+    //     if (newExpandedRow === index && services) {
+    //         const servicesArray = services.split(',').map(Number);
+
+    //         Promise.all(
+    //             servicesArray.map(serviceId => {
+    //                 const url = `${API_URL}/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`;
+
+    //                 return fetch(url, requestOptions)
+    //                     .then(response => {
+    //                         if (!response.ok) throw new Error('Network response was not ok');
+    //                         return response.json();
+    //                     })
+    //                     .then(result => {
+    //                         const newService = result.reportFormJson.json;
+    //                         const parsedData = JSON.parse(newService);
+    //                         const parsedDb = parsedData.db_table;
+    //                         const parsedDbHeading = parsedData.heading;
+
+    //                         if (!serviceHeadings[parsedDb]) {
+    //                             serviceHeadings[parsedDb] = [];
+    //                         }
+    //                         serviceHeadings[parsedDb].push(parsedDbHeading); // Push heading
+
+    //                         const newToken = result._token || result.token;
+    //                         if (newToken) localStorage.setItem("_token", newToken);
+    //                         return parsedDb;
+    //                     })
+    //                     .catch(error => console.error('Fetch error:', error));
+    //             })
+    //         ).then(parsedDbs => {
+    //             const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
+
+    //             const annexureFetches = uniqueDbNames.map(db_name => {
+    //                 const url = `${API_URL}/client-master-tracker/annexure-data?application_id=${id}&db_table=${db_name}&admin_id=${admin_id}&_token=${storedToken}`;
+
+    //                 return fetch(url, requestOptions)
+    //                     .then(response => {
+    //                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    //                         return response.json();
+    //                     })
+    //                     .then(result => ({
+    //                         db_table: db_name,
+    //                         status: result?.annexureData?.status || 'N/A'
+    //                     }))
+    //                     .catch(error => console.error("Fetch error: ", error));
+    //             });
+
+    //             return Promise.all(annexureFetches).then(annexureStatusArr => {
+    //                 setDBHeadingsStatus(prev => ({ ...prev, [id]: annexureStatusArr }));
+    //             });
+    //         })
+    //             .catch(error => console.error("Error during service fetch or annexure fetch: ", error));
+    //     }
+    // }, [expandedRows, admin_id, storedToken, API_URL, requestOptions]);
+
+
     const filteredItems = listData.filter(item => {
         return (
             item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,6 +149,35 @@ console.log('serviceTitle',serviceTitle)
             item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
         );
     });
+
+
+    // const fetchSelectOptions = useCallback(() => {
+    //     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    //     const storedToken = localStorage.getItem("_token");
+
+    //     const requestOptions = {
+    //         method: "GET",
+    //         redirect: "follow"
+    //     };
+
+    //     fetch(`${API_URL}/client-master-tracker/branch-filter-options?branch_id=${1}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+    //         .then((response) => {
+    //             if (!response.ok) {
+    //                 throw new Error('Network response was not ok');
+    //             }
+    //             return response.json();
+    //         })
+    //         .then((result) => {
+    //             console.log(result);
+    //             setOptions(result.filterOptions);
+    //         })
+    //         .catch((error) => console.error('Error fetching options:', error));
+    // }, []);
+
+    // useEffect(() => {
+    //     fetchSelectOptions();
+    // }, [fetchSelectOptions])
+
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -142,10 +238,28 @@ console.log('serviceTitle',serviceTitle)
         setItemPerPage(selectedValue);
     };
 
+    const handleStatusChange = (event) => {
+        setSelectedStatus(event.target.value);
+    };
+
     return (
         <>
             <div className="overflow-x-auto my-14 mx-4 bg-white shadow-md rounded-md">
+                <div className='flex gap-4 justify-end p-4'>
+                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+                        {options.map((item, index) => {
+                            return item.status !== 'closed' ? (
+                                <option key={index} value={item.status}>
+                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                </option>
+                            ) : null;
+                        })}
+
+
+                    </select>
+                </div>
                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
