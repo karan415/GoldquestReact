@@ -5,10 +5,7 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 
 const CustomerLoginForm = () => {
-    useEffect(() => {
-        localStorage.removeItem("branch");
-        localStorage.removeItem("branch_token");
-    }, []);
+ 
 
     const API_URL = useApi();
     const [showPassword, setShowPassword] = useState(false);

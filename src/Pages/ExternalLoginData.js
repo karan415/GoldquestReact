@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import SearchBar from './SearchBar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useData } from './DataContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const ExternalLoginData = () => {
+  const navigate = useNavigate();
   const { listData, fetchData, toggleAccordion, branches, openAccordionId } = useData();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemPerPage] = useState(10);
@@ -46,6 +47,15 @@ const filteredItems = listData.filter(item => {
   const showNext = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
   };
+
+
+  const getEmail = (email) => {
+    localStorage.removeItem("branch");
+    localStorage.removeItem("branch_token");
+    window.open(`/customer-login?email=${encodeURIComponent(email)}`, '_blank');
+
+}
+
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
@@ -127,13 +137,9 @@ const filteredItems = listData.filter(item => {
                     <td className="py-2 px-4 border-b text-center whitespace-nowrap">{branch.name}</td>
                     <td className="py-2 px-4 border-b whitespace-nowrap">{branch.email}</td>
                     <td className="py-2 px-4 border-b whitespace-nowrap text-center uppercase text-blue-500 font-bold">
-                      <Link
-                        to={`/customer-login?email=${encodeURIComponent(branch.email)}`}
-                        target='_blank'
-                        className="hover:underline"
-                      >
-                        Go
-                      </Link>
+                     <button onClick={()=>getEmail(branch.email)}>
+                     Go
+                   </button>
                     </td>
                     <td className="py-2 px-4 border-b whitespace-nowrap text-center">
                       <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">Delete</button>

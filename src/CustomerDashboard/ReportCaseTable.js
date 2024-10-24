@@ -27,7 +27,7 @@ console.log('serviceTitle',serviceTitle)
             : [...expandedRows, index];
 
         setExpandedRows(newExpandedRows);
-        setLoading(true); // Start loading when toggling
+        setLoading(true); 
 
         const fetchPromises = servicesArray.map(serviceId => {
             const url = `${API_URL}/branch/annexure-by-service?service_id=${serviceId}&application_id=${id}&branch_id=${branch_id}&_token=${storedToken}`;

@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
-
+import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer';
 import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
@@ -64,6 +64,8 @@ const ExelTrackerStatus = () => {
             .finally(() => setLoading(false));
     }, [API_URL, branch_id, admin_id, storedToken]);
 
+    console.log('serviceHeadings', serviceHeadings)
+
     useEffect(() => {
         fetchApplications();
     }, [fetchApplications]);
@@ -73,11 +75,17 @@ const ExelTrackerStatus = () => {
             return;
         }
 
+
         const newExpandedRow = expandedRows === index ? null : index;
         setExpandedRows(newExpandedRow);
 
         if (newExpandedRow === index && services) {
             const servicesArray = services.split(',').map(Number);
+
+
+            const uniqueServiceHeadings = new Set();
+            const uniqueStatuses = new Set();
+
 
             Promise.all(
                 servicesArray.map(serviceId => {
@@ -89,26 +97,30 @@ const ExelTrackerStatus = () => {
                             return response.json();
                         })
                         .then(result => {
-                            const newService = result.reportFormJson.json;
-                            const parsedData = JSON.parse(newService);
-                            const parsedDb = parsedData.db_table;
-                            const parsedDbHeading = parsedData.heading;
+                            const { reportFormJson } = result;
+                            const parsedData = JSON.parse(reportFormJson.json);
+                            const { heading, db_table } = parsedData;
 
-                            // Initialize or update serviceHeadings
-                            if (!serviceHeadings[parsedDb]) {
-                                serviceHeadings[parsedDb] = [];
-                            }
-                            serviceHeadings[parsedDb].push(parsedDbHeading); // Push heading
+                            // Add unique heading to the Set
+                            uniqueServiceHeadings.add(heading);
 
+                            // Convert the Set to an array before updating state
+                            setServiceHeadings(prev => ({
+                                ...prev,
+                                [id]: Array.from(uniqueServiceHeadings)  // Convert Set to Array
+                            }));
+
+                            // Update token if available
                             const newToken = result._token || result.token;
                             if (newToken) localStorage.setItem("_token", newToken);
-                            return parsedDb;
+                            return db_table;
                         })
                         .catch(error => console.error('Fetch error:', error));
                 })
             ).then(parsedDbs => {
                 const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
 
+                // Fetch annexure data for unique DB tables
                 const annexureFetches = uniqueDbNames.map(db_name => {
                     const url = `${API_URL}/client-master-tracker/annexure-data?application_id=${id}&db_table=${db_name}&admin_id=${admin_id}&_token=${storedToken}`;
 
@@ -117,15 +129,30 @@ const ExelTrackerStatus = () => {
                             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                             return response.json();
                         })
-                        .then(result => ({
-                            db_table: db_name,
-                            status: result?.annexureData?.status || 'N/A'
-                        }))
+                        .then(result => {
+                            const status = result?.annexureData?.status || 'N/A';
+
+                            // Add unique status
+                            uniqueStatuses.add(status);
+
+                            return {
+                                db_table: db_name,
+                                status
+                            };
+                        })
                         .catch(error => console.error("Fetch error: ", error));
                 });
 
+
                 return Promise.all(annexureFetches).then(annexureStatusArr => {
-                    setDBHeadingsStatus(prev => ({ ...prev, [id]: annexureStatusArr }));
+                    setDBHeadingsStatus(prev => ({
+                        ...prev,
+                        [id]: annexureStatusArr
+                    }));
+
+
+                    // console.log('Unique Service Headings:', Array.from(uniqueServiceHeadings));
+                    // console.log('Unique Statuses:', Array.from(uniqueStatuses));
                 });
             })
                 .catch(error => console.error("Error during service fetch or annexure fetch: ", error));
@@ -194,7 +221,6 @@ const ExelTrackerStatus = () => {
                     ]);
 
                     if (!serviceResponse.ok || !applicationResponse.ok) {
-                        console.error("Failed to fetch service/application data");
                         return null; // Early exit if any request fails
                     }
 
@@ -249,7 +275,7 @@ const ExelTrackerStatus = () => {
                         parsedJson = JSON.parse(data.reportFormJson.json || '{}');
                     } catch (error) {
                         console.error("Failed to parse reportFormJson:", error);
-                        return; // Skip this iteration
+                        return;
                     }
 
                     if (parsedJson.db_table && parsedJson.heading) {
@@ -258,8 +284,7 @@ const ExelTrackerStatus = () => {
 
                         const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
                         if (!annexureResponse.ok) {
-                            console.error(`Failed to fetch annexure data for ${serviceId}`);
-                            return; // Skip this iteration if annexure fetch fails
+                            return;
                         }
 
                         const annexureResult = await annexureResponse.json();
@@ -294,39 +319,6 @@ const ExelTrackerStatus = () => {
             const cmtData = data.CMTData;
             setCmtAllData(cmtData);
 
-            // Create the PDF
-            const element = printRef.current;
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('portrait', 'pt', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-
-            let imgHeight = (canvasHeight * pdfWidth) / canvasWidth;
-            let heightLeft = imgHeight;
-            let position = 0;
-
-            // Define margin for spacing
-            const margin = 20; // Adjust as needed
-
-            // Add first page
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= (pdfHeight + margin);
-
-            // Add remaining pages
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight - margin;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-                heightLeft -= (pdfHeight + margin);
-            }
-
-            // Save the PDF
-            pdf.save('table.pdf');
-
         } catch (error) {
             console.error('Fetch error:', error);
             setError('Failed to load client data');
@@ -352,7 +344,6 @@ const ExelTrackerStatus = () => {
                 return response.json();
             })
             .then((result) => {
-                console.log(result);
                 setOptions(result.filterOptions);
             })
             .catch((error) => console.error('Error fetching options:', error));
@@ -436,41 +427,34 @@ const ExelTrackerStatus = () => {
     const renderPagination = () => {
         const pageNumbers = [];
 
-        // Handle pagination with ellipsis
         if (totalPages <= 5) {
-            // If there are 5 or fewer pages, show all page numbers
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
         } else {
-            // Always show the first page
             pageNumbers.push(1);
 
-            // Show ellipsis if current page is greater than 3
             if (currentPage > 3) {
                 pageNumbers.push('...');
             }
 
-            // Show two pages around the current page
             for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
                 if (!pageNumbers.includes(i)) {
                     pageNumbers.push(i);
                 }
             }
 
-            // Show ellipsis if current page is less than total pages - 2
             if (currentPage < totalPages - 2) {
                 pageNumbers.push('...');
             }
 
-            // Always show the last page
+
             if (!pageNumbers.includes(totalPages)) {
                 pageNumbers.push(totalPages);
             }
         }
 
-        // Log to verify page numbers
-        console.log(pageNumbers);
+
 
         return pageNumbers.map((number, index) => (
             number === '...' ? (
@@ -498,6 +482,330 @@ const ExelTrackerStatus = () => {
     const goBack = () => {
         handleTabChange('client_master');
     }
+
+
+    const getColumnWidth = (numColumns) => `${100 / numColumns}%`;
+
+    const styles = StyleSheet.create({
+        page: {
+            padding: 20,
+            backgroundColor: '#ffffff',
+        },
+        tableCell: {
+            borderLeftWidth: 1,
+            borderLeftColor: '#000',
+            padding: 12,
+            width: '16.66%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+        },
+        greenBox: {
+            height: 15,
+            width: 15,
+            backgroundColor: 'green',
+            marginRight: 10,
+        },
+        redBox: {
+            height: 15,
+            width: 15,
+            backgroundColor: 'red',
+            marginRight: 10,
+        },
+        orangeBox: {
+            height: 15,
+            width: 15,
+            backgroundColor: 'orange',
+            marginRight: 10,
+        },
+        pinkBox: {
+            height: 15,
+            width: 15,
+            backgroundColor: 'pink',
+            marginRight: 10,
+        },
+        yellowBox: {
+            height: 15,
+            width: 15,
+            backgroundColor: 'yellow',
+            marginRight: 10,
+        },
+        title: {
+            textAlign: 'center',
+            fontSize: 18,
+            fontWeight: 'bold',
+            marginBottom: 10,
+        },
+        row: {
+            flexDirection: 'row',
+            borderBottomWidth: 1,
+            borderBottomColor: '#000',
+        },
+        cell: {
+            border: '1px solid #000',
+            padding: 10,
+            fontSize: 12,
+            textAlign: 'left',
+            width: '50%',
+        },
+        header: {
+            backgroundColor: '#f0f0f0',
+            fontWeight: 'bold',
+        },
+        disclaimer: {
+            fontSize: 10,
+            marginTop: 10,
+            borderTop: '1pt solid #000',
+            paddingTop: 10,
+            textAlign: 'center',
+        },
+        headerText: {
+            fontSize: 10,
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+        },
+        border: {
+            borderLeft: '1pt solid #000',
+            padding: 4,
+        }
+    });
+
+
+    const MyDocument = () => (
+  
+        <Document>
+        <Page size="A4" style={styles.page}>
+            <Text style={styles.title}>Confidential Background Verification Report
+            </Text>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Name of the Candidate</Text>
+                    <Text style={styles.cell}>{pdfData?.name || ' N/A'}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Application ID</Text>
+                    <Text style={styles.cell}>{pdfData?.application_id || ' N/A'}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Client Name</Text>
+                    <Text style={styles.cell}>{parentCustomer[0]?.name || 'N/A'}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Report Status</Text>
+                    <Text style={styles.cell}>{cmtAllData?.report_status || ' N/A'}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Date of Birth</Text>
+                    <Text style={styles.cell}>
+                        {cmtAllData.dob ? new Date(cmtAllData.dob).toLocaleDateString() : 'N/A'}
+                    </Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Report Type</Text>
+                    <Text style={styles.cell}>{cmtAllData.report_type || 'N/A'}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+            </View>
+            <View style={styles.row}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>Overall Report Status</Text>
+                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
+                </View>
+            </View>
+    
+    
+    
+    
+    
+            <View style={{ width: '100%', marginBottom: 20, marginTop: 20 }}>
+                <View style={{ flexDirection: 'row', backgroundColor: '#22c55e', color: '#fff' }}>
+                    <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 13 }}>Report Components</Text>
+                    </View>
+                    <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 13 }}>Information Source</Text>
+                    </View>
+                    <View style={{ border: '1px solid #000', padding: 12, flex: 2, textAlign: 'center' }}>
+                        <Text style={{ fontSize: 13 }}>Components Status</Text>
+                        <View style={{ flexDirection: 'row', backgroundColor: '#22c55e', color: '#fff', marginTop: 10 }}>
+                            <View style={{ flex: 1, textAlign: 'center' }}>
+                                <Text style={{ fontSize: 13 }}>Completed Date</Text>
+                            </View>
+                            <View style={{ flex: 1, textAlign: 'center' }}>
+                                <Text style={{ fontSize: 13 }}>Verification Status</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+    
+    
+    
+                {serviceTitleValue.map(item => (
+                    <View key={item.title} style={{ flexDirection: 'row' }}>
+                        <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'left' }}>
+                            <Text style={{ fontSize: 13 }}>{item.title}</Text>
+                        </View>
+                        <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'left' }}>
+                            <Text style={{ fontSize: 13 }}>{item.info_source}</Text>
+                        </View>
+                        <View style={{ flex: 2, flexDirection: 'row' }}>
+                            <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
+                                <Text style={{ fontSize: 13 }}>
+                                    {item.verified_at
+                                        ? new Date(item.verified_at).toLocaleDateString(undefined, {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })
+                                        : 'N/A'}
+                                </Text>
+                            </View>
+                            <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
+                                <Text style={{ fontSize: 13 }}>{item.status.replace(/[_-]/g, ' ')}</Text>
+                            </View>
+                        </View>
+                    </View>
+                ))}
+            </View>
+    
+    
+            <View style={{ width: '100%' }}>
+                <Text style={styles.title}>
+                    End of summary report
+                </Text>
+    
+                <View>
+                    <Text style={styles.title}>Component Status</Text>
+                </View>
+                <View style={{ width: '100%', marginTop: 30, borderWidth: 1, borderColor: '#000' }}>
+    
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
+                            <View style={styles.greenBox}></View>
+                            <Text style={styles.headerText}>Report Component</Text>
+                        </View>
+                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
+                            <View style={styles.redBox}></View>
+                            <Text style={styles.headerText}>Information Source</Text>
+                        </View>
+                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
+                            <View style={styles.orangeBox}></View>
+                            <Text style={styles.headerText}>Component Status</Text>
+                        </View>
+                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
+                            <View style={styles.pinkBox}></View>
+                            <Text style={styles.headerText}>Component Status</Text>
+                        </View>
+                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
+                            <View style={styles.yellowBox}></View>
+                            <Text style={styles.headerText}>Component Status</Text>
+                        </View>
+                    </View>
+    
+                </View>
+            </View>
+    
+
+            <Text style={styles.title}>Additional Details</Text>
+            {allInputDetails.map((annexure, index) => (
+                <View key={index} style={{ marginBottom: 20 }}>
+                    <Text style={{ padding: 10, backgroundColor: '#22c55e', color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 18 }}>
+                        {annexure.annexureHeading}
+                    </Text>
+                    <View style={{ padding: 10 }}>
+                        {annexure.inputDetails.map((input, idx) => (
+                            <View key={idx} style={{ marginVertical: 5 }}>
+                                <View style={{ flexDirection: 'row', marginVertical: 5 }}>
+                                    <Text style={{ flex: 1, fontWeight: 'bold' }}>{input.label}:</Text>
+                                    <Text style={{ flex: 2 }}>
+                                        {input.type === 'datepicker'
+                                            ? input.value ? new Date(input.value).toLocaleDateString() : 'N/A'
+                                            : input.value || 'N/A'}
+                                    </Text>
+                                </View>
+                                {input.type === 'file' && input.value ? (
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginVertical: 5 }}>
+                                        {input.value.split(',').map((url, index) => (
+                                            <Image
+                                                key={index}
+                                                source={{ uri: `https://goldquestreact.onrender.com/${url.trim()}` }}
+                                                style={{ width: '100%', height: 200, marginVertical: 5 }} // Full width, adjust height as needed
+                                                resizeMode="contain" // Maintain aspect ratio
+                                            />
+                                        ))}
+                                    </View>
+                                ) : null}
+                            </View>
+                        ))}
+                    </View>
+                </View>
+            ))}
+    
+            <View style={{ border: '1px solid #000', borderTop: '0px', padding: 10 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 12 }}>Remarks</Text>:
+                <Text style={{ fontSize: 10 }}>
+                    The following applicant details are verbally verified by Mr. Prashant Vishwas, (Head Constable), and the notary report duly stamped and signed by Mr. Harsh Shukla (Advocate) with comment on criminal record not found. Hence closing the check as GREEN and the same is furnished as annexure.
+                </Text>
+            </View>
+    
+            <Text style={{ fontWeight: 'bold', marginTop: 10, fontSize: 12 }}>Annexure - 1 (A)</Text>
+    
+            <View style={{ textAlign: 'center' }}>
+                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem, ipsum dolor.</Text>
+                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem ipsum dolor sit amet consectetur.</Text>
+                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem ipsum dolor sit.</Text>
+                <View style={{ borderBottomWidth: 1, marginVertical: 10 }} />
+            </View>
+    
+    
+            <View>
+                <Text style={{ backgroundColor: 'green', color: '#fff', padding: 10, width: '100%', textAlign: 'center', borderRadius: 10 }}>
+                    Disclaimer
+                </Text>
+                <Text style={{ paddingBottom: 15, fontSize: 10 }}>
+                    This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided.
+                </Text>
+                <Text style={{ border: '1px solid #000', padding: 10, width: '100%', textAlign: 'center', borderRadius: 10 }}>
+                    End of detail report
+                </Text>
+            </View>
+    
+    
+            <Text style={styles.disclaimer}>
+                This report is confidential and is meant for the exclusive use of the Client.
+            </Text>
+        </Page>
+    </Document>
+      );
+
+
     return (
         <>
             <div className='p-3 my-14'>
@@ -580,7 +888,11 @@ const ExelTrackerStatus = () => {
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                <PDFDownloadLink document={<MyDocument />} fileName="report.pdf">
+                                                <button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button>
+                                                </PDFDownloadLink>
+                                                </td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
@@ -604,9 +916,12 @@ const ExelTrackerStatus = () => {
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                            <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
+                                                                        {serviceHeadings[item.id]?.map((value, index) => (
+                                                                            <th key={index} className="service-th py-3 px-4 border-b text-left uppercase whitespace-nowrap">
+                                                                                {value || 'Initiated'}
+                                                                            </th>
                                                                         ))}
+
 
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
                                                                     </tr>
@@ -666,287 +981,7 @@ const ExelTrackerStatus = () => {
                 </div>
 
             </div>
-
-            <div className='opacity-0 '>
-
-                <div ref={printRef} style={{ padding: '70px', backgroundColor: '#fff', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
-                    <img src="https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1" alt="" style={{ width: '200px' }} />
-
-                    <h1 style={{ textAlign: 'center', paddingBottom: '20px', fontWeight: '700', fontSize: '30px' }}>CONFIDENTIAL BACKGROUND VERIFICATION REPORT</h1>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Name of the Candidate               </th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.name || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Client Name</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{parentCustomer[0]?.name || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application ID</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.application_id || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Report Status</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.report_status || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Date of Birth</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.dob
-                                    ? new Date(cmtAllData.dob).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application Received</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  {pdfData?.updated_at
-                                    ? new Date(pdfData.updated_at).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Candidate Employee ID</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.employee_id || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Insuff Cleared/Reopened</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap', border: '1px solid #ccc' }}>{pdfData?.application_id || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Report Type</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{cmtAllData?.report_type || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  Final Report Date</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.report_date
-                                    ? new Date(cmtAllData.report_date).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Verification Purpose</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.overall_status || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  Overall Report Status</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.status || ' N/A'}</td>
-
-                            </tr>
-
-                        </thead>
-
-                    </table>
-                    <br />
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr>
-                                <th
-                                    style={{
-                                        border: '1px solid #000',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                        borderBottom: '0px',
-                                    }}
-                                >
-                                    REPORT COMPONENTS
-                                </th>
-                                <th
-                                    style={{
-                                        border: '1px solid #000',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                        borderBottom: '0px',
-                                    }}
-                                >
-                                    INFORMATION SOURCE
-                                </th>
-                                <th
-                                    colSpan={2}
-                                    style={{
-                                        border: '1px solid #000',
-                                        borderBottom: '0px',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                    }}
-                                >
-                                    COMPONENT STATUS
-                                </th>
-                            </tr>
-                            <tr>
-                                <th colSpan={2} style={{
-                                    padding: '12px', fontSize: '17px',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}></th>
-                                <th style={{
-                                    border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}>Completed Date</th>
-                                <th style={{
-                                    border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}>Verification Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                serviceTitleValue.map(item => (
-                                    <tr key={item.title}> {/* Use a unique key for each row */}
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                            {item.title}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                            {item.info_source} {/* You can replace this with the actual name if available */}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center' }}>
-                                            {item.verified_at
-                                                ? new Date(item.verified_at).toLocaleDateString(undefined, {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })
-                                                : 'N/A'}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center' }}>
-                                            {item.status.replace(/[_-]/g, ' ')}
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-
-                    </table>
-
-
-                    <h2 style={{ textAlign: 'center', fontSize: '20px', fontWeight: '600', marginTop: '30px' }}> End of summary report</h2>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '30px', border: '1px solid #000' }}>
-                        <thead>
-                            <tr>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%" }}>COMPONENT STATUS </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'green' }}></div>REPORT COMPONENTS</th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'red' }}></div>INFORMATION SOURCE</th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'orange' }}></div>COMPONENT STATUS  </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'pink' }}></div>COMPONENT STATUS  </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'yellow' }}></div>COMPONENT STATUS  </th>
-                            </tr>
-                        </thead>
-                    </table>
-                    {allInputDetails.map((annexure, index) => (
-                        <div key={index}>
-                            <h3 style={{ padding: '10px', border: '1px solid #000', backgroundColor: '#22c55e', width: '100%', color: '#fff', marginTop: '30px', textAlign: 'center', fontWeight: 'bold' }}>
-                                {annexure.annexureHeading}
-                            </h3>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: '0px', padding: '20px' }}>
-                                <thead>
-                                    <tr>
-                                        <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application Details</th>
-                                        <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Report Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {annexure.inputDetails.map((input, idx) => (
-                                        <React.Fragment key={idx}>
-                                            {input.type !== 'file' ? (
-                                                <tr>
-                                                    <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.label}
-                                                    </th>
-                                                    <td style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.type === 'datepicker' ? (
-                                                            input.value
-                                                                ? new Date(input.value).toLocaleDateString(undefined, {
-                                                                    year: 'numeric',
-                                                                    month: 'long',
-                                                                    day: 'numeric'
-                                                                })
-                                                                : 'N/A'
-                                                        ) : (
-                                                            input.value ? input.value.replace(/[_-]/g, ' ') : 'N/A'
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                // Handle the case for 'file' type
-                                                <tr>
-                                                    <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.label}
-                                                    </th>
-                                                    <td style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.value ? (
-                                                            input.value.split(',').map((url, index) => (
-                                                                <img
-                                                                    key={index}
-                                                                    src={`https://goldquestreact.onrender.com/${url.trim()}`}
-                                                                    alt={`Image ${index + 1}`}
-                                                                    style={{ width: '50px', height: '50px', marginLeft: '10px' }} // Adjust styles as needed
-                                                                />
-                                                            ))
-                                                        ) : (
-                                                            'N/A'
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </tbody>
-
-                            </table>
-                        </div>
-                    ))}
-
-                    <p style={{ border: "1px solid #000", borderTop: '0px', padding: '10px' }}><b>Remarks</b>: The following applicant details are verbally verified by Mr. Prashant Vishwas, (Head Constable), and the notary
-                        report duly stamped and signed by Mr.Harsh Shukla (Advocate)with comment on criminal record not found, Hence
-                        closing the check as GREEN and the same is furnished as annexure.</p>
-                    <b> Annexure - 1 (A) </b>
-
-                    <div style={{ textAlign: 'center', }}>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem, ipsum dolor.</h5>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem ipsum dolor sit amet consectetur.</h5>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem ipsum dolor sit.</h5>
-                        <hr />
-                    </div>
-
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", marginTop: '20px', fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-
-                    <div>
-                        <button style={{ backgroundColor: 'green', color: "#fff", padding: '13px', width: '100%', borderRadius: '10px', marginBottom: '15px' }}>Disclaimer</button>
-                        <p>This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the
-                            purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any
-                            other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the
-                            information purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on
-                            the information responsible for employment decisions based on the information provided in this report. </p>
-                        <button style={{ border: '1px solid #000', padding: '13px', width: '100%', borderRadius: '10px', marginTop: '15px' }}>End of detail report</button>
-                    </div>
-                </div>
-            </div>
-
-
         </>
-
-
 
     );
 };
