@@ -121,7 +121,6 @@ const GenerateReportProvider = ({ children }) => {
     
     
 
-    // Function to send report data
     const sendReport = async () => {
         try {
             const response = await fetch('YOUR_API_ENDPOINT', {

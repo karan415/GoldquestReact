@@ -317,7 +317,7 @@ const ExelTrackerStatus = () => {
             console.log(`All data is set. Now generating PDF.`);
             generatePDF();
         }
-          
+
     }, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
 
     const handleDownloadPdf = async (id, branch_id) => {
@@ -495,7 +495,8 @@ const ExelTrackerStatus = () => {
 
     const generatePDF = () => {
         const doc = new jsPDF();
-
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         // Add the logo
         doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
 
@@ -650,12 +651,15 @@ const ExelTrackerStatus = () => {
             doc.text(annexure.annexureHeading, 105, 10, { align: 'center' });
 
             // Prepare annexure data
-            const annexureData = annexure.inputDetails.map(input => [
-                { content: input.label },
-                { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
-            ]);
+            const annexureData = annexure.inputDetails
+                .filter(input => input.type !== 'file') // Skip inputs with type 'file'
+                .map(input => [
+                    { content: input.label },
+                    { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
+                ]);
 
-            // AutoTable for the annexure data
+
+
             doc.autoTable({
                 head: [['Application Details', 'Report Details']],
                 body: annexureData,
@@ -663,25 +667,15 @@ const ExelTrackerStatus = () => {
                 theme: 'grid',
                 margin: { top: 20 },
             });
-
-            // Find the annexure image path (assuming the file paths are stored in 'value' of type 'file')
+            console.log(`annexureImage - `, annexure);
             const annexureImage = annexure.inputDetails.find(input => input.type === 'file');
-            if (annexureImage) {
+            console.log(`annexureImage - `, annexureImage);
+            if (annexureImage && annexureImage.value) {
                 const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + annexureImage.value;
-
-                try {
-                    // Check if the image URL is valid by making a HEAD request
-                    const response = await fetch(imagePath, { method: 'HEAD' });
-
-                    if (response.ok) {
-                        // If the image exists, add it to the PDF
-                        doc.addImage(imagePath, 'JPEG', 10, doc.lastAutoTable.finalY + 10, 190, 0); // 190 for full width
-                    } else {
-                        console.warn("Image not found:", imagePath);
-                    }
-                } catch (error) {
-                    console.error("Error checking image:", error);
-                }
+                const imageY = doc.lastAutoTable.finalY + 20;
+                const imageWidth = pageWidth - 40;
+                const imageHeight = (imageWidth / 100);
+                doc.addImage(imagePath, 20, imageY, imageWidth, 100);
             }
         });
 
