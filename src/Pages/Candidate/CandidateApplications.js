@@ -33,6 +33,9 @@ const CandidateApplications = () => {
     const { formData, setFormData, handleInputChange } = useGenerateReport();
     const [errors, setErrors] = useState({});
     const [serviceHeadings, setServiceHeadings] = useState([]);
+    const [cmtData, setCmtData] = useState([]);
+    const [applications, setApplications] = useState([]);
+    const [customerInfo, setCustomerInfo] = useState([]);
     const [selectedStatuses, setSelectedStatuses] = useState(Array(serviceHeadings.length).fill(''));
 
 
@@ -320,14 +323,33 @@ const CandidateApplications = () => {
             })
             .then(data => {
 
-                const applications = data.application;
+                const applicationsData = data.application;
+                setApplications(applicationsData)
+                console.log('applications', applications)
+
                 Object.entries(applications).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
                     if (input) {
                         input.value = value || '';
                     }
                 });
+
+                const customerInfo = data.customerInfo;
+
+                setCustomerInfo(customerInfo);
+                console.log('customerInfo', customerInfo)
+                Object.entries(customerInfo).forEach(([key, value]) => {
+                    const input = document.querySelector(`input[name="${key}"]`);
+                    if (input) {
+                        input.value = value || '';
+                    }
+                });
+
+
+
                 const cmtData = data.CMTData;
+                console.log('cmtData', cmtData);
+                setCmtData(cmtData)
 
                 Object.entries(cmtData).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
@@ -337,71 +359,6 @@ const CandidateApplications = () => {
                 });
 
 
-                setFormData(prevFormData => {
-                    const updated_json = {
-                        month_year: prevFormData.updated_json.month_year || applications.month_year || '',
-                        initiation_date: applications.initiation_date || prevFormData.updated_json.initiation_date || '',
-                        organization_name: applications.organization_name || prevFormData.updated_json.organization_name || '',
-                        verification_purpose: applications.verification_purpose || prevFormData.updated_json.verification_purpose || '',
-                        employee_id: applications.employee_id || prevFormData.updated_json.employee_id || '',
-                        client_code: applications.client_code || prevFormData.updated_json.client_code || '',
-                        applicant_name: applications.applicant_name || prevFormData.updated_json.applicant_name || '',
-                        contact_number: applications.contact_number || prevFormData.updated_json.contact_number || '',
-                        contact_number2: applications.contact_number2 || prevFormData.updated_json.contact_number2 || '',
-                        father_name: applications.father_name || prevFormData.updated_json.father_name || '',
-                        dob: applications.dob || prevFormData.updated_json.dob || '',
-                        gender: applications.gender || prevFormData.updated_json.gender || '',
-                        marital_status: applications.marital_status || prevFormData.updated_json.marital_status || '',
-                        nationality: applications.nationality || prevFormData.updated_json.nationality || '',
-                        insuff: applications.insuff || prevFormData.updated_json.insuff || '',
-                        address: {
-                            address: cmtData.address || prevFormData.updated_json.address?.address || '',
-                            landmark: cmtData.landmark || prevFormData.updated_json.address?.landmark || '',
-                            residence_mobile_number: cmtData.residence_mobile_number || prevFormData.updated_json.address?.residence_mobile_number || '',
-                            state: cmtData.state || prevFormData.updated_json.address?.state || ''
-                        },
-                        permanent_address: {
-                            permanent_address: cmtData.permanent_address || prevFormData.updated_json.permanent_address?.permanent_address || '',
-                            permanent_sender_name: cmtData.permanent_sender_name || prevFormData.updated_json.permanent_address?.permanent_sender_name || '',
-                            permanent_receiver_name: cmtData.permanent_receiver_name || prevFormData.updated_json.permanent_address?.permanent_receiver_name || '',
-                            permanent_landmark: cmtData.permanent_landmark || prevFormData.updated_json.permanent_address?.permanent_landmark || '',
-                            permanent_pin_code: cmtData.permanent_pin_code || prevFormData.updated_json.permanent_address?.permanent_pin_code || '',
-                            permanent_state: cmtData.permanent_state || prevFormData.updated_json.permanent_address?.permanent_state || ''
-                        },
-                        insuffDetails: {
-                            first_insufficiency_marks: cmtData.first_insufficiency_marks || prevFormData.updated_json.insuffDetails?.first_insufficiency_marks || '',
-                            first_insuff_date: cmtData.first_insuff_date || prevFormData.updated_json.insuffDetails?.first_insuff_date || '',
-                            first_insuff_reopened_date: cmtData.first_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.first_insuff_reopened_date || '',
-                            second_insufficiency_marks: cmtData.second_insufficiency_marks || prevFormData.updated_json.insuffDetails?.second_insufficiency_marks || '',
-                            second_insuff_date: cmtData.second_insuff_date || prevFormData.updated_json.insuffDetails?.second_insuff_date || '',
-                            second_insuff_reopened_date: cmtData.second_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.second_insuff_reopened_date || '',
-                            third_insufficiency_marks: cmtData.third_insufficiency_marks || prevFormData.updated_json.insuffDetails?.third_insufficiency_marks || '',
-                            third_insuff_date: cmtData.third_insuff_date || prevFormData.updated_json.insuffDetails?.third_insuff_date || '',
-                            third_insuff_reopened_date: cmtData.third_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.third_insuff_reopened_date || '',
-                            overall_status: cmtData.overall_status || prevFormData.updated_json.insuffDetails?.overall_status || '',
-                            report_date: cmtData.report_date || prevFormData.updated_json.insuffDetails?.report_date || '',
-                            report_status: cmtData.report_status || prevFormData.updated_json.insuffDetails?.report_status || '',
-                            report_type: cmtData.report_type || prevFormData.updated_json.insuffDetails?.report_type || '',
-                            final_verification_status: cmtData.final_verification_status || prevFormData.updated_json.insuffDetails?.final_verification_status || '',
-                            is_verify: cmtData.is_verify || prevFormData.updated_json.insuffDetails?.is_verify || '',
-                            deadline_date: cmtData.deadline_date || prevFormData.updated_json.insuffDetails?.deadline_date || '',
-                            insuff_address: cmtData.insuff_address || prevFormData.updated_json.insuffDetails?.insuff_address || '',
-                            basic_entry: cmtData.basic_entry || prevFormData.updated_json.insuffDetails?.basic_entry || '',
-                            education: cmtData.education || prevFormData.updated_json.insuffDetails?.education || '',
-                            case_upload: cmtData.case_upload || prevFormData.updated_json.insuffDetails?.case_upload || '',
-                            emp_spoc: cmtData.emp_spoc || prevFormData.updated_json.insuffDetails?.emp_spoc || '',
-                            report_generate_by: cmtData.report_generate_by || prevFormData.updated_json.insuffDetails?.report_generate_by || '',
-                            qc_done_by: cmtData.qc_done_by || prevFormData.updated_json.insuffDetails?.qc_done_by || '',
-                            delay_reason: cmtData.delay_reason || prevFormData.updated_json.insuffDetails?.delay_reason || ''
-                        }
-                    };
-
-                    return {
-                        ...prevFormData,
-                        updated_json // Return the updated_json as part of the new state
-                    };
-                });
-
 
 
 
@@ -410,9 +367,9 @@ const CandidateApplications = () => {
                     initiation_date: !!applications.initiation_date,
                     organization_name: !!applications.organization_name,
                     verification_purpose: !!applications.verification_purpose,
-                    employee_id: !!applications.employee_id,
                     client_code: !!applications.client_code,
                     applicant_name: !!applications.name,
+                    employee_id: !!applications.employee_id,
                     contact_number: !!applications.contact_number,
                     contact_number2: !!applications.contact_number2,
                     father_name: !!applications.father_name,
@@ -462,7 +419,9 @@ const CandidateApplications = () => {
             customerLogoFormData.append('application_id', application_id);
             customerLogoFormData.append('email_status', email_status || 0);
             customerLogoFormData.append('branch_id', branch_id);
-            customerLogoFormData.append('customer_code', formData.employee_id);
+            customerLogoFormData.append('customer_code', customerInfo.client_unique_id);
+            customerLogoFormData.append('application_code', applications.application_id);
+
 
             // Check if selectedFiles is not empty
             if (value.selectedFiles.length > 0) {
@@ -528,6 +487,73 @@ const CandidateApplications = () => {
 
             return acc;
         }, {});
+
+
+        setFormData(prevFormData => {
+            const updated_json = {
+                month_year: cmtData.month_year || applications.month_year || prevFormData.updated_json.month_year || '',
+                initiation_date: cmtData.initiation_date || applications.initiation_date || prevFormData.updated_json.initiation_date || '',
+                organization_name: cmtData.organization_name || applications.organization_name || prevFormData.updated_json.organization_name || '',
+                verification_purpose: cmtData.verification_purpose || applications.verification_purpose || prevFormData.updated_json.verification_purpose || '',
+                employee_id: cmtData.employee_id || applications.employee_id || prevFormData.updated_json.employee_id || '',
+                client_code: cmtData.client_code || applications.client_code || prevFormData.updated_json.client_code || '',
+                applicant_name: cmtData.applicant_name || applications.applicant_name || prevFormData.updated_json.applicant_name || '',
+                contact_number: cmtData.contact_number || applications.contact_number || prevFormData.updated_json.contact_number || '',
+                contact_number2: cmtData.contact_number2 || applications.contact_number2 || prevFormData.updated_json.contact_number2 || '',
+                father_name: cmtData.father_name || applications.father_name || prevFormData.updated_json.father_name || '',
+                dob: cmtData.dob || applications.dob || prevFormData.updated_json.dob || '',
+                gender: cmtData.gender || applications.gender || prevFormData.updated_json.gender || '',
+                marital_status: cmtData.marital_status || applications.marital_status || prevFormData.updated_json.marital_status || '',
+                nationality: cmtData.nationality || applications.nationality || prevFormData.updated_json.nationality || '',
+                insuff: cmtData.insuff || applications.insuff || prevFormData.updated_json.insuff || '',
+                address: {
+                    address: cmtData.address || prevFormData.updated_json.address?.address || '',
+                    landmark: cmtData.landmark || prevFormData.updated_json.address?.landmark || '',
+                    residence_mobile_number: cmtData.residence_mobile_number || prevFormData.updated_json.address?.residence_mobile_number || '',
+                    state: cmtData.state || prevFormData.updated_json.address?.state || ''
+                },
+                permanent_address: {
+                    permanent_address: cmtData.permanent_address || prevFormData.updated_json.permanent_address?.permanent_address || '',
+                    permanent_sender_name: cmtData.permanent_sender_name || prevFormData.updated_json.permanent_address?.permanent_sender_name || '',
+                    permanent_receiver_name: cmtData.permanent_receiver_name || prevFormData.updated_json.permanent_address?.permanent_receiver_name || '',
+                    permanent_landmark: cmtData.permanent_landmark || prevFormData.updated_json.permanent_address?.permanent_landmark || '',
+                    permanent_pin_code: cmtData.permanent_pin_code || prevFormData.updated_json.permanent_address?.permanent_pin_code || '',
+                    permanent_state: cmtData.permanent_state || prevFormData.updated_json.permanent_address?.permanent_state || ''
+                },
+                insuffDetails: {
+                    first_insufficiency_marks: cmtData.first_insufficiency_marks || prevFormData.updated_json.insuffDetails?.first_insufficiency_marks || '',
+                    first_insuff_date: cmtData.first_insuff_date || prevFormData.updated_json.insuffDetails?.first_insuff_date || '',
+                    first_insuff_reopened_date: cmtData.first_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.first_insuff_reopened_date || '',
+                    second_insufficiency_marks: cmtData.second_insufficiency_marks || prevFormData.updated_json.insuffDetails?.second_insufficiency_marks || '',
+                    second_insuff_date: cmtData.second_insuff_date || prevFormData.updated_json.insuffDetails?.second_insuff_date || '',
+                    second_insuff_reopened_date: cmtData.second_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.second_insuff_reopened_date || '',
+                    third_insufficiency_marks: cmtData.third_insufficiency_marks || prevFormData.updated_json.insuffDetails?.third_insufficiency_marks || '',
+                    third_insuff_date: cmtData.third_insuff_date || prevFormData.updated_json.insuffDetails?.third_insuff_date || '',
+                    third_insuff_reopened_date: cmtData.third_insuff_reopened_date || prevFormData.updated_json.insuffDetails?.third_insuff_reopened_date || '',
+                    overall_status: cmtData.overall_status || prevFormData.updated_json.insuffDetails?.overall_status || '',
+                    report_date: cmtData.report_date || prevFormData.updated_json.insuffDetails?.report_date || '',
+                    report_status: cmtData.report_status || prevFormData.updated_json.insuffDetails?.report_status || '',
+                    report_type: cmtData.report_type || prevFormData.updated_json.insuffDetails?.report_type || '',
+                    final_verification_status: cmtData.final_verification_status || prevFormData.updated_json.insuffDetails?.final_verification_status || '',
+                    is_verify: cmtData.is_verify || prevFormData.updated_json.insuffDetails?.is_verify || '',
+                    deadline_date: cmtData.deadline_date || prevFormData.updated_json.insuffDetails?.deadline_date || '',
+                    insuff_address: cmtData.insuff_address || prevFormData.updated_json.insuffDetails?.insuff_address || '',
+                    basic_entry: cmtData.basic_entry || prevFormData.updated_json.insuffDetails?.basic_entry || '',
+                    education: cmtData.education || prevFormData.updated_json.insuffDetails?.education || '',
+                    case_upload: cmtData.case_upload || prevFormData.updated_json.insuffDetails?.case_upload || '',
+                    emp_spoc: cmtData.emp_spoc || prevFormData.updated_json.insuffDetails?.emp_spoc || '',
+                    report_generate_by: cmtData.report_generate_by || prevFormData.updated_json.insuffDetails?.report_generate_by || '',
+                    qc_done_by: cmtData.qc_done_by || prevFormData.updated_json.insuffDetails?.qc_done_by || '',
+                    delay_reason: cmtData.delay_reason || prevFormData.updated_json.insuffDetails?.delay_reason || ''
+                }
+            };
+
+            return {
+                ...prevFormData,
+                updated_json // Return the updated_json as part of the new state
+            };
+        });
+
 
 
         let raw;
@@ -604,6 +630,8 @@ const CandidateApplications = () => {
     };
 
 
+    console.log('formData', formData)
+
     return (
         <form onSubmit={handleFormSubmit}>
             <div className="grid grid-cols-2 gap-3">
@@ -614,7 +642,7 @@ const CandidateApplications = () => {
                         name="month_year"
                         id="month_year"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.month_year}
+                        value={applications.month_year || formData.month_year}
                         disabled={disabledFields.month_year}
                         onChange={handleInputChange}
                     />
@@ -629,7 +657,7 @@ const CandidateApplications = () => {
                         name="initiation_date"
                         id="initiation_date"
                         className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                        value={formData.initiation_date}
+                        value={applications.initiation_date || formData.initiation_date}
                         disabled={disabledFields.initiation_date}
                         onChange={handleInputChange}
                     />
@@ -646,7 +674,7 @@ const CandidateApplications = () => {
                         name="organization_name"
                         id="organization_name"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.organization_name}
+                        value={applications.name || formData.organization_name}
                         disabled={disabledFields.organization_name}
                         onChange={handleInputChange}
                     />
@@ -676,9 +704,9 @@ const CandidateApplications = () => {
                         name="employee_id"
                         id="employee_id"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.employee_id}
+                        value={applications.employee_id || formData.employee_id}
                         disabled={disabledFields.employee_id}
-                        onChange={handleInputChange}
+
                     />
                     {errors.employee_id && <span className="text-red-500">{errors.employee_id}</span>}
                 </div>
@@ -690,7 +718,7 @@ const CandidateApplications = () => {
                         name="client_code"
                         id="Client_Code"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.client_code}
+                        value={customerInfo.client_unique_id || formData.client_code}
                         disabled={disabledFields.client_code}
                         onChange={handleInputChange}
                     />

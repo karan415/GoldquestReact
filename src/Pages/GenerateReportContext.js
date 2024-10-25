@@ -74,11 +74,10 @@ const GenerateReportProvider = ({ children }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-
+    
         if (name.startsWith('updated_json.address.')) {
             const nestedField = name.split('.').slice(2).join('.'); // Get the nested field
             setFormData(prevFormData => ({
-                ...prevFormData,
                 updated_json: {
                     ...prevFormData.updated_json,
                     address: {
@@ -90,7 +89,6 @@ const GenerateReportProvider = ({ children }) => {
         } else if (name.startsWith('updated_json.permanent_address.')) {
             const nestedField = name.split('.').slice(2).join('.');
             setFormData(prevFormData => ({
-                ...prevFormData,
                 updated_json: {
                     ...prevFormData.updated_json,
                     permanent_address: {
@@ -102,7 +100,6 @@ const GenerateReportProvider = ({ children }) => {
         } else if (name.startsWith('updated_json.insuffDetails.')) {
             const nestedField = name.split('.').slice(2).join('.');
             setFormData(prevFormData => ({
-                ...prevFormData,
                 updated_json: {
                     ...prevFormData.updated_json,
                     insuffDetails: {
@@ -112,15 +109,17 @@ const GenerateReportProvider = ({ children }) => {
                 }
             }));
         } else {
+            // For top-level fields and other nested structures
             setFormData(prevFormData => ({
-                ...prevFormData,
                 updated_json: {
                     ...prevFormData.updated_json,
-                    [name]: value
+                    [name]: value // Directly set the value for top-level fields
                 }
             }));
         }
     };
+    
+    
 
     // Function to send report data
     const sendReport = async () => {
