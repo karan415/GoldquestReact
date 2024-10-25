@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { useApi } from '../ApiContext';
-import Swal from 'sweetalert2';
+import { useApi } from '../ApiContext'
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
@@ -46,11 +45,7 @@ const ClientMasterTrackerList = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                        Swal.fire(
-                            'Error!',
-                            `An error occurred: ${errorData.message}`,
-                            'error'
-                        );
+                       
                         throw new Error(text);
                     });
                 }
@@ -64,7 +59,6 @@ const ClientMasterTrackerList = () => {
                 setData(data.customers || []);
             })
             .catch((error) => {
-                console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
@@ -86,11 +80,7 @@ const ClientMasterTrackerList = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                        Swal.fire(
-                            'Error!',
-                            `An error occurred: ${errorData.message}`,
-                            'error'
-                        );
+                       
                         throw new Error(text);
                     });
                 }
@@ -106,7 +96,6 @@ const ClientMasterTrackerList = () => {
                 setExpandedClient(prev => (prev === id ? null : id)); // Toggle branches visibility
             })
             .catch((error) => {
-                console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
@@ -134,7 +123,6 @@ const ClientMasterTrackerList = () => {
                 return response.json();
             })
             .then((result) => {
-                console.log(result);
                 setOptions(result.filterOptions);
             })
             .catch((error) => console.error('Error fetching options:', error));
@@ -216,8 +204,6 @@ const ClientMasterTrackerList = () => {
             }
         }
 
-        // Log to verify page numbers
-        console.log(pageNumbers);
 
         return pageNumbers.map((number, index) => (
             number === '...' ? (

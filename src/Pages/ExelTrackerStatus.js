@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { useApi } from '../ApiContext';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
-
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
@@ -18,7 +17,6 @@ const ExelTrackerStatus = () => {
     const [pdfData, setPdfData] = useState([]);
     const [serviceTitleValue, setServiceTitleValue] = useState([]);
     const [cmtAllData, setCmtAllData] = useState([]);
-    const printRef = React.useRef();
     const [dbHeadingsStatus, setDBHeadingsStatus] = useState({});
     const [applicationData, setApplicationData] = useState([]);
     const [expandedRows, setExpandedRows] = useState(null);
@@ -44,7 +42,7 @@ const ExelTrackerStatus = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                        // Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                         throw new Error(errorData.message);
                     });
                 }
@@ -58,26 +56,35 @@ const ExelTrackerStatus = () => {
                 setApplicationData(data.customers || []);
             })
             .catch(error => {
-                console.error('Fetch error:', error);
+
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
     }, [API_URL, branch_id, admin_id, storedToken]);
 
+
+
     useEffect(() => {
         fetchApplications();
     }, [fetchApplications]);
+
     const handleToggle = useCallback((index, services, id) => {
         if (!admin_id || !storedToken || !id) {
             console.error("Missing required parameters");
             return;
         }
 
+
         const newExpandedRow = expandedRows === index ? null : index;
         setExpandedRows(newExpandedRow);
 
         if (newExpandedRow === index && services) {
             const servicesArray = services.split(',').map(Number);
+
+
+            const uniqueServiceHeadings = new Set();
+            const uniqueStatuses = new Set();
+
 
             Promise.all(
                 servicesArray.map(serviceId => {
@@ -89,26 +96,30 @@ const ExelTrackerStatus = () => {
                             return response.json();
                         })
                         .then(result => {
-                            const newService = result.reportFormJson.json;
-                            const parsedData = JSON.parse(newService);
-                            const parsedDb = parsedData.db_table;
-                            const parsedDbHeading = parsedData.heading;
+                            const { reportFormJson } = result;
+                            const parsedData = JSON.parse(reportFormJson.json);
+                            const { heading, db_table } = parsedData;
 
-                            // Initialize or update serviceHeadings
-                            if (!serviceHeadings[parsedDb]) {
-                                serviceHeadings[parsedDb] = [];
-                            }
-                            serviceHeadings[parsedDb].push(parsedDbHeading); // Push heading
+                            // Add unique heading to the Set
+                            uniqueServiceHeadings.add(heading);
 
+                            // Convert the Set to an array before updating state
+                            setServiceHeadings(prev => ({
+                                ...prev,
+                                [id]: Array.from(uniqueServiceHeadings)  // Convert Set to Array
+                            }));
+
+                            // Update token if available
                             const newToken = result._token || result.token;
                             if (newToken) localStorage.setItem("_token", newToken);
-                            return parsedDb;
+                            return db_table;
                         })
                         .catch(error => console.error('Fetch error:', error));
                 })
             ).then(parsedDbs => {
                 const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
 
+                // Fetch annexure data for unique DB tables
                 const annexureFetches = uniqueDbNames.map(db_name => {
                     const url = `${API_URL}/client-master-tracker/annexure-data?application_id=${id}&db_table=${db_name}&admin_id=${admin_id}&_token=${storedToken}`;
 
@@ -117,221 +128,43 @@ const ExelTrackerStatus = () => {
                             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                             return response.json();
                         })
-                        .then(result => ({
-                            db_table: db_name,
-                            status: result?.annexureData?.status || 'N/A'
-                        }))
+                        .then(result => {
+                            const status = result?.annexureData?.status || 'N/A';
+
+                            // Add unique status
+                            uniqueStatuses.add(status);
+
+                            return {
+                                db_table: db_name,
+                                status
+                            };
+                        })
                         .catch(error => console.error("Fetch error: ", error));
                 });
 
+
                 return Promise.all(annexureFetches).then(annexureStatusArr => {
-                    setDBHeadingsStatus(prev => ({ ...prev, [id]: annexureStatusArr }));
+                    setDBHeadingsStatus(prev => ({
+                        ...prev,
+                        [id]: annexureStatusArr
+                    }));
+
+
+                    // console.log('Unique Service Headings:', Array.from(uniqueServiceHeadings));
+                    // console.log('Unique Statuses:', Array.from(uniqueStatuses));
                 });
             })
                 .catch(error => console.error("Error during service fetch or annexure fetch: ", error));
         }
     }, [expandedRows, admin_id, storedToken, API_URL, requestOptions]);
 
+    
     const generateReport = (id, services) => {
         navigate('/candidate');
         setApplicationId(id);
         setServiceId(services);
     };
 
-
-    const handleDownloadPdf = async (id, branch_id) => {
-        if (!id || !branch_id) {
-            return Swal.fire('Error!', 'Something is missing', 'error');
-        }
-
-        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(
-                `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                const errorData = JSON.parse(errorText);
-                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                throw new Error(errorText);
-            }
-
-            const data = await response.json();
-            const applications = data.application;
-            const serviceIdsArr = applications?.services?.split(',') || [];
-            const serviceTitleValue = [];
-
-            // Fetch service data
-            if (serviceIdsArr.length > 0) {
-                const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
-                    const requestOptions = {
-                        method: "GET",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        redirect: "follow",
-                    };
-
-                    const serviceInfoUrl = `https://goldquestreact.onrender.com/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                    const applicationServiceUrl = `https://goldquestreact.onrender.com/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
-
-                    const [serviceResponse, applicationResponse] = await Promise.all([
-                        fetch(serviceInfoUrl, requestOptions),
-                        fetch(applicationServiceUrl, requestOptions),
-                    ]);
-
-                    if (!serviceResponse.ok || !applicationResponse.ok) {
-                        console.error("Failed to fetch service/application data");
-                        return null; // Early exit if any request fails
-                    }
-
-                    const serviceData = await serviceResponse.json();
-                    const applicationData = await applicationResponse.json();
-
-                    const title = serviceData.service.title || "N/A";
-                    serviceTitleValue.push({
-                        title,
-                        status: applicationData.annexureData?.status || "N/A",
-                        info_source: applicationData.annexureData?.info_source || "N/A",
-                        verified_at: applicationData.annexureData?.verified_at || "N/A",
-                        color_status: applicationData.annexureData?.color_status || "N/A",
-                    });
-                });
-
-                await Promise.all(serviceFetchPromises);
-                setServiceTitleValue(serviceTitleValue);
-            }
-
-            // Fetch report form details
-            const allInputDetails = [];
-            const servicesArray = serviceIdsArr.map(Number);
-
-            await Promise.all(
-                servicesArray.map(async (serviceId) => {
-                    const response = await fetch(
-                        `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
-                        {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    );
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        const errorData = JSON.parse(errorText);
-                        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                        throw new Error(errorText);
-                    }
-
-                    const data = await response.json();
-                    const newToken = data._token || data.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-
-                    let parsedJson;
-                    try {
-                        parsedJson = JSON.parse(data.reportFormJson.json || '{}');
-                    } catch (error) {
-                        console.error("Failed to parse reportFormJson:", error);
-                        return; // Skip this iteration
-                    }
-
-                    if (parsedJson.db_table && parsedJson.heading) {
-                        const annexureHeading = parsedJson.heading;
-                        const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
-
-                        const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
-                        if (!annexureResponse.ok) {
-                            console.error(`Failed to fetch annexure data for ${serviceId}`);
-                            return; // Skip this iteration if annexure fetch fails
-                        }
-
-                        const annexureResult = await annexureResponse.json();
-                        const inputDetails = [];
-
-                        const annexureData = annexureResult.annexureData;
-                        parsedJson.rows.forEach(row => {
-                            row.inputs.forEach(input => {
-                                const value = annexureData && Array.isArray(annexureData)
-                                    ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
-                                    : (annexureData?.[input.name] || 'N/A');
-
-                                inputDetails.push({
-                                    label: input.label,
-                                    name: input.name,
-                                    type: input.type,
-                                    value: value,
-                                    options: input.options || undefined,
-                                });
-                            });
-                        });
-
-                        allInputDetails.push({ annexureHeading, inputDetails });
-                    }
-                })
-            );
-
-            setAllInputDetails(allInputDetails);
-
-            // Prepare for PDF generation
-            setPdfData(applications);
-            const cmtData = data.CMTData;
-            setCmtAllData(cmtData);
-
-            // Create the PDF
-            const element = printRef.current;
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('portrait', 'pt', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-
-            let imgHeight = (canvasHeight * pdfWidth) / canvasWidth;
-            let heightLeft = imgHeight;
-            let position = 0;
-
-            // Define margin for spacing
-            const margin = 20; // Adjust as needed
-
-            // Add first page
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= (pdfHeight + margin);
-
-            // Add remaining pages
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight - margin;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-                heightLeft -= (pdfHeight + margin);
-            }
-
-            // Save the PDF
-            pdf.save('table.pdf');
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            setError('Failed to load client data');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const fetchSelectOptions = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -350,7 +183,6 @@ const ExelTrackerStatus = () => {
                 return response.json();
             })
             .then((result) => {
-                console.log(result);
                 setOptions(result.filterOptions);
             })
             .catch((error) => console.error('Error fetching options:', error));
@@ -375,7 +207,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://goldquestreact.onrender.com/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -434,41 +266,34 @@ const ExelTrackerStatus = () => {
     const renderPagination = () => {
         const pageNumbers = [];
 
-        // Handle pagination with ellipsis
         if (totalPages <= 5) {
-            // If there are 5 or fewer pages, show all page numbers
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
         } else {
-            // Always show the first page
             pageNumbers.push(1);
 
-            // Show ellipsis if current page is greater than 3
             if (currentPage > 3) {
                 pageNumbers.push('...');
             }
 
-            // Show two pages around the current page
             for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
                 if (!pageNumbers.includes(i)) {
                     pageNumbers.push(i);
                 }
             }
 
-            // Show ellipsis if current page is less than total pages - 2
             if (currentPage < totalPages - 2) {
                 pageNumbers.push('...');
             }
 
-            // Always show the last page
+
             if (!pageNumbers.includes(totalPages)) {
                 pageNumbers.push(totalPages);
             }
         }
 
-        // Log to verify page numbers
-        console.log(pageNumbers);
+
 
         return pageNumbers.map((number, index) => (
             number === '...' ? (
@@ -487,6 +312,175 @@ const ExelTrackerStatus = () => {
     };
 
 
+useEffect(() => {
+    if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
+        console.log(`All data is set. Now generating PDF.`);
+        generatePDF();
+    }
+}, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
+
+const handleDownloadPdf = async (id, branch_id) => {
+    if (!id || !branch_id) {
+        return Swal.fire('Error!', 'Something is missing', 'error');
+    }
+
+    const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+    setLoading(true);
+    setError(null);
+
+    try {
+        const response = await fetch(
+            `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            const errorData = JSON.parse(errorText);
+            Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+            throw new Error(errorText);
+        }
+
+        const data = await response.json();
+        const applications = data.application;
+        const serviceIdsArr = applications?.services?.split(',') || [];
+        const serviceTitleValue = [];
+
+        // Fetch service data
+        if (serviceIdsArr.length > 0) {
+            const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    redirect: "follow",
+                };
+
+                const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+
+                const [serviceResponse, applicationResponse] = await Promise.all([
+                    fetch(serviceInfoUrl, requestOptions),
+                    fetch(applicationServiceUrl, requestOptions),
+                ]);
+
+                if (!serviceResponse.ok) {
+                    return null;
+                }
+
+                const serviceData = await serviceResponse.json();
+                const applicationData = await applicationResponse.json();
+
+                const title = serviceData.service.title || "N/A";
+                serviceTitleValue.push({
+                    title,
+                    status: applicationData.annexureData?.status || "N/A",
+                    info_source: applicationData.annexureData?.info_source || "N/A",
+                    verified_at: applicationData.annexureData?.verified_at || "N/A",
+                    color_status: applicationData.annexureData?.color_status || "N/A",
+                });
+            });
+
+            await Promise.all(serviceFetchPromises);
+            setServiceTitleValue(serviceTitleValue); // Triggering update here
+        }
+
+        // Fetch report form details
+        const allInputDetails = [];
+        const servicesArray = serviceIdsArr.map(Number);
+
+        await Promise.all(
+            servicesArray.map(async (serviceId) => {
+                const response = await fetch(
+                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    const errorData = JSON.parse(errorText);
+                    return;
+                }
+
+                const data = await response.json();
+                const newToken = data._token || data.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
+
+                let parsedJson;
+                try {
+                    parsedJson = JSON.parse(data.reportFormJson.json || '{}');
+                } catch (error) {
+                    console.error("Failed to parse reportFormJson:", error);
+                    return;
+                }
+
+                if (parsedJson.db_table && parsedJson.heading) {
+                    const annexureHeading = parsedJson.heading;
+                    const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+
+                    const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
+                    if (!annexureResponse.ok) {
+                        return;
+                    }
+
+                    const annexureResult = await annexureResponse.json();
+                    const inputDetails = [];
+
+                    const annexureData = annexureResult.annexureData;
+                    parsedJson.rows.forEach(row => {
+                        row.inputs.forEach(input => {
+                            const value = annexureData && Array.isArray(annexureData)
+                                ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
+                                : (annexureData?.[input.name] || 'N/A');
+
+                            inputDetails.push({
+                                label: input.label,
+                                name: input.name,
+                                type: input.type,
+                                value: value,
+                                options: input.options || undefined,
+                            });
+                        });
+                    });
+
+                    allInputDetails.push({ annexureHeading, inputDetails });
+                }
+            })
+        );
+
+        setAllInputDetails(allInputDetails); // Triggering update here
+
+        // Set application and other related data
+        setPdfData(applications);
+        const cmtData = data.CMTData;
+        setCmtAllData(cmtData);
+
+    } catch (error) {
+        console.error('Fetch error:', error);
+        setError('Failed to load client data');
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+
+
+
     const handleSelectChange = (e) => {
 
         const selectedValue = e.target.value;
@@ -496,8 +490,214 @@ const ExelTrackerStatus = () => {
     const goBack = () => {
         handleTabChange('client_master');
     }
+
+
+    const generatePDF = () => {
+        const doc = new jsPDF();
+
+        // Add the logo
+        doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
+
+        // Title
+        doc.setFontSize(20); // Reduced font size
+        doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
+
+        // First Table
+        const firstTableData = [
+            [
+                { content: 'Name of the Candidate', styles: { cellWidth: 'auto' } },
+                { content: pdfData?.name || 'N/A' },
+                { content: 'Client Name' },
+                { content: parentCustomer[0]?.name || 'N/A' },
+            ],
+            [
+                { content: 'Application ID' },
+                { content: pdfData?.application_id || 'N/A' },
+                { content: 'Report Status' },
+                { content: cmtAllData?.report_status || 'N/A' },
+            ],
+            [
+                { content: 'Date of Birth' },
+                { content: cmtAllData?.dob ? new Date(cmtAllData.dob).toLocaleDateString() : 'N/A' },
+                { content: 'Application Received' },
+                { content: pdfData?.updated_at ? new Date(pdfData.updated_at).toLocaleDateString() : 'N/A' },
+            ],
+            [
+                { content: 'Candidate Employee ID' },
+                { content: pdfData?.employee_id || 'N/A' },
+                { content: 'Insuff Cleared/Reopened' },
+                { content: pdfData?.application_id || 'N/A' },
+            ],
+            [
+                { content: 'Report Type' },
+                { content: cmtAllData?.report_type || 'N/A' },
+                { content: 'Final Report Date' },
+                { content: cmtAllData?.report_date ? new Date(cmtAllData.report_date).toLocaleDateString() : 'N/A' },
+            ],
+            [
+                { content: 'Verification Purpose' },
+                { content: pdfData?.overall_status || 'N/A' },
+                { content: 'Overall Report Status' },
+                { content: pdfData?.status || 'N/A' },
+            ],
+        ];
+
+        doc.autoTable({
+            head: [['', '', '', '']],
+            body: firstTableData,
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' }, // Reduced font size
+            theme: 'grid',
+            margin: { top: 50 },
+        });
+
+        // Second Table Header
+        // Headers for the second table
+        const secondTableHeaders = [
+            { title: 'Report Components', dataKey: 'component' },
+            { title: 'Information Source', dataKey: 'source' },
+            { title: 'Completed Date', dataKey: 'completedDate' },
+            { title: 'Verification Status', dataKey: 'status' },
+        ];
+
+    
+        const secondTableData = serviceTitleValue.map(item => {
+          
+            const logData = {
+                component: item.title || 'N/A',  
+                source: item.info_source || 'N/A',  
+                completedDate: (item.verified_at && new Date(item.verified_at).toString() !== 'Invalid Date')
+                    ? new Date(item.verified_at).toLocaleDateString()  
+                    : 'N/A',  
+                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'N/A', 
+            };
+
+            return logData; 
+        });
+
+      
+        doc.autoTable({
+            head: [secondTableHeaders.map(header => header.title)],  
+            body: secondTableData.map(row => [  
+                row.component,
+                row.source,
+                row.completedDate,
+                row.status,
+            ]),
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  
+            theme: 'grid', 
+            margin: { top: 20 }, 
+        });
+
+
+
+        // Fourth Table Headers
+        const fourthTableHeaders = [
+            { title: 'Component Status', dataKey: 'status' },
+            { title: 'REPORT COMPONENTS', dataKey: 'reportComponents' },
+            { title: 'INFORMATION SOURCE', dataKey: 'infoSource' },
+            { title: 'COMPONENT STATUS 1', dataKey: 'componentStatus1' },
+            { title: 'COMPONENT STATUS 2', dataKey: 'componentStatus2' },
+            { title: 'COMPONENT STATUS 3', dataKey: 'componentStatus3' },
+        ];
+
+        // Sample Data for the Fourth Table
+        const fourthTableData = [
+            {
+                status: '',  // Can be populated dynamically if needed
+                reportComponents: 'Example Component 1',
+                infoSource: 'Source A',
+                componentStatus1: 'Completed',
+                componentStatus2: 'Pending',
+                componentStatus3: 'N/A',
+            },
+            {
+                status: '',
+                reportComponents: 'Example Component 2',
+                infoSource: 'Source B',
+                componentStatus1: 'In Progress',
+                componentStatus2: 'Completed',
+                componentStatus3: 'N/A',
+            },
+            // Add more rows as necessary
+        ];
+
+        // AutoTable for the Fourth Table
+        doc.autoTable({
+            head: [fourthTableHeaders.map(header => header.title)],  // Map only the 'title' for headers
+            body: fourthTableData.map(row => [  // Map each row's data to table format
+                row.status,
+                row.reportComponents,
+                row.infoSource,
+                row.componentStatus1,
+                row.componentStatus2,
+                row.componentStatus3,
+            ]),
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  // Set cell styles
+            theme: 'grid',  // Set the theme to 'grid' for table structure
+            margin: { top: 20 },  // Set top margin for table placement
+        });
+
+
+        // Additional content
+        doc.setFontSize(16); // Reduced font size
+        doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 20, { align: 'center' });
+
+        // Further details
+        allInputDetails.forEach(async (annexure, index) => {
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.text(annexure.annexureHeading, 105, 10, { align: 'center' });
+
+            // Prepare annexure data
+            const annexureData = annexure.inputDetails.map(input => [
+                { content: input.label },
+                { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
+            ]);
+
+            // AutoTable for the annexure data
+            doc.autoTable({
+                head: [['Application Details', 'Report Details']],
+                body: annexureData,
+                styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
+                theme: 'grid',
+                margin: { top: 20 },
+            });
+
+            // Find the annexure image path (assuming the file paths are stored in 'value' of type 'file')
+            const annexureImage = annexure.inputDetails.find(input => input.type === 'file');
+            if (annexureImage) {
+                const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + annexureImage.value;
+
+                try {
+                    // Check if the image URL is valid by making a HEAD request
+                    const response = await fetch(imagePath, { method: 'HEAD' });
+
+                    if (response.ok) {
+                        // If the image exists, add it to the PDF
+                        doc.addImage(imagePath, 'JPEG', 10, doc.lastAutoTable.finalY + 10, 190, 0); // 190 for full width
+                    } else {
+                        console.warn("Image not found:", imagePath);
+                    }
+                } catch (error) {
+                    console.error("Error checking image:", error);
+                }
+            }
+        });
+
+
+
+
+        // Remarks section
+        doc.text("Remarks: The following applicant details are verbally verified...", 10, doc.lastAutoTable.finalY + 20);
+
+        // Save PDF
+        doc.save('background_verification_report.pdf');
+    };
+
     return (
         <>
+
+
             <div className='p-3 my-14'>
                 {loading && <div className="loader">Loading...</div>}
                 {error && <div>Error: {error}</div>}
@@ -601,12 +801,7 @@ const ExelTrackerStatus = () => {
                                                                     <tr>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                            <th key={index} className="service-th  py-3 px-4 border-b text-left uppercase whitespace-nowrap">{value?.db_table || 'N/A'}</th>
-                                                                        ))}
-
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Subclient</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -614,15 +809,43 @@ const ExelTrackerStatus = () => {
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
-                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                            <td key={index} className=" py-3 px-4 border-b whitespace-nowrap capitalize">{value?.status || 'N/A'}</td>
-                                                                        ))}
-
-                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">
-                                                                            <button className="bg-red-500 hover:bg-red-400 text-white rounded-md p-3">Delete</button>
-
-                                                                        </td>
                                                                     </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            <table className="min-w-full max-w-full bg-gray-100">
+                                                                <thead>
+                                                                    <tr className='flex w-full'>
+                                                                        <th className='bg-green-500 text-white text-left border-l p-2 w-1/2'>Service</th>
+                                                                        <th className='bg-green-500 text-white text-left p-2 w-1/2'>Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="h-48 overflow-y-auto block">
+
+                                                                    {serviceHeadings[item.id]?.map((serviceValue, index) => {
+                                                                        const formattedService = serviceValue?.replace(/\//g, '').toUpperCase() || 'NIL';
+
+                                                                        // Check if dbHeadingsStatus has a corresponding index for the service
+                                                                        const statusValue = dbHeadingsStatus[item.id]?.[index]?.status || 'NIL';
+                                                                        const formattedStatus = statusValue
+                                                                            .replace(/_/g, ' ') // Replace underscores with spaces
+                                                                            .toLowerCase() // Convert the whole string to lowercase
+                                                                            .split(' ') // Split the string into words
+                                                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                                                            .join(' ');
+
+                                                                        return (
+                                                                            <tr key={index} className="flex w-full">
+
+                                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                                    {formattedService}
+                                                                                </td>
+
+                                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                                    {formattedStatus}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
                                                                 </tbody>
                                                             </table>
                                                         </div>
@@ -664,287 +887,7 @@ const ExelTrackerStatus = () => {
                 </div>
 
             </div>
-
-            <div className='opacity-0 '>
-
-                <div ref={printRef} style={{ padding: '70px', backgroundColor: '#fff', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
-                    <img src="https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1" alt="" style={{ width: '200px' }} />
-
-                    <h1 style={{ textAlign: 'center', paddingBottom: '20px', fontWeight: '700', fontSize: '30px' }}>CONFIDENTIAL BACKGROUND VERIFICATION REPORT</h1>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Name of the Candidate               </th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.name || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Client Name</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{parentCustomer[0]?.name || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application ID</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.application_id || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Report Status</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.report_status || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Date of Birth</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.dob
-                                    ? new Date(cmtAllData.dob).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application Received</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  {pdfData?.updated_at
-                                    ? new Date(pdfData.updated_at).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Candidate Employee ID</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.employee_id || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Insuff Cleared/Reopened</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap', border: '1px solid #ccc' }}>{pdfData?.application_id || ' N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Report Type</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{cmtAllData?.report_type || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  Final Report Date</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> {cmtAllData?.report_date
-                                    ? new Date(cmtAllData.report_date).toLocaleDateString(undefined, {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })
-                                    : 'N/A'}</td>
-
-                            </tr>
-                            <tr>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}> Verification Purpose</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.overall_status || ' N/A'}</td>
-                                <th style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>  Overall Report Status</th>
-                                <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>{pdfData?.status || ' N/A'}</td>
-
-                            </tr>
-
-                        </thead>
-
-                    </table>
-                    <br />
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr>
-                                <th
-                                    style={{
-                                        border: '1px solid #000',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                        borderBottom: '0px',
-                                    }}
-                                >
-                                    REPORT COMPONENTS
-                                </th>
-                                <th
-                                    style={{
-                                        border: '1px solid #000',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                        borderBottom: '0px',
-                                    }}
-                                >
-                                    INFORMATION SOURCE
-                                </th>
-                                <th
-                                    colSpan={2}
-                                    style={{
-                                        border: '1px solid #000',
-                                        borderBottom: '0px',
-                                        padding: '12px', fontSize: '17px',
-                                        textAlign: 'center',
-                                        whiteSpace: 'nowrap',
-                                        backgroundColor: '#22c55e',
-                                        color: '#fff',
-                                    }}
-                                >
-                                    COMPONENT STATUS
-                                </th>
-                            </tr>
-                            <tr>
-                                <th colSpan={2} style={{
-                                    padding: '12px', fontSize: '17px',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}></th>
-                                <th style={{
-                                    border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}>Completed Date</th>
-                                <th style={{
-                                    border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center',
-                                    textAlign: 'center',
-                                    whiteSpace: 'nowrap',
-                                    backgroundColor: '#22c55e',
-                                    color: '#fff',
-                                }}>Verification Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                serviceTitleValue.map(item => (
-                                    <tr key={item.title}> {/* Use a unique key for each row */}
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                            {item.title}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                            {item.info_source} {/* You can replace this with the actual name if available */}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center' }}>
-                                            {item.verified_at
-                                                ? new Date(item.verified_at).toLocaleDateString(undefined, {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })
-                                                : 'N/A'}
-                                        </td>
-                                        <td style={{ border: '1px solid #000', padding: '12px', fontSize: '17px', textAlign: 'center' }}>
-                                            {item.status.replace(/[_-]/g, ' ')}
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-
-                    </table>
-
-
-                    <h2 style={{ textAlign: 'center', fontSize: '20px', fontWeight: '600', marginTop: '30px' }}> End of summary report</h2>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '30px', border: '1px solid #000' }}>
-                        <thead>
-                            <tr>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%" }}>COMPONENT STATUS </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'green' }}></div>REPORT COMPONENTS</th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'red' }}></div>INFORMATION SOURCE</th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'orange' }}></div>COMPONENT STATUS  </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'pink' }}></div>COMPONENT STATUS  </th>
-                                <th style={{ borderLeft: "1px solid #000", padding: '12px', fontSize: '17px', textAlign: 'center', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'stretch', width: "16.66%", gap: '15px' }}> <div style={{ height: '30px', width: '20px', backgroundColor: 'yellow' }}></div>COMPONENT STATUS  </th>
-                            </tr>
-                        </thead>
-                    </table>
-                    {allInputDetails.map((annexure, index) => (
-                        <div key={index}>
-                            <h3 style={{ padding: '10px', border: '1px solid #000', backgroundColor: '#22c55e', width: '100%', color: '#fff', marginTop: '30px', textAlign: 'center', fontWeight: 'bold' }}>
-                                {annexure.annexureHeading}
-                            </h3>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderTop: '0px', padding: '20px' }}>
-                                <thead>
-                                    <tr>
-                                        <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Application Details</th>
-                                        <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>Report Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {annexure.inputDetails.map((input, idx) => (
-                                        <React.Fragment key={idx}>
-                                            {input.type !== 'file' ? (
-                                                <tr>
-                                                    <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.label}
-                                                    </th>
-                                                    <td style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.type === 'datepicker' ? (
-                                                            input.value
-                                                                ? new Date(input.value).toLocaleDateString(undefined, {
-                                                                    year: 'numeric',
-                                                                    month: 'long',
-                                                                    day: 'numeric'
-                                                                })
-                                                                : 'N/A'
-                                                        ) : (
-                                                            input.value ? input.value.replace(/[_-]/g, ' ') : 'N/A'
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                // Handle the case for 'file' type
-                                                <tr>
-                                                    <th style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.label}
-                                                    </th>
-                                                    <td style={{ padding: '12px', fontSize: '17px', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                                                        {input.value ? (
-                                                            input.value.split(',').map((url, index) => (
-                                                                <img
-                                                                    key={index}
-                                                                    src={`https://goldquestreact.onrender.com/${url.trim()}`}
-                                                                    alt={`Image ${index + 1}`}
-                                                                    style={{ width: '50px', height: '50px', marginLeft: '10px' }} // Adjust styles as needed
-                                                                />
-                                                            ))
-                                                        ) : (
-                                                            'N/A'
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </tbody>
-
-                            </table>
-                        </div>
-                    ))}
-
-                    <p style={{ border: "1px solid #000", borderTop: '0px', padding: '10px' }}><b>Remarks</b>: The following applicant details are verbally verified by Mr. Prashant Vishwas, (Head Constable), and the notary
-                        report duly stamped and signed by Mr.Harsh Shukla (Advocate)with comment on criminal record not found, Hence
-                        closing the check as GREEN and the same is furnished as annexure.</p>
-                    <b> Annexure - 1 (A) </b>
-
-                    <div style={{ textAlign: 'center', }}>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem, ipsum dolor.</h5>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem ipsum dolor sit amet consectetur.</h5>
-                        <h5 style={{ textTransform: 'uppercase' }}>Lorem ipsum dolor sit.</h5>
-                        <hr />
-                    </div>
-
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", marginTop: '20px', fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-                    <h4 style={{ textTransform: 'uppercase', textAlign: 'left', fontSize: "24px", fontWeight: 'bold', paddingBottom: '10px' }}>conclusion</h4>
-                    <p style={{ fontSize: '16px', fontWeight: '400', paddingBottom: '15px' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit facere enim quidem dolorem alias animi sapiente at quisquam quam eveniet dolor, quo quos officiis, deserunt cupiditate minus necessitatibus, omnis blanditiis!</p>
-
-                    <div>
-                        <button style={{ backgroundColor: 'green', color: "#fff", padding: '13px', width: '100%', borderRadius: '10px', marginBottom: '15px' }}>Disclaimer</button>
-                        <p>This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the
-                            purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any
-                            other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the
-                            information purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on
-                            the information responsible for employment decisions based on the information provided in this report. </p>
-                        <button style={{ border: '1px solid #000', padding: '13px', width: '100%', borderRadius: '10px', marginTop: '15px' }}>End of detail report</button>
-                    </div>
-                </div>
-            </div>
-
-
         </>
-
-
 
     );
 };

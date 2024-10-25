@@ -59,9 +59,7 @@ const LoginForm = () => {
 
             const adminData = response.data.adminData;
             const _token = response.data.token;
-            
-
-
+          
             localStorage.setItem('admin', JSON.stringify(adminData));
             localStorage.setItem('_token', _token);
             Swal.fire({
@@ -83,10 +81,9 @@ const LoginForm = () => {
             icon: 'error',
             confirmButtonText: 'Ok'
           });
-          console.error('Login failed:', error); // Log the error details
         })
         .finally(() => {
-          setLoading(false); // Stop loading
+          setLoading(false); 
         });
     } else {
       setError(errors);
