@@ -1,87 +1,93 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useCallback, useEffect, useState } from 'react';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const ReportCaseTable = () => {
+    const [serviceHeadings, setServiceHeadings] = useState({});
+    const [dbHeadingsStatus, setDBHeadingsStatus] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [itemsPerPage, setItemPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
     const API_URL = useApi();
     const { fetchClientDrop, listData } = useContext(DropBoxContext);
-    const [serviceTitle, setServiceTitle] = useState([]);
-    const [loading, setLoading] = useState(false); // Add loading state
+    const [loading, setLoading] = useState(false);
     const [expandedRows, setExpandedRows] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-console.log('serviceTitle',serviceTitle)
+
     useEffect(() => {
-        setLoading(true); // Set loading to true before fetching data
-        fetchClientDrop().finally(() => setLoading(false)); // Set loading to false after fetching
+        setLoading(true);
+        fetchClientDrop().finally(() => setLoading(false));
     }, [fetchClientDrop]);
 
-    const handleToggle = (index, services, branch_id, id) => {
-        const servicesArray = services.split(',').map(Number);
-        const storedToken = localStorage.getItem("branch_token");
+    const handleToggle = useCallback((index, services, id) => {
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
+        const newExpandedRow = expandedRows === index ? null : index;
+        setExpandedRows(newExpandedRow);
 
-        const newExpandedRows = expandedRows.includes(index)
-            ? expandedRows.filter((row) => row !== index)
-            : [...expandedRows, index];
+        if (newExpandedRow === index && services) {
+            setLoading(true); // Set loading to true while fetching service data
+            const servicesArray = services.split(',').map(Number);
+            const uniqueServiceHeadings = new Set();
+            const uniqueStatuses = new Set();
 
-        setExpandedRows(newExpandedRows);
-        setLoading(true); 
+            Promise.all(
+                servicesArray.map(serviceId => {
+                    const url = `${API_URL}/branch/report-case-status/report-form-json-by-service-id?service_id=${serviceId}&branch_id=${branch_id}&_token=${_token}`;
+                    return fetch(url)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(result => {
+                            setLoading(false); // Stop loading once data is fetched
+                            const { reportFormJson } = result;
+                            const parsedData = JSON.parse(reportFormJson.json);
+                            const { heading, db_table } = parsedData;
 
-        const fetchPromises = servicesArray.map(serviceId => {
-            const url = `${API_URL}/branch/annexure-by-service?service_id=${serviceId}&application_id=${id}&branch_id=${branch_id}&_token=${storedToken}`;
-            const requestOptions = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
+                            uniqueServiceHeadings.add(heading);
+                            setServiceHeadings(prev => ({
+                                ...prev,
+                                [id]: Array.from(uniqueServiceHeadings)
+                            }));
 
-            return fetch(url, requestOptions)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
+                            const newToken = result.branch_token || result.token;
+                            if (newToken) localStorage.setItem("branch_token", newToken);
+                            return db_table;
+                        })
+                        .catch(error => console.error('Fetch error:', error));
+                })
+            ).then(parsedDbs => {
+                const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
+
+                return Promise.all(uniqueDbNames.map(db_name => {
+                    const url = `${API_URL}/branch/report-case-status/annexure-data?application_id=${id}&db_table=${db_name}&branch_id=${branch_id}&_token=${_token}`;
+                    return fetch(url)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                            return response.json();
+                        })
+                        .then(result => {
+                            const status = result?.annexureData?.status || 'N/A';
+                            uniqueStatuses.add(status);
+                            return { db_table: db_name, status };
+                        })
+                        .catch(error => console.error("Fetch error: ", error));
+                })).then(annexureStatusArr => {
+                    setDBHeadingsStatus(prev => ({
+                        ...prev,
+                        [id]: annexureStatusArr
+                    }));
                 });
-        });
-
-        Promise.all(fetchPromises)
-            .then(results => {
-                const serviceHeading = {};
-                
-                results.forEach(serviceTitle => {
-                    console.log('serviceTitle',serviceTitle)
-                    if (typeof serviceTitle === 'object' && serviceTitle !== null) {
-                        const hasHeading = serviceTitle.hasOwnProperty('heading');
-                        const hasAnnexureData = serviceTitle.annexureData && typeof serviceTitle.annexureData === 'object';
-                
-                        const entry = {
-                            heading: hasHeading ? serviceTitle.heading || '' : '',
-                            status: hasAnnexureData ? serviceTitle.annexureData.status || '' : ''
-                        };
-                
-                        if (!serviceHeading[id]) {
-                            serviceHeading[id] = [];
-                        }
-                        serviceHeading[id].push(entry);
-                    }
-                });
-                
-                setServiceTitle(serviceHeading);
-            })
-            .catch(error => {
-                console.error('Error fetching service info:', error);
-            })
-            .finally(() => setLoading(false)); // End loading after fetching
-    };
-
-    const filteredItems = listData.filter(item => {
-        return (
-            item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
+            }).catch(error => console.error("Error during fetch: ", error))
+              .finally(() => setLoading(false)); // Stop loading after fetching both data
+        }
+    }, [expandedRows, API_URL]);
+    const filteredItems = listData.filter(item => (
+        item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+    ));
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -102,7 +108,6 @@ console.log('serviceTitle',serviceTitle)
 
     const renderPagination = () => {
         const pageNumbers = [];
-
         if (totalPages <= 5) {
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
@@ -120,7 +125,6 @@ console.log('serviceTitle',serviceTitle)
                 pageNumbers.push(totalPages);
             }
         }
-
         return pageNumbers.map((number, index) => (
             number === '...' ? (
                 <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
@@ -138,8 +142,7 @@ console.log('serviceTitle',serviceTitle)
     };
 
     const handleSelectChange = (e) => {
-        const selectedValue = e.target.value;
-        setItemPerPage(selectedValue);
+        setItemsPerPage(Number(e.target.value));
     };
 
     return (
@@ -147,9 +150,12 @@ console.log('serviceTitle',serviceTitle)
             <div className="overflow-x-auto my-14 mx-4 bg-white shadow-md rounded-md">
                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
-                        <form action="">
+                        <form>
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                <select
+                                    onChange={handleSelectChange}
+                                    className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'
+                                >
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -163,9 +169,9 @@ console.log('serviceTitle',serviceTitle)
                             </div>
                         </form>
                     </div>
-                    <div className="col md:flex justify-end ">
-                        <form action="">
-                            <div className="flex md:items-stretch items-center  gap-3">
+                    <div className="col md:flex justify-end">
+                        <form>
+                            <div className="flex md:items-stretch items-center gap-3">
                                 <input
                                     type="search"
                                     className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
@@ -178,7 +184,7 @@ console.log('serviceTitle',serviceTitle)
                         </form>
                     </div>
                 </div>
-                {loading ? ( // Show loader while loading
+                {loading ? (
                     <div className="flex justify-center items-center h-64">
                         <div className="loader">Loading...</div>
                     </div>
@@ -188,86 +194,110 @@ console.log('serviceTitle',serviceTitle)
                             <tr className='bg-green-500'>
                                 <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">SL NO</th>
                                 <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Application ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
-                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
-                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Initiation Date</th>
-                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Report Date</th>
-                                <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
+                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Client Code</th>
+                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Client Name</th>
+                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Employee ID</th>
+                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Employee Name</th>
+                                <th className="py-3 px-4 border-b text-left border-r uppercase whitespace-nowrap text-white">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map((item, index) => (
-                                <React.Fragment key={index}>
-                                    <tr>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">
-                                            <input type="checkbox" name="" id="" className='me-2' />{index + 1 + (currentPage - 1) * itemsPerPage}
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.application_id}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.employee_id}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.created_at}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.report_date}</td>
-                                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                            <button
-                                                className="bg-green-500 hover:bg-green-400 rounded-md p-2 px-3 text-white"
-                                                onClick={() => handleToggle(index, item.services, item.branch_id, item.id)}
-                                            >
-                                                {expandedRows.includes(index) ? "Hide Details" : "View More"}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {expandedRows.includes(index) && (
-                                        <tr className='w-full'>
-                                            <td colSpan="9" className="p-0 w-full">
-                                                <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
-                                                    <table className="min-w-full max-w-full bg-gray-100 overflow-auto">
-                                                        <thead>
-                                                            <tr className=''>
-                                                                {serviceTitle[item.id] && serviceTitle[item.id].map((service, serviceIndex) => (
-                                                                    <th key={serviceIndex} className="py-3 px-4 border-b text-center text-sm uppercase whitespace-nowrap ">{service.heading || 'N/A'}</th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                {serviceTitle[item.id] && serviceTitle[item.id].map((service, serviceIndex) => (
-                                                                    <td key={serviceIndex} className="py-3 px-4 border-b whitespace-nowrap text-center">{service.status || 'N/A'}</td>
-                                                                ))}
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                            {currentItems.length > 0 ? (
+                                currentItems.map((item, index) => (
+                                    <React.Fragment key={item.id}>
+                                        <tr className='border-b even:bg-gray-100'>
+                                            <td className='text-center border-r py-4'>{index + indexOfFirstItem + 1}</td>
+                                            <td className='text-center border-r'>{item.application_id}</td>
+                                            <td className='text-center border-r'>{item.client_code}</td>
+                                            <td className='text-center border-r'>{item.name}</td>
+                                            <td className='text-center border-r'>{item.employee_id}</td>
+                                            <td className='text-center border-r'>{item.employee_name}</td>
+                                            <td className='text-center border-r'>
+                                                <button className='text-blue-500' onClick={() => handleToggle(index, item.services, item.id)}>View Details</button>
                                             </td>
                                         </tr>
-                                    )}
-                                </React.Fragment>
-                            ))}
+                                        {expandedRows === index && (
+                                            <tr className='w-full'>
+                                                <td colSpan="9" className="p-0 w-full">
+                                              
+                                            
+                                            
+                                            
+                                                    <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
+                                                    <table className="min-w-full max-w-full bg-gray-100">
+                                                    <thead>
+                                                        <tr className='flex w-full'>
+                                                            <th className='bg-green-500 text-white text-left border-l p-2 w-1/2'>Service</th>
+                                                            <th className='bg-green-500 text-white text-left p-2 w-1/2'>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="h-48 overflow-y-auto block">
+                                                        {/* Loop through the serviceHeadings and dbHeadingsStatus arrays and create a new row for each pair */}
+                                                        {serviceHeadings[item.id]?.map((serviceValue, index) => {
+                                                            const formattedService = serviceValue?.replace(/\//g, '').toUpperCase() || 'NIL';
+                                                
+                                                            // Check if dbHeadingsStatus has a corresponding index for the service
+                                                            const statusValue = dbHeadingsStatus[item.id]?.[index]?.status || 'NIL';
+                                                            const formattedStatus = statusValue
+                                                                .replace(/_/g, ' ') // Replace underscores with spaces
+                                                                .toLowerCase() // Convert the whole string to lowercase
+                                                                .split(' ') // Split the string into words
+                                                                .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize the first letter of each word
+                                                                .join(' ');
+                                                
+                                                            return (
+                                                                <tr key={index} className="flex w-full">
+                                                                    {/* Display the formatted service */}
+                                                                    <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                        {formattedService}
+                                                                    </td>
+                                                                    {/* Display the formatted status */}
+                                                                    <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                        {formattedStatus}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                                
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={7} className='text-center py-4'>No records found</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 )}
-            </div>
-            <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                <button
-                    type='button'
-                    onClick={showPrev}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    aria-label="Previous page"
-                >
-                    <MdArrowBackIosNew />
-                </button>
-                <div className="flex items-center">
-                    {renderPagination()}
+                <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                    <button
+                        type='button'
+                        onClick={showPrev}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Previous page"
+                    >
+                        <MdArrowBackIosNew />
+                    </button>
+                    <div className="flex items-center">
+                        {renderPagination()}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={showNext}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Next page"
+                    >
+                        <MdArrowForwardIos />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={showNext}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    aria-label="Next page"
-                >
-                    <MdArrowForwardIos />
-                </button>
             </div>
         </>
     );

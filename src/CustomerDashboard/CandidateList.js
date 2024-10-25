@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import CandidateForm from './CandidateForm';
 
 const CandidateList = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -171,111 +172,121 @@ const CandidateList = () => {
 
     return (
         <>
-            <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-10 m-3">
-            <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-            <div className="col">
-                <form action="">
-                    <div className="flex gap-5 justify-between">
-                        <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                            <option value="10">10 Rows</option>
-                            <option value="20">20 Rows</option>
-                            <option value="50">50 Rows</option>
-                            <option value="100">100 Rows</option>
-                            <option value="200">200 Rows</option>
-                            <option value="300">300 Rows</option>
-                            <option value="400">400 Rows</option>
-                            <option value="500">500 Rows</option>
-                        </select>
-                        <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-                    </div>
-                </form>
-            </div>
-            <div className="col md:flex justify-end ">
-                <form action="">
-                    <div className="flex md:items-stretch items-center  gap-3">
-                        <input
-                            type="search"
-                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                            placeholder='Search by Client Code, Company Name, or Client Spoc'
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
-                    </div>
-                </form>
-            </div>
 
+        <div className="py-4 md:py-16">
+        <h2 className="md:text-4xl text-2xl font-bold pb-8 md:pb-4 text-center">Candidate DropBox</h2>
+        <div className="md:grid md:grid-cols-6 md:p-4 gap-5 md:m-7 m-3">
+            <div className="md:col-span-6 md:p-6">
+                <CandidateForm />
+            </div>
         </div>
-                <table className="min-w-full">
-                    <thead>
-                        <tr className='bg-green-500'>
-                            <th className="py-3 text-left border-r border-l text-white px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Name of the applicant</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Email Id</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Packages</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Docs</th>
-                            <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
-                            <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
-                        </tr>
-                    </thead>
-                    {currentItems.length > 0 ? (
-                        <tbody>
-                            {currentItems.map((report, index) => (
-                                <tr key={report.id || index}>
-                                    <td className="py-3 px-4 border-l border-b border-r whitespace-nowrap capitalize">{index + 1}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.name}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.email}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.mobile_number}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
-                                        {report.services} <button className="block text-blue-600">{report.more}</button>
-                                    </td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.package}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
-                                        <button className="bg-green-600 text-white p-2 rounded-md hover:bg-green-200">{report.doc}</button>
-                                    </td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.created_at}</td>
-                                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
-                                        <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
-                                        <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    ) : (
-                        <tbody>
-                            <tr>
-                                <td colSpan={9} className="py-3 px-4 text-center">No data found</td>
+        <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-10 m-3">
+        <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+        <div className="col">
+            <form action="">
+                <div className="flex gap-5 justify-between">
+                    <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                        <option value="10">10 Rows</option>
+                        <option value="20">20 Rows</option>
+                        <option value="50">50 Rows</option>
+                        <option value="100">100 Rows</option>
+                        <option value="200">200 Rows</option>
+                        <option value="300">300 Rows</option>
+                        <option value="400">400 Rows</option>
+                        <option value="500">500 Rows</option>
+                    </select>
+                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                </div>
+            </form>
+        </div>
+        <div className="col md:flex justify-end ">
+            <form action="">
+                <div className="flex md:items-stretch items-center  gap-3">
+                    <input
+                        type="search"
+                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                        placeholder='Search by Client Code, Company Name, or Client Spoc'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+            <table className="min-w-full">
+                <thead>
+                    <tr className='bg-green-500'>
+                        <th className="py-3 text-left border-r border-l text-white px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Name of the applicant</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Email Id</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Packages</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Docs</th>
+                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
+                        <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
+                    </tr>
+                </thead>
+                {currentItems.length > 0 ? (
+                    <tbody>
+                        {currentItems.map((report, index) => (
+                            <tr key={report.id || index}>
+                                <td className="py-3 px-4 border-l border-b border-r whitespace-nowrap capitalize">{index + 1}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.name}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.email}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.mobile_number}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
+                                    {report.services} <button className="block text-blue-600">{report.more}</button>
+                                </td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.package}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
+                                    <button className="bg-green-600 text-white p-2 rounded-md hover:bg-green-200">{report.doc}</button>
+                                </td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.created_at}</td>
+                                <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
+                                    <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
+                                    <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
+                                </td>
                             </tr>
-                        </tbody>
-                    )}
-                    
-                </table>
-            </div>
-            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-            <button
-                type='button'
-                onClick={showPrev}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                aria-label="Previous page"
-            >
-                <MdArrowBackIosNew />
-            </button>
-            <div className="flex items-center">
-                {renderPagination()}
-            </div>
-            <button
-                type="button"
-                onClick={showNext}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                aria-label="Next page"
-            >
-                <MdArrowForwardIos />
-            </button>
+                        ))}
+                    </tbody>
+                ) : (
+                    <tbody>
+                        <tr>
+                            <td colSpan={9} className="py-3 px-4 text-center">No data found</td>
+                        </tr>
+                    </tbody>
+                )}
+                
+            </table>
         </div>
+        <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+        <button
+            type='button'
+            onClick={showPrev}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            aria-label="Previous page"
+        >
+            <MdArrowBackIosNew />
+        </button>
+        <div className="flex items-center">
+            {renderPagination()}
+        </div>
+        <button
+            type="button"
+            onClick={showNext}
+            disabled={currentPage === totalPages}
+            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            aria-label="Next page"
+        >
+            <MdArrowForwardIos />
+        </button>
+    </div>
+    </div>
+           
         </>
     );
 };

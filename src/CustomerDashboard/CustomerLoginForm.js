@@ -5,7 +5,6 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 
 const CustomerLoginForm = () => {
- 
 
     const API_URL = useApi();
     const [showPassword, setShowPassword] = useState(false);

@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { useApi } from '../ApiContext';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
-import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
@@ -18,7 +17,6 @@ const ExelTrackerStatus = () => {
     const [pdfData, setPdfData] = useState([]);
     const [serviceTitleValue, setServiceTitleValue] = useState([]);
     const [cmtAllData, setCmtAllData] = useState([]);
-    const printRef = React.useRef();
     const [dbHeadingsStatus, setDBHeadingsStatus] = useState({});
     const [applicationData, setApplicationData] = useState([]);
     const [expandedRows, setExpandedRows] = useState(null);
@@ -44,7 +42,7 @@ const ExelTrackerStatus = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                        // Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                         throw new Error(errorData.message);
                     });
                 }
@@ -58,17 +56,18 @@ const ExelTrackerStatus = () => {
                 setApplicationData(data.customers || []);
             })
             .catch(error => {
-                console.error('Fetch error:', error);
+
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
     }, [API_URL, branch_id, admin_id, storedToken]);
 
-    console.log('serviceHeadings', serviceHeadings)
+
 
     useEffect(() => {
         fetchApplications();
     }, [fetchApplications]);
+
     const handleToggle = useCallback((index, services, id) => {
         if (!admin_id || !storedToken || !id) {
             console.error("Missing required parameters");
@@ -159,173 +158,13 @@ const ExelTrackerStatus = () => {
         }
     }, [expandedRows, admin_id, storedToken, API_URL, requestOptions]);
 
+    
     const generateReport = (id, services) => {
         navigate('/candidate');
         setApplicationId(id);
         setServiceId(services);
     };
 
-
-    const handleDownloadPdf = async (id, branch_id) => {
-
-
-        if (!id || !branch_id) {
-            return Swal.fire('Error!', 'Something is missing', 'error');
-        }
-
-        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(
-                `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                const errorData = JSON.parse(errorText);
-                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                throw new Error(errorText);
-            }
-
-            const data = await response.json();
-            const applications = data.application;
-            const serviceIdsArr = applications?.services?.split(',') || [];
-            const serviceTitleValue = [];
-
-            // Fetch service data
-            if (serviceIdsArr.length > 0) {
-                const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
-                    const requestOptions = {
-                        method: "GET",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        redirect: "follow",
-                    };
-
-                    const serviceInfoUrl = `https://goldquestreact.onrender.com/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                    const applicationServiceUrl = `https://goldquestreact.onrender.com/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
-
-                    const [serviceResponse, applicationResponse] = await Promise.all([
-                        fetch(serviceInfoUrl, requestOptions),
-                        fetch(applicationServiceUrl, requestOptions),
-                    ]);
-
-                    if (!serviceResponse.ok || !applicationResponse.ok) {
-                        return null; // Early exit if any request fails
-                    }
-
-                    const serviceData = await serviceResponse.json();
-                    const applicationData = await applicationResponse.json();
-
-                    const title = serviceData.service.title || "N/A";
-                    serviceTitleValue.push({
-                        title,
-                        status: applicationData.annexureData?.status || "N/A",
-                        info_source: applicationData.annexureData?.info_source || "N/A",
-                        verified_at: applicationData.annexureData?.verified_at || "N/A",
-                        color_status: applicationData.annexureData?.color_status || "N/A",
-                    });
-                });
-
-                await Promise.all(serviceFetchPromises);
-                setServiceTitleValue(serviceTitleValue);
-            }
-
-            // Fetch report form details
-            const allInputDetails = [];
-            const servicesArray = serviceIdsArr.map(Number);
-
-            await Promise.all(
-                servicesArray.map(async (serviceId) => {
-                    const response = await fetch(
-                        `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
-                        {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    );
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        const errorData = JSON.parse(errorText);
-                        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                        throw new Error(errorText);
-                    }
-
-                    const data = await response.json();
-                    const newToken = data._token || data.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-
-                    let parsedJson;
-                    try {
-                        parsedJson = JSON.parse(data.reportFormJson.json || '{}');
-                    } catch (error) {
-                        console.error("Failed to parse reportFormJson:", error);
-                        return;
-                    }
-
-                    if (parsedJson.db_table && parsedJson.heading) {
-                        const annexureHeading = parsedJson.heading;
-                        const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
-
-                        const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
-                        if (!annexureResponse.ok) {
-                            return;
-                        }
-
-                        const annexureResult = await annexureResponse.json();
-                        const inputDetails = [];
-
-                        const annexureData = annexureResult.annexureData;
-                        parsedJson.rows.forEach(row => {
-                            row.inputs.forEach(input => {
-                                const value = annexureData && Array.isArray(annexureData)
-                                    ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
-                                    : (annexureData?.[input.name] || 'N/A');
-
-                                inputDetails.push({
-                                    label: input.label,
-                                    name: input.name,
-                                    type: input.type,
-                                    value: value,
-                                    options: input.options || undefined,
-                                });
-                            });
-                        });
-
-                        allInputDetails.push({ annexureHeading, inputDetails });
-                    }
-                })
-            );
-
-            setAllInputDetails(allInputDetails);
-
-            // Prepare for PDF generation
-            setPdfData(applications);
-            const cmtData = data.CMTData;
-            setCmtAllData(cmtData);
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            setError('Failed to load client data');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const fetchSelectOptions = useCallback(() => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -368,7 +207,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://goldquestreact.onrender.com/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -473,6 +312,175 @@ const ExelTrackerStatus = () => {
     };
 
 
+useEffect(() => {
+    if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
+        console.log(`All data is set. Now generating PDF.`);
+        generatePDF();
+    }
+}, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
+
+const handleDownloadPdf = async (id, branch_id) => {
+    if (!id || !branch_id) {
+        return Swal.fire('Error!', 'Something is missing', 'error');
+    }
+
+    const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+    setLoading(true);
+    setError(null);
+
+    try {
+        const response = await fetch(
+            `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            const errorData = JSON.parse(errorText);
+            Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+            throw new Error(errorText);
+        }
+
+        const data = await response.json();
+        const applications = data.application;
+        const serviceIdsArr = applications?.services?.split(',') || [];
+        const serviceTitleValue = [];
+
+        // Fetch service data
+        if (serviceIdsArr.length > 0) {
+            const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    redirect: "follow",
+                };
+
+                const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+
+                const [serviceResponse, applicationResponse] = await Promise.all([
+                    fetch(serviceInfoUrl, requestOptions),
+                    fetch(applicationServiceUrl, requestOptions),
+                ]);
+
+                if (!serviceResponse.ok) {
+                    return null;
+                }
+
+                const serviceData = await serviceResponse.json();
+                const applicationData = await applicationResponse.json();
+
+                const title = serviceData.service.title || "N/A";
+                serviceTitleValue.push({
+                    title,
+                    status: applicationData.annexureData?.status || "N/A",
+                    info_source: applicationData.annexureData?.info_source || "N/A",
+                    verified_at: applicationData.annexureData?.verified_at || "N/A",
+                    color_status: applicationData.annexureData?.color_status || "N/A",
+                });
+            });
+
+            await Promise.all(serviceFetchPromises);
+            setServiceTitleValue(serviceTitleValue); // Triggering update here
+        }
+
+        // Fetch report form details
+        const allInputDetails = [];
+        const servicesArray = serviceIdsArr.map(Number);
+
+        await Promise.all(
+            servicesArray.map(async (serviceId) => {
+                const response = await fetch(
+                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    const errorData = JSON.parse(errorText);
+                    return;
+                }
+
+                const data = await response.json();
+                const newToken = data._token || data.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
+
+                let parsedJson;
+                try {
+                    parsedJson = JSON.parse(data.reportFormJson.json || '{}');
+                } catch (error) {
+                    console.error("Failed to parse reportFormJson:", error);
+                    return;
+                }
+
+                if (parsedJson.db_table && parsedJson.heading) {
+                    const annexureHeading = parsedJson.heading;
+                    const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+
+                    const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
+                    if (!annexureResponse.ok) {
+                        return;
+                    }
+
+                    const annexureResult = await annexureResponse.json();
+                    const inputDetails = [];
+
+                    const annexureData = annexureResult.annexureData;
+                    parsedJson.rows.forEach(row => {
+                        row.inputs.forEach(input => {
+                            const value = annexureData && Array.isArray(annexureData)
+                                ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
+                                : (annexureData?.[input.name] || 'N/A');
+
+                            inputDetails.push({
+                                label: input.label,
+                                name: input.name,
+                                type: input.type,
+                                value: value,
+                                options: input.options || undefined,
+                            });
+                        });
+                    });
+
+                    allInputDetails.push({ annexureHeading, inputDetails });
+                }
+            })
+        );
+
+        setAllInputDetails(allInputDetails); // Triggering update here
+
+        // Set application and other related data
+        setPdfData(applications);
+        const cmtData = data.CMTData;
+        setCmtAllData(cmtData);
+
+    } catch (error) {
+        console.error('Fetch error:', error);
+        setError('Failed to load client data');
+    } finally {
+        setLoading(false);
+    }
+};
+
+
+
+
+
     const handleSelectChange = (e) => {
 
         const selectedValue = e.target.value;
@@ -484,330 +492,212 @@ const ExelTrackerStatus = () => {
     }
 
 
-    const getColumnWidth = (numColumns) => `${100 / numColumns}%`;
+    const generatePDF = () => {
+        const doc = new jsPDF();
 
-    const styles = StyleSheet.create({
-        page: {
-            padding: 20,
-            backgroundColor: '#ffffff',
-        },
-        tableCell: {
-            borderLeftWidth: 1,
-            borderLeftColor: '#000',
-            padding: 12,
-            width: '16.66%',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-        },
-        greenBox: {
-            height: 15,
-            width: 15,
-            backgroundColor: 'green',
-            marginRight: 10,
-        },
-        redBox: {
-            height: 15,
-            width: 15,
-            backgroundColor: 'red',
-            marginRight: 10,
-        },
-        orangeBox: {
-            height: 15,
-            width: 15,
-            backgroundColor: 'orange',
-            marginRight: 10,
-        },
-        pinkBox: {
-            height: 15,
-            width: 15,
-            backgroundColor: 'pink',
-            marginRight: 10,
-        },
-        yellowBox: {
-            height: 15,
-            width: 15,
-            backgroundColor: 'yellow',
-            marginRight: 10,
-        },
-        title: {
-            textAlign: 'center',
-            fontSize: 18,
-            fontWeight: 'bold',
-            marginBottom: 10,
-        },
-        row: {
-            flexDirection: 'row',
-            borderBottomWidth: 1,
-            borderBottomColor: '#000',
-        },
-        cell: {
-            border: '1px solid #000',
-            padding: 10,
-            fontSize: 12,
-            textAlign: 'left',
-            width: '50%',
-        },
-        header: {
-            backgroundColor: '#f0f0f0',
-            fontWeight: 'bold',
-        },
-        disclaimer: {
-            fontSize: 10,
-            marginTop: 10,
-            borderTop: '1pt solid #000',
-            paddingTop: 10,
-            textAlign: 'center',
-        },
-        headerText: {
-            fontSize: 10,
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-        },
-        border: {
-            borderLeft: '1pt solid #000',
-            padding: 4,
-        }
-    });
+        // Add the logo
+        doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
+
+        // Title
+        doc.setFontSize(20); // Reduced font size
+        doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
+
+        // First Table
+        const firstTableData = [
+            [
+                { content: 'Name of the Candidate', styles: { cellWidth: 'auto' } },
+                { content: pdfData?.name || 'N/A' },
+                { content: 'Client Name' },
+                { content: parentCustomer[0]?.name || 'N/A' },
+            ],
+            [
+                { content: 'Application ID' },
+                { content: pdfData?.application_id || 'N/A' },
+                { content: 'Report Status' },
+                { content: cmtAllData?.report_status || 'N/A' },
+            ],
+            [
+                { content: 'Date of Birth' },
+                { content: cmtAllData?.dob ? new Date(cmtAllData.dob).toLocaleDateString() : 'N/A' },
+                { content: 'Application Received' },
+                { content: pdfData?.updated_at ? new Date(pdfData.updated_at).toLocaleDateString() : 'N/A' },
+            ],
+            [
+                { content: 'Candidate Employee ID' },
+                { content: pdfData?.employee_id || 'N/A' },
+                { content: 'Insuff Cleared/Reopened' },
+                { content: pdfData?.application_id || 'N/A' },
+            ],
+            [
+                { content: 'Report Type' },
+                { content: cmtAllData?.report_type || 'N/A' },
+                { content: 'Final Report Date' },
+                { content: cmtAllData?.report_date ? new Date(cmtAllData.report_date).toLocaleDateString() : 'N/A' },
+            ],
+            [
+                { content: 'Verification Purpose' },
+                { content: pdfData?.overall_status || 'N/A' },
+                { content: 'Overall Report Status' },
+                { content: pdfData?.status || 'N/A' },
+            ],
+        ];
+
+        doc.autoTable({
+            head: [['', '', '', '']],
+            body: firstTableData,
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' }, // Reduced font size
+            theme: 'grid',
+            margin: { top: 50 },
+        });
+
+        // Second Table Header
+        // Headers for the second table
+        const secondTableHeaders = [
+            { title: 'Report Components', dataKey: 'component' },
+            { title: 'Information Source', dataKey: 'source' },
+            { title: 'Completed Date', dataKey: 'completedDate' },
+            { title: 'Verification Status', dataKey: 'status' },
+        ];
+
+    
+        const secondTableData = serviceTitleValue.map(item => {
+          
+            const logData = {
+                component: item.title || 'N/A',  
+                source: item.info_source || 'N/A',  
+                completedDate: (item.verified_at && new Date(item.verified_at).toString() !== 'Invalid Date')
+                    ? new Date(item.verified_at).toLocaleDateString()  
+                    : 'N/A',  
+                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'N/A', 
+            };
+
+            return logData; 
+        });
+
+      
+        doc.autoTable({
+            head: [secondTableHeaders.map(header => header.title)],  
+            body: secondTableData.map(row => [  
+                row.component,
+                row.source,
+                row.completedDate,
+                row.status,
+            ]),
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  
+            theme: 'grid', 
+            margin: { top: 20 }, 
+        });
 
 
-    const MyDocument = () => (
-  
-        <Document>
-        <Page size="A4" style={styles.page}>
-            <Text style={styles.title}>Confidential Background Verification Report
-            </Text>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Name of the Candidate</Text>
-                    <Text style={styles.cell}>{pdfData?.name || ' N/A'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Application ID</Text>
-                    <Text style={styles.cell}>{pdfData?.application_id || ' N/A'}</Text>
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Client Name</Text>
-                    <Text style={styles.cell}>{parentCustomer[0]?.name || 'N/A'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Report Status</Text>
-                    <Text style={styles.cell}>{cmtAllData?.report_status || ' N/A'}</Text>
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Date of Birth</Text>
-                    <Text style={styles.cell}>
-                        {cmtAllData.dob ? new Date(cmtAllData.dob).toLocaleDateString() : 'N/A'}
-                    </Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Report Type</Text>
-                    <Text style={styles.cell}>{cmtAllData.report_type || 'N/A'}</Text>
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>Overall Report Status</Text>
-                    <Text style={styles.cell}>{pdfData.status || 'N/A'}</Text>
-                </View>
-            </View>
-    
-    
-    
-    
-    
-            <View style={{ width: '100%', marginBottom: 20, marginTop: 20 }}>
-                <View style={{ flexDirection: 'row', backgroundColor: '#22c55e', color: '#fff' }}>
-                    <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
-                        <Text style={{ fontSize: 13 }}>Report Components</Text>
-                    </View>
-                    <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
-                        <Text style={{ fontSize: 13 }}>Information Source</Text>
-                    </View>
-                    <View style={{ border: '1px solid #000', padding: 12, flex: 2, textAlign: 'center' }}>
-                        <Text style={{ fontSize: 13 }}>Components Status</Text>
-                        <View style={{ flexDirection: 'row', backgroundColor: '#22c55e', color: '#fff', marginTop: 10 }}>
-                            <View style={{ flex: 1, textAlign: 'center' }}>
-                                <Text style={{ fontSize: 13 }}>Completed Date</Text>
-                            </View>
-                            <View style={{ flex: 1, textAlign: 'center' }}>
-                                <Text style={{ fontSize: 13 }}>Verification Status</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-    
-    
-    
-                {serviceTitleValue.map(item => (
-                    <View key={item.title} style={{ flexDirection: 'row' }}>
-                        <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'left' }}>
-                            <Text style={{ fontSize: 13 }}>{item.title}</Text>
-                        </View>
-                        <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'left' }}>
-                            <Text style={{ fontSize: 13 }}>{item.info_source}</Text>
-                        </View>
-                        <View style={{ flex: 2, flexDirection: 'row' }}>
-                            <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
-                                <Text style={{ fontSize: 13 }}>
-                                    {item.verified_at
-                                        ? new Date(item.verified_at).toLocaleDateString(undefined, {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })
-                                        : 'N/A'}
-                                </Text>
-                            </View>
-                            <View style={{ border: '1px solid #000', padding: 12, flex: 1, textAlign: 'center' }}>
-                                <Text style={{ fontSize: 13 }}>{item.status.replace(/[_-]/g, ' ')}</Text>
-                            </View>
-                        </View>
-                    </View>
-                ))}
-            </View>
-    
-    
-            <View style={{ width: '100%' }}>
-                <Text style={styles.title}>
-                    End of summary report
-                </Text>
-    
-                <View>
-                    <Text style={styles.title}>Component Status</Text>
-                </View>
-                <View style={{ width: '100%', marginTop: 30, borderWidth: 1, borderColor: '#000' }}>
-    
-                    <View style={{ flexDirection: 'row' }}>
-                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
-                            <View style={styles.greenBox}></View>
-                            <Text style={styles.headerText}>Report Component</Text>
-                        </View>
-                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
-                            <View style={styles.redBox}></View>
-                            <Text style={styles.headerText}>Information Source</Text>
-                        </View>
-                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
-                            <View style={styles.orangeBox}></View>
-                            <Text style={styles.headerText}>Component Status</Text>
-                        </View>
-                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
-                            <View style={styles.pinkBox}></View>
-                            <Text style={styles.headerText}>Component Status</Text>
-                        </View>
-                        <View style={[styles.row, styles.border, { width: getColumnWidth(5) }]}>
-                            <View style={styles.yellowBox}></View>
-                            <Text style={styles.headerText}>Component Status</Text>
-                        </View>
-                    </View>
-    
-                </View>
-            </View>
-    
 
-            <Text style={styles.title}>Additional Details</Text>
-            {allInputDetails.map((annexure, index) => (
-                <View key={index} style={{ marginBottom: 20 }}>
-                    <Text style={{ padding: 10, backgroundColor: '#22c55e', color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 18 }}>
-                        {annexure.annexureHeading}
-                    </Text>
-                    <View style={{ padding: 10 }}>
-                        {annexure.inputDetails.map((input, idx) => (
-                            <View key={idx} style={{ marginVertical: 5 }}>
-                                <View style={{ flexDirection: 'row', marginVertical: 5 }}>
-                                    <Text style={{ flex: 1, fontWeight: 'bold' }}>{input.label}:</Text>
-                                    <Text style={{ flex: 2 }}>
-                                        {input.type === 'datepicker'
-                                            ? input.value ? new Date(input.value).toLocaleDateString() : 'N/A'
-                                            : input.value || 'N/A'}
-                                    </Text>
-                                </View>
-                                {input.type === 'file' && input.value ? (
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginVertical: 5 }}>
-                                        {input.value.split(',').map((url, index) => (
-                                            <Image
-                                                key={index}
-                                                source={{ uri: `https://goldquestreact.onrender.com/${url.trim()}` }}
-                                                style={{ width: '100%', height: 200, marginVertical: 5 }} // Full width, adjust height as needed
-                                                resizeMode="contain" // Maintain aspect ratio
-                                            />
-                                        ))}
-                                    </View>
-                                ) : null}
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            ))}
-    
-            <View style={{ border: '1px solid #000', borderTop: '0px', padding: 10 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 12 }}>Remarks</Text>:
-                <Text style={{ fontSize: 10 }}>
-                    The following applicant details are verbally verified by Mr. Prashant Vishwas, (Head Constable), and the notary report duly stamped and signed by Mr. Harsh Shukla (Advocate) with comment on criminal record not found. Hence closing the check as GREEN and the same is furnished as annexure.
-                </Text>
-            </View>
-    
-            <Text style={{ fontWeight: 'bold', marginTop: 10, fontSize: 12 }}>Annexure - 1 (A)</Text>
-    
-            <View style={{ textAlign: 'center' }}>
-                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem, ipsum dolor.</Text>
-                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem ipsum dolor sit amet consectetur.</Text>
-                <Text style={{ textTransform: 'uppercase', fontSize: 16 }}>Lorem ipsum dolor sit.</Text>
-                <View style={{ borderBottomWidth: 1, marginVertical: 10 }} />
-            </View>
-    
-    
-            <View>
-                <Text style={{ backgroundColor: 'green', color: '#fff', padding: 10, width: '100%', textAlign: 'center', borderRadius: 10 }}>
-                    Disclaimer
-                </Text>
-                <Text style={{ paddingBottom: 15, fontSize: 10 }}>
-                    This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided.
-                </Text>
-                <Text style={{ border: '1px solid #000', padding: 10, width: '100%', textAlign: 'center', borderRadius: 10 }}>
-                    End of detail report
-                </Text>
-            </View>
-    
-    
-            <Text style={styles.disclaimer}>
-                This report is confidential and is meant for the exclusive use of the Client.
-            </Text>
-        </Page>
-    </Document>
-      );
+        // Fourth Table Headers
+        const fourthTableHeaders = [
+            { title: 'Component Status', dataKey: 'status' },
+            { title: 'REPORT COMPONENTS', dataKey: 'reportComponents' },
+            { title: 'INFORMATION SOURCE', dataKey: 'infoSource' },
+            { title: 'COMPONENT STATUS 1', dataKey: 'componentStatus1' },
+            { title: 'COMPONENT STATUS 2', dataKey: 'componentStatus2' },
+            { title: 'COMPONENT STATUS 3', dataKey: 'componentStatus3' },
+        ];
 
+        // Sample Data for the Fourth Table
+        const fourthTableData = [
+            {
+                status: '',  // Can be populated dynamically if needed
+                reportComponents: 'Example Component 1',
+                infoSource: 'Source A',
+                componentStatus1: 'Completed',
+                componentStatus2: 'Pending',
+                componentStatus3: 'N/A',
+            },
+            {
+                status: '',
+                reportComponents: 'Example Component 2',
+                infoSource: 'Source B',
+                componentStatus1: 'In Progress',
+                componentStatus2: 'Completed',
+                componentStatus3: 'N/A',
+            },
+            // Add more rows as necessary
+        ];
+
+        // AutoTable for the Fourth Table
+        doc.autoTable({
+            head: [fourthTableHeaders.map(header => header.title)],  // Map only the 'title' for headers
+            body: fourthTableData.map(row => [  // Map each row's data to table format
+                row.status,
+                row.reportComponents,
+                row.infoSource,
+                row.componentStatus1,
+                row.componentStatus2,
+                row.componentStatus3,
+            ]),
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  // Set cell styles
+            theme: 'grid',  // Set the theme to 'grid' for table structure
+            margin: { top: 20 },  // Set top margin for table placement
+        });
+
+
+        // Additional content
+        doc.setFontSize(16); // Reduced font size
+        doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 20, { align: 'center' });
+
+        // Further details
+        allInputDetails.forEach(async (annexure, index) => {
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.text(annexure.annexureHeading, 105, 10, { align: 'center' });
+
+            // Prepare annexure data
+            const annexureData = annexure.inputDetails.map(input => [
+                { content: input.label },
+                { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
+            ]);
+
+            // AutoTable for the annexure data
+            doc.autoTable({
+                head: [['Application Details', 'Report Details']],
+                body: annexureData,
+                styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
+                theme: 'grid',
+                margin: { top: 20 },
+            });
+
+            // Find the annexure image path (assuming the file paths are stored in 'value' of type 'file')
+            const annexureImage = annexure.inputDetails.find(input => input.type === 'file');
+            if (annexureImage) {
+                const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + annexureImage.value;
+
+                try {
+                    // Check if the image URL is valid by making a HEAD request
+                    const response = await fetch(imagePath, { method: 'HEAD' });
+
+                    if (response.ok) {
+                        // If the image exists, add it to the PDF
+                        doc.addImage(imagePath, 'JPEG', 10, doc.lastAutoTable.finalY + 10, 190, 0); // 190 for full width
+                    } else {
+                        console.warn("Image not found:", imagePath);
+                    }
+                } catch (error) {
+                    console.error("Error checking image:", error);
+                }
+            }
+        });
+
+
+
+
+        // Remarks section
+        doc.text("Remarks: The following applicant details are verbally verified...", 10, doc.lastAutoTable.finalY + 20);
+
+        // Save PDF
+        doc.save('background_verification_report.pdf');
+    };
 
     return (
         <>
+
+
             <div className='p-3 my-14'>
                 {loading && <div className="loader">Loading...</div>}
                 {error && <div>Error: {error}</div>}
@@ -888,11 +778,7 @@ const ExelTrackerStatus = () => {
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                <PDFDownloadLink document={<MyDocument />} fileName="report.pdf">
-                                                <button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button>
-                                                </PDFDownloadLink>
-                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
@@ -915,15 +801,7 @@ const ExelTrackerStatus = () => {
                                                                     <tr>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
                                                                         <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap   fhghghghghghghghghghgf">Subclient</th>
-                                                                        {serviceHeadings[item.id]?.map((value, index) => (
-                                                                            <th key={index} className="service-th py-3 px-4 border-b text-left uppercase whitespace-nowrap">
-                                                                                {value || 'NIL'}
-                                                                            </th>
-                                                                        ))}
-
-
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Action</th>
+                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Subclient</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -931,15 +809,43 @@ const ExelTrackerStatus = () => {
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
                                                                         <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
-                                                                        {dbHeadingsStatus[item.id]?.map((value, index) => (
-                                                                            <td key={index} className=" py-3 px-4 border-b whitespace-nowrap capitalize">{value?.status || 'N/A'}</td>
-                                                                        ))}
-
-                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">
-                                                                            <button className="bg-red-500 hover:bg-red-400 text-white rounded-md p-3">Delete</button>
-
-                                                                        </td>
                                                                     </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            <table className="min-w-full max-w-full bg-gray-100">
+                                                                <thead>
+                                                                    <tr className='flex w-full'>
+                                                                        <th className='bg-green-500 text-white text-left border-l p-2 w-1/2'>Service</th>
+                                                                        <th className='bg-green-500 text-white text-left p-2 w-1/2'>Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="h-48 overflow-y-auto block">
+
+                                                                    {serviceHeadings[item.id]?.map((serviceValue, index) => {
+                                                                        const formattedService = serviceValue?.replace(/\//g, '').toUpperCase() || 'NIL';
+
+                                                                        // Check if dbHeadingsStatus has a corresponding index for the service
+                                                                        const statusValue = dbHeadingsStatus[item.id]?.[index]?.status || 'NIL';
+                                                                        const formattedStatus = statusValue
+                                                                            .replace(/_/g, ' ') // Replace underscores with spaces
+                                                                            .toLowerCase() // Convert the whole string to lowercase
+                                                                            .split(' ') // Split the string into words
+                                                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                                                            .join(' ');
+
+                                                                        return (
+                                                                            <tr key={index} className="flex w-full">
+
+                                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                                    {formattedService}
+                                                                                </td>
+
+                                                                                <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
+                                                                                    {formattedStatus}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
                                                                 </tbody>
                                                             </table>
                                                         </div>

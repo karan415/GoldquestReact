@@ -9,21 +9,22 @@ import { GrServices } from "react-icons/gr";
 import DashBoard from './Dashboard';
 import EmployeeManagement from './EmployeeManagement';
 import AddUser from './AddUser';
-import ReportAndCase from './ReportAndCase';
 import BulkUpload from './BulkUpload';
 import UpdatePassword from '../Pages/UpdatePassword';
 import EscalationMatrix from './EscalationMatrix';
 import CustomerHeader from './CustomerHeader';
-import ClientDropBox from "./ClientDropBox";
-import CandidateDropBox from "./CandidateDropBox";
 import Logout from './Logout'
+import ReportCaseTable from "./ReportCaseTable";
+import DropBoxList from "./DropBoxList";
+import CandidateList from "./CandidateList";
+
 const tabComponents = {
   dashboard: <DashBoard />,
   employee_management: <EmployeeManagement />,
   add_user: <AddUser />,
-  report_case: <ReportAndCase />,
-  dropbox: <ClientDropBox />,
-  Candidate: <CandidateDropBox />,
+  report_case: <ReportCaseTable />,
+  dropbox: <DropBoxList />,
+  Candidate: <CandidateList />,
   bulkupload: <BulkUpload />,
   update_password: <UpdatePassword />,
   escalation: <EscalationMatrix />,

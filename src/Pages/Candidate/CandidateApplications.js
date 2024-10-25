@@ -69,7 +69,6 @@ const CandidateApplications = () => {
                         if (!response.ok) {
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
-                                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                                 throw new Error(text);
                             });
                         }
@@ -314,7 +313,6 @@ const CandidateApplications = () => {
                 if (!res.ok) {
                     return res.text().then(text => {
                         const errorData = JSON.parse(text);
-                        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                         throw new Error(text);
                     });
                 }
@@ -495,7 +493,6 @@ const CandidateApplications = () => {
                     }
                 );
             } catch (err) {
-                Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
             }
         }
     };
