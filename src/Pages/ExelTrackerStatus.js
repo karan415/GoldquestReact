@@ -158,7 +158,7 @@ const ExelTrackerStatus = () => {
         }
     }, [expandedRows, admin_id, storedToken, API_URL, requestOptions]);
 
-    
+
     const generateReport = (id, services) => {
         navigate('/candidate');
         setApplicationId(id);
@@ -312,170 +312,171 @@ const ExelTrackerStatus = () => {
     };
 
 
-useEffect(() => {
-    if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
-        console.log(`All data is set. Now generating PDF.`);
-        generatePDF();
-    }
-}, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
+    useEffect(() => {
+        if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
+            console.log(`All data is set. Now generating PDF.`);
+            generatePDF();
+        }
+          
+    }, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
 
-const handleDownloadPdf = async (id, branch_id) => {
-    if (!id || !branch_id) {
-        return Swal.fire('Error!', 'Something is missing', 'error');
-    }
-
-    const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-    const storedToken = localStorage.getItem("_token");
-    setLoading(true);
-    setError(null);
-
-    try {
-        const response = await fetch(
-            `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            const errorData = JSON.parse(errorText);
-            Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-            throw new Error(errorText);
+    const handleDownloadPdf = async (id, branch_id) => {
+        if (!id || !branch_id) {
+            return Swal.fire('Error!', 'Something is missing', 'error');
         }
 
-        const data = await response.json();
-        const applications = data.application;
-        const serviceIdsArr = applications?.services?.split(',') || [];
-        const serviceTitleValue = [];
+        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
+        const storedToken = localStorage.getItem("_token");
+        setLoading(true);
+        setError(null);
 
-        // Fetch service data
-        if (serviceIdsArr.length > 0) {
-            const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
-                const requestOptions = {
-                    method: "GET",
+        try {
+            const response = await fetch(
+                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+                {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    redirect: "follow",
-                };
-
-                const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
-
-                const [serviceResponse, applicationResponse] = await Promise.all([
-                    fetch(serviceInfoUrl, requestOptions),
-                    fetch(applicationServiceUrl, requestOptions),
-                ]);
-
-                if (!serviceResponse.ok) {
-                    return null;
                 }
+            );
 
-                const serviceData = await serviceResponse.json();
-                const applicationData = await applicationResponse.json();
+            if (!response.ok) {
+                const errorText = await response.text();
+                const errorData = JSON.parse(errorText);
+                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                throw new Error(errorText);
+            }
 
-                const title = serviceData.service.title || "N/A";
-                serviceTitleValue.push({
-                    title,
-                    status: applicationData.annexureData?.status || "N/A",
-                    info_source: applicationData.annexureData?.info_source || "N/A",
-                    verified_at: applicationData.annexureData?.verified_at || "N/A",
-                    color_status: applicationData.annexureData?.color_status || "N/A",
-                });
-            });
+            const data = await response.json();
+            const applications = data.application;
+            const serviceIdsArr = applications?.services?.split(',') || [];
+            const serviceTitleValue = [];
 
-            await Promise.all(serviceFetchPromises);
-            setServiceTitleValue(serviceTitleValue); // Triggering update here
-        }
-
-        // Fetch report form details
-        const allInputDetails = [];
-        const servicesArray = serviceIdsArr.map(Number);
-
-        await Promise.all(
-            servicesArray.map(async (serviceId) => {
-                const response = await fetch(
-                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
-                    {
-                        method: 'GET',
+            // Fetch service data
+            if (serviceIdsArr.length > 0) {
+                const serviceFetchPromises = serviceIdsArr.map(async (serviceId) => {
+                    const requestOptions = {
+                        method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                         },
+                        redirect: "follow",
+                    };
+
+                    const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                    const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+
+                    const [serviceResponse, applicationResponse] = await Promise.all([
+                        fetch(serviceInfoUrl, requestOptions),
+                        fetch(applicationServiceUrl, requestOptions),
+                    ]);
+
+                    if (!serviceResponse.ok) {
+                        return null;
                     }
-                );
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    const errorData = JSON.parse(errorText);
-                    return;
-                }
+                    const serviceData = await serviceResponse.json();
+                    const applicationData = await applicationResponse.json();
 
-                const data = await response.json();
-                const newToken = data._token || data.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
+                    const title = serviceData.service.title || "N/A";
+                    serviceTitleValue.push({
+                        title,
+                        status: applicationData.annexureData?.status || "N/A",
+                        info_source: applicationData.annexureData?.info_source || "N/A",
+                        verified_at: applicationData.annexureData?.verified_at || "N/A",
+                        color_status: applicationData.annexureData?.color_status || "N/A",
+                    });
+                });
 
-                let parsedJson;
-                try {
-                    parsedJson = JSON.parse(data.reportFormJson.json || '{}');
-                } catch (error) {
-                    console.error("Failed to parse reportFormJson:", error);
-                    return;
-                }
+                await Promise.all(serviceFetchPromises);
+                setServiceTitleValue(serviceTitleValue); // Triggering update here
+            }
 
-                if (parsedJson.db_table && parsedJson.heading) {
-                    const annexureHeading = parsedJson.heading;
-                    const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+            // Fetch report form details
+            const allInputDetails = [];
+            const servicesArray = serviceIdsArr.map(Number);
 
-                    const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
-                    if (!annexureResponse.ok) {
+            await Promise.all(
+                servicesArray.map(async (serviceId) => {
+                    const response = await fetch(
+                        `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        const errorData = JSON.parse(errorText);
                         return;
                     }
 
-                    const annexureResult = await annexureResponse.json();
-                    const inputDetails = [];
+                    const data = await response.json();
+                    const newToken = data._token || data.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
 
-                    const annexureData = annexureResult.annexureData;
-                    parsedJson.rows.forEach(row => {
-                        row.inputs.forEach(input => {
-                            const value = annexureData && Array.isArray(annexureData)
-                                ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
-                                : (annexureData?.[input.name] || 'N/A');
+                    let parsedJson;
+                    try {
+                        parsedJson = JSON.parse(data.reportFormJson.json || '{}');
+                    } catch (error) {
+                        console.error("Failed to parse reportFormJson:", error);
+                        return;
+                    }
 
-                            inputDetails.push({
-                                label: input.label,
-                                name: input.name,
-                                type: input.type,
-                                value: value,
-                                options: input.options || undefined,
+                    if (parsedJson.db_table && parsedJson.heading) {
+                        const annexureHeading = parsedJson.heading;
+                        const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+
+                        const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
+                        if (!annexureResponse.ok) {
+                            return;
+                        }
+
+                        const annexureResult = await annexureResponse.json();
+                        const inputDetails = [];
+
+                        const annexureData = annexureResult.annexureData;
+                        parsedJson.rows.forEach(row => {
+                            row.inputs.forEach(input => {
+                                const value = annexureData && Array.isArray(annexureData)
+                                    ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
+                                    : (annexureData?.[input.name] || 'N/A');
+
+                                inputDetails.push({
+                                    label: input.label,
+                                    name: input.name,
+                                    type: input.type,
+                                    value: value,
+                                    options: input.options || undefined,
+                                });
                             });
                         });
-                    });
 
-                    allInputDetails.push({ annexureHeading, inputDetails });
-                }
-            })
-        );
+                        allInputDetails.push({ annexureHeading, inputDetails });
+                    }
+                })
+            );
 
-        setAllInputDetails(allInputDetails); // Triggering update here
+            setAllInputDetails(allInputDetails); // Triggering update here
 
-        // Set application and other related data
-        setPdfData(applications);
-        const cmtData = data.CMTData;
-        setCmtAllData(cmtData);
+            // Set application and other related data
+            setPdfData(applications);
+            const cmtData = data.CMTData;
+            setCmtAllData(cmtData);
 
-    } catch (error) {
-        console.error('Fetch error:', error);
-        setError('Failed to load client data');
-    } finally {
-        setLoading(false);
-    }
-};
+        } catch (error) {
+            console.error('Fetch error:', error);
+            setError('Failed to load client data');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
 
@@ -559,33 +560,33 @@ const handleDownloadPdf = async (id, branch_id) => {
             { title: 'Verification Status', dataKey: 'status' },
         ];
 
-    
+
         const secondTableData = serviceTitleValue.map(item => {
-          
+
             const logData = {
-                component: item.title || 'N/A',  
-                source: item.info_source || 'N/A',  
+                component: item.title || 'N/A',
+                source: item.info_source || 'N/A',
                 completedDate: (item.verified_at && new Date(item.verified_at).toString() !== 'Invalid Date')
-                    ? new Date(item.verified_at).toLocaleDateString()  
-                    : 'N/A',  
-                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'N/A', 
+                    ? new Date(item.verified_at).toLocaleDateString()
+                    : 'N/A',
+                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'N/A',
             };
 
-            return logData; 
+            return logData;
         });
 
-      
+
         doc.autoTable({
-            head: [secondTableHeaders.map(header => header.title)],  
-            body: secondTableData.map(row => [  
+            head: [secondTableHeaders.map(header => header.title)],
+            body: secondTableData.map(row => [
                 row.component,
                 row.source,
                 row.completedDate,
                 row.status,
             ]),
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  
-            theme: 'grid', 
-            margin: { top: 20 }, 
+            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
+            theme: 'grid',
+            margin: { top: 20 },
         });
 
 
