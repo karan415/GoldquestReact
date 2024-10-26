@@ -12,7 +12,7 @@ const ExelTrackerStatus = () => {
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [allInputDetails, setAllInputDetails] = useState([]);
+    const [allInputDetails, setAllInputDetails] = useState(null);
     const [parentCustomer, setParentCustomer] = useState([]);
     const [pdfData, setPdfData] = useState([]);
     const [serviceTitleValue, setServiceTitleValue] = useState([]);
@@ -207,7 +207,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://goldquestreact.onrender.com/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -312,13 +312,7 @@ const ExelTrackerStatus = () => {
     };
 
 
-    useEffect(() => {
-        if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
-            console.log(`All data is set. Now generating PDF.`);
-            generatePDF();
-        }
 
-    }, [serviceTitleValue, allInputDetails, pdfData, cmtAllData]);
 
     const handleDownloadPdf = async (id, branch_id) => {
         if (!id || !branch_id) {
@@ -332,7 +326,7 @@ const ExelTrackerStatus = () => {
 
         try {
             const response = await fetch(
-                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+                `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
                 {
                     method: 'GET',
                     headers: {
@@ -364,8 +358,8 @@ const ExelTrackerStatus = () => {
                         redirect: "follow",
                     };
 
-                    const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                    const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+                    const serviceInfoUrl = `https://goldquestreact.onrender.com/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                    const applicationServiceUrl = `https://goldquestreact.onrender.com/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
 
                     const [serviceResponse, applicationResponse] = await Promise.all([
                         fetch(serviceInfoUrl, requestOptions),
@@ -400,7 +394,7 @@ const ExelTrackerStatus = () => {
             await Promise.all(
                 servicesArray.map(async (serviceId) => {
                     const response = await fetch(
-                        `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                        `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
                         {
                             method: 'GET',
                             headers: {
@@ -431,7 +425,7 @@ const ExelTrackerStatus = () => {
 
                     if (parsedJson.db_table && parsedJson.heading) {
                         const annexureHeading = parsedJson.heading;
-                        const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+                        const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
 
                         const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
                         if (!annexureResponse.ok) {
@@ -478,6 +472,17 @@ const ExelTrackerStatus = () => {
         }
     };
 
+useEffect(() => {
+    if (allInputDetails) {
+        console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
+        
+        // Assuming you want to ensure all necessary data is ready before generating PDF.
+        // Add your conditions here if needed to check for other required data.
+        
+        console.log(`All data is set. Now generating PDF.`);
+        generatePDF();
+    }
+}, [allInputDetails]);
 
 
 
@@ -503,7 +508,12 @@ const ExelTrackerStatus = () => {
         // Title
         doc.setFontSize(20); // Reduced font size
         doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
-
+        const capitalizeFirstLetter = (text) => {
+            return text
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        };
         // First Table
         const firstTableData = [
             [
@@ -576,6 +586,45 @@ const ExelTrackerStatus = () => {
             return logData;
         });
 
+        const dataRow = [
+            { title: 'completed', color: null },
+            { title: 'component a', color: 'lightgreen' },
+            { title: 'source 1', color: 'lightcoral' },
+            { title: 'pending', color: 'orange' },
+            { title: 'check again', color: 'pink' },
+            { title: 'reviewed', color: 'yellow' },
+        ];
+
+        // Calculate column width and starting position
+        const colWidth = (pageWidth - 40) / dataRow.length; // Adjust for margins
+        const startingY = 70; // Starting Y position for data row
+        const height = 10; // Row height
+
+        // Draw data row
+        dataRow.forEach((item, index) => {
+            const x = 20 + index * colWidth; // Calculate X position for each data cell
+
+            // Draw data cell border
+            doc.setDrawColor(0); // Set border color to black
+            doc.rect(x, startingY, colWidth, height); // Draw border around the data box
+
+            // Draw small colored box if color is specified
+            if (item.color) {
+                doc.setFillColor(item.color);
+                doc.rect(x + colWidth / 2 - 1.5, startingY + 2, 3, 3, 'F'); // Fill a small colored box (width: 3, height: 3)
+            }
+
+            doc.setTextColor(0, 0, 0); // Set text color to black
+            doc.setFontSize(8); // Set font size for data (smaller font size)
+
+            // Center the text horizontally, converting to capitalized first letter
+            const textWithCapital = capitalizeFirstLetter(item.title);
+            const textWidth = doc.getTextWidth(textWithCapital);
+            const textX = x + (colWidth - textWidth) / 2; // Center the text in the cell
+            const textY = startingY + (height / 2) + 3; // Slightly offset for vertical centering
+            doc.text(textWithCapital, textX, textY); // Add centered text
+        });
+
 
         doc.autoTable({
             head: [secondTableHeaders.map(header => header.title)],
@@ -589,7 +638,6 @@ const ExelTrackerStatus = () => {
             theme: 'grid',
             margin: { top: 20 },
         });
-
 
 
         // Fourth Table Headers
@@ -644,48 +692,115 @@ const ExelTrackerStatus = () => {
         doc.setFontSize(16); // Reduced font size
         doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 20, { align: 'center' });
 
-        // Further details
-        allInputDetails.forEach(async (annexure, index) => {
-            doc.addPage();
-            doc.setFontSize(16);
-            doc.text(annexure.annexureHeading, 105, 10, { align: 'center' });
+        // Check if any data is present
+        const allDataPresent = serviceTitleValue.length > 0 || allInputDetails.length > 0 || pdfData || cmtAllData;
 
-            // Prepare annexure data
-            const annexureData = annexure.inputDetails
-                .filter(input => input.type !== 'file') // Skip inputs with type 'file'
-                .map(input => [
-                    { content: input.label },
-                    { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
-                ]);
+        if (allDataPresent) {
+            console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
+            if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
+                // Further details
+                allInputDetails.forEach(async (annexure, index) => {
+                    doc.addPage();
+                    doc.setFontSize(16);
+                    doc.text(annexure.annexureHeading, 105, 10, { align: 'center' });
+
+                    // Prepare annexure data
+                    const annexureData = annexure.inputDetails
+                        .filter(input => input.type !== 'file') // Skip inputs with type 'file'
+                        .map(input => [
+                            { content: input.label },
+                            { content: input.type === 'datepicker' ? (input.value ? new Date(input.value).toLocaleDateString() : 'N/A') : input.value || 'N/A' },
+                        ]);
 
 
 
-            doc.autoTable({
-                head: [['Application Details', 'Report Details']],
-                body: annexureData,
-                styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
-                theme: 'grid',
-                margin: { top: 20 },
-            });
-            console.log(`annexureImage - `, annexure);
-            const annexureImage = annexure.inputDetails.find(input => input.type === 'file');
-            console.log(`annexureImage - `, annexureImage);
-            if (annexureImage && annexureImage.value) {
-                const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + annexureImage.value;
-                const imageY = doc.lastAutoTable.finalY + 20;
-                const imageWidth = pageWidth - 40;
-                doc.addImage(imagePath, 20, imageY, imageWidth, 100);
+                    doc.autoTable({
+                        head: [['Application Details', 'Report Details']],
+                        body: annexureData,
+                        styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
+                        theme: 'grid',
+                        margin: { top: 20 },
+                    });
+                    console.log(`annexure - `, annexure);
+
+                    const annexureImage = annexure.inputDetails.find(input => input.type === 'file');
+                    if (annexureImage && annexureImage.value) {
+                        const annexureImageArr = annexureImage.value.split(',');
+
+                        annexureImageArr.forEach(async (imageUrl) => {
+                            console.log(`Checking annexureImage URL - `, imageUrl);
+
+                            const imagePath = "https://goldquestreact.onrender.com/" + imageUrl;
+
+                            try {
+                                // Perform a HEAD request to check if the image exists
+                                const response = await fetch(imagePath, { method: 'HEAD' });
+
+                                if (response.ok) {
+                                    // Image exists, proceed to add it
+                                    const imageY = doc.lastAutoTable.finalY + 20;
+                                    const imageWidth = pageWidth - 40;
+
+                                    doc.addImage(imagePath, 20, imageY, imageWidth, 100);
+                                    console.log(`Image added: ${imagePath}`);
+                                } else {
+                                    console.warn(`Image not found at URL: ${imagePath}`);
+                                }
+                            } catch (error) {
+                                console.error(`Error checking image URL: ${imagePath}`, error);
+                            }
+                        });
+                    }
+
+                });
             }
-        });
+        }
 
-        doc.text('Go to Link', 15, 23);  // Position text within the rectangle
+        let finalY = doc.lastAutoTable.finalY + 20;
 
-        // Add a clickable link area over the "button"
-        doc.link(10, 10, 60, 20, { url: 'https://example.com' });
-        doc.text("This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement(LoE) / Agreement signed with you and is not to be used for any other purpose.The Client recognizes that we are not the source of the data gathered and our reports are based on the information purpose.The Client recognizes that we are not the source of the data gathered and our reports are based on the information responsible for employment decisions based on the information provided in this report.", 10, doc.lastAutoTable.finalY + 20);
+        // Button properties
+        const buttonWidth = pageWidth - 20;
+        const buttonHeight = 15;
 
+        const disclaimerButtonY = finalY + 20;
 
-        doc.save('background_verification_report.pdf');
+        // Disclaimer Button
+        doc.setFillColor(26, 189, 156); // Set button color to #1abd9c
+        doc.roundedRect(10, disclaimerButtonY, buttonWidth, buttonHeight, 2, 2, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(255, 255, 255);
+        doc.text('Disclaimer', 10 + buttonWidth / 2, disclaimerButtonY + 10, { align: 'center' });
+
+        doc.link(10, disclaimerButtonY, buttonWidth, buttonHeight, { url: 'https://your-link-here.com' });
+
+        const disclaimerTextY = disclaimerButtonY + buttonHeight + 10;
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+            "This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information gathered. The Client is responsible for employment decisions based on the information provided in this report.",
+            10,
+            disclaimerTextY,
+            { maxWidth: pageWidth - 20 }
+        );
+
+        // End Of Detail Report Button
+        const endOfDetailButtonY = disclaimerTextY + 30;
+
+        // Set the fill color to white for the End Of Detail Report button
+        doc.setFillColor(255, 255, 255); // Set fill color to white
+        doc.roundedRect(10, endOfDetailButtonY, buttonWidth, buttonHeight, 2, 2, 'F'); // Draw filled rectangle
+
+        // Draw the border
+        doc.setDrawColor(0, 0, 0); // Set border color to black
+        doc.roundedRect(10, endOfDetailButtonY, buttonWidth, buttonHeight, 2, 2, 'S'); // Draw border
+
+        // Add text for End Of Detail Report button
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text('End Of Detail Report', 10 + buttonWidth / 2, endOfDetailButtonY + 10, { align: 'center' });
+
+        // Save the PDF
+        doc.save("background_verification_report.pdf");
     };
 
     return (

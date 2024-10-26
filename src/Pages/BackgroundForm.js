@@ -82,7 +82,7 @@ const BackgroundForm = () => {
 
     const isApplicationExists = useCallback(() => {
         if (isValidApplication && decodedValues.app_id && decodedValues.branch_id && decodedValues.customer_id) {
-            fetch(`https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
+            fetch(`https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
                 .then(res => res.json())
                 .then(result => {
                     if (!result.status) {
@@ -118,7 +118,7 @@ const BackgroundForm = () => {
         };
 
         const fetchPromises = serviceArr.map(serviceId =>
-            fetch(`https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`, requestOptions)
+            fetch(`https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`, requestOptions)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error(`Error fetching service ID ${serviceId}: ${res.statusText}`);
@@ -188,7 +188,7 @@ const BackgroundForm = () => {
             redirect: "follow",
         };
     
-        fetch("https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/submit", requestOptions)
+        fetch("https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/submit", requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
