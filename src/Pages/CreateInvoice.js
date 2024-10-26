@@ -4,75 +4,75 @@ import SelectSearch from 'react-select-search';
 import 'react-select-search/style.css'
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { useApi } from '../ApiContext';
 const CreateInvoice = () => {
+  const { API_URL } = useApi();
   const { listData, fetchData } = useData();
   const [clientCode, setClientCode] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
-
-
   const options = listData.map(client => ({
     name: client.name + `(${client.client_unique_id})`,
     value: client.id,
   }));
   console.log('listData', listData)
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
   const handleSubmit = (e) => {
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
     e.preventDefault();
-   
-
     const formdata = new FormData();
-
     const requestOptions = {
       method: "GET",
       body: formdata,
       redirect: "follow"
     };
-    
-    fetch("http://localhost:5000/generate-invoice?customer_id=1&admin_id=1&_token=eae0ff2481308a95b2029eb2282f07b5723b556b3355a3f1b8f09d2cba1ede00", requestOptions)
+    fetch(`${API_URL}/generate-invoice?customer_id=${clientCode}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
       .then((response) => response.text())
       .then((result) => console.log(result))
       .catch((error) => console.error(error))
-
-
-
     console.log('Form Data:');
     generatePdf();
-
   };
-
-
-
-
   const generatePdf = () => {
     const doc = new jsPDF();
-  
-    // Add the "Bill To" Section
+    // Document Title
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice", 105, 15, { align: "center" });
+    // Section: Bill To & Invoice Details Side-by-Side
     doc.setFontSize(10);
-    doc.text("BILL TO", 10, 10);
-    doc.text("Attention:", 10, 20);
-    doc.text("INDIVIDUAL", 10, 25);
-    doc.text("Bangalore, Karnataka, India", 10, 30);
-  
-    // Add the Invoice Details Section
-    doc.text("GSTIN", 160, 10);
-    doc.text("State", 160, 15);
-    doc.text("Karnataka", 180, 15);
-    doc.text("Invoice Date", 160, 20);
-    doc.text("10 Oct, 2024", 180, 20);
-    doc.text("Invoice Number", 160, 25);
-    doc.text("INV-INDV-OCT-10", 180, 25);
-    doc.text("State Code", 160, 30);
-  
-    // Define table headers and rows
-    const headers = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
-    const rows = [
+    doc.setFont("helvetica", "bold");
+    doc.text("BILL TO:", 10, 25);
+    doc.setFont("helvetica", "normal");
+    doc.text("Attention: INDIVIDUAL", 10, 30);
+    doc.text("Location: Bangalore, Karnataka, India", 10, 35);
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice Details", 140, 25);
+    doc.setFont("helvetica", "normal");
+    const invoiceDetails = [
+      ["GSTIN", ""],
+      ["State", "Karnataka"],
+      ["Invoice Date", "10 Oct, 2024"],
+      ["Invoice Number", "INV-INDV-OCT-10"],
+      ["State Code", ""]
+    ];
+    let yPosition = 30;
+    invoiceDetails.forEach(([label, value]) => {
+      doc.text(`${label}:`, 140, yPosition);
+      doc.text(value, 180, yPosition);
+      yPosition += 5;
+    });
+    // Divider Line
+    yPosition += 5; // Move down for divider
+    doc.line(10, yPosition, 200, yPosition);
+    // First Table
+    const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
+    const rows1 = [
       ["LATEST EMPLOYMENT-1", "998521", "2", "123", "0", "246"],
       ["EX-EMPLOYMENT-2", "998521", "2", "123", "0", "246"],
       ["PREVIOUS EMPLOYMENT-3", "998521", "0", "123", "0", "0"],
@@ -80,24 +80,20 @@ const CreateInvoice = () => {
       ["GRADUATION", "998521", "1", "3245", "0", "3245"],
       ["COMPANY SITE VISIT", "998521", "0", "900", "0", "0"]
     ];
-  
-    // Draw the first table using autoTable plugin
     doc.autoTable({
-      startY: 40,
-      head: headers,
-      body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
-      bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
+      startY: yPosition + 5, // Start table below the divider
+      head: headers1,
+      body: rows1,
+      styles: { fontSize: 8, halign: 'center' },
+      headStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
+      bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-  
-    // Define the starting position for the second table
-    let currentY = doc.autoTable.previous.finalY + 10; // Adding some space after the first table
-  
-    // Define second table headers and rows
-    const secondHeader = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
-    const secondRow = [
+    // Space for the second table
+    yPosition = doc.autoTable.previous.finalY + 10;
+    // Second Table
+    const headers2 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
+    const rows2 = [
       ["UAN/ITR/FORM 26AS", "998521", "0", "675", "0", "0"],
       ["EMPLOYMENT SITE VISIT", "998521", "0", "890", "0", "0"],
       ["EDUCATION/ACADEMIC", "998521", "0", "78", "0", "0"],
@@ -109,24 +105,21 @@ const CreateInvoice = () => {
       ["GAP CHECK", "998521", "0", "0", "0", "0"],
       ["Total", "", "18", "", "", "25621"]
     ];
-  
-    // Draw the second table
     doc.autoTable({
-      startY: currentY,
-      head: secondHeader,
-      body: secondRow,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
-      bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
+      startY: yPosition,
+      head: headers2,
+      body: rows2,
+      styles: { fontSize: 8, halign: 'center' },
+      headStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
+      bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-  
-    // Update currentY for the next section
-    currentY = doc.autoTable.previous.finalY + 10;
-  
-    // Add the bank account details
-    doc.setFontSize(10);
-    doc.text("GoldQuest Global Bank Account Details", 10, currentY);
+    // Bank Account & Tax Details
+    yPosition = doc.autoTable.previous.finalY + 15; // Add space before the bank details
+    doc.setFont("helvetica", "bold");
+    doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
+    doc.text("Tax Details", 140, yPosition);
+    doc.setFont("helvetica", "normal");
     const bankDetails = [
       ["Bank Name", "ICICI BANK LTD"],
       ["Bank A/C No", "058305004248"],
@@ -134,74 +127,52 @@ const CreateInvoice = () => {
       ["Bank IFSC/ NEFT/ RTGS", "ICIC0001417"],
       ["MICR", "560229040"]
     ];
-  
-    bankDetails.forEach((detail, index) => {
-      doc.text(detail[0], 10, currentY + 10 + index * 5);
-      doc.text(detail[1], 60, currentY + 10 + index * 5);
+    const taxDetails = [
+      { label: "Total Amount Before Tax", amount: "25621" },
+      { label: "Add: CGST - 9%", amount: "2305.89" },
+      { label: "Add: SGST - 9%", amount: "2305.89" },
+      { label: "Add: IGST - 18%", amount: "0" },
+      { label: "Total Tax Amount (Round off)", amount: "30232.78" },
+      { label: "GST On Reverse Charge", amount: "No" }
+    ];
+    bankDetails.forEach(([label, value], index) => {
+      const rowY = yPosition + 10 + index * 5;
+      doc.text(`${label}:`, 10, rowY);
+      doc.text(value, 60, rowY);
+      if (taxDetails[index]) {
+        const taxDetail = taxDetails[index];
+        doc.text(`${taxDetail.label}:`, 140, rowY);
+        doc.text(taxDetail.amount, 190, rowY);
+      }
     });
-  
-    // Update currentY for the next section
-    currentY = doc.autoTable.previous.finalY + 10;
-  
-    // Add the tax details section
-    doc.text("Total Amount Before Tax", 140, currentY);
-    doc.text("25621", 190, currentY);
-  
-    doc.text("Add: CGST - 9%", 140, currentY + 10);
-    doc.text("2305.89", 190, currentY + 10);
-  
-    doc.text("Add: SGST - 9%", 140, currentY + 20);
-    doc.text("2305.89", 190, currentY + 20);
-  
-    doc.text("Add: IGST - 18%", 140, currentY + 30);
-    doc.text("0", 190, currentY + 30);
-  
-    doc.text("Total Tax Amount (Round off)", 140, currentY + 40);
-    doc.text("30232.78", 190, currentY + 40);
-  
-    doc.text("GST On Reverse Charge", 140, currentY + 50);
-    doc.text("No", 190, currentY + 50);
-  
-    // Add the total in words
-    doc.setFontSize(10);
-    doc.text(
-      "Invoice Amount in words: Thirty Thousand Two Hundred And Thirty Two Point Seventy Eight Rupees Only",
-      10,
-      currentY + 70
-    );
-  
-    // Define third table headers and rows
-    const thirdHeader = [
+    // Invoice Amount in Words
+    yPosition += bankDetails.length * 5 + 20; // Adjust spacing before amount in words
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice Amount in Words:", 10, yPosition);
+    doc.setFont("helvetica", "normal");
+    doc.text("Thirty Thousand Two Hundred And Thirty Two Point Seventy Eight Rupees Only", 10, yPosition + 5);
+    // Third Table
+    const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", "E1", "E2", "E3", "E4", "D", "C", "P", "I", "D", "A", "A", "C", "A", "Add Fee", "Pricing", "Report Date"]
     ];
-  
-    const thirdRow = [
+    const rows3 = [
       ["1", "GQ-INDV-649", "NA", "01-10-2024", "Anala V G Trinath Kumar", "N", "N", "N", "N", "N", "7", "7", "9", "9", "4", "0", "8", "10", "0", "8902", "08-10-2024"],
       ["2", "GQ-INDV-652", "NA", "04-10-2024", "Vijay Pathak", "2", "1", "3", "N", "N", "7", "8", "8", "0", "0", "0", "2", "21", "0", "6404", "21-10-2024"],
       ["3", "GQ-INDV-654", "NA", "07-10-2024", "Lokita Vijaykumar Thakrar", "N", "N", "N", "N", "N", "7", "9", "9", "0", "0", "N", "N", "16", "0", "702", "16-10-2024"],
-      ["4", "GQ-INDV-657", "NA", "16-10-2024", "Vishnukant", "N", "N", "N", "N", "N", "5", "6", "6", "0", "0", "4", "16", "0", "1023", "16-10-2024"],
-      ["5", "GQ-INDV-658", "NA", "16-10-2024", "Bayagaraj C", "N", "N", "N", "N", "N", "4", "4", "8", "8", "0", "0", "18", "18", "0", "8590", "18-10-2024"],
-      ["Total", "", "", "", "", "2", "1", "3", "N", "N", "35", "35", "41", "4", "0", "0", "20", "16", "0", "11918", ""]
+      ["4", "GQ-INDV-657", "NA", "16-10-2024", "Vishnukant", "N", "N", "N", "N", "N", "5", "4", "4", "4", "4", "37", "65", "0", "27598", ""]
     ];
-  
-    // Draw the third table
     doc.autoTable({
-      startY: currentY + 80, // Adjusting for spacing above this table
-      head: thirdHeader,
-      body: thirdRow,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
-      bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
+      startY: yPosition + 20, // Ensure spacing before the third table
+      head: headers3,
+      body: rows3,
+      styles: { fontSize: 8, halign: 'center' },
+      headStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
+      bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-  
-    // Save the PDF
-    doc.save("Invoice.pdf");
+    // Finalize PDF
+    doc.save("invoice.pdf");
   };
-
-
-
-
   return (
     <div className="bg-[#F7F6FB] p-12">
       <div className="bg-white p-12 rounded-md w-full mx-auto">
@@ -281,5 +252,4 @@ const CreateInvoice = () => {
     </div>
   );
 };
-
 export default CreateInvoice;
