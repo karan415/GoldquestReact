@@ -674,18 +674,17 @@ const ExelTrackerStatus = () => {
                 const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + annexureImage.value;
                 const imageY = doc.lastAutoTable.finalY + 20;
                 const imageWidth = pageWidth - 40;
-                const imageHeight = (imageWidth / 100);
                 doc.addImage(imagePath, 20, imageY, imageWidth, 100);
             }
         });
 
+        doc.text('Go to Link', 15, 23);  // Position text within the rectangle
+
+        // Add a clickable link area over the "button"
+        doc.link(10, 10, 60, 20, { url: 'https://example.com' });
+        doc.text("This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement(LoE) / Agreement signed with you and is not to be used for any other purpose.The Client recognizes that we are not the source of the data gathered and our reports are based on the information purpose.The Client recognizes that we are not the source of the data gathered and our reports are based on the information responsible for employment decisions based on the information provided in this report.", 10, doc.lastAutoTable.finalY + 20);
 
 
-
-        // Remarks section
-        doc.text("Remarks: The following applicant details are verbally verified...", 10, doc.lastAutoTable.finalY + 20);
-
-        // Save PDF
         doc.save('background_verification_report.pdf');
     };
 
