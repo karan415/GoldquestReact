@@ -129,7 +129,7 @@ const ExelTrackerStatus = () => {
                             return response.json();
                         })
                         .then(result => {
-                            const status = result?.annexureData?.status || 'N/A';
+                            const status = result?.annexureData?.status || 'NIL';
 
                             // Add unique status
                             uniqueStatuses.add(status);
@@ -373,13 +373,13 @@ const ExelTrackerStatus = () => {
                     const serviceData = await serviceResponse.json();
                     const applicationData = await applicationResponse.json();
 
-                    const title = serviceData.service.title || "N/A";
+                    const title = serviceData.service.title || "NIL";
                     serviceTitleValue.push({
                         title,
-                        status: applicationData.annexureData?.status || "N/A",
-                        info_source: applicationData.annexureData?.info_source || "N/A",
-                        verified_at: applicationData.annexureData?.verified_at || "N/A",
-                        color_status: applicationData.annexureData?.color_status || "N/A",
+                        status: applicationData.annexureData?.status || "NIL",
+                        info_source: applicationData.annexureData?.info_source || "NIL",
+                        verified_at: applicationData.annexureData?.verified_at || "NIL",
+                        color_status: applicationData.annexureData?.color_status || "NIL",
                     });
                 });
 
@@ -439,8 +439,8 @@ const ExelTrackerStatus = () => {
                         parsedJson.rows.forEach(row => {
                             row.inputs.forEach(input => {
                                 const value = annexureData && Array.isArray(annexureData)
-                                    ? (annexureData.find(item => item.name === input.name)?.value || 'N/A')
-                                    : (annexureData?.[input.name] || 'N/A');
+                                    ? (annexureData.find(item => item.name === input.name)?.value || 'NIL')
+                                    : (annexureData?.[input.name] || 'NIL');
 
                                 inputDetails.push({
                                     label: input.label,
@@ -472,17 +472,17 @@ const ExelTrackerStatus = () => {
         }
     };
 
-useEffect(() => {
-    if (allInputDetails) {
-        console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
-        
-        // Assuming you want to ensure all necessary data is ready before generating PDF.
-        // Add your conditions here if needed to check for other required data.
-        
-        console.log(`All data is set. Now generating PDF.`);
-        generatePDF();
-    }
-}, [allInputDetails]);
+    useEffect(() => {
+        if (allInputDetails) {
+            console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
+
+            // Assuming you want to ensure all necessary data is ready before generating PDF.
+            // Add your conditions here if needed to check for other required data.
+
+            console.log(`All data is set. Now generating PDF.`);
+            generatePDF();
+        }
+    }, [allInputDetails]);
 
 
 
@@ -501,8 +501,8 @@ useEffect(() => {
     const generatePDF = () => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        // Add the logo
+        // const pageHeight = doc.internal.pageSize.getHeight();
+
         doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
 
         // Title
@@ -575,54 +575,15 @@ useEffect(() => {
         const secondTableData = serviceTitleValue.map(item => {
 
             const logData = {
-                component: item.title || 'N/A',
-                source: item.info_source || 'N/A',
+                component: item.title || 'NIL',
+                source: item.info_source || 'NIL',
                 completedDate: (item.verified_at && new Date(item.verified_at).toString() !== 'Invalid Date')
                     ? new Date(item.verified_at).toLocaleDateString()
-                    : 'N/A',
-                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'N/A',
+                    : 'NIL',
+                status: item.status ? item.status.replace(/[_-]/g, ' ') : 'NIL',
             };
 
             return logData;
-        });
-
-        const dataRow = [
-            { title: 'completed', color: null },
-            { title: 'component a', color: 'lightgreen' },
-            { title: 'source 1', color: 'lightcoral' },
-            { title: 'pending', color: 'orange' },
-            { title: 'check again', color: 'pink' },
-            { title: 'reviewed', color: 'yellow' },
-        ];
-
-        // Calculate column width and starting position
-        const colWidth = (pageWidth - 40) / dataRow.length; // Adjust for margins
-        const startingY = 70; // Starting Y position for data row
-        const height = 10; // Row height
-
-        // Draw data row
-        dataRow.forEach((item, index) => {
-            const x = 20 + index * colWidth; // Calculate X position for each data cell
-
-            // Draw data cell border
-            doc.setDrawColor(0); // Set border color to black
-            doc.rect(x, startingY, colWidth, height); // Draw border around the data box
-
-            // Draw small colored box if color is specified
-            if (item.color) {
-                doc.setFillColor(item.color);
-                doc.rect(x + colWidth / 2 - 1.5, startingY + 2, 3, 3, 'F'); // Fill a small colored box (width: 3, height: 3)
-            }
-
-            doc.setTextColor(0, 0, 0); // Set text color to black
-            doc.setFontSize(8); // Set font size for data (smaller font size)
-
-            // Center the text horizontally, converting to capitalized first letter
-            const textWithCapital = capitalizeFirstLetter(item.title);
-            const textWidth = doc.getTextWidth(textWithCapital);
-            const textX = x + (colWidth - textWidth) / 2; // Center the text in the cell
-            const textY = startingY + (height / 2) + 3; // Slightly offset for vertical centering
-            doc.text(textWithCapital, textX, textY); // Add centered text
         });
 
 
@@ -639,58 +600,50 @@ useEffect(() => {
             margin: { top: 20 },
         });
 
-
-        // Fourth Table Headers
-        const fourthTableHeaders = [
-            { title: 'Component Status', dataKey: 'status' },
-            { title: 'REPORT COMPONENTS', dataKey: 'reportComponents' },
-            { title: 'INFORMATION SOURCE', dataKey: 'infoSource' },
-            { title: 'COMPONENT STATUS 1', dataKey: 'componentStatus1' },
-            { title: 'COMPONENT STATUS 2', dataKey: 'componentStatus2' },
-            { title: 'COMPONENT STATUS 3', dataKey: 'componentStatus3' },
+        const dataRow = [
+            { title: 'completed', color: null },
+            { title: 'component a', color: 'lightgreen' },
+            { title: 'source 1', color: 'lightcoral' },
+            { title: 'pending', color: 'orange' },
+            { title: 'check again', color: 'pink' },
+            { title: 'reviewed', color: 'yellow' },
         ];
 
-        // Sample Data for the Fourth Table
-        const fourthTableData = [
-            {
-                status: '',  // Can be populated dynamically if needed
-                reportComponents: 'Example Component 1',
-                infoSource: 'Source A',
-                componentStatus1: 'Completed',
-                componentStatus2: 'Pending',
-                componentStatus3: 'N/A',
-            },
-            {
-                status: '',
-                reportComponents: 'Example Component 2',
-                infoSource: 'Source B',
-                componentStatus1: 'In Progress',
-                componentStatus2: 'Completed',
-                componentStatus3: 'N/A',
-            },
-            // Add more rows as necessary
-        ];
+   
+        const colWidth = (pageWidth - 40) / dataRow.length; 
+        const startingY = doc.lastAutoTable.finalY + 10; // Increase this value to avoid overlap
+        const height = 10; // Row height
 
-        // AutoTable for the Fourth Table
-        doc.autoTable({
-            head: [fourthTableHeaders.map(header => header.title)],  // Map only the 'title' for headers
-            body: fourthTableData.map(row => [  // Map each row's data to table format
-                row.status,
-                row.reportComponents,
-                row.infoSource,
-                row.componentStatus1,
-                row.componentStatus2,
-                row.componentStatus3,
-            ]),
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },  // Set cell styles
-            theme: 'grid',  // Set the theme to 'grid' for table structure
-            margin: { top: 20 },  // Set top margin for table placement
+        // Draw data row
+        dataRow.forEach((item, index) => {
+            const x = 20 + index * colWidth; // Calculate X position for each data cell
+
+            // Draw data cell border
+            doc.setDrawColor(0); // Set border color to black
+            doc.rect(x, startingY, colWidth, height); // Draw border around the data box
+
+            // Draw small colored box if color is specified
+            if (item.color) {
+                doc.setFillColor(item.color);
+                doc.rect(x + colWidth / 2 - 1.5, startingY, 3, 5, 'F'); // Fill a small colored box (width: 3, height: 3)
+            }
+
+            // Set text color and font size
+            doc.setTextColor(0, 0, 0); // Set text color to black
+            doc.setFontSize(8); // Set font size for data (smaller font size)
+
+            // Center the text horizontally, converting to capitalized first letter
+            const textWithCapital = capitalizeFirstLetter(item.title);
+            const textWidth = doc.getTextWidth(textWithCapital);
+            const textX = x + (colWidth - textWidth) / 2; // Center the text in the cell
+            const textY = startingY + (height / 2) + 3; // Slightly offset for vertical centering
+            doc.text(textWithCapital, textX, textY); // Add centered text
         });
 
 
         // Additional content
         doc.setFontSize(16); // Reduced font size
-        doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 20, { align: 'center' });
+        doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 30, { align: 'center' });
 
         // Check if any data is present
         const allDataPresent = serviceTitleValue.length > 0 || allInputDetails.length > 0 || pdfData || cmtAllData;
