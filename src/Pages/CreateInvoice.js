@@ -25,28 +25,41 @@ const CreateInvoice = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const formData = {
-      clientCode,
-      invoiceNumber,
-      invoiceDate,
-      month,
-      year,
+   
+
+    const formdata = new FormData();
+
+    const requestOptions = {
+      method: "GET",
+      body: formdata,
+      redirect: "follow"
     };
-    console.log('Form Data:', formData);
+    
+    fetch("http://localhost:5000/generate-invoice?customer_id=1&admin_id=1&_token=eae0ff2481308a95b2029eb2282f07b5723b556b3355a3f1b8f09d2cba1ede00", requestOptions)
+      .then((response) => response.text())
+      .then((result) => console.log(result))
+      .catch((error) => console.error(error))
+
+
+
+    console.log('Form Data:');
     generatePdf();
 
   };
 
+
+
+
   const generatePdf = () => {
     const doc = new jsPDF();
-
+  
     // Add the "Bill To" Section
     doc.setFontSize(10);
     doc.text("BILL TO", 10, 10);
     doc.text("Attention:", 10, 20);
     doc.text("INDIVIDUAL", 10, 25);
     doc.text("Bangalore, Karnataka, India", 10, 30);
-
+  
     // Add the Invoice Details Section
     doc.text("GSTIN", 160, 10);
     doc.text("State", 160, 15);
@@ -56,7 +69,7 @@ const CreateInvoice = () => {
     doc.text("Invoice Number", 160, 25);
     doc.text("INV-INDV-OCT-10", 180, 25);
     doc.text("State Code", 160, 30);
-
+  
     // Define table headers and rows
     const headers = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
     const rows = [
@@ -65,11 +78,10 @@ const CreateInvoice = () => {
       ["PREVIOUS EMPLOYMENT-3", "998521", "0", "123", "0", "0"],
       ["POST GRADUATION", "998521", "1", "1234", "0", "1234"],
       ["GRADUATION", "998521", "1", "3245", "0", "3245"],
-      // Add more rows as needed, following the structure in your image
       ["COMPANY SITE VISIT", "998521", "0", "900", "0", "0"]
     ];
-
-    // Draw the table using autoTable plugin
+  
+    // Draw the first table using autoTable plugin
     doc.autoTable({
       startY: 40,
       head: headers,
@@ -79,28 +91,11 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
       theme: 'grid',
     });
-
-    // Add page numbers at the bottom
-    doc.text("Page 1/3", doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: "center" });
-
-
-    doc.setFontSize(10);
-    doc.text("BILL TO", 10, 10);
-    doc.text("Attention:", 10, 20);
-    doc.text("INDIVIDUAL", 10, 25);
-    doc.text("Bangalore, Karnataka, India", 10, 30);
-
-    // Add the Invoice Details Section
-    doc.text("GSTIN", 160, 10);
-    doc.text("State", 160, 15);
-    doc.text("Karnataka", 180, 15);
-    doc.text("Invoice Date", 160, 20);
-    doc.text("10 Oct, 2024", 180, 20);
-    doc.text("Invoice Number", 160, 25);
-    doc.text("INV-INDV-OCT-10", 180, 25);
-    doc.text("State Code", 160, 30);
-
-    // Define table headers and rows
+  
+    // Define the starting position for the second table
+    let currentY = doc.autoTable.previous.finalY + 10; // Adding some space after the first table
+  
+    // Define second table headers and rows
     const secondHeader = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
     const secondRow = [
       ["UAN/ITR/FORM 26AS", "998521", "0", "675", "0", "0"],
@@ -114,10 +109,10 @@ const CreateInvoice = () => {
       ["GAP CHECK", "998521", "0", "0", "0", "0"],
       ["Total", "", "18", "", "", "25621"]
     ];
-
-    // Draw the table
+  
+    // Draw the second table
     doc.autoTable({
-      startY: 40,
+      startY: currentY,
       head: secondHeader,
       body: secondRow,
       styles: { fontSize: 8 },
@@ -125,10 +120,13 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
       theme: 'grid',
     });
-
+  
+    // Update currentY for the next section
+    currentY = doc.autoTable.previous.finalY + 10;
+  
     // Add the bank account details
     doc.setFontSize(10);
-    doc.text("GoldQuest Global Bank Account Details", 10, doc.autoTable.previous.finalY + 10);
+    doc.text("GoldQuest Global Bank Account Details", 10, currentY);
     const bankDetails = [
       ["Bank Name", "ICICI BANK LTD"],
       ["Bank A/C No", "058305004248"],
@@ -136,105 +134,69 @@ const CreateInvoice = () => {
       ["Bank IFSC/ NEFT/ RTGS", "ICIC0001417"],
       ["MICR", "560229040"]
     ];
-
+  
     bankDetails.forEach((detail, index) => {
-      doc.text(detail[0], 10, doc.autoTable.previous.finalY + 20 + index * 5);
-      doc.text(detail[1], 60, doc.autoTable.previous.finalY + 20 + index * 5);
+      doc.text(detail[0], 10, currentY + 10 + index * 5);
+      doc.text(detail[1], 60, currentY + 10 + index * 5);
     });
-
+  
+    // Update currentY for the next section
+    currentY = doc.autoTable.previous.finalY + 10;
+  
     // Add the tax details section
-    const taxY = doc.autoTable.previous.finalY + 50;
-    doc.text("Total Amount Before Tax", 140, taxY);
-    doc.text("25621", 190, taxY);
-
-    doc.text("Add: CGST - 9%", 140, taxY + 10);
-    doc.text("2305.89", 190, taxY + 10);
-
-    doc.text("Add: SGST - 9%", 140, taxY + 20);
-    doc.text("2305.89", 190, taxY + 20);
-
-    doc.text("Add: IGST - 18%", 140, taxY + 30);
-    doc.text("0", 190, taxY + 30);
-
-    doc.text("Total Tax Amount (Round off)", 140, taxY + 40);
-    doc.text("30232.78", 190, taxY + 40);
-
-    doc.text("GST On Reverse Charge", 140, taxY + 50);
-    doc.text("No", 190, taxY + 50);
-
+    doc.text("Total Amount Before Tax", 140, currentY);
+    doc.text("25621", 190, currentY);
+  
+    doc.text("Add: CGST - 9%", 140, currentY + 10);
+    doc.text("2305.89", 190, currentY + 10);
+  
+    doc.text("Add: SGST - 9%", 140, currentY + 20);
+    doc.text("2305.89", 190, currentY + 20);
+  
+    doc.text("Add: IGST - 18%", 140, currentY + 30);
+    doc.text("0", 190, currentY + 30);
+  
+    doc.text("Total Tax Amount (Round off)", 140, currentY + 40);
+    doc.text("30232.78", 190, currentY + 40);
+  
+    doc.text("GST On Reverse Charge", 140, currentY + 50);
+    doc.text("No", 190, currentY + 50);
+  
     // Add the total in words
     doc.setFontSize(10);
     doc.text(
       "Invoice Amount in words: Thirty Thousand Two Hundred And Thirty Two Point Seventy Eight Rupees Only",
       10,
-      taxY + 70
+      currentY + 70
     );
-
+  
+    // Define third table headers and rows
     const thirdHeader = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", "E1", "E2", "E3", "E4", "D", "C", "P", "I", "D", "A", "A", "C", "A", "Add Fee", "Pricing", "Report Date"]
     ];
-
+  
     const thirdRow = [
       ["1", "GQ-INDV-649", "NA", "01-10-2024", "Anala V G Trinath Kumar", "N", "N", "N", "N", "N", "7", "7", "9", "9", "4", "0", "8", "10", "0", "8902", "08-10-2024"],
       ["2", "GQ-INDV-652", "NA", "04-10-2024", "Vijay Pathak", "2", "1", "3", "N", "N", "7", "8", "8", "0", "0", "0", "2", "21", "0", "6404", "21-10-2024"],
       ["3", "GQ-INDV-654", "NA", "07-10-2024", "Lokita Vijaykumar Thakrar", "N", "N", "N", "N", "N", "7", "9", "9", "0", "0", "N", "N", "16", "0", "702", "16-10-2024"],
       ["4", "GQ-INDV-657", "NA", "16-10-2024", "Vishnukant", "N", "N", "N", "N", "N", "5", "6", "6", "0", "0", "4", "16", "0", "1023", "16-10-2024"],
       ["5", "GQ-INDV-658", "NA", "16-10-2024", "Bayagaraj C", "N", "N", "N", "N", "N", "4", "4", "8", "8", "0", "0", "18", "18", "0", "8590", "18-10-2024"],
-      ["Total", "", "", "", "", "2", "2", "3", "3", "0", "0", "0", "0", "0", "0", "8", "25621"]
+      ["Total", "", "", "", "", "2", "1", "3", "N", "N", "35", "35", "41", "4", "0", "0", "20", "16", "0", "11918", ""]
     ];
-
-    // Draw the table
+  
+    // Draw the third table
     doc.autoTable({
-      startY: 20,
+      startY: currentY + 80, // Adjusting for spacing above this table
       head: thirdHeader,
       body: thirdRow,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
       bodyStyles: { lineColor: [0, 0, 0], lineWidth: 0.1 },
       theme: 'grid',
-      margin: { left: 10, right: 10 },
-      columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 20 },
-        4: { cellWidth: 40 },
-        5: { cellWidth: 10 },
-        6: { cellWidth: 10 },
-        7: { cellWidth: 10 },
-        8: { cellWidth: 10 },
-        // Customize further columns as needed
-        19: { cellWidth: 20 },
-        20: { cellWidth: 20 }
-      }
     });
-
-    // Add the footer for terms and conditions
-    const footerY = doc.autoTable.previous.finalY + 10;
-    doc.setFontSize(10);
-    doc.text(
-      "Make all your payment Cheques, RTGS/NEFT Payable to :\"GOLDQUEST GLOBAL HR SERVICES PRIVATE LIMITED\".",
-      10,
-      footerY
-    );
-    doc.text(
-      "Payment to be made as per the terms of Agreement, Payments received after due date shall be liable of interest @ 3% per month,",
-      10,
-      footerY + 5
-    );
-    doc.text(
-      "part of month taken as full month. Any discrepancy shall be intimated within 3 working days receipt of bill.",
-      10,
-      footerY + 10
-    );
-    doc.text(
-      "Please email us at accounts@goldquestglobal.com / Contact Us: +91 9945891310",
-      10,
-      footerY + 15
-    );
-
-    // Save the generated PDF
-    doc.save("invoice.pdf");
+  
+    // Save the PDF
+    doc.save("Invoice.pdf");
   };
 
 
