@@ -22,6 +22,7 @@ import { BranchEditProvider } from './Pages/BranchEditContext';
 import { DropBoxProvider } from './CustomerDashboard/DropBoxContext'
 import { DataProvider } from './Pages/DataContext';
 import { ApiProvider } from './ApiContext'
+import { CustomFunctionsProvider } from './CustomFunctionsContext'
 import { TabProvider } from './Pages/TabContext';
 import { BranchProviderExel } from './Pages/BranchContextExel';
 import CandidateMain from './Pages/Candidate/CandidateMain';
@@ -46,6 +47,7 @@ const App = () => {
                         <DropBoxProvider>
                           <PackageProvider>
                             <ServiceProvider>
+                            <CustomFunctionsProvider>
                               <Router basename='/'>
                                 <Routes>
                                   <Route path='/' element={<Admin><Render /></Admin>} />
@@ -63,6 +65,7 @@ const App = () => {
                                   <Route path='/PDF' element={<PdfTableGenerator />} />
                                 </Routes>
                               </Router>
+                              </CustomFunctionsProvider>
                             </ServiceProvider>
                           </PackageProvider>
                         </DropBoxProvider>
