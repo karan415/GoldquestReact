@@ -453,68 +453,45 @@ const CandidateApplications = () => {
     const handleFormSubmit = (e) => {
         e.preventDefault();
 
+        // Validate form and check for errors
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
+        // Get stored data for admin and token
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
 
-
+        // Prepare main annexure data
         const mainAnnexureData = allInputDetails.reduce((acc, { db_table, inputDetails }) => {
             acc[db_table] = inputDetails.reduce((inputAcc, { name, value }) => {
                 inputAcc[name] = value !== undefined ? value : '';
                 return inputAcc;
             }, {});
 
-            const serviceIndex = serviceHeadings.findIndex(heading => heading.heading.replace(/ /g, '').toLowerCase() === db_table.replace(/_/g, '').toLowerCase());
+            const serviceIndex = serviceHeadings.findIndex(
+                heading => heading.heading.replace(/\s/g, '').toLowerCase() === db_table.replace(/_/g, '').toLowerCase()
+            );
 
-
-
-            if (serviceIndex !== -1) {
-                acc[db_table].status = selectedStatuses[serviceIndex] || ''; // Use selected status or empty string
-            } else {
-                acc[db_table].status = 'Status not found'; // Handle unmatched db_table
-            }
-
+            acc[db_table].status = serviceIndex !== -1 ? (selectedStatuses[serviceIndex] || '') : 'Status not found';
             return acc;
         }, {});
 
+        // Determine raw data for request based on file count
+        const raw = JSON.stringify({
+            admin_id: adminData?.id,
+            _token: token,
+            branch_id: branch_id,
+            customer_id: 1,
+            application_id: application_id,
+            annexure: mainAnnexureData,
+            ...formData,
+            send_mail: Object.keys(files).length === 0 ? 1 : 0,
+        });
 
-      
-
-
-
-        let raw;
-        const fileCount = Object.keys(files).length;
-        if (fileCount == 0) {
-            raw = JSON.stringify({
-                admin_id: adminData?.id,
-                _token: token,
-                branch_id: branch_id,
-                customer_id: 1,
-                application_id: application_id,
-                annexure: mainAnnexureData,
-                ...formData,
-                send_mail: 1,
-            });
-        }
-        else {
-            raw = JSON.stringify({
-                admin_id: adminData?.id,
-                _token: token,
-                branch_id: branch_id,
-                customer_id: 1,
-                application_id: application_id,
-                annexure: mainAnnexureData,
-                ...formData,
-                send_mail: 0,
-            });
-        }
-
-
+        // Define request options
         const requestOptions = {
             method: 'PUT',
             headers: {
@@ -523,27 +500,25 @@ const CandidateApplications = () => {
             body: raw,
         };
 
+        // Fetch request to generate report
         fetch(`https://goldquestreact.onrender.com/client-master-tracker/generate-report`, requestOptions)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                return response.text();
+                return response.json(); // Parse response as JSON directly
             })
             .then(result => {
-                const parsedData = JSON.parse(result);
-
-                const email_status = parsedData.email_status;
+                const { email_status, _token: newToken } = result;
 
                 Swal.fire('Success!', 'Application updated successfully.', 'success');
-                const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
 
                 uploadCustomerLogo(email_status);
 
-
+                // Reset form data
                 setFormData({
                     updated_json: {
                         month_year: '',
@@ -603,16 +578,13 @@ const CandidateApplications = () => {
                         },
                     },
                 });
-
             })
-
-
-
             .catch(error => {
-                console.error(error);
+                console.error('Error updating application data:', error);
                 setError('Failed to update application data');
             });
     };
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -632,221 +604,222 @@ const CandidateApplications = () => {
 
     return (
         <form onSubmit={handleFormSubmit}>
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="month">Month -Year*</label>
-                    <input
-                        type="text"
-                        name="month_year"
-                        id="month_year"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={applications.month_year || formData.month_year}
-                        disabled={disabledFields.month_year}
-                        onChange={handleInputChange}
-                    />
-                    {errors.month_year && <span className="text-red-500">{errors.month_year}</span>}
+            <div>
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="month_year">Month - Year*</label>
+                        <input
+                            type="text"
+                            name="month_year"
+                            id="month_year"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.month_year || ""}
+                            disabled={disabledFields.month_year}
+                            onChange={handleInputChange}
+                        />
+                        {errors.month_year && <span className="text-red-500">{errors.month_year}</span>}
+                    </div>
 
+                    <div className="mb-4">
+                        <label htmlFor="initiation_date">Initiation Date</label>
+                        <input
+                            type="date"
+                            name="initiation_date"
+                            id="initiation_date"
+                            className="w-full border p-2 outline-none rounded-md mt-2"
+                            value={formData.updated_json.initiation_date || ""}
+                            disabled={disabledFields.initiation_date}
+                            onChange={handleInputChange}
+                        />
+                        {errors.initiation_date && <span className="text-red-500">{errors.initiation_date}</span>}
+                    </div>
                 </div>
 
-                <div className="mb-4">
-                    <label htmlFor="Initiation Date">Initiation Date</label>
-                    <input
-                        type="date"
-                        name="initiation_date"
-                        id="initiation_date"
-                        className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                        value={applications.initiation_date || formData.initiation_date}
-                        disabled={disabledFields.initiation_date}
-                        onChange={handleInputChange}
-                    />
-                    {errors.initiation_date && <span className="text-red-500">{errors.initiation_date}</span>}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="organization_name">Name of the Client Organization</label>
+                        <input
+                            type="text"
+                            name="organization_name"
+                            id="organization_name"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.organization_name || ""}
+                            disabled={disabledFields.organization_name}
+                            onChange={handleInputChange}
+                        />
+                        {errors.organization_name && <span className="text-red-500">{errors.organization_name}</span>}
+                    </div>
 
+                    <div className="mb-4">
+                        <label htmlFor="verification_purpose">Verification Purpose*</label>
+                        <input
+                            type="text"
+                            name="verification_purpose"
+                            id="verification_purpose"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.verification_purpose || ""}
+                            disabled={disabledFields.verification_purpose}
+                            onChange={handleInputChange}
+                        />
+                        {errors.verification_purpose && <span className="text-red-500">{errors.verification_purpose}</span>}
+                    </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="employee_id">Applicant Employee ID</label>
+                        <input
+                            type="text"
+                            name="employee_id"
+                            id="employee_id"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.employee_id || ""}
+                            disabled={disabledFields.employee_id}
+                            onChange={handleInputChange}
+                        />
+                        {errors.employee_id && <span className="text-red-500">{errors.employee_id}</span>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="client_code">Client Code</label>
+                        <input
+                            type="text"
+                            name="client_code"
+                            id="client_code"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.client_code || ""}
+                            disabled={disabledFields.client_code}
+                            onChange={handleInputChange}
+                        />
+                        {errors.client_code && <span className="text-red-500">{errors.client_code}</span>}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="applicant_name">Name of the Applicant*</label>
+                        <input
+                            type="text"
+                            name="applicant_name"
+                            id="applicant_name"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.applicant_name || ""}
+                            disabled={disabledFields.applicant_name}
+                            onChange={handleInputChange}
+                        />
+                        {errors.applicant_name && <span className="text-red-500">{errors.applicant_name}</span>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="contact_number">Contact Number</label>
+                        <input
+                            type="tel"
+                            name="contact_number"
+                            id="contact_number"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.contact_number || ""}
+                            disabled={disabledFields.contact_number}
+                            onChange={handleInputChange}
+                        />
+                        {errors.contact_number && <span className="text-red-500">{errors.contact_number}</span>}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="contact_number2">Contact Number 2:</label>
+                        <input
+                            type="tel"
+                            name="contact_number2"
+                            id="contact_number2"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.contact_number2 || ""}
+                            disabled={disabledFields.contact_number2}
+                            onChange={handleInputChange}
+                        />
+                        {errors.contact_number2 && <span className="text-red-500">{errors.contact_number2}</span>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="father_name">Father's Name:</label>
+                        <input
+                            type="text"
+                            name="father_name"
+                            id="father_name"
+                            className="border w-full rounded-md p-2 mt-2 capitalize"
+                            value={formData.updated_json.father_name || ""}
+                            disabled={disabledFields.father_name}
+                            onChange={handleInputChange}
+                        />
+                        {errors.father_name && <span className="text-red-500">{errors.father_name}</span>}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="mb-4">
+                        <label htmlFor="gender">Gender</label>
+                        <select
+                            name="gender"
+                            id="gender"
+                            className="border w-full rounded-md p-2 mt-2"
+                            value={formData.updated_json.gender || ""}
+                            disabled={disabledFields.gender}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        {errors.gender && <span className="text-red-500">{errors.gender}</span>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="marital_status">Marital Status</label>
+                        <select
+                            name="marital_status"
+                            id="marital_status"
+                            className="border w-full rounded-md p-2 mt-2"
+                            value={formData.updated_json.marital_status || ""}
+                            disabled={disabledFields.marital_status}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Marital Status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                        </select>
+                        {errors.marital_status && <span className="text-red-500">{errors.marital_status}</span>}
+                    </div>
+                </div>
+
+
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="organization name">Name of the Client Organization</label>
-                    <input
-                        type="text"
-                        name="organization_name"
-                        id="organization_name"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={applications.name || formData.organization_name}
-                        disabled={disabledFields.organization_name}
-                        onChange={handleInputChange}
-                    />
-                    {errors.organization_name && <span className="text-red-500">{errors.organization_name}</span>}
-                </div>
-
-                <div className="mb-4">
-                    <label htmlFor="Verification Purpose*">Verification Purpose*</label>
-                    <input
-                        type="text"
-                        name="verification_purpose"
-                        id="verification_purpose"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.verification_purpose}
-                        disabled={disabledFields.verification_purpose}
-                        onChange={handleInputChange}
-                    />
-                    {errors.verification_purpose && <span className="text-red-500">{errors.verification_purpose}</span>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="Applicant Employee ID">Applicant Employee ID</label>
-                    <input
-                        type="text"
-                        name="employee_id"
-                        id="employee_id"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={applications.employee_id || formData.employee_id}
-                        disabled={disabledFields.employee_id}
-
-                    />
-                    {errors.employee_id && <span className="text-red-500">{errors.employee_id}</span>}
-                </div>
-
-                <div className="mb-4">
-                    <label htmlFor="Client Code">Client Code</label>
-                    <input
-                        type="text"
-                        name="client_code"
-                        id="Client_Code"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={customerInfo.client_unique_id || formData.client_code}
-                        disabled={disabledFields.client_code}
-                        onChange={handleInputChange}
-                    />
-                    {errors.client_code && <span className="text-red-500">{errors.client_code}</span>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="applicant name">Name of the Applicant*</label>
-                    <input
-                        type="text"
-                        name="applicant_name"
-                        id="applicant_name"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.applicant_name}
-                        disabled={disabledFields.applicant_name}
-                        onChange={handleInputChange}
-                    />
-                    {errors.applicant_name && <span className="text-red-500">{errors.applicant_name}</span>}
-                </div>
-
-                <div className="mb-4">
-                    <label htmlFor="contact number">Contact Number</label>
-                    <input
-                        type="number"
-                        name="contact_number"
-                        id="contact_number"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.contact_number}
-                        disabled={disabledFields.contact_number}
-                        onChange={handleInputChange}
-                    />
-                    {errors.contact_number && <span className="text-red-500">{errors.contact_number}</span>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="contact number2">Contact Number 2:</label>
-                    <input
-                        type="number"
-                        name="contact_number2"
-                        id="contact_number2"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.contact_number2}
-                        disabled={disabledFields.contact_number2}
-                        onChange={handleInputChange}
-                    />
-                    {errors.contact_number2 && <span className="text-red-500">{errors.contact_number2}</span>}
-                </div>
-
-                <div className="mb-4">
-                    <label htmlFor="Father Name">Father's Name:</label>
-                    <input
-                        type="text"
-                        name="father_name"
-                        id="father_name"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.father_name}
-                        disabled={disabledFields.father_name}
-                        onChange={handleInputChange}
-
-                    />
-                    {errors.father_name && <span className="text-red-500">{errors.father_name}</span>}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div className="mb-4">
-                    <label htmlFor="gender">Gender</label>
-                    <select
-                        name="gender"
-                        id="gender"
-                        className="border w-full rounded-md p-2 mt-2"
-                        value={formData.gender}
-                        disabled={disabledFields.gender}
-                        onChange={handleInputChange}
-                    >
-
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                    {errors.gender && <span className="text-red-500">{errors.gender}</span>}
-                </div>
-
-                <div className="mb-4">
-                    <label htmlFor="marital_status">Marital Status</label>
-                    <select
-                        name="marital_status"
-                        id="marital_status"
-                        className="border w-full rounded-md p-2 mt-2"
-                        value={formData.marital_status}
-                        disabled={disabledFields.marital_status}
-                        onChange={handleInputChange}
-                    >
-                        <option value="">Select Marital Status</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                    </select>
-                    {errors.marital_status && <span className="text-red-500">{errors.marital_status}</span>}
-                </div>
-            </div>
             <h3 className='text-2xl text-center font-bold my-5'>Permanent Address</h3>
             <div className="form-group border p-3 rounded-md">
                 <div className="mb-4">
                     <label htmlFor="full_address">Full Address:</label>
                     <input
                         type="text"
-                        name="permanent_address"
+                        name="updated_json.permanent_address.permanent_address"
                         id="full_address"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.permanent_address}
+                        value={formData.updated_json.permanent_address.permanent_address}
                         onChange={handleInputChange}
                     />
                     {errors.permanent_address && <span className="text-red-500">{errors.permanent_address}</span>}
                 </div>
 
                 <div className="form-group">
-                    <h3 className='font-semibold text-xl mb-3'>Period of Stay</h3>
+                    <h3 className="font-semibold text-xl mb-3">Period of Stay</h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="mb-4">
                             <label htmlFor="permanent_sender_name">From:</label>
                             <input
                                 type="text"
-                                name="permanent_sender_name"
+                                name="updated_json.permanent_address.permanent_sender_name"
                                 id="permanent_sender_name"
                                 className="border w-full rounded-md p-2 mt-2 capitalize"
-                                value={formData.permanent_sender_name}
+                                value={formData.updated_json.permanent_address.permanent_sender_name}
                                 onChange={handleInputChange}
                             />
                             {errors.permanent_sender_name && <span className="text-red-500">{errors.permanent_sender_name}</span>}
@@ -856,10 +829,10 @@ const CandidateApplications = () => {
                             <label htmlFor="permanent_reciever_name">To:</label>
                             <input
                                 type="text"
-                                name="permanent_reciever_name"
+                                name="updated_json.permanent_address.permanent_reciever_name"
                                 id="permanent_reciever_name"
                                 className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                                value={formData.permanent_reciever_name}
+                                value={formData.updated_json.permanent_address.permanent_reciever_name}
                                 onChange={handleInputChange}
                             />
                             {errors.permanent_reciever_name && <span className="text-red-500">{errors.permanent_reciever_name}</span>}
@@ -871,10 +844,10 @@ const CandidateApplications = () => {
                             <label htmlFor="permanent_landmark">Landmark:</label>
                             <input
                                 type="text"
-                                name="permanent_landmark"
+                                name="updated_json.permanent_address.permanent_landmark"
                                 id="permanent_landmark"
                                 className="border w-full rounded-md p-2 mt-2 capitalize"
-                                value={formData.permanent_landmark}
+                                value={formData.updated_json.permanent_address.permanent_landmark}
                                 onChange={handleInputChange}
                             />
                             {errors.permanent_landmark && <span className="text-red-500">{errors.permanent_landmark}</span>}
@@ -883,11 +856,11 @@ const CandidateApplications = () => {
                         <div className="mb-4">
                             <label htmlFor="permanent_pin_code">Pin Code:</label>
                             <input
-                                type="text" // Change to "number" if appropriate
-                                name="permanent_pin_code"
+                                type="text" // Keep as text to handle leading zeros
+                                name="updated_json.permanent_address.permanent_pin_code"
                                 id="permanent_pin_code"
                                 className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                                value={formData.permanent_pin_code}
+                                value={formData.updated_json.permanent_address.permanent_pin_code}
                                 onChange={handleInputChange}
                             />
                             {errors.permanent_pin_code && <span className="text-red-500">{errors.permanent_pin_code}</span>}
@@ -898,68 +871,68 @@ const CandidateApplications = () => {
                         <label htmlFor="permanent_state">State:</label>
                         <input
                             type="text"
-                            name="permanent_state"
+                            name="updated_json.permanent_address.permanent_state"
                             id="permanent_state"
                             className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                            value={formData.permanent_state}
+                            value={formData.updated_json.permanent_address.permanent_state}
                             onChange={handleInputChange}
                         />
                         {errors.permanent_state && <span className="text-red-500">{errors.permanent_state}</span>}
                     </div>
                 </div>
-
             </div>
+
             <h3 className='text-2xl text-center font-semi-bold my-5'>Current Address</h3>
             <div className="form-group border rounded-md p-3">
-                <div className="mb-4">
-                    <label htmlFor="full_address">Full Address:</label>
-                    <input
-                        type="text"
-                        name="address"
-                        id="address"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                    />
-                    {errors.address && <span className="text-red-500">{errors.address}</span>}
-                </div>
-                <div className="mb-4">
-                    <label htmlFor="Landmark">Landmark:</label>
-                    <input
-                        type="text"
-                        name="landmark"
-                        id="landmark"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.landmark}
-                        onChange={handleInputChange}
-                    />
-                    {errors.landmark && <span className="text-red-500">{errors.landmark}</span>}
-                </div>
-                <div className="mb-4">
-                    <label htmlFor="residence_mobile_number">Residence Mobile No:</label>
-                    <input
-                        type="text"
-                        name="residence_mobile_number"
-                        id="residence_mobile_number"
-                        className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.residence_mobile_number}
-                        onChange={handleInputChange}
-                    />
-                    {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
-                </div>
-                <div className="mb-4">
-                    <label htmlFor="state">State</label>
-                    <input
-                        type="text"
-                        name="state"
-                        id="state"
-                        className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                    />
-                    {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
-                </div>
+            <div className="mb-4">
+                <label htmlFor="full_address">Full Address:</label>
+                <input
+                    type="text"
+                    name="updated_json.address.address"
+                    id="address"
+                    className="border w-full rounded-md p-2 mt-2 capitalize"
+                    value={formData.updated_json.address.address}
+                    onChange={handleInputChange}
+                />
+                {errors.address && <span className="text-red-500">{errors.address}</span>}
             </div>
+            <div className="mb-4">
+                <label htmlFor="Landmark">Landmark:</label>
+                <input
+                    type="text"
+                    name="updated_json.address.landmark"
+                    id="landmark"
+                    className="border w-full rounded-md p-2 mt-2 capitalize"
+                    value={formData.updated_json.address.landmark}
+                    onChange={handleInputChange}
+                />
+                {errors.landmark && <span className="text-red-500">{errors.landmark}</span>}
+            </div>
+            <div className="mb-4">
+                <label htmlFor="residence_mobile_number">Residence Mobile No:</label>
+                <input
+                    type="text"
+                    name="updated_json.address.residence_mobile_number"
+                    id="residence_mobile_number"
+                    className="border w-full rounded-md p-2 mt-2 capitalize"
+                    value={formData.updated_json.address.residence_mobile_number}
+                    onChange={handleInputChange}
+                />
+                {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
+            </div>
+            <div className="mb-4">
+                <label htmlFor="state">State</label>
+                <input
+                    type="text"
+                    name="updated_json.address.state"
+                    id="state"
+                    className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
+                    value={formData.updated_json.address.state}
+                    onChange={handleInputChange}
+                />
+                {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
+            </div>
+        </div>
 
 
             <div className="services-table border p-2 mt-5 mb-5">
@@ -1081,10 +1054,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="first_insufficiency_marks">First Level Insufficiency Remarks</label>
                     <input
                         type="text"
-                        name="first_insufficiency_marks"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.first_insufficiency_marks"
                         id="first_insufficiency_marks"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.first_insufficiency_marks}
+                        value={formData.updated_json.insuffDetails.first_insufficiency_marks}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -1092,10 +1065,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="first_insuff_date">First Insuff Raised Date:</label>
                     <input
                         type="date"
-                        name="first_insuff_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.first_insuff_date"
                         id="first_insuff_date"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.first_insuff_date}
+                        value={formData.updated_json.insuffDetails.first_insuff_date}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -1103,10 +1076,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="first_insuff_reopened_date">First Insuff Cleared Date / Re-Opened date</label>
                     <input
                         type="date"
-                        name="first_insuff_reopened_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.first_insuff_reopened_date"
                         id="first_insuff_reopened_date"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.first_insuff_reopened_date}
+                        value={formData.updated_json.insuffDetails.first_insuff_reopened_date}
                         onChange={handleInputChange}
                     />
                 </div>
@@ -1114,9 +1087,9 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="second Level Insufficiency Remarks">Second Level Insufficiency Remarks</label>
                     <input
                         type="text"
-                        name="second_insufficiency_marks"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.second_insufficiency_marks"
                         id="second_insufficiency_marks"
-                        value={formData.second_insufficiency_marks}
+                        value={formData.updated_json.insuffDetails.second_insufficiency_marks}
                         onChange={handleInputChange}
                         className="border w-full rounded-md p-2 mt-2 capitalize"
                     />
@@ -1126,9 +1099,9 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="second Insuff Raised Date:">Second Insuff Raised Date:</label>
                     <input
                         type="date"
-                        name="second_insuff_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.second_insuff_date"
                         id="second_insuff_date"
-                        value={formData.second_insuff_dat}
+                        value={formData.updated_json.insuffDetails.second_insuff_dat}
                         onChange={handleInputChange}
                         className="border w-full rounded-md p-2 mt-2 capitalize"
                     />
@@ -1138,10 +1111,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="second Insuff Cleared Date / Re-Opened date">Second Insuff Cleared Date / Re-Opened date</label>
                     <input
                         type="date"
-                        name="second_insuff_reopened_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.second_insuff_reopened_date"
                         id="second_insuff_reopened_date"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.second_insuff_reopened_dat}
+                        value={formData.updated_json.insuffDetails.second_insuff_reopened_dat}
                         onChange={handleInputChange}
                     />
 
@@ -1150,9 +1123,9 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="third Level Insufficiency Remarks">third Level Insufficiency Remarks</label>
                     <input
                         type="text"
-                        name="third_insufficiency_marks"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.third_insufficiency_marks"
                         id="third_insufficiency_marks"
-                        value={formData.third_insufficiency_marks}
+                        value={formData.updated_json.insuffDetails.third_insufficiency_marks}
                         onChange={handleInputChange}
                         className="border w-full rounded-md p-2 mt-2 capitalize"
                     />
@@ -1162,10 +1135,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="third Insuff Raised Date:">third Insuff Raised Date:</label>
                     <input
                         type="date"
-                        name="third_insuff_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.third_insuff_date"
                         id="third_insuff_date"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.third_insuff_date}
+                        value={formData.updated_json.insuffDetails.third_insuff_date}
                         onChange={handleInputChange}
                     />
 
@@ -1174,10 +1147,10 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="third Insuff Cleared Date / Re-Opened date">third Insuff Cleared Date / Re-Opened date</label>
                     <input
                         type="date"
-                        name="third_insuff_reopened_date"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.third_insuff_reopened_date"
                         id="third_insuff_reopened_date"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
-                        value={formData.third_insuff_reopened_dat}
+                        value={formData.updated_json.insuffDetails.third_insuff_reopened_dat}
                         onChange={handleInputChange}
                     />
 
@@ -1185,8 +1158,8 @@ const CandidateApplications = () => {
                 <div className="mb-4 ">
                     <label className='capitalize text-gray-500' htmlFor="overall status">overall status</label>
                     <select
-                        name="overall_status"
-                        value={formData.overall_status}
+                        name="updated_json.insuffDetails.overall_status"
+                        value={formData.updated_json.insuffDetails.overall_status}
                         onChange={handleInputChange}
                         className="border rounded-md p-2 mt-2 uppercase w-full"
                     >
@@ -1205,18 +1178,18 @@ const CandidateApplications = () => {
                         <label className='capitalize text-gray-500' htmlFor="report date">report date</label>
                         <input
                             type="date"
-                            name="report_date"
+                            name="updated_json.insuffDetails.updated_json.insuffDetails.report_date"
                             id="report_date"
                             className="border rounded-md p-2 w-full mt-2 capitalize"
-                            value={formData.report_date}
+                            value={formData.updated_json.insuffDetails.report_date}
                             onChange={handleInputChange}
                         />
 
                     </div>
                     <div className="mb-4">
                         <label className='capitalize text-gray-500' htmlFor="overall status">Report Status:</label>
-                        <select name="report_status" id=""
-                            value={formData.report_status}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.report_status" id=""
+                            value={formData.updated_json.insuffDetails.report_status}
                             onChange={handleInputChange}
                             className="border rounded-md p-2 mt-2 uppercase w-full">
                             <option value="insuff">insuff</option>
@@ -1230,8 +1203,8 @@ const CandidateApplications = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="mb-4">
                         <label className='capitalize text-gray-500' htmlFor="report status">Report Type:</label>
-                        <select name="report_type" id=""
-                            value={formData.report_type}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.report_type" id=""
+                            value={formData.updated_json.insuffDetails.report_type}
                             onChange={handleInputChange}
                             className="border rounded-md p-2 mt-2 uppercase w-full">
                             <option value="insuff">insuff</option>
@@ -1243,8 +1216,8 @@ const CandidateApplications = () => {
                     </div>
                     <div className="mb-4">
                         <label className='capitalize text-gray-500' htmlFor="Final Verification Status:">Final Verification Status:</label>
-                        <select name="final_verification_status"
-                            value={formData.final_verification_status}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.final_verification_status"
+                            value={formData.updated_json.insuffDetails.final_verification_status}
                             onChange={handleInputChange}
                             id="" className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="insuff">insuff</option>
@@ -1260,8 +1233,8 @@ const CandidateApplications = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="mb-4">
                         <label className='capitalize text-gray-500  ' htmlFor="Is verified by quality team">Is verified by quality team</label>
-                        <select name="is_verify"
-                            value={formData.is_verify}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.is_verify"
+                            value={formData.updated_json.insuffDetails.is_verify}
                             onChange={handleInputChange}
 
                             id="" className="border w-full rounded-md p-2 mt-2 uppercase">
@@ -1274,10 +1247,10 @@ const CandidateApplications = () => {
                         <label className='capitalize text-gray-500 ' htmlFor="deadline date">deadline date</label>
                         <input
                             type="date"
-                            name="deadline_date"
+                            name="updated_json.insuffDetails.updated_json.insuffDetails.deadline_date"
                             id="deadline_date"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
-                            value={formData.deadline_date}
+                            value={formData.updated_json.insuffDetails.deadline_date}
                             onChange={handleInputChange}
                         />
 
@@ -1286,8 +1259,8 @@ const CandidateApplications = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="mb-4">
                         <label className='capitalize text-gray-500 ' htmlFor="Address">Address</label>
-                        <select name="insuff_address"
-                            value={formData.insuff_address}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.insuff_address"
+                            value={formData.updated_json.insuffDetails.insuff_address}
                             onChange={handleInputChange}
                             id="" className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="yes">yes</option>
@@ -1297,8 +1270,8 @@ const CandidateApplications = () => {
                     </div>
                     <div className="mb-4 ">
                         <label className='capitalize text-gray-500' htmlFor="basic entry">basic entry</label>
-                        <select name="basic_entry"
-                            value={formData.basic_entry}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.basic_entry"
+                            value={formData.updated_json.insuffDetails.basic_entry}
                             onChange={handleInputChange}
                             id="" className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="yes">yes</option>
@@ -1310,8 +1283,8 @@ const CandidateApplications = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="mb-4 ">
                         <label className='capitalize text-gray-500 ' htmlFor="education">education</label>
-                        <select name="education" id=""
-                            value={formData.education}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.education" id=""
+                            value={formData.updated_json.insuffDetails.education}
                             onChange={handleInputChange}
                             className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="yes">yes</option>
@@ -1324,10 +1297,10 @@ const CandidateApplications = () => {
                         <label className='capitalize text-gray-500' htmlFor="case upload">case upload</label>
                         <input
                             type="text"
-                            name="case_upload"
+                            name="updated_json.insuffDetails.updated_json.insuffDetails.case_upload"
                             id="case_upload"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
-                            value={formData.case_upload}
+                            value={formData.updated_json.insuffDetails.case_upload}
                             onChange={handleInputChange}
                         />
 
@@ -1336,8 +1309,8 @@ const CandidateApplications = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="mb-4 ">
                         <label className='capitalize text-gray-500 block' htmlFor="Employment Spoc:">Employment Spoc:</label>
-                        <select name="emp_spoc" id=""
-                            value={formData.emp_spoc}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.emp_spoc" id=""
+                            value={formData.updated_json.insuffDetails.emp_spoc}
                             onChange={handleInputChange}
                             className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="yes">yes</option>
@@ -1347,8 +1320,8 @@ const CandidateApplications = () => {
                     </div>
                     <div className="mb-4 ">
                         <label className='capitalize text-gray-500' htmlFor="Report Generated By:">Report Generated By:</label>
-                        <select name="report_generate_by"
-                            value={formData.report_generate_by}
+                        <select name="updated_json.insuffDetails.updated_json.insuffDetails.report_generate_by"
+                            value={formData.updated_json.insuffDetails.report_generate_by}
                             onChange={handleInputChange}
                             id="" className="border w-full rounded-md p-2 mt-2 uppercase">
                             <option value="yes">yes</option>
@@ -1360,8 +1333,8 @@ const CandidateApplications = () => {
                 <div className="mb-4 ">
                     <label className='capitalize block text-gray-500' htmlFor="QC Done By:">QC Done By:</label>
 
-                    <select name="qc_done_by"
-                        value={formData.qc_done_by}
+                    <select name="updated_json.insuffDetails.updated_json.insuffDetails.qc_done_by"
+                        value={formData.updated_json.insuffDetails.qc_done_by}
                         onChange={handleInputChange}
                         id="" className="border w-full rounded-md p-2 mt-2 uppercase">
                         <option value="yes">yes</option>
@@ -1373,9 +1346,9 @@ const CandidateApplications = () => {
                     <label className='capitalize text-gray-500' htmlFor="Remarks & reason for Delay:">Remarks & reason for Delay:</label>
                     <input
                         type="text"
-                        value={formData.delay_reason}
+                        value={formData.updated_json.insuffDetails.delay_reason}
                         onChange={handleInputChange}
-                        name="delay_reason"
+                        name="updated_json.insuffDetails.updated_json.insuffDetails.delay_reason"
                         id="delay_reason"
                         className="border w-full rounded-md p-2 mt-2 capitalize"
                     />

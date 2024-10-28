@@ -44,7 +44,7 @@ const CreateInvoice = () => {
     fetchData();
   }, [fetchData]);
   const handleSubmit = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
@@ -53,13 +53,13 @@ const CreateInvoice = () => {
       customer_id: clientCode,
       admin_id: admin_id,
       _token: storedToken,
-      month:formData.month,
-      year:formData.year,
+      month: formData.month,
+      year: formData.year,
 
     }).toString();
 
     const requestOptions = {
-      method: "GET", 
+      method: "GET",
       redirect: "follow",
     };
 
@@ -84,7 +84,7 @@ const CreateInvoice = () => {
         setTotalAmount(data.finalArr.costInfo.totalAmount);
         setServiceInfo(data.finalArr.serviceInfo);
 
-        generatePdf(); 
+        generatePdf();
       })
       .catch((error) => {
         console.error('Fetch error:', error);
@@ -95,11 +95,11 @@ const CreateInvoice = () => {
 
   const generatePdf = () => {
     const doc = new jsPDF();
-    
+
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Invoice", 105, 15, { align: "center" });
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("BILL TO:", 10, 25);
@@ -122,25 +122,48 @@ const CreateInvoice = () => {
       doc.text(value, 180, yPosition);
       yPosition += 5;
     });
-    
-    yPosition += 5; 
-    doc.line(10, yPosition, 200, yPosition);
-  
-    const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
-    
-   
-    const rows1 = serviceInfo.map(service => [
-      service.serviceTitle,     
-      "998521",                 
-      service.count.toString(), 
-      service.price.toString(),                   
-      "0",                      
-      service.totalCost.toString() 
-    ]);
 
-    
+    yPosition += 5;
+    doc.line(10, yPosition, 200, yPosition);
+
+    const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
+
+    function getTotalAdditionalFeeByService(serviceId) {
+      let totalFee = 0;
+
+      for (const appGroup of applications) {
+        for (const application of appGroup.applications) {
+          // Sum up the additionalFee for the specified serviceId in each application's statusDetails
+          for (const statusDetail of application.statusDetails) {
+            if (statusDetail.serviceId === String(serviceId)) {
+              const fee = parseFloat(statusDetail.additionalFee) || 0;
+              totalFee += fee;
+            }
+          }
+        }
+      }
+
+      return totalFee;
+    }
+
+    let overallServiceAdditionalFeeAmount = 0;
+
+    const rows1 = serviceInfo.map(service => {
+      const serviceAdditionalFee = getTotalAdditionalFeeByService(service.serviceId);
+      overallServiceAdditionalFeeAmount += serviceAdditionalFee;
+
+      return [
+        service.serviceTitle,
+        "998521",
+        service.count.toString(),
+        service.price.toString(),
+        serviceAdditionalFee,
+        (serviceAdditionalFee + service.totalCost).toString()
+      ];
+    });
+
     doc.autoTable({
-      startY: yPosition + 5, 
+      startY: yPosition + 5,
       head: headers1,
       body: rows1,
       styles: { fontSize: 8, halign: 'center' },
@@ -149,31 +172,40 @@ const CreateInvoice = () => {
       theme: 'grid',
     });
 
-   
-    yPosition = doc.autoTable.previous.finalY + 15; 
+    yPosition = doc.autoTable.previous.finalY + 15;
     doc.setFont("helvetica", "bold");
     doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
     doc.text("Tax Details", 140, yPosition);
     doc.setFont("helvetica", "normal");
     const bankDetails = [
-      ["Bank Name", String(companyInfo.bank_name)], 
+      ["Bank Name", String(companyInfo.bank_name)],
       ["Bank A/C No", String(companyInfo.bank_account_number)],
       ["Bank Branch", String(companyInfo.bank_branch_name)],
-      ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)], 
+      ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)],
       ["MICR", String(companyInfo.bank_micr)]
     ];
 
+    let newOverallServiceAmount = parseInt(overallServiceAmount) + parseInt(overallServiceAdditionalFeeAmount); // Ensure these are parsed as integers
+
+    function calculatePercentage(amount, percentage) {
+      return (amount * percentage) / 100;
+    }
+
+    const cgstTax = calculatePercentage(newOverallServiceAmount, parseInt(cgst.percentage)); // Parse percentage as integer
+    const sgstTax = calculatePercentage(newOverallServiceAmount, parseInt(sgst.percentage)); // Parse percentage as integer
+
     const taxDetails = [
-      { label: "Total Amount Before Tax", amount: String(overallServiceAmount) },
-      { label: `Add: CGST - ${cgst.percentage}%`, amount: String(cgst.tax) },
-      { label: `Add: SGST - ${sgst.percentage}%`, amount: String(sgst.tax) },
+      { label: "Total Amount Before Tax", amount: String(newOverallServiceAmount) },
+      { label: `Add: CGST - ${cgst.percentage}%`, amount: String(cgstTax) },
+      { label: `Add: SGST - ${sgst.percentage}%`, amount: String(sgstTax) },
       {
         label: `Total Tax - ${parseInt(cgst.percentage) + parseInt(sgst.percentage)}%`,
-        amount: String(totalTax)
+        amount: String(cgstTax + sgstTax)
       },
-      { label: "Total Tax Amount (Round off)", amount: String(totalAmount) },
+      { label: "Total Tax Amount (Round off)", amount: String(newOverallServiceAmount + cgstTax + sgstTax) },
       { label: "GST On Reverse Charge", amount: "No" }
     ];
+
     bankDetails.forEach(([label, value], index) => {
       const rowY = yPosition + 10 + index * 5;
       doc.text(`${label}:`, 10, rowY);
@@ -184,36 +216,55 @@ const CreateInvoice = () => {
         doc.text(taxDetail.amount, 190, rowY);
       }
     });
-    
-    yPosition += bankDetails.length * 5 + 20; 
+
+    yPosition += bankDetails.length * 5 + 20;
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Amount in Words:", 10, yPosition);
     doc.setFont("helvetica", "normal");
-
 
     function getServicePriceById(serviceId) {
       const service = serviceInfo.find(item => item.serviceId === serviceId);
       return service ? service.price : "NIL";
     }
 
-
     const formattedTotalAmount = parseInt(totalAmount);
     const words = wordify(formattedTotalAmount);
     doc.text(words, 10, yPosition + 5);
-   
+
     const serviceCodes = serviceNames.map(service => service.shortCode);
-   
+
+    function getTotalAdditionalFee(id) {
+      for (const appGroup of applications) {
+        for (const application of appGroup.applications) {
+          if (application.id === id) {
+            // Calculate the total additionalFee for the matching application
+            const totalAdditionalFee = application.statusDetails.reduce((total, statusDetail) => {
+              const fee = parseFloat(statusDetail.additionalFee) || 0;
+              return total + fee;
+            }, 0);
+            return totalAdditionalFee;
+          }
+        }
+      }
+      // If no application with the specified ID is found, return 0 or null
+      return 0;
+    }
+
+    let overAllAdditionalFee = 0;
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "Pricing", "Report Date"]
     ];
+
     const rows3 = applications[0].applications.map((app, index) => {
       let totalCost = 0;
+      const appAdditionalFee = getTotalAdditionalFee(app.id);
+      overAllAdditionalFee += appAdditionalFee;
 
       const applicationRow = [
-        index + 1, 
-        app.application_id, 
-        app.employee_id, 
-        app.created_at.split("T")[0], 
+        index + 1,
+        app.application_id,
+        app.employee_id,
+        app.created_at.split("T")[0],
         app.name,
         ...serviceNames.map(service => {
           if (!service || !service.id) {
@@ -228,39 +279,38 @@ const CreateInvoice = () => {
             const colPrice = getServicePriceById(service.id);
 
             if (service.serviceIndexPrice) {
-              service.serviceIndexPrice += colPrice;
+              service.serviceIndexPrice += parseInt(colPrice); // Ensure parsed as integer
             } else {
-              service.serviceIndexPrice = colPrice;
+              service.serviceIndexPrice = parseInt(colPrice); // Ensure parsed as integer
             }
 
-            totalCost += colPrice;
+            totalCost += parseInt(colPrice); // Ensure parsed as integer
             return colPrice;
           } else {
             return "NIL";
           }
         }),
-        "0", 
-        totalCost,
-        app.report_date ? app.report_date.split("T")[0] : "" 
+        parseInt(appAdditionalFee) || 0, // Ensure parsed as integer
+        parseInt(totalCost) + parseInt(appAdditionalFee) || 0,
+        app.report_date ? app.report_date.split("T")[0] : ""
       ];
 
       return applicationRow;
     });
 
-    const serviceCodePrices = serviceNames.map(service => service.serviceIndexPrice);
+    const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0); // Ensure parsed as integer
     const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
     const totalRow = [
       { content: "Total", colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
       ...serviceCodePrices,
-      "0",
-      overAllTotalCost,
+      overAllAdditionalFee,
+      { content: (overAllTotalCost + overAllAdditionalFee), styles: { fontStyle: 'bold' } },
       ""
     ];
     rows3.push(totalRow);
 
-   
     doc.autoTable({
-      startY: yPosition + 20, 
+      startY: yPosition + 20,
       head: headers3,
       body: rows3,
       styles: { fontSize: 8, halign: 'center' },
@@ -268,9 +318,10 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-    
-    doc.save("invoice.pdf");
+
+    doc.save(`invoice_${formData.invoice_number}.pdf`);
   };
+
   return (
     <div className="bg-[#F7F6FB] p-12">
       <div className="bg-white p-12 rounded-md w-full mx-auto">

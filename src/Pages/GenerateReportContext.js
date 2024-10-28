@@ -73,53 +73,39 @@ const GenerateReportProvider = ({ children }) => {
     };
 
     const handleInputChange = (e) => {
+        console.log(`HEllo`);
         const { name, value } = e.target;
-    
-        if (name.startsWith('updated_json.address.')) {
-            const nestedField = name.split('.').slice(2).join('.'); // Get the nested field
-            setFormData(prevFormData => ({
-                updated_json: {
-                    ...prevFormData.updated_json,
-                    address: {
-                        ...prevFormData.updated_json.address,
-                        [nestedField]: value
-                    }
-                }
-            }));
-        } else if (name.startsWith('updated_json.permanent_address.')) {
-            const nestedField = name.split('.').slice(2).join('.');
-            setFormData(prevFormData => ({
-                updated_json: {
-                    ...prevFormData.updated_json,
-                    permanent_address: {
-                        ...prevFormData.updated_json.permanent_address,
-                        [nestedField]: value
-                    }
-                }
-            }));
-        } else if (name.startsWith('updated_json.insuffDetails.')) {
-            const nestedField = name.split('.').slice(2).join('.');
-            setFormData(prevFormData => ({
-                updated_json: {
-                    ...prevFormData.updated_json,
-                    insuffDetails: {
-                        ...prevFormData.updated_json.insuffDetails,
-                        [nestedField]: value
-                    }
-                }
-            }));
-        } else {
-            // For top-level fields and other nested structures
-            setFormData(prevFormData => ({
-                updated_json: {
-                    ...prevFormData.updated_json,
-                    [name]: value // Directly set the value for top-level fields
-                }
-            }));
-        }
+        console.log(`name - ${name} // value - ${value}`);
+
+        setFormData((prevFormData) => {
+            const updatedFormData = { ...prevFormData };
+
+            // Determine where to update based on the name
+            if (name.startsWith('updated_json.address.')) {
+                const addressField = name.replace('updated_json.address.', '');
+                updatedFormData.updated_json.address[addressField] = value;
+            } else if (name.startsWith('updated_json.permanent_address.')) {
+                const permanentField = name.replace('updated_json.permanent_address.', '');
+                updatedFormData.updated_json.permanent_address[permanentField] = value;
+            } else if (name.startsWith('updated_json.insuffDetails.')) {
+                const insuffField = name.replace('updated_json.insuffDetails.', '');
+                updatedFormData.updated_json.insuffDetails[insuffField] = value;
+            } else {
+                const topLevelField = name.replace('updated_json.', '');
+                updatedFormData.updated_json[topLevelField] = value;
+            }
+
+            return updatedFormData;
+        });
     };
-    
-    
+
+
+
+
+
+
+
+
 
     const sendReport = async () => {
         try {
