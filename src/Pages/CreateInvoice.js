@@ -5,8 +5,6 @@ import 'react-select-search/style.css'
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useCustomFunction } from '../CustomFunctionsContext'
-
-
 const CreateInvoice = () => {
   const wordify = useCustomFunction();
   const { listData, fetchData } = useData();
@@ -21,21 +19,18 @@ const CreateInvoice = () => {
   const [sgst, setSgst] = useState([]);
   const [totalTax, setTotalTax] = useState([]);
   const [totalAmount, setTotalAmount] = useState([]);
-
   const [formData, setFormData] = useState({
     invoice_number: '',
     invoice_date: '',
     month: '',
     year: '',
   });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev, [name]: value
     }))
   }
-
   const options = listData.map(client => ({
     name: client.name + `(${client.client_unique_id})`,
     value: client.id,
@@ -45,24 +40,19 @@ const CreateInvoice = () => {
   }, [fetchData]);
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
       _token: storedToken,
       month: formData.month,
       year: formData.year,
-
     }).toString();
-
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-
     fetch(`https://goldquestreact.onrender.com/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
@@ -73,7 +63,6 @@ const CreateInvoice = () => {
       .then((dataRaw) => {
         const data = JSON.parse(dataRaw);
         setServiceNames(data.serviceNames);
-
         setCustomer(data.customer);
         setApplications(data.applications);
         setCompanyInfo(data.companyInfo);
@@ -83,23 +72,55 @@ const CreateInvoice = () => {
         setTotalTax(data.finalArr.costInfo.totalTax);
         setTotalAmount(data.finalArr.costInfo.totalAmount);
         setServiceInfo(data.finalArr.serviceInfo);
-
         generatePdf();
       })
       .catch((error) => {
         console.error('Fetch error:', error);
       });
-
   };
-
-
+  function getTotalAdditionalFeeByService(serviceId) {
+    let totalFee = 0;
+    for (const appGroup of applications) {
+      for (const application of appGroup.applications) {
+        // Sum up the additionalFee for the specified serviceId in each application's statusDetails
+        for (const statusDetail of application.statusDetails) {
+          if (statusDetail.serviceId === String(serviceId)) {
+            const fee = parseFloat(statusDetail.additionalFee) || 0;
+            totalFee += fee;
+          }
+        }
+      }
+    }
+    return totalFee;
+  }
+  function calculatePercentage(amount, percentage) {
+    return (amount * percentage) / 100;
+  }
+  function getServicePriceById(serviceId) {
+    const service = serviceInfo.find(item => item.serviceId === serviceId);
+    return service ? service.price : "NIL";
+  }
+  function getTotalAdditionalFee(id) {
+    for (const appGroup of applications) {
+      for (const application of appGroup.applications) {
+        if (application.id === id) {
+          // Calculate the total additionalFee for the matching application
+          const totalAdditionalFee = application.statusDetails.reduce((total, statusDetail) => {
+            const fee = parseFloat(statusDetail.additionalFee) || 0;
+            return total + fee;
+          }, 0);
+          return totalAdditionalFee;
+        }
+      }
+    }
+    // If no application with the specified ID is found, return 0 or null
+    return 0;
+  }
   const generatePdf = () => {
     const doc = new jsPDF();
-
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Invoice", 105, 15, { align: "center" });
-
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("BILL TO:", 10, 25);
@@ -122,36 +143,13 @@ const CreateInvoice = () => {
       doc.text(value, 180, yPosition);
       yPosition += 5;
     });
-
     yPosition += 5;
     doc.line(10, yPosition, 200, yPosition);
-
     const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
-
-    function getTotalAdditionalFeeByService(serviceId) {
-      let totalFee = 0;
-
-      for (const appGroup of applications) {
-        for (const application of appGroup.applications) {
-          // Sum up the additionalFee for the specified serviceId in each application's statusDetails
-          for (const statusDetail of application.statusDetails) {
-            if (statusDetail.serviceId === String(serviceId)) {
-              const fee = parseFloat(statusDetail.additionalFee) || 0;
-              totalFee += fee;
-            }
-          }
-        }
-      }
-
-      return totalFee;
-    }
-
     let overallServiceAdditionalFeeAmount = 0;
-
     const rows1 = serviceInfo.map(service => {
       const serviceAdditionalFee = getTotalAdditionalFeeByService(service.serviceId);
       overallServiceAdditionalFeeAmount += serviceAdditionalFee;
-
       return [
         service.serviceTitle,
         "998521",
@@ -161,7 +159,6 @@ const CreateInvoice = () => {
         (serviceAdditionalFee + service.totalCost).toString()
       ];
     });
-
     doc.autoTable({
       startY: yPosition + 5,
       head: headers1,
@@ -171,7 +168,6 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-
     yPosition = doc.autoTable.previous.finalY + 15;
     doc.setFont("helvetica", "bold");
     doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
@@ -184,16 +180,9 @@ const CreateInvoice = () => {
       ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)],
       ["MICR", String(companyInfo.bank_micr)]
     ];
-
     let newOverallServiceAmount = parseInt(overallServiceAmount) + parseInt(overallServiceAdditionalFeeAmount); // Ensure these are parsed as integers
-
-    function calculatePercentage(amount, percentage) {
-      return (amount * percentage) / 100;
-    }
-
     const cgstTax = calculatePercentage(newOverallServiceAmount, parseInt(cgst.percentage)); // Parse percentage as integer
     const sgstTax = calculatePercentage(newOverallServiceAmount, parseInt(sgst.percentage)); // Parse percentage as integer
-
     const taxDetails = [
       { label: "Total Amount Before Tax", amount: String(newOverallServiceAmount) },
       { label: `Add: CGST - ${cgst.percentage}%`, amount: String(cgstTax) },
@@ -205,7 +194,6 @@ const CreateInvoice = () => {
       { label: "Total Tax Amount (Round off)", amount: String(newOverallServiceAmount + cgstTax + sgstTax) },
       { label: "GST On Reverse Charge", amount: "No" }
     ];
-
     bankDetails.forEach(([label, value], index) => {
       const rowY = yPosition + 10 + index * 5;
       doc.text(`${label}:`, 10, rowY);
@@ -216,50 +204,22 @@ const CreateInvoice = () => {
         doc.text(taxDetail.amount, 190, rowY);
       }
     });
-
     yPosition += bankDetails.length * 5 + 20;
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Amount in Words:", 10, yPosition);
     doc.setFont("helvetica", "normal");
-
-    function getServicePriceById(serviceId) {
-      const service = serviceInfo.find(item => item.serviceId === serviceId);
-      return service ? service.price : "NIL";
-    }
-
     const formattedTotalAmount = parseInt(totalAmount);
     const words = wordify(formattedTotalAmount);
     doc.text(words, 10, yPosition + 5);
-
     const serviceCodes = serviceNames.map(service => service.shortCode);
-
-    function getTotalAdditionalFee(id) {
-      for (const appGroup of applications) {
-        for (const application of appGroup.applications) {
-          if (application.id === id) {
-            // Calculate the total additionalFee for the matching application
-            const totalAdditionalFee = application.statusDetails.reduce((total, statusDetail) => {
-              const fee = parseFloat(statusDetail.additionalFee) || 0;
-              return total + fee;
-            }, 0);
-            return totalAdditionalFee;
-          }
-        }
-      }
-      // If no application with the specified ID is found, return 0 or null
-      return 0;
-    }
-
     let overAllAdditionalFee = 0;
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
-
     const rows3 = applications[0].applications.map((app, index) => {
       let totalCost = 0;
       const appAdditionalFee = getTotalAdditionalFee(app.id);
       overAllAdditionalFee += appAdditionalFee;
-
       const applicationRow = [
         index + 1,
         app.application_id,
@@ -270,17 +230,13 @@ const CreateInvoice = () => {
           if (!service || !service.id) {
             return "NIL";
           }
-
           const serviceExists = app.statusDetails.some(
             detail => detail.serviceId === service.id.toString()
           );
-
           if (serviceExists) {
             const colPrice = parseInt(getServicePriceById(service.id)) || 0; // Ensure parsed as integer, fallback to 0
-
             // Update the service's serviceIndexPrice
             service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice; // Ensure parsed as integer
-
             totalCost += colPrice; // Ensure parsed as integer
             return colPrice;
           } else {
@@ -289,24 +245,18 @@ const CreateInvoice = () => {
         }),
         parseInt(appAdditionalFee) || 0, // Ensure parsed as integer
       ];
-
       // Now calculate CGST and SGST after totalCost is updated
       const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
       const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
-
       // Add CGST, SGST, total pricing, and report date to the applicationRow
       applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
       applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");
-
       return applicationRow;
     });
-
     const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0); // Ensure parsed as integer
     const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
-
     const invoiceCGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(cgst.percentage)) || 0;
     const invoiceSGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(sgst.percentage)) || 0;
-
     const totalRow = [
       { content: "Total", colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
       ...serviceCodePrices,
@@ -317,7 +267,6 @@ const CreateInvoice = () => {
       ""
     ];
     rows3.push(totalRow);
-
     doc.autoTable({
       startY: yPosition + 20,
       head: headers3,
@@ -327,7 +276,6 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-
     doc.save(`invoice_${formData.invoice_number}.pdf`);
   };
 
