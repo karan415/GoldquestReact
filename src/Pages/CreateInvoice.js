@@ -191,6 +191,11 @@ const CreateInvoice = () => {
     doc.setFont("helvetica", "normal");
 
 
+    function getServicePriceById(serviceId) {
+      const service = serviceInfo.find(item => item.serviceId === serviceId);
+      return service ? service.price : "NIL";
+    }
+
 
     const formattedTotalAmount = parseInt(totalAmount);
     const words = wordify(formattedTotalAmount);
@@ -202,31 +207,62 @@ const CreateInvoice = () => {
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "Pricing", "Report Date"]
     ];
-
-    // Create rows for the table
     const rows3 = applications[0].applications.map((app, index) => {
-      // Extract relevant data for each application
+      let totalCost = 0;
+
       const applicationRow = [
         index + 1, // SL NO
         app.application_id, // Application ID
         app.employee_id, // Employee ID
         app.created_at.split("T")[0], // Case Received (formatted)
         app.name,
-        ...serviceCodes.map(code => {
-          console.log(code);
+        ...serviceNames.map(service => {
+          if (!service || !service.id) {
+            return "NIL";
+          }
+
+          // Check if the serviceId exists in the application's statusDetails
+          const serviceExists = app.statusDetails.some(
+            detail => detail.serviceId === service.id.toString()
+          );
+
+          if (serviceExists) {
+            const colPrice = getServicePriceById(service.id);
+
+            // Update the serviceIndexPrice, summing it with colPrice for each occurrence
+            if (service.serviceIndexPrice) {
+              service.serviceIndexPrice += colPrice;
+            } else {
+              service.serviceIndexPrice = colPrice;
+            }
+
+            // Increment the total cost by colPrice
+            totalCost += colPrice;
+            return colPrice;
+          } else {
+            return "NIL";
+          }
         }),
-        "1",
-        "2",
-        "3",
-        "0",
-        "0",
+        "0", // Other fields as needed
+        totalCost,
         app.report_date ? app.report_date.split("T")[0] : "" // Report Date (formatted)
       ];
-
 
       return applicationRow;
     });
 
+    const serviceCodePrices = serviceNames.map(service => service.serviceIndexPrice);
+    const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
+    const totalRow = [
+      { content: "Total", colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+      ...serviceCodePrices,
+      "0",
+      overAllTotalCost,
+      ""
+    ];
+    rows3.push(totalRow);
+
+    console.log(`serviceNames - `, serviceNames);
     // Example of how to use the autoTable method
     doc.autoTable({
       startY: yPosition + 20, // Ensure spacing before the third table

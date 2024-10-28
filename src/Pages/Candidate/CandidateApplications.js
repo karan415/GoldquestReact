@@ -536,6 +536,10 @@ const CandidateApplications = () => {
                 const email_status = parsedData.email_status;
 
                 Swal.fire('Success!', 'Application updated successfully.', 'success');
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
 
                 uploadCustomerLogo(email_status);
 
@@ -958,7 +962,7 @@ const CandidateApplications = () => {
             </div>
 
 
-            <div className="services-table border p-2 mt-5">
+            <div className="services-table border p-2 mt-5 mb-5">
                 <h3 className='text-center text-2xl py-4'>Selected Services</h3>
                 {serviceHeadings.map((item, index) => (
                     <div key={index} className="service-box border p-3 rounded-md w-full mb-3 flex items-center bg-slate-100">
