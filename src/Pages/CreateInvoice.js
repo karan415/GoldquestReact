@@ -40,25 +40,26 @@ const CreateInvoice = () => {
     name: client.name + `(${client.client_unique_id})`,
     value: client.id,
   }));
-  console.log('listData', listData)
   useEffect(() => {
     fetchData();
   }, [fetchData]);
   const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+    e.preventDefault(); 
 
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
 
-    // Construct the query string with parameters
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
       _token: storedToken,
+      month:formData.month,
+      year:formData.year,
+
     }).toString();
 
     const requestOptions = {
-      method: "GET", // Use GET method
+      method: "GET", 
       redirect: "follow",
     };
 
@@ -83,23 +84,22 @@ const CreateInvoice = () => {
         setTotalAmount(data.finalArr.costInfo.totalAmount);
         setServiceInfo(data.finalArr.serviceInfo);
 
-        generatePdf(); // Call generatePdf only after successful response
+        generatePdf(); 
       })
       .catch((error) => {
         console.error('Fetch error:', error);
       });
 
-    console.log('Form Data:'); // This should be logged only if you have actual form data to log
   };
 
 
   const generatePdf = () => {
     const doc = new jsPDF();
-    // Document Title
+    
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Invoice", 105, 15, { align: "center" });
-    // Section: Bill To & Invoice Details Side-by-Side
+    
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("BILL TO:", 10, 25);
@@ -122,25 +122,25 @@ const CreateInvoice = () => {
       doc.text(value, 180, yPosition);
       yPosition += 5;
     });
-    // Divider Line
-    yPosition += 5; // Move down for divider
+    
+    yPosition += 5; 
     doc.line(10, yPosition, 200, yPosition);
-    // First Table
+  
     const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
-    console.log(serviceInfo);
-    // Map serviceInfo to the desired format
+    
+   
     const rows1 = serviceInfo.map(service => [
-      service.serviceTitle,     // Service Title
-      "998521",                 // Static value (can be changed)
-      service.count.toString(), // Count (converted to string)
-      service.price.toString(),                   // Static value (can be changed)
-      "0",                      // Static value (can be changed)
-      service.totalCost.toString() // Total Cost (converted to string)
+      service.serviceTitle,     
+      "998521",                 
+      service.count.toString(), 
+      service.price.toString(),                   
+      "0",                      
+      service.totalCost.toString() 
     ]);
 
-    // Generate the table
+    
     doc.autoTable({
-      startY: yPosition + 5, // Start table below the divider
+      startY: yPosition + 5, 
       head: headers1,
       body: rows1,
       styles: { fontSize: 8, halign: 'center' },
@@ -149,17 +149,17 @@ const CreateInvoice = () => {
       theme: 'grid',
     });
 
-    // Bank Account & Tax Details
-    yPosition = doc.autoTable.previous.finalY + 15; // Add space before the bank details
+   
+    yPosition = doc.autoTable.previous.finalY + 15; 
     doc.setFont("helvetica", "bold");
     doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
     doc.text("Tax Details", 140, yPosition);
     doc.setFont("helvetica", "normal");
     const bankDetails = [
-      ["Bank Name", String(companyInfo.bank_name)], // Ensure these are strings
+      ["Bank Name", String(companyInfo.bank_name)], 
       ["Bank A/C No", String(companyInfo.bank_account_number)],
       ["Bank Branch", String(companyInfo.bank_branch_name)],
-      ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)], // Corrected spelling
+      ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)], 
       ["MICR", String(companyInfo.bank_micr)]
     ];
 
@@ -184,8 +184,8 @@ const CreateInvoice = () => {
         doc.text(taxDetail.amount, 190, rowY);
       }
     });
-    // Invoice Amount in Words
-    yPosition += bankDetails.length * 5 + 20; // Adjust spacing before amount in words
+    
+    yPosition += bankDetails.length * 5 + 20; 
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Amount in Words:", 10, yPosition);
     doc.setFont("helvetica", "normal");
@@ -199,11 +199,10 @@ const CreateInvoice = () => {
 
     const formattedTotalAmount = parseInt(totalAmount);
     const words = wordify(formattedTotalAmount);
-    console.log('words', words)
     doc.text(words, 10, yPosition + 5);
-    // Third Table
+   
     const serviceCodes = serviceNames.map(service => service.shortCode);
-    // Create the headers for the table
+   
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "Pricing", "Report Date"]
     ];
@@ -211,17 +210,16 @@ const CreateInvoice = () => {
       let totalCost = 0;
 
       const applicationRow = [
-        index + 1, // SL NO
-        app.application_id, // Application ID
-        app.employee_id, // Employee ID
-        app.created_at.split("T")[0], // Case Received (formatted)
+        index + 1, 
+        app.application_id, 
+        app.employee_id, 
+        app.created_at.split("T")[0], 
         app.name,
         ...serviceNames.map(service => {
           if (!service || !service.id) {
             return "NIL";
           }
 
-          // Check if the serviceId exists in the application's statusDetails
           const serviceExists = app.statusDetails.some(
             detail => detail.serviceId === service.id.toString()
           );
@@ -229,23 +227,21 @@ const CreateInvoice = () => {
           if (serviceExists) {
             const colPrice = getServicePriceById(service.id);
 
-            // Update the serviceIndexPrice, summing it with colPrice for each occurrence
             if (service.serviceIndexPrice) {
               service.serviceIndexPrice += colPrice;
             } else {
               service.serviceIndexPrice = colPrice;
             }
 
-            // Increment the total cost by colPrice
             totalCost += colPrice;
             return colPrice;
           } else {
             return "NIL";
           }
         }),
-        "0", // Other fields as needed
+        "0", 
         totalCost,
-        app.report_date ? app.report_date.split("T")[0] : "" // Report Date (formatted)
+        app.report_date ? app.report_date.split("T")[0] : "" 
       ];
 
       return applicationRow;
@@ -262,10 +258,9 @@ const CreateInvoice = () => {
     ];
     rows3.push(totalRow);
 
-    console.log(`serviceNames - `, serviceNames);
-    // Example of how to use the autoTable method
+   
     doc.autoTable({
-      startY: yPosition + 20, // Ensure spacing before the third table
+      startY: yPosition + 20, 
       head: headers3,
       body: rows3,
       styles: { fontSize: 8, halign: 'center' },
@@ -273,7 +268,7 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
     });
-    // Finalize PDF
+    
     doc.save("invoice.pdf");
   };
   return (
