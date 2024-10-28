@@ -252,7 +252,7 @@ const CreateInvoice = () => {
 
     let overAllAdditionalFee = 0;
     const headers3 = [
-      ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "Pricing", "Report Date"]
+      ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
 
     const rows3 = applications[0].applications.map((app, index) => {
@@ -276,35 +276,44 @@ const CreateInvoice = () => {
           );
 
           if (serviceExists) {
-            const colPrice = getServicePriceById(service.id);
+            const colPrice = parseInt(getServicePriceById(service.id)) || 0; // Ensure parsed as integer, fallback to 0
 
-            if (service.serviceIndexPrice) {
-              service.serviceIndexPrice += parseInt(colPrice); // Ensure parsed as integer
-            } else {
-              service.serviceIndexPrice = parseInt(colPrice); // Ensure parsed as integer
-            }
+            // Update the service's serviceIndexPrice
+            service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice; // Ensure parsed as integer
 
-            totalCost += parseInt(colPrice); // Ensure parsed as integer
+            totalCost += colPrice; // Ensure parsed as integer
             return colPrice;
           } else {
             return "NIL";
           }
         }),
         parseInt(appAdditionalFee) || 0, // Ensure parsed as integer
-        parseInt(totalCost) + parseInt(appAdditionalFee) || 0,
-        app.report_date ? app.report_date.split("T")[0] : ""
       ];
+
+      // Now calculate CGST and SGST after totalCost is updated
+      const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
+      const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
+
+      // Add CGST, SGST, total pricing, and report date to the applicationRow
+      applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
+      applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");
 
       return applicationRow;
     });
 
     const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0); // Ensure parsed as integer
     const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
+
+    const invoiceCGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(cgst.percentage)) || 0;
+    const invoiceSGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(sgst.percentage)) || 0;
+
     const totalRow = [
       { content: "Total", colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
       ...serviceCodePrices,
       overAllAdditionalFee,
-      { content: (overAllTotalCost + overAllAdditionalFee), styles: { fontStyle: 'bold' } },
+      invoiceCGSTTax,
+      invoiceSGSTTax,
+      { content: (overAllTotalCost + invoiceCGSTTax + invoiceSGSTTax + overAllAdditionalFee), styles: { fontStyle: 'bold' } },
       ""
     ];
     rows3.push(totalRow);
