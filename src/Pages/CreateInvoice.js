@@ -118,15 +118,22 @@ const CreateInvoice = () => {
   }
   const generatePdf = () => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Invoice", 105, 15, { align: "center" });
+
+    // BILL TO section
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("BILL TO:", 10, 25);
     doc.setFont("helvetica", "normal");
     doc.text(`Attention: ${customer.name}`, 10, 30);
-    doc.text(`Location:${customer.address} `, 10, 35);
+    doc.text(`Location: ${customer.address}`, 10, 35);
+
+    // Invoice Details section
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Details", 140, 25);
     doc.setFont("helvetica", "normal");
@@ -143,8 +150,12 @@ const CreateInvoice = () => {
       doc.text(value, 180, yPosition);
       yPosition += 5;
     });
+
+    // Draw line separator
     yPosition += 5;
     doc.line(10, yPosition, 200, yPosition);
+
+    // Product Details Table
     const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
     let overallServiceAdditionalFeeAmount = 0;
     const rows1 = serviceInfo.map(service => {
@@ -167,8 +178,12 @@ const CreateInvoice = () => {
       headStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
+      margin: { top: 10, bottom: 10 },
+      pageBreak: 'auto',
     });
     yPosition = doc.autoTable.previous.finalY + 15;
+
+    // Bank Account and Tax Details section
     doc.setFont("helvetica", "bold");
     doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
     doc.text("Tax Details", 140, yPosition);
@@ -180,20 +195,20 @@ const CreateInvoice = () => {
       ["Bank IFSC/ NEFT/ RTGS", String(companyInfo.bank_ifsc)],
       ["MICR", String(companyInfo.bank_micr)]
     ];
-    let newOverallServiceAmount = parseInt(overallServiceAmount) + parseInt(overallServiceAdditionalFeeAmount); // Ensure these are parsed as integers
-    const cgstTax = calculatePercentage(newOverallServiceAmount, parseInt(cgst.percentage)); // Parse percentage as integer
-    const sgstTax = calculatePercentage(newOverallServiceAmount, parseInt(sgst.percentage)); // Parse percentage as integer
+
+    // Tax Details Calculation
+    let newOverallServiceAmount = parseInt(overallServiceAmount) + parseInt(overallServiceAdditionalFeeAmount);
+    const cgstTax = calculatePercentage(newOverallServiceAmount, parseInt(cgst.percentage));
+    const sgstTax = calculatePercentage(newOverallServiceAmount, parseInt(sgst.percentage));
     const taxDetails = [
       { label: "Total Amount Before Tax", amount: String(newOverallServiceAmount) },
       { label: `Add: CGST - ${cgst.percentage}%`, amount: String(cgstTax) },
       { label: `Add: SGST - ${sgst.percentage}%`, amount: String(sgstTax) },
-      {
-        label: `Total Tax - ${parseInt(cgst.percentage) + parseInt(sgst.percentage)}%`,
-        amount: String(cgstTax + sgstTax)
-      },
+      { label: `Total Tax - ${parseInt(cgst.percentage) + parseInt(sgst.percentage)}%`, amount: String(cgstTax + sgstTax) },
       { label: "Total Tax Amount (Round off)", amount: String(newOverallServiceAmount + cgstTax + sgstTax) },
       { label: "GST On Reverse Charge", amount: "No" }
     ];
+
     bankDetails.forEach(([label, value], index) => {
       const rowY = yPosition + 10 + index * 5;
       doc.text(`${label}:`, 10, rowY);
@@ -204,15 +219,21 @@ const CreateInvoice = () => {
         doc.text(taxDetail.amount, 190, rowY);
       }
     });
+
     yPosition += bankDetails.length * 5 + 20;
+
+    // Total Amount in Words
     doc.setFont("helvetica", "bold");
     doc.text("Invoice Amount in Words:", 10, yPosition);
     doc.setFont("helvetica", "normal");
     const formattedTotalAmount = parseInt(totalAmount);
     const words = wordify(formattedTotalAmount);
     doc.text(words, 10, yPosition + 5);
+
+    // Application Details Table
     const serviceCodes = serviceNames.map(service => service.shortCode);
     let overAllAdditionalFee = 0;
+    doc.addPage('l','p');
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
@@ -234,26 +255,23 @@ const CreateInvoice = () => {
             detail => detail.serviceId === service.id.toString()
           );
           if (serviceExists) {
-            const colPrice = parseInt(getServicePriceById(service.id)) || 0; // Ensure parsed as integer, fallback to 0
-            // Update the service's serviceIndexPrice
-            service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice; // Ensure parsed as integer
-            totalCost += colPrice; // Ensure parsed as integer
+            const colPrice = parseInt(getServicePriceById(service.id)) || 0;
+            service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice;
+            totalCost += colPrice;
             return colPrice;
           } else {
             return "NIL";
           }
         }),
-        parseInt(appAdditionalFee) || 0, // Ensure parsed as integer
+        parseInt(appAdditionalFee) || 0,
       ];
-      // Now calculate CGST and SGST after totalCost is updated
       const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
       const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
-      // Add CGST, SGST, total pricing, and report date to the applicationRow
       applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
       applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");
       return applicationRow;
     });
-    const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0); // Ensure parsed as integer
+    const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0);
     const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
     const invoiceCGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(cgst.percentage)) || 0;
     const invoiceSGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(sgst.percentage)) || 0;
@@ -268,16 +286,22 @@ const CreateInvoice = () => {
     ];
     rows3.push(totalRow);
     doc.autoTable({
-      startY: yPosition + 20,
+      startY: 20,  // Adjust start position if necessary
       head: headers3,
       body: rows3,
       styles: { fontSize: 8, halign: 'center' },
       headStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
-    });
-    doc.save(`invoice_${formData.invoice_number}.pdf`);
+      margin: { top: 10, bottom: 10 },
+      pageBreak: 'avoid', // Avoid starting a new page unless absolutely necessary
+  });
+  
+
+    // Save PDF
+    doc.save("invoice.pdf");
   };
+
 
   return (
     <div className="bg-[#F7F6FB] p-12">
