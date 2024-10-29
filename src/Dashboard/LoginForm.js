@@ -59,7 +59,7 @@ const LoginForm = () => {
 
             const adminData = response.data.adminData;
             const _token = response.data.token;
-          
+
             localStorage.setItem('admin', JSON.stringify(adminData));
             localStorage.setItem('_token', _token);
             Swal.fire({
@@ -83,12 +83,16 @@ const LoginForm = () => {
           });
         })
         .finally(() => {
-          setLoading(false); 
+          setLoading(false);
         });
     } else {
       setError(errors);
     }
   };
+
+  const goToForgotPassword = () => {
+       navigate('/ForgotPassword')
+  }
 
   return (
     <div className="bg-transparent md:p-8 p-3 rounded-md shadow-md w-full max-w-sm">
@@ -132,7 +136,7 @@ const LoginForm = () => {
           <button
             type="button"
             className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800"
-            onClick={() => alert('Forgot Password functionality is not yet implemented.')}
+            onClick={goToForgotPassword}
           >
             Forgot Password?
           </button>
@@ -153,14 +157,14 @@ const LoginForm = () => {
           <button
             type="button"
             className="text-red-500 hover:text-blue-800 font-bold"
-            onClick={() => alert('Sign up functionality is not yet implemented.')}
+            onClick={goToForgotPassword}
           >
             Sign up
           </button>
         </p>
       </div>
-    
-     
+
+
       {message && <p className="text-red-500 text-center mt-4">{message}</p>}
     </div>
   );

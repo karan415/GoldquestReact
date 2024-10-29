@@ -17,6 +17,7 @@ import Logout from './Logout'
 import ReportCaseTable from "./ReportCaseTable";
 import DropBoxList from "./DropBoxList";
 import CandidateList from "./CandidateList";
+import CustomerUpdatePassword from "./CustomerUpdatePassword";
 
 const tabComponents = {
   dashboard: <DashBoard />,
@@ -28,6 +29,7 @@ const tabComponents = {
   bulkupload: <BulkUpload />,
   update_password: <UpdatePassword />,
   escalation: <EscalationMatrix />,
+  update_password: <CustomerUpdatePassword />,
 };
 
 const tabNames = {
@@ -38,7 +40,7 @@ const tabNames = {
   dropbox: (<><FaDropbox className="h-6 w-6 mr-3 text-gray-600" />Client DropBox</>),
   Candidate: (<><AiFillDropboxCircle className="h-6 w-6 mr-3 text-gray-600" />Candidate DropBox</>),
   // bulkupload: (<><MdDashboardCustomize className="h-6 w-6 mr-3 text-gray-600" />Bulk Upload</>),
-  // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
+  update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
   // escalation: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Escalation Matrix</>),
 };
 

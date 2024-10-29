@@ -1,14 +1,15 @@
 import { React, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
-const ForgotPassword = () => {
+const CustomerForgotPassword = () => {
 
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
   });
-  
+
 
 
   const handleChange = (e) => {
@@ -35,17 +36,24 @@ const ForgotPassword = () => {
       redirect: "follow",
     };
 
-    fetch("https://goldquestreact.onrender.com/admin/forgot-password-request", requestOptions)
+    fetch("https://goldquestreact.onrender.com/branch/forgot-password-request", requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.text();
+        return response.json();
       })
       .then((result) => {
         console.log(result);
-        // Navigate to the password reset page after successful request
-        // navigate('/forgotpassword/passwordreset');
+        Swal.fire({
+          title: 'Success',
+          text: result.message,
+          icon: 'success',
+          confirmButtonText: 'OK',
+        }).then(() => {
+          // Navigate to the customer login page after clicking OK
+          navigate('/customer-login');
+        });
       })
       .catch((error) => console.error('Error:', error));
   };
@@ -79,4 +87,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default CustomerForgotPassword;

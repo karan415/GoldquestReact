@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
-const UpdatePasswordForm = () => {
+const CustomerUpdatePassword = () => {
     const [newPass, setNewPass] = useState({
         newpass: '',
         c_newpass: '',
@@ -16,56 +17,80 @@ const UpdatePasswordForm = () => {
 
         // Clear error when user starts typing
         if (passError[name]) {
-            setPassError((prev) => ({ ...prev, [name]: null }));
+            setPassError((prev) => ({ ...prev, [name]: '' }));
         }
     };
 
     const validate = () => {
-        const NewErr = {};
-        if (!newPass.newpass) NewErr.newpass = 'This is required';
-        if (!newPass.c_newpass) NewErr.c_newpass = 'This is required';
-        else if (newPass.c_newpass !== newPass.newpass) NewErr.c_newpass = 'Passwords do not match';
-        return NewErr;
+        const errors = {};
+        if (!newPass.newpass) errors.newpass = 'New password is required';
+        if (!newPass.c_newpass) errors.c_newpass = 'Confirmation password is required';
+        else if (newPass.c_newpass !== newPass.newpass) errors.c_newpass = 'Passwords do not match';
+        return errors;
     };
 
     const handleSubmit = (e) => {
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
         e.preventDefault();
         const errors = validate();
+
         if (Object.keys(errors).length === 0) {
+            const storedBranchData = JSON.parse(localStorage.getItem("branch") || '{}')?.id;
+            const branch_token = localStorage.getItem("branch_token");
+
+            if (!storedBranchData || !branch_token) {
+                console.error('Branch data or token is missing');
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Branch data or token is missing',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
 
             const raw = JSON.stringify({
-                new_password: newPass.newpass, // Use the new password from the state
-                admin_id: admin_id, // Replace with the actual admin ID as needed
-                _token: storedToken // Use the actual token as needed
+                new_password: newPass.newpass,
+                branch_id: storedBranchData,
+                _token: branch_token,
             });
 
             const requestOptions = {
                 method: "PUT",
                 headers: myHeaders,
                 body: raw,
-                redirect: "follow"
+                redirect: "follow",
             };
 
-            fetch("https://goldquestreact.onrender.com/admin/update-password", requestOptions)
+            fetch("https://goldquestreact.onrender.com/branch/update-password", requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
-                    return response.json(); // Use JSON response
+                    return response.json();
                 })
                 .then((result) => {
                     console.log(result);
                     // Clear form and errors on successful update
+                    Swal.fire({
+                        title: 'Success',
+                        text: result.message || 'Password updated successfully',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                    });
                     setNewPass({ newpass: '', c_newpass: '' });
                     setPassError({});
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    // Handle error accordingly, maybe set an error message in state
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.message || 'Something went wrong, please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
                 });
         } else {
             setPassError(errors);
@@ -73,7 +98,7 @@ const UpdatePasswordForm = () => {
     };
 
     return (
-        <form className='mt-4' onSubmit={handleSubmit}>
+        <form className='mt-4 w-6/12 m-auto' onSubmit={handleSubmit}>
             <div className="mb-6 text-left">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newpass">New Password</label>
                 <input
@@ -105,4 +130,4 @@ const UpdatePasswordForm = () => {
     );
 };
 
-export default UpdatePasswordForm;
+export default CustomerUpdatePassword;

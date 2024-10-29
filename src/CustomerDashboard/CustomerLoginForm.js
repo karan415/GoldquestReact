@@ -126,6 +126,9 @@ const CustomerLoginForm = () => {
             setError(validateError);
         }
     };
+    const forgotPassword=()=>{
+        navigate('/customer-forgotpassword');
+    }
 
     return (
         <div className="w-full md:max-w-7xl mx-auto p-4">
@@ -166,9 +169,8 @@ const CustomerLoginForm = () => {
                         <input className="mr-2 leading-tight" type="checkbox" />
                         <span className="text-sm">Remember me</span>
                     </label>
-                    <a href="#" className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800">
-                        Forgot Password?
-                    </a>
+                   
+                    <button className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800" onClick={forgotPassword}>Forgot Password</button>
                 </div>
                 <div className="flex items-center justify-between">
                     <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">

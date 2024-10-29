@@ -31,6 +31,9 @@ import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
 import PdfTableGenerator from './Pages/PdfTableGenerator';
 import 'react-select-search/style.css'
+import UpdatePassword from './Pages/UpdatePassword';
+import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
+import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 
 const App = () => {
   return (
@@ -53,10 +56,13 @@ const App = () => {
                                   <Route path='/' element={<Admin><Render /></Admin>} />
                                   <Route path='/customer-login' element={<CustomerLogin />} />
                                   <Route path='/admin-login' element={<Login />} />
-                                  <Route path='forgotpassword' element={<ForgotPassword />} />
-                                  <Route path='forgotpassword/passwordreset' element={<PasswordReset />} />
-                                  <Route path='/newpassword' element={<SetNewPassword />} />
+                                  <Route path='/forgotpassword' element={<ForgotPassword />} />
+                                  <Route path='/customer-forgotpassword' element={<CustomerForgotPassword />} />
+                                  <Route path='/reset-password' element={<SetNewPassword />} />
+                                  <Route path='/customer-reset-password' element={<CustomerResetPassword />} />
                                   <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
+                                  <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
+                                  <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
                                   <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
                                   <Route path='/addclient' element={<Admin><AddClient /></Admin>} />
                                   <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />

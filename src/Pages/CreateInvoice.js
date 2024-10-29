@@ -120,22 +120,83 @@ const CreateInvoice = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 10; // Initial y-position for content alignment
+
+    // Set Logo (Uncomment and update the path if you have a logo image)
+    // const logoImg = 'path/to/your/logo.png';
+ 
+    const logoImg = "https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1";
+    const imgWidth = 50;
+    const imgHeight = 20;
+    doc.addImage(logoImg, 'PNG', 10, yPosition, imgWidth, imgHeight);
+    
+    const addressLines = companyInfo.address.split(',');
+    // Add Company Information
+
+    let formattedLine1 = '';
+    let formattedLine2 = '';
+    let formattedLine3 = '';
+
+    // Loop through the address array
+    for (let i = 0; i < addressLines.length; i++) {
+      if (i === 0) {
+        formattedLine1 += addressLines[i]; // First element
+      } else if (i === 1) {
+        formattedLine1 += `, ${addressLines[i]}`; // Second element
+      } else if (i === 2) {
+        formattedLine2 = addressLines[i]; // Third element
+      } else if (i >= 4 && i <= 6) {
+        // For Bangalore, Karnataka, and India
+        if (i > 4) {
+          formattedLine3 += `, `;
+        }
+        formattedLine3 += addressLines[i];
+      } else if (i === 7) {
+        formattedLine3 += `, ${addressLines[i]}`; // Pincode
+      }
+    }
+
+    const companyInfoArray = [
+      companyInfo.name,
+      companyInfo.gstin,
+      formattedLine1,
+      formattedLine2,
+      formattedLine3,
+      "Website: http://www.goldquestglobal.in"
+    ];
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+
+    // Align text to the right of the logo
+    companyInfoArray.forEach((line, index) => {
+        doc.text(line, 10 + imgWidth + 10, yPosition + (index * 5)); // Positioned to the right of the logo
+    });
+
+    yPosition += imgHeight + 10;
+
+    // Add a divider line
+    doc.setLineWidth(0.5);
+    doc.line(10, yPosition, pageWidth - 10, yPosition);
+    yPosition += 5;
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Invoice", 105, 15, { align: "center" });
+    doc.text("Invoice", pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 10;
 
     // BILL TO section
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("BILL TO:", 10, 25);
+    doc.text("BILL TO:", 10, yPosition);
     doc.setFont("helvetica", "normal");
-    doc.text(`Attention: ${customer.name}`, 10, 30);
-    doc.text(`Location: ${customer.address}`, 10, 35);
+    doc.text(`Attention: ${customer.name}`, 10, yPosition + 5);
+    doc.text(`Location: ${customer.address}`, 10, yPosition + 10);
+    yPosition += 15;
 
     // Invoice Details section
     doc.setFont("helvetica", "bold");
-    doc.text("Invoice Details", 140, 25);
+    doc.text("Invoice Details", 140, yPosition);
     doc.setFont("helvetica", "normal");
     const invoiceDetails = [
       ["GSTIN", `${customer.gst_number}`],
@@ -144,16 +205,17 @@ const CreateInvoice = () => {
       ["Invoice Number", `${formData.invoice_number}`],
       ["State Code", `${customer.state_code}`]
     ];
-    let yPosition = 30;
+    let invoiceYPosition = yPosition + 5;
     invoiceDetails.forEach(([label, value]) => {
-      doc.text(`${label}:`, 140, yPosition);
-      doc.text(value, 180, yPosition);
-      yPosition += 5;
+      doc.text(`${label}:`, 140, invoiceYPosition);
+      doc.text(value, 180, invoiceYPosition);
+      invoiceYPosition += 5;
     });
 
     // Draw line separator
-    yPosition += 5;
-    doc.line(10, yPosition, 200, yPosition);
+    invoiceYPosition += 5;
+    doc.line(10, invoiceYPosition, pageWidth - 10, invoiceYPosition);
+    invoiceYPosition += 5;
 
     // Product Details Table
     const headers1 = [["Product Description", "SAC Code", "Qty", "Rate", "Additional Fee", "Taxable Amount"]];
@@ -171,7 +233,7 @@ const CreateInvoice = () => {
       ];
     });
     doc.autoTable({
-      startY: yPosition + 5,
+      startY: invoiceYPosition + 5,
       head: headers1,
       body: rows1,
       styles: { fontSize: 8, halign: 'center' },
@@ -181,12 +243,14 @@ const CreateInvoice = () => {
       margin: { top: 10, bottom: 10 },
       pageBreak: 'auto',
     });
-    yPosition = doc.autoTable.previous.finalY + 15;
+    invoiceYPosition = doc.autoTable.previous.finalY + 10;
 
     // Bank Account and Tax Details section
+
+    // doc.addPage('landscape');
     doc.setFont("helvetica", "bold");
-    doc.text("GoldQuest Global Bank Account Details", 10, yPosition);
-    doc.text("Tax Details", 140, yPosition);
+    doc.text("GoldQuest Global Bank Account Details", 10, invoiceYPosition);
+    doc.text("Tax Details", 140, invoiceYPosition);
     doc.setFont("helvetica", "normal");
     const bankDetails = [
       ["Bank Name", String(companyInfo.bank_name)],
@@ -210,7 +274,7 @@ const CreateInvoice = () => {
     ];
 
     bankDetails.forEach(([label, value], index) => {
-      const rowY = yPosition + 10 + index * 5;
+      const rowY = invoiceYPosition + 10 + index * 5;
       doc.text(`${label}:`, 10, rowY);
       doc.text(value, 60, rowY);
       if (taxDetails[index]) {
@@ -220,20 +284,19 @@ const CreateInvoice = () => {
       }
     });
 
-    yPosition += bankDetails.length * 5 + 20;
+    invoiceYPosition += bankDetails.length * 5 + 20;
 
     // Total Amount in Words
     doc.setFont("helvetica", "bold");
-    doc.text("Invoice Amount in Words:", 10, yPosition);
+    doc.text("Invoice Amount in Words:", 10, invoiceYPosition);
     doc.setFont("helvetica", "normal");
-    const formattedTotalAmount = parseInt(totalAmount);
-    const words = wordify(formattedTotalAmount);
-    doc.text(words, 10, yPosition + 5);
+    const words = wordify(parseInt(newOverallServiceAmount + cgstTax + sgstTax));
+    doc.text(words+' Rupees Only', 10, invoiceYPosition + 5);
 
     // Application Details Table
     const serviceCodes = serviceNames.map(service => service.shortCode);
     let overAllAdditionalFee = 0;
-    doc.addPage('landscape');
+    // doc.addPage('landscape');
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
@@ -271,22 +334,9 @@ const CreateInvoice = () => {
       applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");
       return applicationRow;
     });
-    const serviceCodePrices = serviceNames.map(service => parseInt(service.serviceIndexPrice) || 0);
-    const overAllTotalCost = serviceCodePrices.reduce((acc, price) => acc + price, 0);
-    const invoiceCGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(cgst.percentage)) || 0;
-    const invoiceSGSTTax = calculatePercentage(parseInt(overAllTotalCost + overAllAdditionalFee), parseInt(sgst.percentage)) || 0;
-    const totalRow = [
-      { content: "Total", colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
-      ...serviceCodePrices,
-      overAllAdditionalFee,
-      invoiceCGSTTax,
-      invoiceSGSTTax,
-      { content: (overAllTotalCost + invoiceCGSTTax + invoiceSGSTTax + overAllAdditionalFee), styles: { fontStyle: 'bold' } },
-      ""
-    ];
-    rows3.push(totalRow);
+
     doc.autoTable({
-      startY: 20,  // Adjust start position if necessary
+      startY: invoiceYPosition + 10,
       head: headers3,
       body: rows3,
       styles: { fontSize: 8, halign: 'center' },
@@ -294,13 +344,29 @@ const CreateInvoice = () => {
       bodyStyles: { lineColor: [200, 200, 200], lineWidth: 0.2 },
       theme: 'grid',
       margin: { top: 10, bottom: 10 },
-      pageBreak: 'avoid', // Avoid starting a new page unless absolutely necessary
-  });
-  
+      // pageBreak: 'auto',
+    });
 
-    // Save PDF
-    doc.save("invoice.pdf");
-  };
+
+    const footerText = [
+      "Make all your payment Cheques, RTGS/NEFT Payable to: 'GOLDQUEST GLOBAL HR SERVICES PRIVATE LIMITED'.",
+      "Payments received after due date shall be liable of interest @ 3% per month, part of month taken as full month.",
+      "Any discrepancy shall be intimated within 3 working days of receipt of bill.",
+      "Please email us at accounts@goldquestglobal.com / Contact Us: +91 9945891310"
+  ];
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+
+  let footerY = pageHeight - 30; // Position the footer near the bottom
+  footerText.forEach((line, index) => {
+      doc.text(line, 10, footerY + (index * 4));
+  });
+
+    // Finalize and Save PDF
+    doc.save('invoice.pdf');
+  }
+
 
 
   return (
