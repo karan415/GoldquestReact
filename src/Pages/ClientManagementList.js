@@ -160,7 +160,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`https://goldquestreact.onrender.com/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`https://octopus-app-www87.ondigitalocean.app/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -211,7 +211,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`https://goldquestreact.onrender.com/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`https://octopus-app-www87.ondigitalocean.app/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

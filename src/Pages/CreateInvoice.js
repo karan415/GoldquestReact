@@ -53,7 +53,7 @@ const CreateInvoice = () => {
       method: "GET",
       redirect: "follow",
     };
-    fetch(`https://goldquestreact.onrender.com/generate-invoice?${queryString}`, requestOptions)
+    fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -117,7 +117,7 @@ const CreateInvoice = () => {
     return 0;
   }
   const generatePdf = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 10; // Initial y-position for content alignment
