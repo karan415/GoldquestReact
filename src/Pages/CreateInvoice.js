@@ -233,7 +233,7 @@ const CreateInvoice = () => {
     // Application Details Table
     const serviceCodes = serviceNames.map(service => service.shortCode);
     let overAllAdditionalFee = 0;
-    doc.addPage('l','p');
+    doc.addPage('landscape');
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
