@@ -19,7 +19,6 @@ export const DataProvider = ({ children }) => {
     const fetchData = useCallback(() => {
         setLoading(true);
         setError(null);
-
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
 
@@ -51,6 +50,7 @@ export const DataProvider = ({ children }) => {
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
+              
                 setListData(data.customers || []);
                 setTotalResults(data.totalResults || 0);
             })

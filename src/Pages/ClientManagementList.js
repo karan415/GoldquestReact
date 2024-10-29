@@ -2,17 +2,23 @@ import React, { useEffect, useState, } from 'react';
 import Swal from 'sweetalert2';
 import Popup from 'reactjs-popup';
 import { useSidebar } from '../Sidebar/SidebarContext';
-
+import Loader from '../Loader'
 import 'reactjs-popup/dist/index.css';
-import { ClientEditForm } from './ClientEditForm';
 import { useEditClient } from './ClientEditContext';
 import BranchEditForm from './BranchEditForm';
 import { useEditBranch } from './BranchEditContext';
 import { useData } from './DataContext';
+import PulseLoader from "react-spinners/PulseLoader";
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
-
 const ClientManagementList = () => {
+  const override: CSSProperties = {
+    display: "block",
+    margin: "0 auto",
+    borderColor: "red",
+  };
+  const [color] = useState("#000");
+
   const { handleTabChange } = useSidebar();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -47,7 +53,12 @@ const ClientManagementList = () => {
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+  let currentItems = null; // Initialize as null
+
+  // Check if filteredItems exists and is not null
+  if (filteredItems) {
+    currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+  }
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -61,6 +72,54 @@ const ClientManagementList = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
   };
 
+
+  const renderPagination = () => {
+    const pageNumbers = [];
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+
+      if (currentPage > 3) {
+        pageNumbers.push('...');
+      }
+
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        if (!pageNumbers.includes(i)) {
+          pageNumbers.push(i);
+        }
+      }
+
+      if (currentPage < totalPages - 2) {
+        pageNumbers.push('...');
+      }
+
+
+      if (!pageNumbers.includes(totalPages)) {
+        pageNumbers.push(totalPages);
+      }
+    }
+
+
+
+    return pageNumbers.map((number, index) => (
+      number === '...' ? (
+        <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+      ) : (
+        <button
+          type="button"
+          key={`page-${number}`} // Unique key for page buttons
+          onClick={() => handlePageChange(number)}
+          className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+        >
+          {number}
+        </button>
+      )
+    ));
+  };
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -345,37 +404,40 @@ const ClientManagementList = () => {
 
       </div>
       <div className="overflow-x-auto py-6 px-4">
-        {
-          currentItems.length > 0 ? (
-            <>
-              <table className="min-w-full">
-                <thead>
-                  <tr className='bg-green-500'>
-                    <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Name of Client Spoc</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Date of Service Agreement</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Contact Person</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Mobile</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Services</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Address</th>
-                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((item, index) => {
+
+        <table className="min-w-full mb-4">
+
+
+          <thead>
+            <tr className='bg-green-500'>
+              <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Name of Client Spoc</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Date of Service Agreement</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Contact Person</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Mobile</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Services</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Address</th>
+              <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody id='clientListTableTBody'>
+            {
+              currentItems !== null ? (
+                currentItems.length > 0 ? (
+                  currentItems.map((item, index) => {
                     const services = JSON.parse(item.services);
                     const showAllServices = showAllServicesState[item.main_id] || false;
 
                     const result = Array.isArray(services) && services.length > 0 ? services : [];
-
                     const displayedServices = showAllServices ? result : result.slice(0, 1);
+
                     return (
                       <tr key={item.main_id}>
                         <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
                           <input type="checkbox" className="me-2" />
-                          {index + 1}
+                          {index + 1 + (currentPage - 1) * itemsPerPage}
                         </td>
                         <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
                         <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name}</td>
@@ -383,55 +445,51 @@ const ClientManagementList = () => {
                         <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
                           {new Date(item.agreement_date).toLocaleString()}
                         </td>
-
                         <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
                         <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
-                        <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
-                          <td className="py-3 px-4  text-left cursor-pointer">
-                            {result.length > 0 ? (
-                              <div>
-                                {displayedServices.map((service, idx) => (
-                                  <div key={idx} className='flex gap-3'>
-                                    <>
-                                      {service.price ? (
-                                        <>
-                                          <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
-                                          <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
-                                        </>
-                                      ) : (
-                                        <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
-                                      )}
+                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
+                          {result.length > 0 ? (
+                            <div>
+                              {displayedServices.map((service, idx) => (
+                                <div key={idx} className='flex gap-3'>
+                                  <>
+                                    {service.price ? (
+                                      <>
+                                        <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
+                                        <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
+                                      </>
+                                    ) : (
+                                      <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
+                                    )}
 
-                                      {service.packages && Object.keys(service.packages).length > 0 ? (
-                                        <p className='whitespace-nowrap capitalize text-left'>
-                                          Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
-                                        </p>
-                                      ) : (
-                                        <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
-                                      )}
-                                    </>
-                                  </div>
-                                ))}
+                                    {service.packages && Object.keys(service.packages).length > 0 ? (
+                                      <p className='whitespace-nowrap capitalize text-left'>
+                                        Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
+                                      </p>
+                                    ) : (
+                                      <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
+                                    )}
+                                  </>
+                                </div>
+                              ))}
 
-                                {result.length > 1 && !showAllServices && (
-                                  <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
-                                    Show more
-                                  </button>
-                                )}
-                                {showAllServices && (
-                                  <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
-                                    Show less
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <p className='whitespace-nowrap capitalize'>No services available.</p>
-                            )}
-                          </td>
-
+                              {result.length > 1 && !showAllServices && (
+                                <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
+                                  Show more
+                                </button>
+                              )}
+                              {showAllServices && (
+                                <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
+                                  Show less
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <p className='whitespace-nowrap capitalize'>No services available.</p>
+                          )}
                         </td>
                         <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
-                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap capitalize fullwidth">
+                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
                           <button
                             className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
@@ -462,15 +520,14 @@ const ClientManagementList = () => {
                               services: item.services || [],
                             }])}>Edit</button>
                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
-                          {item.branch_count > 1 ? (
+                          {item.branch_count > 1 && (
                             <button
                               className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
                               onClick={() => toggleAccordion(item.main_id)}
                             >
                               View Branches
                             </button>
-
-                          ) : ('')}
+                          )}
 
                           {openAccordionId === item.main_id && (
                             branches.map((branch) => {
@@ -501,7 +558,6 @@ const ClientManagementList = () => {
                                         >
                                           <BranchEditForm />
                                         </Popup>
-
                                         <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
                                         {isActive && (
                                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
@@ -513,28 +569,38 @@ const ClientManagementList = () => {
                                     </div>
                                   )}
                                 </div>
-                              )
+                              );
                             })
                           )}
-
-
-
                         </td>
                       </tr>
-
                     );
-                  })}
-                </tbody>
-              </table>
-            </>
-          ) : (
-            <p className='text-center'>No Client Found</p>
-          )
-        }
-        {loading && <p>Loading...</p>}
-        {error && <p>{error}</p>}
-        {listData.length === 0 && !loading && <p>No clients found.</p>}
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={10} className="text-center">No Data Found</td>
+                  </tr>
+                )
+              ) : (
+                <tr>
+                  <td colSpan={10} className="text-center">No Data Found</td>
+                </tr>
+              )
+            }
+
+
+          </tbody>
+        </table>
+        {loading && !filteredItems.length && <p className='text-center whitespace-nowrap'> <PulseLoader
+          color={color}
+          loading={loading}
+          cssOverride={override}
+          size={15}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        /></p>} {/* Optional loading message */}
       </div>
+
       <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
         <button
           onClick={showPrev}
@@ -545,15 +611,7 @@ const ClientManagementList = () => {
           <MdArrowBackIosNew />
         </button>
         <div className="flex items-center">
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => handlePageChange(index + 1)}
-              className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-            >
-              {index + 1}
-            </button>
-          ))}
+          {renderPagination()}
         </div>
         <button
           onClick={showNext}

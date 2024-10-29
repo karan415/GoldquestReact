@@ -7,6 +7,7 @@ import { useGenerateReport } from '../GenerateReportContext';
 const CandidateApplications = () => {
     const [files, setFiles] = useState([]);
     const renderedServices = new Set();
+
     const [allInputDetails, setAllInputDetails] = useState([]);
     const [disabledFields, setDisabledFields] = useState({
         month_year: false,
@@ -28,7 +29,7 @@ const CandidateApplications = () => {
     const [, setAnnexureData] = useState({});
     const { service_id, branch_id, application_id } = useContext(BranchContextExel);
     const [annexure, setAnnexure] = useState({});
-    const [, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [, setError] = useState(null);
     const { formData, setFormData, handleInputChange } = useGenerateReport();
     const [errors, setErrors] = useState({});
@@ -452,7 +453,7 @@ const CandidateApplications = () => {
 
     const handleFormSubmit = (e) => {
         e.preventDefault();
-
+        setLoading(true);
         // Validate form and check for errors
         const validationErrors = validateForm();
         if (Object.keys(validationErrors).length > 0) {
@@ -582,6 +583,8 @@ const CandidateApplications = () => {
             .catch(error => {
                 console.error('Error updating application data:', error);
                 setError('Failed to update application data');
+            }).finally(() => {
+                setLoading(false); // Stop loading
             });
     };
 
@@ -884,55 +887,55 @@ const CandidateApplications = () => {
 
             <h3 className='text-2xl text-center font-semi-bold my-5'>Current Address</h3>
             <div className="form-group border rounded-md p-3">
-            <div className="mb-4">
-                <label htmlFor="full_address">Full Address:</label>
-                <input
-                    type="text"
-                    name="updated_json.address.address"
-                    id="address"
-                    className="border w-full rounded-md p-2 mt-2 capitalize"
-                    value={formData.updated_json.address.address}
-                    onChange={handleInputChange}
-                />
-                {errors.address && <span className="text-red-500">{errors.address}</span>}
+                <div className="mb-4">
+                    <label htmlFor="full_address">Full Address:</label>
+                    <input
+                        type="text"
+                        name="updated_json.address.address"
+                        id="address"
+                        className="border w-full rounded-md p-2 mt-2 capitalize"
+                        value={formData.updated_json.address.address}
+                        onChange={handleInputChange}
+                    />
+                    {errors.address && <span className="text-red-500">{errors.address}</span>}
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="Landmark">Landmark:</label>
+                    <input
+                        type="text"
+                        name="updated_json.address.landmark"
+                        id="landmark"
+                        className="border w-full rounded-md p-2 mt-2 capitalize"
+                        value={formData.updated_json.address.landmark}
+                        onChange={handleInputChange}
+                    />
+                    {errors.landmark && <span className="text-red-500">{errors.landmark}</span>}
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="residence_mobile_number">Residence Mobile No:</label>
+                    <input
+                        type="text"
+                        name="updated_json.address.residence_mobile_number"
+                        id="residence_mobile_number"
+                        className="border w-full rounded-md p-2 mt-2 capitalize"
+                        value={formData.updated_json.address.residence_mobile_number}
+                        onChange={handleInputChange}
+                    />
+                    {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="state">State</label>
+                    <input
+                        type="text"
+                        name="updated_json.address.state"
+                        id="state"
+                        className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
+                        value={formData.updated_json.address.state}
+                        onChange={handleInputChange}
+                    />
+                    {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
+                </div>
             </div>
-            <div className="mb-4">
-                <label htmlFor="Landmark">Landmark:</label>
-                <input
-                    type="text"
-                    name="updated_json.address.landmark"
-                    id="landmark"
-                    className="border w-full rounded-md p-2 mt-2 capitalize"
-                    value={formData.updated_json.address.landmark}
-                    onChange={handleInputChange}
-                />
-                {errors.landmark && <span className="text-red-500">{errors.landmark}</span>}
-            </div>
-            <div className="mb-4">
-                <label htmlFor="residence_mobile_number">Residence Mobile No:</label>
-                <input
-                    type="text"
-                    name="updated_json.address.residence_mobile_number"
-                    id="residence_mobile_number"
-                    className="border w-full rounded-md p-2 mt-2 capitalize"
-                    value={formData.updated_json.address.residence_mobile_number}
-                    onChange={handleInputChange}
-                />
-                {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
-            </div>
-            <div className="mb-4">
-                <label htmlFor="state">State</label>
-                <input
-                    type="text"
-                    name="updated_json.address.state"
-                    id="state"
-                    className="w-full border p-2 outline-none rounded-md mt-2 capitalize"
-                    value={formData.updated_json.address.state}
-                    onChange={handleInputChange}
-                />
-                {errors.residence_mobile_number && <span className="text-red-500">{errors.residence_mobile_number}</span>}
-            </div>
-        </div>
 
 
             <div className="services-table border p-2 mt-5 mb-5">
@@ -1355,7 +1358,9 @@ const CandidateApplications = () => {
 
                 </div>
             </div>
-            <button type='submit' className='w-full bg-green-500 p-3 rounded-md m-3 text-white'>submit</button>
+            <button type='submit' className='w-full bg-green-500 p-3 rounded-md m-3 text-white' disabled={loading}>             
+               {loading ? 'Processing...' :  'Generate Report' }
+            </button>
         </form>
     );
 };
