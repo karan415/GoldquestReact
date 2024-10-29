@@ -1,7 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 const LoginForm = () => {

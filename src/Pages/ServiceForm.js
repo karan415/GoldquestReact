@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useService } from './ServiceContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+
 const ServiceForm = () => {
     const API_URL = useApi();
-    const { selectedService, updateServiceList ,fetchData} = useService();
+    const { selectedService, updateServiceList, fetchData } = useService();
     const [adminId, setAdminId] = useState(null);
     const [storedToken, setStoredToken] = useState(null);
     const [isEdit, setIsEdit] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [serviceInput, setServiceInput] = useState({
         name: "",
         d_name: "",
@@ -57,7 +59,7 @@ const ServiceForm = () => {
         const validateError = validate();
 
         if (Object.keys(validateError).length === 0) {
-         
+            setLoading(true); // Start loading
             const requestOptions = {
                 method: isEdit ? "PUT" : "POST",
                 headers: {
@@ -88,16 +90,15 @@ const ServiceForm = () => {
                             );
                             throw new Error(text);
                         });
-                      }
+                    }
                     return response.json();
                 })
                 .then((result) => {
-                    const newToken = result._token || result.token; // Use result.token if result._token is not available
+                    const newToken = result._token || result.token;
                     if (newToken) {
-                        localStorage.setItem("_token", newToken); // Replace the old token with the new one
+                        localStorage.setItem("_token", newToken);
                     }
                     setError({});
-
                     Swal.fire({
                         title: "Success",
                         text: isEdit ? 'Service updated successfully' : 'Service added successfully',
@@ -111,12 +112,14 @@ const ServiceForm = () => {
                         updateServiceList(prevList => [...prevList, result]);
                     }
                     fetchData();
-                    // Reset the form
                     setServiceInput({ name: "", d_name: "" });
-                    setIsEdit(false); 
+                    setIsEdit(false);
                 })
                 .catch((error) => {
                     console.error(error);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         } else {
             setError(validateError);
@@ -147,8 +150,8 @@ const ServiceForm = () => {
                     className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
                 {error.d_name && <p className='text-red-500'>{error.d_name}</p>}
             </div>
-            <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit'>
-                {isEdit ? 'Update' : 'Add'}
+            <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit' disabled={loading}>
+                {loading ? 'Processing...' : isEdit ? 'Update' : 'Add'}
             </button>
         </form>
     );

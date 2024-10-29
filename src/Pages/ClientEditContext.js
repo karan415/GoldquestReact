@@ -9,6 +9,8 @@ const ClientEditContext = createContext();
 export const ClientEditProvider = ({ children }) => {
     const [files, setFiles] = useState([]);
     const API_URL = useApi();
+    const [loading, setLoading] = useState(false);
+
     const [clientData, setClientData] = useState({
         company_name: '',
         client_code: '',
@@ -83,28 +85,31 @@ export const ClientEditProvider = ({ children }) => {
         e.preventDefault();
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+        setLoading(true); // Start loading
+    
         if (!clientData.company_name || !clientData.client_code || !clientData.address) {
             Swal.fire('Error!', 'Missing required fields: Branch ID, Name, Email', 'error');
+            setLoading(false); // Stop loading if there's an error
             return;
         }
+    
         const raw = JSON.stringify({
             ...clientData,
             admin_id,
             _token: storedToken
         });
-
+    
         const requestOptions = {
             method: "PUT",
             headers: { 'Content-Type': 'application/json' },
             body: raw,
             redirect: "follow"
         };
-
+    
         try {
             const response = await fetch(`${API_URL}/customer/update`, requestOptions);
             const contentType = response.headers.get("content-type");
-
+    
             if (!response.ok) {
                 if (contentType && contentType.includes("application/json")) {
                     const errorData = await response.json();
@@ -115,25 +120,30 @@ export const ClientEditProvider = ({ children }) => {
                 }
                 return;
             }
-            fetchData();
+    
             const data = contentType.includes("application/json") ? await response.json() : {};
             const customerInsertId = clientData.customer_id;
             const newToken = data._token || data.token;
+    
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+    
             uploadCustomerLogo(admin_id, storedToken, customerInsertId);
             Swal.fire('Success!', 'Branch updated successfully.', 'success');
-          
+    
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
             Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
+        } finally {
+            setLoading(false); // Stop loading
         }
     };
+    
 
 
     return (
-        <ClientEditContext.Provider value={{ clientData, setClientData, handleClientChange, handleClientSubmit, setFiles, files }}>
+        <ClientEditContext.Provider value={{ clientData, setClientData, handleClientChange, handleClientSubmit, setFiles, files,loading }}>
             {children}
         </ClientEditContext.Provider>
     );

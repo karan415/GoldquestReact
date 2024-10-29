@@ -1,6 +1,8 @@
 import React, { useEffect, useState, } from 'react';
 import Swal from 'sweetalert2';
 import Popup from 'reactjs-popup';
+import { useSidebar } from '../Sidebar/SidebarContext';
+
 import 'reactjs-popup/dist/index.css';
 import { ClientEditForm } from './ClientEditForm';
 import { useEditClient } from './ClientEditContext';
@@ -9,7 +11,9 @@ import { useEditBranch } from './BranchEditContext';
 import { useData } from './DataContext';
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+
 const ClientManagementList = () => {
+  const { handleTabChange } = useSidebar();
   const [searchTerm, setSearchTerm] = useState('');
 
   const API_URL = useApi();
@@ -294,7 +298,14 @@ const ClientManagementList = () => {
     });
   };
 
+  const handleEditForm = (customerArr) => {
+    // Change the tab to 'edit'
+    setClientData(customerArr[0])
+    handleTabChange('edit');
 
+    // Log the array to console
+    console.log(customerArr[0]);
+  };
 
 
 
@@ -354,13 +365,11 @@ const ClientManagementList = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => {
-                    const services = JSON.parse(item.services); // Parse services from JSON
-                    const showAllServices = showAllServicesState[item.main_id] || false; // Determine if all services should be shown
+                    const services = JSON.parse(item.services);
+                    const showAllServices = showAllServicesState[item.main_id] || false;
 
-                    // Check if services array is valid and has at least one item
                     const result = Array.isArray(services) && services.length > 0 ? services : [];
 
-                    // Determine the services to display based on the showAllServices flag
                     const displayedServices = showAllServices ? result : result.slice(0, 1);
                     return (
                       <tr key={item.main_id}>
@@ -378,7 +387,7 @@ const ClientManagementList = () => {
                         <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
                         <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
                         <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
-                          <td className="py-3 px-4 border-b border-r text-left cursor-pointer">
+                          <td className="py-3 px-4  text-left cursor-pointer">
                             {result.length > 0 ? (
                               <div>
                                 {displayedServices.map((service, idx) => (
@@ -424,9 +433,9 @@ const ClientManagementList = () => {
                         <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
                         <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap capitalize fullwidth">
                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
-                          <Popup className='w-full' trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
-                            position="right center"
-                            onOpen={() => setClientData({
+                          <button
+                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                            onClick={() => handleEditForm([{
                               customer_id: item.id || '',
                               emails: item.emails || '',
                               clientData: item.clientData || '',
@@ -451,11 +460,7 @@ const ClientManagementList = () => {
                               custom_logo: item.custom_logo || '',
                               custom_address: item.custom_address || '',
                               services: item.services || [],
-
-                            })}
-                          >
-                            <ClientEditForm />
-                          </Popup>
+                            }])}>Edit</button>
                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
                           {item.branch_count > 1 ? (
                             <button
@@ -496,6 +501,7 @@ const ClientManagementList = () => {
                                         >
                                           <BranchEditForm />
                                         </Popup>
+
                                         <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
                                         {isActive && (
                                           <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>

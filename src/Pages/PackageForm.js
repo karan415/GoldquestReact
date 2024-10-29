@@ -6,7 +6,7 @@ import { useApi } from '../ApiContext';
 const PackageForm = ({ onSuccess }) => {
     const API_URL = useApi();
 
-    const {fetchData } = usePackage();
+    const { fetchData } = usePackage();
     const { selectedPackage, clearSelectedPackage, packageList, updatePackageList } = usePackage();
     const [packageInput, setPackageInput] = useState({
         name: "",
@@ -17,6 +17,7 @@ const PackageForm = ({ onSuccess }) => {
     const [, setStoredToken] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [formMessage, setFormMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
 
     useEffect(() => {
         const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -60,6 +61,8 @@ const PackageForm = ({ onSuccess }) => {
 
     const handlePackageFormSubmit = (e) => {
         e.preventDefault();
+        setIsLoading(true); // Start loading
+
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
 
@@ -78,7 +81,6 @@ const PackageForm = ({ onSuccess }) => {
                 admin_id: adminId,
                 _token: token,
             });
-
 
             const requestOptions = {
                 method: isEditMode ? "PUT" : "POST",
@@ -103,18 +105,18 @@ const PackageForm = ({ onSuccess }) => {
                             );
                             throw new Error(text);
                         });
-                      }
+                    }
                     return response.json();
                 })
                 .then(result => {
-                    const newToken = result._token || result.token; // Use result.token if result._token is not available
+                    const newToken = result._token || result.token;
                     if (newToken) {
-                        localStorage.setItem("_token", newToken); // Replace the old token with the new one
+                        localStorage.setItem("_token", newToken);
                     }
                     setError({});
                     Swal.fire({
                         title: "Success",
-                        text:  isEditMode ? 'Package Edit Successfully' : 'Package added successfully',
+                        text: isEditMode ? 'Package Edited Successfully' : 'Package added successfully',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
@@ -142,17 +144,17 @@ const PackageForm = ({ onSuccess }) => {
                         onSuccess(result);
                     }
 
-                    setTimeout(() => setFormMessage(""), 5000); // Clear message after 5 seconds
-
-                    // Refresh the page after a successful form submission
-                 
-
+                    setTimeout(() => setFormMessage(""), 5000);
                 })
                 .catch(error => {
                     console.log(error);
+                })
+                .finally(() => {
+                    setIsLoading(false); // Stop loading after submission
                 });
         } else {
             setError(validationErrors);
+            setIsLoading(false); // Stop loading if there are validation errors
         }
     };
 
@@ -188,16 +190,14 @@ const PackageForm = ({ onSuccess }) => {
             <button
                 type="submit"
                 className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'
-               
+                disabled={isLoading} // Disable button while loading
             >
-                {isEditMode ? 'Update' : 'Send'}
+                {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Send'}
             </button>
 
-            {formMessage && <p className="mt-4 text-center text-green-600">{formMessage}</p>} {/* Display form message */}
+            {formMessage && <p className="mt-4 text-center text-green-600">{formMessage}</p>}
         </form>
-       
         </>
-         
     );
 };
 

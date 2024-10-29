@@ -5,7 +5,7 @@ import ServicesEditForm from './ServicesEditForm';
 
 export const ClientEditForm = () => {
     const options = useMemo(() => countryList().getData(), []);
-    const { clientData, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
+    const { clientData,loading, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
 
     // Initialize newEmails safely
     let newEmails = [];
@@ -41,7 +41,7 @@ export const ClientEditForm = () => {
 
     return (
         <>
-            <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md' >
+            <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md w-8/12 m-auto py-10 my-7' >
                 <div className="md:flex gap-5">
                     <div className="mb-4 md:w-6/12">
                         <label className="text-gray-500" htmlFor="company_name">Company Name: *</label>
@@ -322,7 +322,7 @@ export const ClientEditForm = () => {
                         type="submit"
                         className="bg-green-200 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
                     >
-                        Submit
+                    {loading ? 'Processing...' : 'Update'}
                     </button>
                 </div>
 
