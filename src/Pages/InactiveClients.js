@@ -98,15 +98,16 @@ const InactiveClients = () => {
     fetchClients();
   }, [fetchClients]);
 
-  const inActive = async (id) => {
+  const inActive = async (name, id) => {
     const confirm = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      title: 'Confirm Action',
+      text: `Are you sure you want to activate client ${name} ?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, block it!',
-      cancelButtonText: 'No, cancel!',
+      confirmButtonText: 'Yes, activate client',
+      cancelButtonText: 'No, keep inactive',
     });
+
 
     if (confirm.isConfirmed) {
       const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -129,12 +130,14 @@ const InactiveClients = () => {
         if (newToken) {
           localStorage.setItem("_token", newToken);
         }
-        Swal.fire('Blocked!', 'Your package has been blocked.', 'success');
+        Swal.fire('Success!', `The client ${name} has been successfully unblocked.`, 'success');
         fetchClients();
       } catch (error) {
         console.error('Fetch error:', error);
-        Swal.fire('Error!', `Could not block the package: ${error.message}`, 'error');
+        Swal.fire('Error', `Failed to unblock the client ${name}: ${error.message}`, 'error');
       }
+
+
     }
   };
 
@@ -237,7 +240,7 @@ const InactiveClients = () => {
                     )}
                   </td>
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(client.id)}>Unblock</button>
+                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(client.name, client.main_id)}>Unblock</button>
                   </td>
                 </tr>
               ))}
