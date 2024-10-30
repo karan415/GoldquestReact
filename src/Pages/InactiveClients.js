@@ -4,31 +4,19 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 const InactiveClients = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemPerPage] = useState(10)
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState([]);
+  const [currentItems, setCurrentItems] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-
-
-
-
-  //   const filteredItems = data.filter(item => {
-  //     return (
-  //         item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //         item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  //      );
-  //  });
-
-
-
-
-
-
   const totalPages = Math.ceil(data.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+  useEffect(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    setCurrentItems(data.slice(indexOfFirstItem, indexOfLastItem));
+  }, [data, currentPage, itemsPerPage]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -41,7 +29,6 @@ const InactiveClients = () => {
   const showNext = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
   };
-
 
   const renderPagination = () => {
     const pageNumbers = [];
@@ -67,28 +54,25 @@ const InactiveClients = () => {
         pageNumbers.push('...');
       }
 
-
       if (!pageNumbers.includes(totalPages)) {
         pageNumbers.push(totalPages);
       }
     }
 
-
-
-    return pageNumbers.map((number, index) => (
+    return pageNumbers.map((number, index) =>
       number === '...' ? (
         <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
       ) : (
         <button
           type="button"
-          key={`page-${number}`} // Unique key for page buttons
+          key={`page-${number}`}
           onClick={() => handlePageChange(number)}
           className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
         >
           {number}
         </button>
       )
-    ));
+    );
   };
 
   const fetchClients = useCallback(async () => {
@@ -154,15 +138,14 @@ const InactiveClients = () => {
     }
   };
 
-
   const handleViewMore = () => {
     setShowAll(prev => !prev);
   };
-  const handleSelectChange = (e) => {
 
-    const selectedValue = e.target.value;
-    setItemPerPage(selectedValue)
-}
+  const handleSelectChange = (e) => {
+    const selectedValue = parseInt(e.target.value, 10);
+    setItemsPerPage(selectedValue);
+  };
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
@@ -170,7 +153,7 @@ const InactiveClients = () => {
         <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
-              <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+              <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
                 <option value="10">10 Rows</option>
                 <option value="20">20 Rows</option>
                 <option value="50">50 Rows</option>
@@ -180,14 +163,13 @@ const InactiveClients = () => {
                 <option value="400">400 Rows</option>
                 <option value="500">500 Rows</option>
               </select>
-              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-
+              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
             </div>
           </form>
         </div>
-        <div className="col md:flex justify-end ">
+        <div className="col md:flex justify-end">
           <form action="">
-            <div className="flex md:items-stretch items-center  gap-3">
+            <div className="flex md:items-stretch items-center gap-3">
               <input
                 type="search"
                 className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
@@ -195,12 +177,12 @@ const InactiveClients = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+              <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
             </div>
           </form>
         </div>
-
       </div>
+
       <div className="overflow-x-auto py-6 px-4">
         {currentItems.length === 0 ? (
           <p>No Inactive Clients Found</p>
@@ -221,28 +203,29 @@ const InactiveClients = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item) => (
-                <tr key={item.id}>
+              {currentItems.map((client, index) => (
+                <tr key={index} className="border">
                   <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                     <input type="checkbox" className='me-2' />
-                    {item.index}
+                    {index + 1 + (currentPage - 1) * itemsPerPage}
+
                   </td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.agreement_date}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard}</td>
+                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{client.client_unique_id}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{client.name}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.single_point_of_contact}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.agreement_date}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.contact_person_name}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.mobile}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.client_standard}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                    {item.services ? (
+                    {client.services ? (
                       <div className='text-start'>
-                        {JSON.parse(item.services).slice(0, showAll ? undefined : 1).map((service, index) => (
+                        {JSON.parse(client.services).slice(0, showAll ? undefined : 1).map((service, index) => (
                           <div key={service.serviceId} className='py-2 text-start'>
                             <div className='text-start pb-2'><strong>Title:</strong> {service.serviceTitle}</div>
                             <div className='text-start pb-2'><strong>Price:</strong> {service.price}</div>
                             <div className='text-start pb-2'><strong>Packages:</strong> {service.packages ? Object.values(service.packages).join(', ') : 'No packages available'}</div>
-                            {index < JSON.parse(item.services).length - 1 && <hr />}
+                            {index < JSON.parse(client.services).length - 1 && <hr />}
                           </div>
                         ))}
                         <button className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' onClick={handleViewMore}>
@@ -253,9 +236,8 @@ const InactiveClients = () => {
                       'No services available'
                     )}
                   </td>
-
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(item.id)}>Unblock</button>
+                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(client.id)}>Unblock</button>
                   </td>
                 </tr>
               ))}
@@ -263,26 +245,13 @@ const InactiveClients = () => {
           </table>
         )}
       </div>
-      <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-        <button
-          type='button'
-          onClick={showPrev}
-          disabled={currentPage === 1}
-          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          aria-label="Previous page"
-        >
+
+      <div className="flex items-center gap-2 mt-4 justify-center">
+        <button type="button" onClick={showPrev} className="bg-gray-300 px-2 py-1 rounded">
           <MdArrowBackIosNew />
         </button>
-        <div className="flex items-center">
-          {renderPagination()}
-        </div>
-        <button
-          type="button"
-          onClick={showNext}
-          disabled={currentPage === totalPages}
-          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          aria-label="Next page"
-        >
+        {renderPagination()}
+        <button type="button" onClick={showNext} className="bg-gray-300 px-2 py-1 rounded">
           <MdArrowForwardIos />
         </button>
       </div>
