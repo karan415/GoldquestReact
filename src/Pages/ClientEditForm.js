@@ -5,8 +5,10 @@ import ServicesEditForm from './ServicesEditForm';
 
 export const ClientEditForm = () => {
     const options = useMemo(() => countryList().getData(), []);
-    const { clientData,loading, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
-
+    const { clientData, loading, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
+    const initialDate = clientData.date_agreement;
+    const formattedDate = initialDate.split("T")[0];
+ 
     // Initialize newEmails safely
     let newEmails = [];
     try {
@@ -29,7 +31,7 @@ export const ClientEditForm = () => {
 
     const handleFileChange = (fileName, e) => {
 
-        const selectedFiles = Array.from(e.target.files); 
+        const selectedFiles = Array.from(e.target.files);
         setFiles((prevFiles) => {
             return {
                 ...prevFiles,
@@ -38,10 +40,13 @@ export const ClientEditForm = () => {
         });
     };
 
+  
+
 
     return (
         <>
-            <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md w-8/12 m-auto py-10 my-7' >
+            <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md w-8/12 m-auto py-10 my-7 border ' >
+                <h3 className='text-center font-bold text-2xl pb-5'>Edit Client</h3>
                 <div className="md:flex gap-5">
                     <div className="mb-4 md:w-6/12">
                         <label className="text-gray-500" htmlFor="company_name">Company Name: *</label>
@@ -61,6 +66,7 @@ export const ClientEditForm = () => {
                             name="client_code"
                             id="client_code"
                             className="border w-full rounded-md p-2 mt-2 outline-none"
+                            disabled
                             value={clientData.client_code}
                             onChange={handleClientChange}
                         />
@@ -189,7 +195,7 @@ export const ClientEditForm = () => {
                             name="date_agreement"
                             id="date_agreement"
                             className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.date_agreement}
+                            value={formattedDate}
                             onChange={handleClientChange}
                         />
                     </div>
@@ -322,7 +328,7 @@ export const ClientEditForm = () => {
                         type="submit"
                         className="bg-green-200 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
                     >
-                    {loading ? 'Processing...' : 'Update'}
+                        {loading ? 'Processing...' : 'Update'}
                     </button>
                 </div>
 

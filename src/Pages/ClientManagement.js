@@ -152,6 +152,12 @@ const ClientManagement = () => {
           } else {
             event.target.setCustomValidity('');
           }
+
+          const newToken = data._token || data.token;
+    
+          if (newToken) {
+              localStorage.setItem("_token", newToken);
+          }
         })
         .catch(error => {
           console.error('Error:', error);
@@ -216,6 +222,12 @@ const ClientManagement = () => {
         throw new Error(errorData.message);
       }
   
+
+      const newToken = response._token || data.token;
+    
+      if (newToken) {
+          localStorage.setItem("_token", newToken);
+      }
       const data = await response.json();
       const customerInsertId = data.data.customerId;
       const password = data.password;

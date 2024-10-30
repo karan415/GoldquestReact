@@ -2,7 +2,6 @@ import React, { useEffect, useState, } from 'react';
 import Swal from 'sweetalert2';
 import Popup from 'reactjs-popup';
 import { useSidebar } from '../Sidebar/SidebarContext';
-import Loader from '../Loader'
 import 'reactjs-popup/dist/index.css';
 import { useEditClient } from './ClientEditContext';
 import BranchEditForm from './BranchEditForm';
@@ -53,12 +52,8 @@ const ClientManagementList = () => {
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  let currentItems = null; // Initialize as null
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Check if filteredItems exists and is not null
-  if (filteredItems) {
-    currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  }
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -120,6 +115,8 @@ const ClientManagementList = () => {
       )
     ));
   };
+
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -424,7 +421,7 @@ const ClientManagementList = () => {
           </thead>
           <tbody id='clientListTableTBody'>
             {
-              currentItems !== null ? (
+             
                 currentItems.length > 0 ? (
                   currentItems.map((item, index) => {
                     const services = JSON.parse(item.services);
@@ -581,11 +578,7 @@ const ClientManagementList = () => {
                     <td colSpan={10} className="text-center">No Data Found</td>
                   </tr>
                 )
-              ) : (
-                <tr>
-                  <td colSpan={10} className="text-center">No Data Found</td>
-                </tr>
-              )
+            
             }
 
 
