@@ -48,6 +48,55 @@ const filteredItems = listData.filter(item => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
   };
 
+  const renderPagination = () => {
+    const pageNumbers = [];
+
+    if (totalPages <= 5) {
+        for (let i = 1; i <= totalPages; i++) {
+            pageNumbers.push(i);
+        }
+    } else {
+        pageNumbers.push(1);
+
+        if (currentPage > 3) {
+            pageNumbers.push('...');
+        }
+
+        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+            if (!pageNumbers.includes(i)) {
+                pageNumbers.push(i);
+            }
+        }
+
+        if (currentPage < totalPages - 2) {
+            pageNumbers.push('...');
+        }
+
+
+        if (!pageNumbers.includes(totalPages)) {
+            pageNumbers.push(totalPages);
+        }
+    }
+
+
+
+    return pageNumbers.map((number, index) => (
+        number === '...' ? (
+            <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+        ) : (
+            <button
+                type="button"
+                key={`page-${number}`} // Unique key for page buttons
+                onClick={() => handlePageChange(number)}
+                className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+            >
+                {number}
+            </button>
+        )
+    ));
+};
+
+
 
   const getEmail = (email) => {
     localStorage.removeItem("branch");
@@ -166,15 +215,7 @@ const filteredItems = listData.filter(item => {
               <MdArrowBackIosNew />
             </button>
             <div className="flex items-center">
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}                        >
-
-                  {index + 1}
-                </button>
-              ))}
+           {  renderPagination()}
             </div>
             <button
               onClick={showNext}

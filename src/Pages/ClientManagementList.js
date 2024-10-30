@@ -450,22 +450,12 @@ const ClientManagementList = () => {
                               {displayedServices.map((service, idx) => (
                                 <div key={idx} className='flex gap-3'>
                                   <>
-                                    {service.price ? (
-                                      <>
-                                        <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
-                                        <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
-                                      </>
-                                    ) : (
-                                      <p className='whitespace-nowrap capitalize text-left text-red-500'>Service not available</p>
-                                    )}
+                                  <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
+                                  <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
 
-                                    {service.packages && Object.keys(service.packages).length > 0 ? (
-                                      <p className='whitespace-nowrap capitalize text-left'>
+                                    <p className='whitespace-nowrap capitalize text-left'>
                                         Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
                                       </p>
-                                    ) : (
-                                      <p className='whitespace-nowrap capitalize text-left text-red-500'>No packages available</p>
-                                    )}
                                   </>
                                 </div>
                               ))}
