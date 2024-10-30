@@ -206,29 +206,29 @@ const InactiveClients = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((client, index) => (
+              {currentItems.map((item, index) => (
                 <tr key={index} className="border">
                   <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                     <input type="checkbox" className='me-2' />
                     {index + 1 + (currentPage - 1) * itemsPerPage}
 
                   </td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{client.client_unique_id}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{client.name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.single_point_of_contact}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.agreement_date}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.contact_person_name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.mobile}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{client.client_standard}</td>
+                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.item_unique_id}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.agreement_date}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.item_standard}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                    {client.services ? (
+                    {item.services ? (
                       <div className='text-start'>
-                        {JSON.parse(client.services).slice(0, showAll ? undefined : 1).map((service, index) => (
+                        {JSON.parse(item.services).slice(0, showAll ? undefined : 1).map((service, index) => (
                           <div key={service.serviceId} className='py-2 text-start'>
                             <div className='text-start pb-2'><strong>Title:</strong> {service.serviceTitle}</div>
                             <div className='text-start pb-2'><strong>Price:</strong> {service.price}</div>
                             <div className='text-start pb-2'><strong>Packages:</strong> {service.packages ? Object.values(service.packages).join(', ') : 'No packages available'}</div>
-                            {index < JSON.parse(client.services).length - 1 && <hr />}
+                            {index < JSON.parse(item.services).length - 1 && <hr />}
                           </div>
                         ))}
                         <button className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' onClick={handleViewMore}>
@@ -240,7 +240,7 @@ const InactiveClients = () => {
                     )}
                   </td>
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(client.name, client.main_id)}>Unblock</button>
+                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(item.name, item.main_id)}>Unblock</button>
                   </td>
                 </tr>
               ))}
