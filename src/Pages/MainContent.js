@@ -20,6 +20,7 @@ import InactiveClients from './InactiveClients'; // Inactive Clients component
 import ExelTrackerStatus from './ExelTrackerStatus'; // Excel Tracker Status component
 import CreateInvoice from './CreateInvoice';
 import { ClientEditForm } from './ClientEditForm';
+import HolidayManagement from './HolidayManagement';
 
 // Mapping tab keys to their respective components
 const tabComponents = {
@@ -42,7 +43,8 @@ const tabComponents = {
   inactive_clients: <InactiveClients />,
   tracker_status: <ExelTrackerStatus />,
   generate_invoice: <CreateInvoice />,
-  edit: <ClientEditForm />
+  edit: <ClientEditForm />,
+  holiday_management: <HolidayManagement />
 };
 
 const MainContent = () => {

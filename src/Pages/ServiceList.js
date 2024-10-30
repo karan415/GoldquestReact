@@ -163,7 +163,7 @@ const ServiceList = () => {
                             <tr key={item.index}>
                                 <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
-                                <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.description}</td>
+                                <td className="py-2 px-4 border-r border-b ">{item.description}</td>
                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
                                     <button
                                         disabled={loading}

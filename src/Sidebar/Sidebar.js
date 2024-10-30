@@ -40,6 +40,7 @@ const tabNames = {
   // invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
   // email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
   // tracker_status: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Tracker Status</>),
+  holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>),
 
 };
 

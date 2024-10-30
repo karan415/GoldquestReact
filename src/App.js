@@ -4,7 +4,6 @@ import './App.css';
 import Render from './Pages/Render';
 import ForgotPassword from './Pages/ForgotPassword';
 import CustomerLogin from './CustomerDashboard/CustomerLogin';
-import PasswordReset from './Pages/PasswordReset';
 import SetNewPassword from './Pages/SetNewPassword';
 import Login from './Dashboard/Login';
 import CustomerDashboard from './CustomerDashboard/CustomerDashboard';
@@ -34,7 +33,7 @@ import 'react-select-search/style.css'
 import UpdatePassword from './Pages/UpdatePassword';
 import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
 import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
-
+import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
 const App = () => {
   return (
     <GenerateReportProvider>
@@ -51,6 +50,7 @@ const App = () => {
                           <PackageProvider>
                             <ServiceProvider>
                             <CustomFunctionsProvider>
+                            <HolidayManagementProvider>
                               <Router basename='/'>
                                 <Routes>
                                   <Route path='/' element={<Admin><Render /></Admin>} />
@@ -71,6 +71,7 @@ const App = () => {
                                   <Route path='/PDF' element={<PdfTableGenerator />} />
                                 </Routes>
                               </Router>
+                              </HolidayManagementProvider>
                               </CustomFunctionsProvider>
                             </ServiceProvider>
                           </PackageProvider>
