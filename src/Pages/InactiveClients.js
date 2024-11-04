@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const InactiveClients = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -9,12 +10,12 @@ const InactiveClients = () => {
   const [currentItems, setCurrentItems] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Calculate total pages based on current filtered data
-  const filteredData = data.filter(item => 
-    item.item_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = data.filter(item =>
+    item.item_unique_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -22,7 +23,7 @@ const InactiveClients = () => {
   useEffect(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    // Set current items based on the filtered data
+    // Set current items based on the filtered filteredData
     setCurrentItems(filteredData.slice(indexOfFirstItem, indexOfLastItem));
   }, [filteredData, currentPage, itemsPerPage]);
 
@@ -84,23 +85,29 @@ const InactiveClients = () => {
   };
 
   const fetchClients = useCallback(async () => {
+    setLoading(true);
+
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
 
     try {
       const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
+
       if (!response.ok) {
         const errorData = await response.json();
         Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
         return;
       }
+
       const result = await response.json();
       setData(result.customers || []);
     } catch (error) {
-      console.error(error);
-      Swal.fire('Error!', 'Failed to fetch inactive clients.', 'error');
+      console.error('Fetch error:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     fetchClients();
@@ -157,7 +164,7 @@ const InactiveClients = () => {
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-    <h2 className='text-center text-2xl font-bold my-5'>InActive Clients</h2>
+      <h2 className='text-center text-2xl font-bold my-5'>InActive Clients</h2>
 
       <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
@@ -194,10 +201,13 @@ const InactiveClients = () => {
       </div>
 
       <div className="overflow-x-auto py-6 px-4">
-        {currentItems.length === 0 ? (
-          <p className='text-center'>No Inactive Clients Found</p>
-        ) : (
-          <table className="min-w-full">
+        {loading ? (
+          <div className='flex justify-center items-center py-6 h-full'>
+            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+          </div>
+        ) : currentItems.length > 0 ? (
+          <table className="min-w-full mb-4">
             <thead>
               <tr className='bg-green-500'>
                 <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
@@ -213,6 +223,7 @@ const InactiveClients = () => {
               </tr>
             </thead>
             <tbody>
+
               {currentItems.map((item, index) => (
                 <tr key={index} className="border">
                   <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
@@ -230,14 +241,14 @@ const InactiveClients = () => {
                     {item.services ? (
                       <div className='text-start'>
                         {JSON.parse(item.services).slice(0, showAll ? undefined : 1).map((service, index) => (
-                          <div key={service.serviceId} className='py-2 text-start'>
-                            <div className='text-start pb-2'><strong>Title:</strong> {service.serviceTitle}</div>
-                            <div className='text-start pb-2'><strong>Price:</strong> {service.price}</div>
-                            <div className='text-start pb-2'><strong>Packages:</strong> {service.packages ? Object.values(service.packages).join(', ') : 'No packages available'}</div>
+                          <div key={service.serviceId} className='py-2 pb-1 text-start flex'>
+                            <div className='text-start pb-0'> {service.serviceTitle}</div>
+                            <div className='text-start pb-0'>{service.price}</div>
+                            <div className='text-start pb-0'> {service.packages ? Object.values(service.packages).join(', ') : 'No packages available'}</div>
                             {index < JSON.parse(item.services).length - 1 && <hr />}
                           </div>
                         ))}
-                        <button className='bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded' onClick={handleViewMore}>
+                        <button className='' onClick={handleViewMore}>
                           {showAll ? 'View Less' : 'View More'}
                         </button>
                       </div>
@@ -249,33 +260,41 @@ const InactiveClients = () => {
                     <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(item.name, item.main_id)}>Unblock</button>
                   </td>
                 </tr>
-              ))}
+              ))
+              }
+
             </tbody>
           </table>
+        ) : (
+          <div className="text-center py-6">
+            <p>No Data Found</p>
+          </div>
         )}
+
+
       </div>
 
       <div className="flex items-center justify-end rounded-md bg-white px-4 py-2">
-      <button
-        onClick={showPrev}
-        disabled={currentPage === 1}
-        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        aria-label="Previous page"
-      >
-        <MdArrowBackIosNew />
-      </button>
-      <div className="flex items-center">
-        {renderPagination()}
+        <button
+          onClick={showPrev}
+          disabled={currentPage === 1}
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          aria-label="Previous page"
+        >
+          <MdArrowBackIosNew />
+        </button>
+        <div className="flex items-center">
+          {renderPagination()}
+        </div>
+        <button
+          onClick={showNext}
+          disabled={currentPage === totalPages}
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          aria-label="Next page"
+        >
+          <MdArrowForwardIos />
+        </button>
       </div>
-      <button
-        onClick={showNext}
-        disabled={currentPage === totalPages}
-        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        aria-label="Next page"
-      >
-        <MdArrowForwardIos />
-      </button>
-    </div>
     </div>
   );
 };

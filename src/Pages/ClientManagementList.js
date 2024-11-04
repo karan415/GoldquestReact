@@ -37,14 +37,14 @@ const ClientManagementList = () => {
 
   const filteredItems = listData.filter(item => {
     return (
-      item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.contact_person_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.address.toLowerCase().includes(searchTerm.toLowerCase())
-
+      item.client_unique_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.single_point_of_contact?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.contact_person_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.address?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemPerPage] = useState(10);
@@ -367,7 +367,40 @@ const ClientManagementList = () => {
 
   return (
     <div className="overflow-x-auto py-6 px-4 border m-3">
-   <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
+      <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
+      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+        <div className="col">
+          <form action="">
+            <div className="flex gap-5 justify-between">
+              <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                <option value="10">10 Rows</option>
+                <option value="20">20 Rows</option>
+                <option value="50">50 Rows</option>
+                <option value="100">100 Rows</option>
+                <option value="200">200 Rows</option>
+                <option value="300">300 Rows</option>
+                <option value="400">400 Rows</option>
+                <option value="500">500 Rows</option>
+              </select>
+              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
+            </div>
+          </form>
+        </div>
+        <div className="col md:flex justify-end">
+          <form action="">
+            <div className="flex md:items-stretch items-center gap-3">
+              <input
+                type="search"
+                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
+            </div>
+          </form>
+        </div>
+      </div>
       {loading ? (
         <div className='flex justify-center items-center py-6 h-full'>
           <PulseLoader
