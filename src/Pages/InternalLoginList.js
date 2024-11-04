@@ -1,24 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import PaginationContext from './PaginationContext';
 
 const InternalLoginList = () => {
-    const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
     const LoginData =useMemo(()=>
         [
             { SL: "01", employeeid: "NA_2423", e_name: "lShruti M ",e_number:'8050410136',email:"support@goldquestglobal.in",role:"	Super_user",status:"Active" },
             { SL: "02", employeeid: "NA_2423", e_name: "lShruti M ",e_number:'8050410136',email:"support@goldquestglobal.in",role:"	Super_user",status:"Active" },
         ],[]
     ) ;
-    const [paginatedData, setPaginatedData] = useState([]);
-
-    useEffect(() => {
-      setTotalResults(LoginData.length);
-  
-      const startIndex = (currentItem - 1) * showPerPage;
-      const endIndex = startIndex + showPerPage;
-      setPaginatedData(LoginData.slice(startIndex, endIndex));
-    }, [currentItem, showPerPage, LoginData, setTotalResults]);
-  
+ 
   return (
     <>
     <div className="overflow-x-auto py-4 px-4">
@@ -36,7 +25,7 @@ const InternalLoginList = () => {
             </tr>
         </thead>
         <tbody>
-            { paginatedData.map((item, index) => (
+            { LoginData.map((item, index) => (
                 <tr key={index}>
                     <td className="py-2 px-4 border-b border-r border-l text-center whitespace-nowrap">{item.SL}</td>
                     <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.employeeid}</td>

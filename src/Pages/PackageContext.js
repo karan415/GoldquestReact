@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext,useCallback } from 'react';
 import Swal from 'sweetalert2';
-import PaginationContext from './PaginationContext';
 import { useApi } from '../ApiContext';
 const PackageContext = createContext();
 
@@ -12,7 +11,6 @@ const [loading, setLoading] = useState(true);
     const [packageList, setPackageList] = useState([]);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [error, setError] = useState(null);
-    const { setTotalResults } = useContext(PaginationContext);
     const API_URL = useApi();
 
     const updatePackageList = (updatedPackages) => {
@@ -62,14 +60,13 @@ const [loading, setLoading] = useState(true);
                     localStorage.setItem("_token", newToken); // Replace the old token with the new one
                 }
                 setData(data.packages || []);
-                setTotalResults(data.totalResults || 0);
             })
             .catch((error) => {
                 console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
-    }, [setTotalResults,API_URL]);
+    }, [API_URL]);
 
     return (
         <PackageContext.Provider

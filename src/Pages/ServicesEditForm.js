@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
-import PaginationContext from './PaginationContext';
-import Pagination from './Pagination';
 import Multiselect from 'multiselect-react-dropdown';
 import { useEditClient } from './ClientEditContext';
 import { useApi } from '../ApiContext';

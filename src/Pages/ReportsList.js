@@ -1,9 +1,6 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import PaginationContext from './PaginationContext';
-import Pagination from './Pagination';
+import React, { useMemo } from 'react';
 
 const ReportsList = () => {
-  const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
 
     const reports =useMemo(()=>
       [
@@ -54,15 +51,7 @@ const ReportsList = () => {
         },
        
       ],[] ) ;
-      const [paginatedData, setPaginatedData] = useState([]);
-
-      useEffect(() => {
-        setTotalResults(reports.length);
-    
-        const startIndex = (currentItem - 1) * showPerPage;
-        const endIndex = startIndex + showPerPage;
-        setPaginatedData(reports.slice(startIndex, endIndex));
-      }, [currentItem, showPerPage, reports, setTotalResults]);
+   
   return (
    <>
    <div className="overflow-x-auto py-4 px-4">
@@ -79,7 +68,7 @@ const ReportsList = () => {
        </tr>
      </thead>
      <tbody>
-       {paginatedData.map((report, index) => (
+       {reports.map((report, index) => (
          <tr key={index}>
          <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{report.num}</td>
            <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.date}</td>
@@ -95,7 +84,6 @@ const ReportsList = () => {
      </tbody>
    </table>
  </div>
- <Pagination/>
    </>
   )
 }

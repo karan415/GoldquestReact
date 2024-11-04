@@ -1,11 +1,9 @@
 import React, { createContext, useState, useContext,useCallback } from 'react';
 import Swal from 'sweetalert2';
-import PaginationContext from './PaginationContext';
 import { useApi } from '../ApiContext';
 const HolidayManagementContext = createContext();
 
 export const HolidayManagementProvider = ({ children }) => {
-    const { setTotalResults } = useContext(PaginationContext);
     const API_URL = useApi();
 
     const [selectedService, setSelectedService] = useState(null);// Store Service list
@@ -67,14 +65,13 @@ export const HolidayManagementProvider = ({ children }) => {
             }));
 
             setData(processedData);
-            setTotalResults(processedData.length);
         } catch (error) {
             console.error('Fetch error:', error);
             setError('Failed to load data');
         } finally {
             setLoading(false);
         }
-    }, [setTotalResults]);
+    }, []);
 
     return (
         <HolidayManagementContext.Provider value={{ selectedService, editService, ServiceList, updateServiceList ,fetchData,loading ,setData,data,error,setError}}>

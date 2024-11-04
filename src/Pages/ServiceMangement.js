@@ -1,6 +1,5 @@
 import React from 'react'
 import ServiceList from './ServiceList'
-import SearchBar from './SearchBar'
 import ServiceForm from './ServiceForm'
 const ServiceMangement = () => {
   return (

@@ -1,7 +1,5 @@
 import React from 'react'
 import InternalLoginList from './InternalLoginList';
-import SearchBar from './SearchBar'
-import Pagination from './Pagination'
 import InternalLoginForm from './InternalLoginForm';
 const InternalLogin = () => {
   return (
@@ -13,9 +11,9 @@ const InternalLogin = () => {
           <InternalLoginForm/>
           </div>
           <div className="md:col-span-3 bg-white shadow-md rounded-md  p-3 ">
-          <SearchBar/>
+       
             <InternalLoginList/>
-            <Pagination/>
+      
           </div>
         </div>
       </div>
