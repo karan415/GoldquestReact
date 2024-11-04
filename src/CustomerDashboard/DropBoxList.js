@@ -4,12 +4,14 @@ import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import ClientForm from './ClientForm';
+import PulseLoader from 'react-spinners/PulseLoader';
+
 const DropBoxList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
     const API_URL = useApi();
     const [currentPage, setCurrentPage] = useState(1);
-    const { handleEditDrop, fetchClientDrop, listData } = useContext(DropBoxContext)
+    const { handleEditDrop, fetchClientDrop, listData,loading } = useContext(DropBoxContext)
     useEffect(() => {
         fetchClientDrop();
     }, [fetchClientDrop]);
@@ -210,101 +212,109 @@ const DropBoxList = () => {
                         </div>
 
                     </div>
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className="bg-green-500">
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Photo</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Application Id	</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Employee Name</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Application Date/time</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Location</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Batch Number</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Sub Client</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Documents</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Services</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Packages</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Spoc Case Name</th>
-                                <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Employee Id</th>
-                                <th className="py-3 text-center text-white px-4 border-b whitespace-nowrap uppercase">Action</th>
-                            </tr>
-                        </thead>
+                    <div className="overflow-x-auto py-6 px-4">
+                        {loading ? (
+                            <div className='flex justify-center items-center py-6 h-full'>
+                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
 
-                        {currentItems.length > 0 ? (
-                            <tbody>
-                                {currentItems.map((report, index) => (
-                                    <tr key={index} id={report.id}>
-                                        <td className="py-3 px-4 border-b border-r text-center border-l whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
-                                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                            {report.photo ? (
-                                                <img
-                                                    src={`https://octopus-app-www87.ondigitalocean.app/${report.photo}`}
-                                                    alt={report.photo}
-                                                    className='h-20 w-20 rounded-full'
-                                                />
-                                            ) : '----'}
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{report.application_id}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.name}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.created_at}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client}</td>
-                                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                            {report.attach_documents ? (
-                                                <img
-                                                    src={`https://octopus-app-www87.ondigitalocean.app/${report.attach_documents}`}
-                                                    alt={report.attach_documents}
-                                                    className='h-20 w-20 rounded-full'
-                                                />
-                                            ) : '----'}
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                                            {report.services || 'no data available'}
-                                            <button className='block text-blue-600'>{report.more}</button>
-                                        </td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.package || 'no data available'}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{report.spoc}</td>
-                                        <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>
-                                        <td className="py-3 px-4 border-b whitespace-nowrap border-r">
-                                            <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
-                                            <button className="bg-red-600 text-white p-3 ms-2 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
-                                        </td>
+                            </div>
+                        ) : currentItems.length > 0 ? (
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="bg-green-500">
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Photo</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Application Id	</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Employee Name</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Application Date/time</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Location</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Batch Number</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Sub Client</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Documents</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Services</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Packages</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Spoc Case Name</th>
+                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Employee Id</th>
+                                        <th className="py-3 text-center text-white px-4 border-b whitespace-nowrap uppercase">Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
+                                </thead>
+
+                                <tbody>
+                                    {currentItems.map((report, index) => (
+                                        <tr key={index} id={report.id}>
+                                            <td className="py-3 px-4 border-b border-r text-center border-l whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
+                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
+                                                {report.photo ? (
+                                                    <img
+                                                        src={`https://octopus-app-www87.ondigitalocean.app/${report.photo}`}
+                                                        alt={report.photo}
+                                                        className='h-20 w-20 rounded-full'
+                                                    />
+                                                ) : '----'}
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{report.application_id}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.name}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.created_at}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client}</td>
+                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
+                                                {report.attach_documents ? (
+                                                    <img
+                                                        src={`https://octopus-app-www87.ondigitalocean.app/${report.attach_documents}`}
+                                                        alt={report.attach_documents}
+                                                        className='h-20 w-20 rounded-full'
+                                                    />
+                                                ) : '----'}
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
+                                                {report.services || 'no data available'}
+                                                <button className='block text-blue-600'>{report.more}</button>
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.package || 'no data available'}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{report.spoc}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>
+                                            <td className="py-3 px-4 border-b whitespace-nowrap border-r">
+                                                <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
+                                                <button className="bg-red-600 text-white p-3 ms-2 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+
+
+                            </table>
                         ) : (
-                            <tr>
-                                <td colSpan={13} className='text-center p-5 w-full whitespace-nowrap'>No Data Available</td>
-                            </tr>
+                            <div className="text-center py-6">
+                                <p>No Data Found</p>
+                            </div>
                         )}
 
 
-                    </table>
-                </div>
-                <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                    <button
-                        type='button'
-                        onClick={showPrev}
-                        disabled={currentPage === 1}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Previous page"
-                    >
-                        <MdArrowBackIosNew />
-                    </button>
-                    <div className="flex items-center">
-                        {renderPagination()}
                     </div>
-                    <button
-                        type="button"
-                        onClick={showNext}
-                        disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Next page"
-                    >
-                        <MdArrowForwardIos />
-                    </button>
+                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                        <button
+                            onClick={showPrev}
+                            disabled={currentPage === 1}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Previous page"
+                        >
+                            <MdArrowBackIosNew />
+                        </button>
+                        <div className="flex items-center">
+                            {renderPagination()}
+                        </div>
+                        <button
+                            onClick={showNext}
+                            disabled={currentPage === totalPages}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Next page"
+                        >
+                            <MdArrowForwardIos />
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
         </>

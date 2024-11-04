@@ -46,6 +46,7 @@ const Chart = () => {
             completed: "#36A2EB",
             ready: "#4BC0C0",
             not_ready: "#FF6384",
+            insuff: "#FF6384",
         };
         return colors[status] || "#000";
     }
@@ -84,7 +85,7 @@ const Chart = () => {
                     aria-label="Loading Spinner"
                     data-testid="loader"
                 />
-            ) : tableData.length > 0 ? ( // Check if there is data in options
+            ) : dataPoints.length > 0 ? ( // Check if there is data in dataPoints array
                 <CanvasJSChart options={options} />
             ) : (
                 <p className="text-center py-5 text-lg">No data available</p> // Display message if no data

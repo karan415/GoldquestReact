@@ -11,6 +11,7 @@ export const DropBoxProvider = ({ children }) => {
     const [listData, setListData] = useState([]);
     const [selectedDropBox, setSelectedDropBox] = useState(null);
     const [branchId, setBranchId] = useState(null);
+    const [loading, setLoading] = useState(null);
     const [customerId, setCustomerId] = useState(null);
     const [token, setToken] = useState(null);
 
@@ -80,6 +81,7 @@ export const DropBoxProvider = ({ children }) => {
 
 
     const fetchClient = useCallback(async () => {
+
         if (!branchId || !token) return;
 
         try {
@@ -106,31 +108,38 @@ export const DropBoxProvider = ({ children }) => {
     }, [API_URL, branchId, token]);
 
     const fetchClientDrop = useCallback(async () => {
-        if (!branchId || !token) return;
-
+        setLoading(true);
+        if (!branchId || !token) {
+            setLoading(false); // Ensure loading is set to false if branchId or token is missing
+            return;
+        }
+    
         try {
             const response = await fetch(`${API_URL}/branch/client-application/list?branch_id=${branchId}&_token=${token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
                 return;
             }
-
+    
             const data = await response.json();
-            const newToken = data?._token || data?.token;
+            const { clientApplications = [], _token: newToken } = data; // Destructure and provide default value
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-            setListData(data.clientApplications || []);
+            setListData(clientApplications);
         } catch (error) {
+            console.error('Fetch error:', error); // Log the error for debugging purposes
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+        } finally {
+            setLoading(false);
         }
     }, [API_URL, branchId, token]);
-
+    
 
 useEffect(()=>{
     fetchServices();
@@ -152,7 +161,7 @@ useEffect(()=>{
             selectedDropBox,
             setSelectedDropBox,
             setUniquePackages,
-            fetchServices
+            fetchServices,loading
         }}>
             {children}
         </DropBoxContext.Provider>
