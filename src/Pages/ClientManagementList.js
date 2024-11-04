@@ -421,154 +421,154 @@ const ClientManagementList = () => {
           </thead>
           <tbody id='clientListTableTBody'>
             {
-             
-                currentItems.length > 0 ? (
-                  currentItems.map((item, index) => {
-                    const services = JSON.parse(item.services);
-                    const showAllServices = showAllServicesState[item.main_id] || false;
 
-                    const result = Array.isArray(services) && services.length > 0 ? services : [];
-                    const displayedServices = showAllServices ? result : result.slice(0, 1);
+              currentItems.length > 0 ? (
+                currentItems.map((item, index) => {
+                  const services = JSON.parse(item.services);
+                  const showAllServices = showAllServicesState[item.main_id] || false;
 
-                    return (
-                      <tr key={item.main_id}>
-                        <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
-                          <input type="checkbox" className="me-2" />
-                          {index + 1 + (currentPage - 1) * itemsPerPage}
-                        </td>
-                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
-                        <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name}</td>
-                        <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact}</td>
-                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
-                          {new Date(item.agreement_date).toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
-                        <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
-                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
-                          {result.length > 0 ? (
-                            <div>
-                              {displayedServices.map((service, idx) => (
-                                <div key={idx} className='flex gap-3'>
-                                  <>
+                  const result = Array.isArray(services) && services.length > 0 ? services : [];
+                  const displayedServices = showAllServices ? result : result.slice(0, 1);
+
+                  return (
+                    <tr key={item.main_id}>
+                      <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
+                        <input type="checkbox" className="me-2" />
+                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id}</td>
+                      <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name}</td>
+                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact}</td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
+                        {new Date(item.agreement_date).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name}</td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile}</td>
+                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
+                        {result.length > 0 ? (
+                          <div>
+                            {displayedServices.map((service, idx) => (
+                              <div key={idx} className='flex gap-3'>
+                                <>
                                   <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle}</p>
                                   <p className='whitespace-nowrap capitalize text-left'>Price: {service.price}</p>
 
-                                    <p className='whitespace-nowrap capitalize text-left'>
-                                        Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
-                                      </p>
-                                  </>
-                                </div>
-                              ))}
+                                  <p className='whitespace-nowrap capitalize text-left'>
+                                    Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
+                                  </p>
+                                </>
+                              </div>
+                            ))}
 
-                              {result.length > 1 && !showAllServices && (
-                                <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
-                                  Show more
-                                </button>
-                              )}
-                              {showAllServices && (
-                                <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
-                                  Show less
-                                </button>
-                              )}
-                            </div>
-                          ) : (
-                            <p className='whitespace-nowrap capitalize'>No services available.</p>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
-                        <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
-                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+                            {result.length > 1 && !showAllServices && (
+                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
+                                Show more
+                              </button>
+                            )}
+                            {showAllServices && (
+                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
+                                Show less
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <p className='whitespace-nowrap capitalize'>No services available.</p>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address}</td>
+                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+                        <button
+                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                          onClick={() => handleEditForm([{
+                            customer_id: item.id || '',
+                            emails: item.emails || '',
+                            clientData: item.clientData || '',
+                            client_standard: item.client_standard || '',
+                            additional_login: item.additional_login || '',
+                            tat: item.tat_days || '',
+                            state: item.state || '',
+                            gstin: item.gst_number || '',
+                            address: item.address || '',
+                            username: item.username || '',
+                            state_code: item.state_code || '',
+                            agr_upload: item.agr_upload || '',
+                            client_spoc: item.single_point_of_contact || '',
+                            client_code: item.client_unique_id || '',
+                            company_name: item.name || '',
+                            mobile_number: item.mobile || '',
+                            contact_person: item.contact_person_name || '',
+                            date_agreement: item.agreement_date || '',
+                            agreement_period: item.agreement_duration || '',
+                            name_of_escalation: item.escalation_point_contact || '',
+                            custom_template: item.custom_template || '',
+                            custom_logo: item.custom_logo || '',
+                            custom_address: item.custom_address || '',
+                            services: item.services || [],
+                          }])}>Edit</button>
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        {item.branch_count > 1 && (
                           <button
                             className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                            onClick={() => handleEditForm([{
-                              customer_id: item.id || '',
-                              emails: item.emails || '',
-                              clientData: item.clientData || '',
-                              client_standard: item.client_standard || '',
-                              additional_login: item.additional_login || '',
-                              tat: item.tat_days || '',
-                              state: item.state || '',
-                              gstin: item.gst_number || '',
-                              address: item.address || '',
-                              username: item.username || '',
-                              state_code: item.state_code || '',
-                              agr_upload: item.agr_upload || '',
-                              client_spoc: item.single_point_of_contact || '',
-                              client_code: item.client_unique_id || '',
-                              company_name: item.name || '',
-                              mobile_number: item.mobile || '',
-                              contact_person: item.contact_person_name || '',
-                              date_agreement: item.agreement_date || '',
-                              agreement_period: item.agreement_duration || '',
-                              name_of_escalation: item.escalation_point_contact || '',
-                              custom_template: item.custom_template || '',
-                              custom_logo: item.custom_logo || '',
-                              custom_address: item.custom_address || '',
-                              services: item.services || [],
-                            }])}>Edit</button>
-                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
-                          {item.branch_count > 1 && (
-                            <button
-                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                              onClick={() => toggleAccordion(item.main_id)}
-                            >
-                              View Branches
-                            </button>
-                          )}
+                            onClick={() => toggleAccordion(item.main_id)}
+                          >
+                            View Branches
+                          </button>
+                        )}
 
-                          {openAccordionId === item.main_id && (
-                            branches.map((branch) => {
-                              const isActive = branch.status === 0;
-                              const isBlocked = branch.status === 1;
+                        {openAccordionId === item.main_id && (
+                          branches.map((branch) => {
+                            const isActive = branch.status === 0;
+                            const isBlocked = branch.status === 1;
 
-                              return (
-                                <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
-                                  <div
-                                    className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
-                                    id={branch.id}
-                                    onClick={() => toggleAccordions(branch.id)}
-                                  >
-                                    <h3 className="branch_name">{branch.name}</h3>
-                                  </div>
-                                  {isOpen === branch.id && (
-                                    <div className="accordion_body">
-                                      <ul className='flex gap-2 items-center'>
-                                        <li>{branch.email}</li>
-                                        <Popup
-                                          trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
-                                          position="right center"
-                                          onOpen={() => setBranchEditData({
-                                            id: branch.id,
-                                            name: branch.name,
-                                            email: branch.email
-                                          })}
-                                        >
-                                          <BranchEditForm />
-                                        </Popup>
-                                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
-                                        {isActive && (
-                                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
-                                        )}
-                                        {isBlocked && (
-                                          <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2" onClick={() => unblockBranch(branch.id)}>Unblock</button>
-                                        )}
-                                      </ul>
-                                    </div>
-                                  )}
+                            return (
+                              <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
+                                <div
+                                  className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
+                                  id={branch.id}
+                                  onClick={() => toggleAccordions(branch.id)}
+                                >
+                                  <h3 className="branch_name">{branch.name}</h3>
                                 </div>
-                              );
-                            })
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={10} className="text-center">No Data Found</td>
-                  </tr>
-                )
-            
+                                {isOpen === branch.id && (
+                                  <div className="accordion_body">
+                                    <ul className='flex gap-2 items-center'>
+                                      <li>{branch.email}</li>
+                                      <Popup
+                                        trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
+                                        position="right center"
+                                        onOpen={() => setBranchEditData({
+                                          id: branch.id,
+                                          name: branch.name,
+                                          email: branch.email
+                                        })}
+                                      >
+                                        <BranchEditForm />
+                                      </Popup>
+                                      <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
+                                      {isActive && (
+                                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
+                                      )}
+                                      {isBlocked && (
+                                        <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2" onClick={() => unblockBranch(branch.id)}>Unblock</button>
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={10} className="text-center">No Data Found</td>
+                </tr>
+              )
+
             }
 
 
