@@ -353,8 +353,8 @@ const ExelTrackerStatus = () => {
             }
 
             const data = await response.json();
-             const newToken = data._token || data.token;
-                            if (newToken) localStorage.setItem("_token", newToken);
+            const newToken = data._token || data.token;
+            if (newToken) localStorage.setItem("_token", newToken);
             const applications = data.application;
             const serviceIdsArr = applications?.services?.split(',') || [];
             const serviceTitleValue = [];
@@ -477,7 +477,7 @@ const ExelTrackerStatus = () => {
             setCmtAllData(cmtData);
             console.log('downloading...........')
             generatePDF();
-            
+
 
         } catch (error) {
             console.error('Fetch error:', error);

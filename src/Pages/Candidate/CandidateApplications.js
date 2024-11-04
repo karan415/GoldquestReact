@@ -3,29 +3,14 @@ import { BranchContextExel } from '../BranchContextExel';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useGenerateReport } from '../GenerateReportContext';
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const CandidateApplications = () => {
     const [files, setFiles] = useState([]);
     const renderedServices = new Set();
 
     const [allInputDetails, setAllInputDetails] = useState([]);
-    const [disabledFields, setDisabledFields] = useState({
-        month_year: false,
-        initiation_date: false,
-        organization_name: false,
-        verification_purpose: false,
-        employee_id: false,
-        client_code: false,
-        applicant_name: false,
-        contact_number: false,
-        contact_number2: false,
-        father_name: false,
-        dob: false,
-        gender: false,
-        marital_status: false,
-        nationality: false,
-        insuff: false,
-    });
+ 
     const [, setAnnexureData] = useState({});
     const { service_id, branch_id, application_id } = useContext(BranchContextExel);
     const [annexure, setAnnexure] = useState({});
@@ -53,13 +38,15 @@ const CandidateApplications = () => {
         const servicesArray = service_id ? service_id.split(',').map(Number) : [];
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-        setLoading(true);
+
+        setLoading(true); // Start loading before initiating fetches
         setError(null);
 
         const allInputDetails = [];
         let inNo = [];
         Promise.all(
             servicesArray.map(serviceId => {
+                // Fetch service data for each serviceId
                 return fetch(
                     `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
@@ -72,7 +59,6 @@ const CandidateApplications = () => {
                     .then(response => {
                         if (!response.ok) {
                             return response.text().then(text => {
-                                const errorData = JSON.parse(text);
                                 throw new Error(text);
                             });
                         }
@@ -156,7 +142,6 @@ const CandidateApplications = () => {
                                                 });
                                             } else if (typeof annexureResult.annexureData === 'object' && annexureResult.annexureData !== null) {
 
-
                                                 parsedJson.rows.forEach(row => {
                                                     row.inputs.forEach(input => {
                                                         const value = annexureResult.annexureData[input.name] || null;
@@ -181,7 +166,6 @@ const CandidateApplications = () => {
                                                         });
                                                     });
                                                 });
-                                                console.error("Expected annexureData to be either an array or an object, but got:", annexureResult.annexureData);
                                             }
 
                                             // Check if the service already exists before adding
@@ -199,7 +183,6 @@ const CandidateApplications = () => {
                                 });
                         }
 
-
                         return { serviceId, parsedJson };
                     });
             })
@@ -215,8 +198,6 @@ const CandidateApplications = () => {
                     }, {});
                     return acc;
                 }, {});
-
-
 
                 const newAnnexureData = results.reduce((acc, { serviceId, parsedJson }) => {
                     const title = parsedJson.db_table;
@@ -234,11 +215,12 @@ const CandidateApplications = () => {
 
                 setAnnexure(mainAnnexureData);
                 setAnnexureData(newAnnexureData);
-            }).catch(error => {
+            })
+            .catch(error => {
                 console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
-            .finally(() => setLoading(false));
+            .finally(() => setLoading(false)); // Stop loading once all fetches complete
     }, [service_id, application_id]);
 
 
@@ -282,7 +264,6 @@ const CandidateApplications = () => {
                 if (result && result.annexureData) {
                     return result.annexureData;
                 } else {
-                    console.error("No annexure data found in the response.");
                     return false;
                 }
             })
@@ -298,7 +279,6 @@ const CandidateApplications = () => {
         setError(null);
 
         if (!admin_id || !storedToken || !application_id || !branch_id) {
-            console.error("Missing required parameters");
             setError('Missing required parameters');
             setLoading(false);
             return;
@@ -338,7 +318,6 @@ const CandidateApplications = () => {
                 const customerInfo = data.customerInfo;
 
                 setCustomerInfo(customerInfo);
-                console.log('customerInfo', customerInfo)
                 Object.entries(customerInfo).forEach(([key, value]) => {
                     const input = document.querySelector(`input[name="${key}"]`);
                     if (input) {
@@ -347,7 +326,6 @@ const CandidateApplications = () => {
                 });
 
                 const cmtData = data.CMTData;
-                console.log('cmtData', cmtData);
                 setCmtData(cmtData)
 
                 Object.entries(cmtData).forEach(([key, value]) => {
@@ -357,23 +335,8 @@ const CandidateApplications = () => {
                     }
                 });
 
-                setDisabledFields({
-                    month_year: !!applications.month_year,
-                    initiation_date: !!applications.initiation_date,
-                    organization_name: !!applications.organization_name,
-                    verification_purpose: !!applications.verification_purpose,
-                    client_code: !!applications.client_code,
-                    applicant_name: !!applications.name,
-                    employee_id: !!applications.employee_id,
-                    contact_number: !!applications.contact_number,
-                    contact_number2: !!applications.contact_number2,
-                    father_name: !!applications.father_name,
-                    dob: !!applications.dob,
-                    gender: !!applications.gender,
-                    marital_status: !!applications.marital_status,
-                    nationality: !!applications.nationality,
-                    insuff: !!applications.insuff,
-                });
+                const newToken = data._token || data.token;
+                if (newToken) localStorage.setItem("_token", newToken);
             })
             .catch(error => {
                 console.error('Fetch error:', error);
@@ -510,14 +473,23 @@ const CandidateApplications = () => {
                 return response.json(); // Parse response as JSON directly
             })
             .then(result => {
-                const { email_status, _token: newToken } = result;
+                const { email_status } = result;
 
                 Swal.fire('Success!', 'Application updated successfully.', 'success');
+                const newToken = result._token || result.token;
+
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
 
+                console.log('newToken',newToken)
+
                 uploadCustomerLogo(email_status);
+                const newToken2 = result._token || result.token;
+
+                if (newToken) {
+                    localStorage.setItem("_token", newToken2);
+                }
 
                 // Reset form data
                 setFormData({
@@ -616,8 +588,8 @@ const CandidateApplications = () => {
                             name="month_year"
                             id="month_year"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
-                            value={formData.updated_json.month_year || ""}
-                            disabled={disabledFields.month_year}
+                            value={formData.updated_json.month_year || applications.month_year || ""}
+                            disabled={applications.month_year}
                             onChange={handleInputChange}
                         />
                         {errors.month_year && <span className="text-red-500">{errors.month_year}</span>}
@@ -631,7 +603,7 @@ const CandidateApplications = () => {
                             id="initiation_date"
                             className="w-full border p-2 outline-none rounded-md mt-2"
                             value={formData.updated_json.initiation_date || ""}
-                            disabled={disabledFields.initiation_date}
+                            disabled={applications.initiation_date}
                             onChange={handleInputChange}
                         />
                         {errors.initiation_date && <span className="text-red-500">{errors.initiation_date}</span>}
@@ -646,8 +618,8 @@ const CandidateApplications = () => {
                             name="organization_name"
                             id="organization_name"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
-                            value={formData.updated_json.organization_name || ""}
-                            disabled={disabledFields.organization_name}
+                            value={formData.updated_json.organization_name || applications.name || ""}
+                            disabled={applications.name}
                             onChange={handleInputChange}
                         />
                         {errors.organization_name && <span className="text-red-500">{errors.organization_name}</span>}
@@ -661,7 +633,7 @@ const CandidateApplications = () => {
                             id="verification_purpose"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.verification_purpose || ""}
-                            disabled={disabledFields.verification_purpose}
+                            disabled={applications.verification_purpose}
                             onChange={handleInputChange}
                         />
                         {errors.verification_purpose && <span className="text-red-500">{errors.verification_purpose}</span>}
@@ -676,8 +648,8 @@ const CandidateApplications = () => {
                             name="employee_id"
                             id="employee_id"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
-                            value={formData.updated_json.employee_id || ""}
-                            disabled={disabledFields.employee_id}
+                            value={formData.updated_json.employee_id || applications.employee_id || ""}
+                            disabled={applications.employee_id}
                             onChange={handleInputChange}
                         />
                         {errors.employee_id && <span className="text-red-500">{errors.employee_id}</span>}
@@ -691,7 +663,7 @@ const CandidateApplications = () => {
                             id="client_code"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.client_code || ""}
-                            disabled={disabledFields.client_code}
+                            disabled={applications.client_code}
                             onChange={handleInputChange}
                         />
                         {errors.client_code && <span className="text-red-500">{errors.client_code}</span>}
@@ -707,7 +679,7 @@ const CandidateApplications = () => {
                             id="applicant_name"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.applicant_name || ""}
-                            disabled={disabledFields.applicant_name}
+                            disabled={applications.applicant_name}
                             onChange={handleInputChange}
                         />
                         {errors.applicant_name && <span className="text-red-500">{errors.applicant_name}</span>}
@@ -721,7 +693,7 @@ const CandidateApplications = () => {
                             id="contact_number"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.contact_number || ""}
-                            disabled={disabledFields.contact_number}
+                            disabled={applications.contact_number}
                             onChange={handleInputChange}
                         />
                         {errors.contact_number && <span className="text-red-500">{errors.contact_number}</span>}
@@ -737,7 +709,7 @@ const CandidateApplications = () => {
                             id="contact_number2"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.contact_number2 || ""}
-                            disabled={disabledFields.contact_number2}
+                            disabled={applications.contact_number2}
                             onChange={handleInputChange}
                         />
                         {errors.contact_number2 && <span className="text-red-500">{errors.contact_number2}</span>}
@@ -751,7 +723,7 @@ const CandidateApplications = () => {
                             id="father_name"
                             className="border w-full rounded-md p-2 mt-2 capitalize"
                             value={formData.updated_json.father_name || ""}
-                            disabled={disabledFields.father_name}
+                            disabled={applications.father_name}
                             onChange={handleInputChange}
                         />
                         {errors.father_name && <span className="text-red-500">{errors.father_name}</span>}
@@ -766,7 +738,7 @@ const CandidateApplications = () => {
                             id="gender"
                             className="border w-full rounded-md p-2 mt-2"
                             value={formData.updated_json.gender || ""}
-                            disabled={disabledFields.gender}
+                            disabled={applications.gender}
                             onChange={handleInputChange}
                         >
                             <option value="">Select Gender</option>
@@ -783,7 +755,7 @@ const CandidateApplications = () => {
                             id="marital_status"
                             className="border w-full rounded-md p-2 mt-2"
                             value={formData.updated_json.marital_status || ""}
-                            disabled={disabledFields.marital_status}
+                            disabled={applications.marital_status}
                             onChange={handleInputChange}
                         >
                             <option value="">Select Marital Status</option>
@@ -939,116 +911,136 @@ const CandidateApplications = () => {
 
 
             <div className="services-table border p-2 mt-5 mb-5">
-                <h3 className='text-center text-2xl py-4'>Selected Services</h3>
-                {serviceHeadings.map((item, index) => (
-                    <div key={index} className="service-box border p-3 rounded-md w-full mb-3 flex items-center bg-slate-100">
-                        <span className='w-5/12'>{item.heading}</span>
-                        <select
-                            className="border p-2 w-7/12"
-                            value={selectedStatuses[index]}
-                            onChange={(e) => handleSelectChange(index, e.target.value)}
-                            required
-                        >
-                            <option disabled value="">--Select status--</option>
-                            <option value="nil">NIL</option>
-                            <option value="initiated">INITIATED</option>
-                            <option value="hold">HOLD</option>
-                            <option value="closure advice">CLOSURE ADVICE</option>
-                            <option value="wip">WIP</option>
-                            <option value="insuff">INSUFF</option>
-                            <option value="completed">COMPLETED</option>
-                            <option value="completed_green">COMPLETED GREEN</option>
-                            <option value="completed_orange">COMPLETED ORANGE</option>
-                            <option value="completed_red">COMPLETED RED</option>
-                            <option value="completed_yellow">COMPLETED YELLOW</option>
-                            <option value="completed_pink">COMPLETED PINK</option>
-                            <option value="stopcheck">STOPCHECK</option>
-                            <option value="active employment">ACTIVE EMPLOYMENT</option>
-                            <option value="not doable">NOT DOABLE</option>
-                            <option value="candidate denied">CANDIDATE DENIED</option>
-                        </select>
+                <h3 className="text-center text-2xl py-4">Selected Services</h3>
+
+                {loading ? (
+                    <div className="flex justify-center items-center py-6">
+                        <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
                     </div>
-                ))}
+                ) : serviceHeadings.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500">
+                        <p>No ServiceHeadings Available</p>
+                    </div>
+                ) : (
+                    serviceHeadings.map((item, index) => (
+                        <div key={index} className="service-box border p-3 rounded-md w-full mb-3 flex items-center bg-slate-100">
+                            <span className="w-5/12">{item.heading}</span>
+                            <select
+                                className="border p-2 w-7/12"
+                                value={selectedStatuses[index]}
+                                onChange={(e) => handleSelectChange(index, e.target.value)}
+                                required
+                            >
+                                <option disabled value="">--Select status--</option>
+                                <option value="nil">NIL</option>
+                                <option value="initiated">INITIATED</option>
+                                <option value="hold">HOLD</option>
+                                <option value="closure advice">CLOSURE ADVICE</option>
+                                <option value="wip">WIP</option>
+                                <option value="insuff">INSUFF</option>
+                                <option value="completed">COMPLETED</option>
+                                <option value="completed_green">COMPLETED GREEN</option>
+                                <option value="completed_orange">COMPLETED ORANGE</option>
+                                <option value="completed_red">COMPLETED RED</option>
+                                <option value="completed_yellow">COMPLETED YELLOW</option>
+                                <option value="completed_pink">COMPLETED PINK</option>
+                                <option value="stopcheck">STOPCHECK</option>
+                                <option value="active employment">ACTIVE EMPLOYMENT</option>
+                                <option value="not doable">NOT DOABLE</option>
+                                <option value="candidate denied">CANDIDATE DENIED</option>
+                            </select>
+                        </div>
+                    ))
+                )}
             </div>
 
-            {Array.from(new Set(Object.keys(annexure))).map(serviceId => {
-                const form = annexure[serviceId];
-                const idNumber = Number(serviceId);
 
-                if (renderedServices.has(idNumber)) {
-                    return null;
-                }
+            {loading ? (
+                <div className="flex justify-center items-center py-6">
+                    <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+                </div>
+            ) : Object.keys(annexure).length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                    <p>No Services Available</p>
+                </div>
+            ) : (
+                Array.from(new Set(Object.keys(annexure))).map((serviceId) => {
+                    const form = annexure[serviceId];
+                    const idNumber = Number(serviceId);
 
-                renderedServices.add(idNumber);
+                    if (renderedServices.has(idNumber)) {
+                        return null;
+                    }
 
-                const filteredInputs = Array.isArray(allInputDetails)
-                    ? allInputDetails.filter(({ serviceId: id }) => id === idNumber)
-                    : [];
+                    renderedServices.add(idNumber);
 
-                const selectedDb = filteredInputs[0].db_table
+                    const filteredInputs = Array.isArray(allInputDetails)
+                        ? allInputDetails.filter(({ serviceId: id }) => id === idNumber)
+                        : [];
 
+                    const selectedDb = filteredInputs[0]?.db_table;
+                    const heading = serviceHeadings.find((service) => service.service_id === idNumber)?.heading || 'No heading';
 
-                const heading = serviceHeadings.find(service => service.service_id === idNumber)?.heading || 'No heading';
+                    return (
+                        <div key={serviceId} className="form-section mb-6">
+                            <h4 className="text-2xl text-center mt-4 font-bold my-5">
+                                {heading}
+                            </h4>
 
-                return (
-                    <div key={serviceId} className="form-section mb-6">
-                        <h4 className="text-2xl text-center mt-4 font-bold my-5">
-                            {heading}
-                        </h4>
-
-                        <div className="form-group bg-slate-100 p-3 rounded-md mb-4">
-                            {filteredInputs.length > 0 ? (
-                                filteredInputs.flatMap(({ inputDetails }) => inputDetails).map((input) => (
-
-                                    <div key={input.name} className="mb-4">
-                                        <label className='capitalize' htmlFor={input.name}>
-                                            {input.label}
-                                        </label>
-                                        {input.type === 'text' || input.type === 'datepicker' ? (
-                                            <input
-                                                type="text"
-                                                name={input.name}
-                                                id={input.name}
-                                                value={input.value}
-                                                className="border w-full rounded-md p-2 mt-2"
-                                                onChange={handleChange}
-                                            />
-                                        ) : input.type === 'dropdown' ? (
-                                            <select
-                                                name={input.name}
-                                                id={input.name}
-                                                className="border w-full rounded-md p-2 mt-2"
-                                                onChange={handleChange}
-                                                value={input.value}
-                                            >
-                                                <option value="">Select...</option>
-                                                {input.options.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.showText}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ) : input.type === 'file' ? (
-                                            <input
-                                                type="file"
-                                                name={input.name}
-                                                id={input.name}
-                                                className="border w-full rounded-md p-2 mt-2"
-                                                onChange={(e) => handleFileChange(input.name, e, selectedDb)}
-                                            />
-                                        ) : null}
-                                        {errors[input.name] && (
-                                            <span className="text-red-600">{errors[input.name]}</span>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No inputs available for this service.</p>
-                            )}
+                            <div className="form-group bg-slate-100 p-3 rounded-md mb-4">
+                                {filteredInputs.length > 0 ? (
+                                    filteredInputs.flatMap(({ inputDetails }) => inputDetails).map((input) => (
+                                        <div key={input.name} className="mb-4">
+                                            <label className="capitalize" htmlFor={input.name}>
+                                                {input.label}
+                                            </label>
+                                            {input.type === 'text' || input.type === 'datepicker' ? (
+                                                <input
+                                                    type="text"
+                                                    name={input.name}
+                                                    id={input.name}
+                                                    value={input.value}
+                                                    className="border w-full rounded-md p-2 mt-2"
+                                                    onChange={handleChange}
+                                                />
+                                            ) : input.type === 'dropdown' ? (
+                                                <select
+                                                    name={input.name}
+                                                    id={input.name}
+                                                    className="border w-full rounded-md p-2 mt-2"
+                                                    onChange={handleChange}
+                                                    value={input.value}
+                                                >
+                                                    <option value="">Select...</option>
+                                                    {input.options.map((option) => (
+                                                        <option key={option.value} value={option.value}>
+                                                            {option.showText}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : input.type === 'file' ? (
+                                                <input
+                                                    type="file"
+                                                    name={input.name}
+                                                    id={input.name}
+                                                    className="border w-full rounded-md p-2 mt-2"
+                                                    onChange={(e) => handleFileChange(input.name, e, selectedDb)}
+                                                />
+                                            ) : null}
+                                            {errors[input.name] && (
+                                                <span className="text-red-600">{errors[input.name]}</span>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No inputs available for this service.</p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                );
-            })}
+                    );
+                })
+            )}
+
 
 
 
@@ -1358,8 +1350,8 @@ const CandidateApplications = () => {
 
                 </div>
             </div>
-            <button type='submit' className='w-full bg-green-500 p-3 rounded-md m-3 text-white' disabled={loading}>             
-               {loading ? 'Processing...' :  'Generate Report' }
+            <button type='submit' className='w-full bg-green-500 p-3 rounded-md m-3 text-white' disabled={loading}>
+                {loading ? 'Processing...' : 'Generate Report'}
             </button>
         </form>
     );
