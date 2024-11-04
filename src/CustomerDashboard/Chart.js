@@ -1,57 +1,92 @@
-import {React,useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import CanvasJSReact from '@canvasjs/react-charts';
 import { useDashboard } from './DashboardContext';
+import PulseLoader from 'react-spinners/PulseLoader';
 
 const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 const Chart = () => {
+    const { fetchDashboard, tableData } = useDashboard();
+    const [loading, setLoading] = useState(true);
+    const color = "#36A2EB"; // Define loader color
 
-    const {fetchDashboard, tableData, setTableData ,loading,setLoading} = useDashboard();
-    useEffect(()=>{
-        fetchDashboard();
-    },[fetchDashboard]);
+    const override = {
+        display: "block",
+        margin: "0 auto",
+    };
+
+    useEffect(() => {
+        const loadData = async () => {
+            setLoading(true);
+            await fetchDashboard();
+            setLoading(false);
+        };
+
+        loadData();
+    }, [fetchDashboard]);
+
+    const totalApplications = tableData.totalApplicationCount;
+    const dataPoints = [];
+
+    for (const [key, value] of Object.entries(tableData.clientApplications)) {
+        const percentage = totalApplications > 0
+            ? ((value.applicationCount / totalApplications) * 100).toFixed(2)
+            : 0;
+        dataPoints.push({
+            y: Number(percentage),
+            label: key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '),
+            color: getColorByStatus(key),
+            count: value.applicationCount
+        });
+    }
+
+    function getColorByStatus(status) {
+        const colors = {
+            wip: "#FFCE56",
+            completed: "#36A2EB",
+            ready: "#4BC0C0",
+            not_ready: "#FF6384"
+        };
+        return colors[status] || "#000";
+    }
 
     const options = {
         theme: "light",
         animationEnabled: true,
-        exportFileName: "New Year Resolutions",
+        exportFileName: "Client Applications Status",
         exportEnabled: true,
         title: {
-            text: "New Year Resolutions",
+            text: "Client Applications Status",
             fontSize: 24,
-            padding: {
-                top: 10,
-                bottom: 10
-            }
+            padding: { top: 10, bottom: 10 }
         },
         data: [{
             type: "pie",
             showInLegend: true,
             legendText: "{label}",
-            toolTipContent: "{label}: <strong>{y}%</strong>",
-            indexLabel: "{y}%",
+            toolTipContent: "{label}: <strong>{y}%</strong> (Count: {count})",
+            indexLabel: "{y}% (Count: {count})",
             indexLabelPlacement: "inside",
             indexLabelFontColor: "#fff",
             indexLabelFontSize: 16,
-            dataPoints: [
-                { y: 10, label: "Insufficiancy", color: "#FF6384" },
-                { y: 12, label: "Completed", color: "#36A2EB" },
-                { y: 18, label: "WIP", color: "#FFCE56" },
-                { y: 10, label: "Completed Green", color: "#4BC0C0" },
-                { y: 5, label: "Completed Red", color: "#FF6384" },
-                { y: 7, label: "Completed Yellow", color: "#FFCE56" },
-                { y: 7, label: "Completed Pink", color: "#FF9F40" },
-                { y: 7, label: "Completed Orange", color: "#FFCD56" },
-                { y: 7, label: "Reports In Tat", color: "#4BC0C0" },
-                { y: 7, label: "Reports Out of Tat", color: "#9966FF" },
-                { y: 12, label: "Case Received", color: "#FF6384" },
-            ]
+            dataPoints: dataPoints
         }]
     };
 
     return (
-        <div style={{ padding: '20px' }}>
-            <CanvasJSChart options={options} />
+        <div className="chart-container flex items-center justify-center">
+            {loading ? (
+                <PulseLoader
+                    color={color}
+                    loading={loading}
+                    cssOverride={override}
+                    size={15}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                />
+            ) : (
+                <CanvasJSChart options={options} />
+            )}
         </div>
     );
 };

@@ -2,8 +2,15 @@ import React, { useContext, useCallback, useEffect, useState } from 'react';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from 'react-spinners/PulseLoader';
 
 const ReportCaseTable = () => {
+    const color = "#36A2EB"; // Loader color
+
+    const override = {
+        display: "block",
+        margin: "0 auto",
+    };
     const [serviceHeadings, setServiceHeadings] = useState({});
     const [dbHeadingsStatus, setDBHeadingsStatus] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
@@ -186,7 +193,7 @@ const ReportCaseTable = () => {
                 </div>
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <div className="loader">Loading...</div>
+                        <PulseLoader color={color} loading={loading} cssOverride={override} size={15} aria-label="Loading Spinner" data-testid="loader" />
                     </div>
                 ) : (
                     <table className="min-w-full">

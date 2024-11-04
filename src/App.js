@@ -51,31 +51,31 @@ const App = () => {
                         <DropBoxProvider>
                           <PackageProvider>
                             <ServiceProvider>
-                            <CustomFunctionsProvider>
-                            <HolidayManagementProvider>
-                            <DashboardProvider>
-                              <Router basename='/'>
-                                <Routes>
-                                  <Route path='/' element={<Admin><Render /></Admin>} />
-                                  <Route path='/customer-login' element={<CustomerLogin />} />
-                                  <Route path='/admin-login' element={<Login />} />
-                                  <Route path='/forgotpassword' element={<ForgotPassword />} />
-                                  <Route path='/customer-forgotpassword' element={<CustomerForgotPassword />} />
-                                  <Route path='/reset-password' element={<SetNewPassword />} />
-                                  <Route path='/customer-reset-password' element={<CustomerResetPassword />} />
-                                  <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
-                                  <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
-                                  <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
-                                  <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
-                                  <Route path='/addclient' element={<Admin><AddClient /></Admin>} />
-                                  <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
-                                  <Route path='/background_form' element={<BackgroundForm />} />
-                                  <Route path='/digital_form' element={<DigitalAddressVerification />} />
-                                  <Route path='/PDF' element={<PdfTableGenerator />} />
-                                </Routes>
-                              </Router>
-                              </DashboardProvider>
-                              </HolidayManagementProvider>
+                              <CustomFunctionsProvider>
+                                <HolidayManagementProvider>
+                                  <DashboardProvider>
+                                    <Router basename='/'>
+                                      <Routes>
+                                        <Route path='/' element={<Admin><Render /></Admin>} />
+                                        <Route path='/customer-login' element={<CustomerLogin />} />
+                                        <Route path='/admin-login' element={<Login />} />
+                                        <Route path='/forgotpassword' element={<ForgotPassword />} />
+                                        <Route path='/customer-forgotpassword' element={<CustomerForgotPassword />} />
+                                        <Route path='/reset-password' element={<SetNewPassword />} />
+                                        <Route path='/customer-reset-password' element={<CustomerResetPassword />} />
+                                        <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
+                                        <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
+                                        <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
+                                        <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
+                                        <Route path='/addclient' element={<Admin><AddClient /></Admin>} />
+                                        <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
+                                        <Route path='/background_form' element={<BackgroundForm />} />
+                                        <Route path='/digital_form' element={<DigitalAddressVerification />} />
+                                        <Route path='/PDF' element={<PdfTableGenerator />} />
+                                      </Routes>
+                                    </Router>
+                                  </DashboardProvider>
+                                </HolidayManagementProvider>
                               </CustomFunctionsProvider>
                             </ServiceProvider>
                           </PackageProvider>
