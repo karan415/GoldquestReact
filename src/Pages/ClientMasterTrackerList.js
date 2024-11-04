@@ -3,6 +3,8 @@ import { useApi } from '../ApiContext'
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+
 const ClientMasterTrackerList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { setBranchId } = useContext(BranchContextExel);
@@ -45,7 +47,7 @@ const ClientMasterTrackerList = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                       
+
                         throw new Error(text);
                     });
                 }
@@ -80,7 +82,7 @@ const ClientMasterTrackerList = () => {
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
-                       
+
                         throw new Error(text);
                     });
                 }
@@ -137,18 +139,15 @@ const ClientMasterTrackerList = () => {
 
     const filteredItems = data.filter(item => {
         return (
-            item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+            item.client_unique_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name.toLowerCase?.().includes(searchTerm.toLowerCase())
 
         );
     });
 
-
-
     // const filteredOptions = filteredItems.filter(item =>
     //     item.status.toLowerCase().includes(selectedStatus.toLowerCase())
     // );
-
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -292,20 +291,25 @@ const ClientMasterTrackerList = () => {
                 </div>
 
                 <div className="overflow-x-auto py-6 px-4">
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className='bg-green-500'>
-                                <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
-                                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
-                                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
-                                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Spoc</th>
-                                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Active Cases</th>
-                                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.length > 0 ? (
-                                currentItems.map((item, index) => (
+                    {loading ? (
+                        <div className='flex justify-center items-center py-6 h-full'>
+                            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+                        </div>
+                    ) : currentItems.length > 0 ? (
+                        <table className="min-w-full mb-4">
+                            <thead>
+                                <tr className='bg-green-500'>
+                                    <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
+                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
+                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
+                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Spoc</th>
+                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Active Cases</th>
+                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentItems.map((item, index) => (
                                     <tr key={index}>
                                         <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                                             <input type="checkbox" className='me-2' />
@@ -335,36 +339,36 @@ const ClientMasterTrackerList = () => {
                                             )}
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr className='text-center whitespace-nowrap'>No Data Available</tr>
-                            )}
-                        </tbody>
-                        {loading && <div className="text-center">Loading...</div>}
-                    </table>
-                </div>
-                <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                    <button
-                        type='button'
-                        onClick={showPrev}
-                        disabled={currentPage === 1}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Previous page"
-                    >
-                        <MdArrowBackIosNew />
-                    </button>
-                    <div className="flex items-center">
-                        {renderPagination()}
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="text-center py-6">
+                            <p>No Data Found</p>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                        <button
+                            onClick={showPrev}
+                            disabled={currentPage === 1}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Previous page"
+                        >
+                            <MdArrowBackIosNew />
+                        </button>
+                        <div className="flex items-center">
+                            {renderPagination()}
+                        </div>
+                        <button
+                            onClick={showNext}
+                            disabled={currentPage === totalPages}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Next page"
+                        >
+                            <MdArrowForwardIos />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={showNext}
-                        disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Next page"
-                    >
-                        <MdArrowForwardIos />
-                    </button>
                 </div>
             </div>
         </>
