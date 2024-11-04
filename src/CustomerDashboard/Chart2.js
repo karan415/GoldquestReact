@@ -38,7 +38,7 @@ const Chart2 = () => {
     };
 
     return (
-        <div>
+        <div className='chart-container flex items-center justify-center  h-full rounded-md'>
             <CanvasJSChart options={options}/>
         </div>
     );

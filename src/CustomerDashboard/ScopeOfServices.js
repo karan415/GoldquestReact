@@ -1,5 +1,6 @@
 import { React, useCallback, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext';
+import PulseLoader from 'react-spinners/PulseLoader';
 
 const ScopeOfServices = () => {
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
@@ -10,6 +11,12 @@ const ScopeOfServices = () => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const color = "#36A2EB"; // Define loader color
+
+    const override = {
+        display: "block",
+        margin: "0 auto",
+    };
 
     const fetchServicePackage = useCallback(async () => {
         if (!customer_id || !branch?.id || !branch_token) {
@@ -17,24 +24,24 @@ const ScopeOfServices = () => {
             setLoading(false);
             return;
         }
-    
+
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch.id}&branch_token=${branch_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-    
+
             const data = await response.json();
-    
+
             if (data.customers && data.customers.length > 0) {
                 const servicesData = data.customers[0].services;
-    
-    
+
+
                 try {
                     const parsedServices = JSON.parse(servicesData);
                     setServices(parsedServices || []);
@@ -51,7 +58,7 @@ const ScopeOfServices = () => {
             setLoading(false);
         }
     }, [API_URL, customer_id, branch?.id, branch_token]);
-    
+
     useEffect(() => {
         fetchServicePackage();
     }, [fetchServicePackage]);
@@ -59,8 +66,20 @@ const ScopeOfServices = () => {
     return (
         <>
             <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Scope Of Services</h2>
+
             <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3">
-                {loading && <p className="text-center">Loading...</p>}
+                {loading && (
+                    <div className="flex justify-center items-center py-5">
+                        <PulseLoader
+                            color={color}
+                            loading={loading}
+                            cssOverride={override}
+                            size={15}
+                            aria-label="Loading Spinner"
+                            data-testid="loader"
+                        />
+                    </div>
+                )}
                 {error && <p className="text-center text-red-500">{error}</p>}
                 {!loading && !error && (
                     <table className="min-w-full">
@@ -72,7 +91,6 @@ const ScopeOfServices = () => {
                                 <th className="py-3 px-4 border-b text-center text-white uppercase whitespace-nowrap">SERVICE PACKAGE</th>
                             </tr>
                         </thead>
-                     
                         {services.length > 0 ? (
                             <tbody>
                                 {services.map((item, index) => (
@@ -91,10 +109,6 @@ const ScopeOfServices = () => {
                                 </tr>
                             </tbody>
                         )}
-                        
-                        
-                           
-                       
                     </table>
                 )}
             </div>

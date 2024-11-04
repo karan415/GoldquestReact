@@ -161,7 +161,6 @@ const ClientManagement = () => {
         })
         .catch(error => {
           console.error('Error:', error);
-          Swal.fire('Error!', `An error occurred: ${error.message}`, 'error');
         });
     }
     
@@ -223,12 +222,13 @@ const ClientManagement = () => {
       }
   
 
-      const newToken = response._token || data.token;
+    
+      const data = await response.json();
+      const newToken = data._token || data.token;
     
       if (newToken) {
           localStorage.setItem("_token", newToken);
       }
-      const data = await response.json();
       const customerInsertId = data.data.customerId;
       const password = data.password;
       setInsertId(customerInsertId);
@@ -278,7 +278,7 @@ const resetFormFields = () => {
   setBranchForms([{ branch_name: "", branch_email: "" }]);
   setEmails([""]);
   setErrors({});
-  setClientData([""]);
+  setClientData({});
 };
 
 

@@ -45,7 +45,7 @@ const Chart = () => {
             wip: "#FFCE56",
             completed: "#36A2EB",
             ready: "#4BC0C0",
-            not_ready: "#FF6384"
+            not_ready: "#FF6384",
         };
         return colors[status] || "#000";
     }
@@ -57,15 +57,15 @@ const Chart = () => {
         exportEnabled: true,
         title: {
             text: "Client Applications Status",
-            fontSize: 24,
+            fontSize: 20,
             padding: { top: 10, bottom: 10 }
         },
         data: [{
             type: "pie",
             showInLegend: true,
             legendText: "{label}",
-            toolTipContent: "{label}: <strong>{y}%</strong> (Count: {count})",
-            indexLabel: "{y}% (Count: {count})",
+            toolTipContent: "{label}: <strong>{y}%</strong> (Count: {count}) ",
+            indexLabel: "{y}% ({count})",
             indexLabelPlacement: "inside",
             indexLabelFontColor: "#fff",
             indexLabelFontSize: 16,
@@ -74,7 +74,7 @@ const Chart = () => {
     };
 
     return (
-        <div className="chart-container flex items-center justify-center">
+        <div className="chart-container flex items-center justify-center border h-full rounded-md">
             {loading ? (
                 <PulseLoader
                     color={color}
@@ -84,8 +84,10 @@ const Chart = () => {
                     aria-label="Loading Spinner"
                     data-testid="loader"
                 />
-            ) : (
+            ) : tableData.length > 0 ? ( // Check if there is data in options
                 <CanvasJSChart options={options} />
+            ) : (
+                <p className="text-center py-5 text-lg">No data available</p> // Display message if no data
             )}
         </div>
     );
