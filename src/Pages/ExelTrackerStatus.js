@@ -7,6 +7,8 @@ import 'jspdf-autotable';
 import { BranchContextExel } from './BranchContextExel';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+
 const ExelTrackerStatus = () => {
     const { handleTabChange } = useSidebar();
     const [itemsPerPage, setItemPerPage] = useState(10)
@@ -89,8 +91,9 @@ const ExelTrackerStatus = () => {
             Promise.all(
                 servicesArray.map(serviceId => {
                     const url = `${API_URL}/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`;
-
+                    setLoading(true)
                     return fetch(url, requestOptions)
+
                         .then(response => {
                             if (!response.ok) throw new Error('Network response was not ok');
                             return response.json();
@@ -114,7 +117,7 @@ const ExelTrackerStatus = () => {
                             if (newToken) localStorage.setItem("_token", newToken);
                             return db_table;
                         })
-                        .catch(error => console.error('Fetch error:', error));
+                        .catch(error => console.error('Fetch error:', error)).finally(() => setLoading(false))
                 })
             ).then(parsedDbs => {
                 const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
@@ -133,11 +136,14 @@ const ExelTrackerStatus = () => {
 
                             // Add unique status
                             uniqueStatuses.add(status);
+                            const newToken = result._token || result.token;
+                            if (newToken) localStorage.setItem("_token", newToken);
 
                             return {
                                 db_table: db_name,
                                 status
                             };
+
                         })
                         .catch(error => console.error("Fetch error: ", error));
                 });
@@ -184,6 +190,8 @@ const ExelTrackerStatus = () => {
             })
             .then((result) => {
                 setOptions(result.filterOptions);
+                const newToken = result._token || result.token;
+                if (newToken) localStorage.setItem("_token", newToken);
             })
             .catch((error) => console.error('Error fetching options:', error));
     }, []);
@@ -214,7 +222,9 @@ const ExelTrackerStatus = () => {
                 }
                 return response.json(); // Assuming the response is JSON
             }).then((data) => {
-                setParentCustomer(data.customers)
+                setParentCustomer(data.customers);
+                const newToken = data._token || data.token;
+                if (newToken) localStorage.setItem("_token", newToken);
             })
 
             .catch((error) => console.error('Error fetching customers:', error));
@@ -232,9 +242,9 @@ const ExelTrackerStatus = () => {
 
     const filteredItems = applicationData.filter(item => {
         return (
-            item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+            item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+            item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     });
 
@@ -343,6 +353,8 @@ const ExelTrackerStatus = () => {
             }
 
             const data = await response.json();
+             const newToken = data._token || data.token;
+                            if (newToken) localStorage.setItem("_token", newToken);
             const applications = data.application;
             const serviceIdsArr = applications?.services?.split(',') || [];
             const serviceTitleValue = [];
@@ -463,6 +475,9 @@ const ExelTrackerStatus = () => {
             setPdfData(applications);
             const cmtData = data.CMTData;
             setCmtAllData(cmtData);
+            console.log('downloading...........')
+            generatePDF();
+            
 
         } catch (error) {
             console.error('Fetch error:', error);
@@ -472,17 +487,17 @@ const ExelTrackerStatus = () => {
         }
     };
 
-    useEffect(() => {
-        if (allInputDetails) {
-            console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
+    // useEffect(() => {
+    //     if (allInputDetails) {
+    //         console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
 
-            // Assuming you want to ensure all necessary data is ready before generating PDF.
-            // Add your conditions here if needed to check for other required data.
+    //         // Assuming you want to ensure all necessary data is ready before generating PDF.
+    //         // Add your conditions here if needed to check for other required data.
 
-            console.log(`All data is set. Now generating PDF.`);
-            generatePDF();
-        }
-    }, [allInputDetails]);
+    //         console.log(`All data is set. Now generating PDF.`);
+    //         generatePDF();
+    //     }
+    // }, [allInputDetails]);
 
 
 
@@ -500,7 +515,7 @@ const ExelTrackerStatus = () => {
 
     const generatePDF = () => {
         const doc = new jsPDF();
-        
+
         const pageWidth = doc.internal.pageSize.getWidth();
         // const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -610,8 +625,8 @@ const ExelTrackerStatus = () => {
             { title: 'reviewed', color: 'yellow' },
         ];
 
-   
-        const colWidth = (pageWidth - 40) / dataRow.length; 
+
+        const colWidth = (pageWidth - 40) / dataRow.length;
         const startingY = doc.lastAutoTable.finalY + 10; // Increase this value to avoid overlap
         const height = 10; // Row height
 
@@ -647,10 +662,9 @@ const ExelTrackerStatus = () => {
         doc.text("End of summary report", 105, doc.lastAutoTable.finalY + 30, { align: 'center' });
 
         // Check if any data is present
-        const allDataPresent = serviceTitleValue.length > 0 || allInputDetails.length > 0 || pdfData || cmtAllData;
+        const allDataPresent = serviceTitleValue?.length > 0 || allInputDetails?.length > 0 || pdfData || cmtAllData;
 
         if (allDataPresent) {
-            console.log(`At least one piece of data is set. Now checking if all data is ready for PDF generation.`);
             if (serviceTitleValue.length > 0 && allInputDetails.length > 0 && pdfData && cmtAllData) {
                 // Further details
                 allInputDetails.forEach(async (annexure, index) => {
@@ -762,8 +776,7 @@ const ExelTrackerStatus = () => {
 
 
             <div className='p-3 my-14'>
-                {loading && <div className="loader">Loading...</div>}
-                {error && <div>Error: {error}</div>}
+
                 <div className='flex gap-4 justify-end p-4'>
                     <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
                         {options.map((item, index) => {
@@ -814,141 +827,162 @@ const ExelTrackerStatus = () => {
                         </div>
 
                     </div>
-                    {currentItems.length > 0 ? (
-                        <>
-                            <table className="min-w-full">
-                                <thead>
-                                    <tr className='bg-green-500'>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">SL NO</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Application ID</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Initiation Date</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Download Status</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Overall Status</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Report Data</th>
-                                        <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {currentItems.map((item, index) => (
-                                        <React.Fragment key={item.id}>
-                                            <tr>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    <input type="checkbox" className='me-2' />     {index + 1 + (currentPage - 1) * itemsPerPage}
-                                                </td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.application_id}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.created_at}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
-                                                </td>
-                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    <button
-                                                        className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white"
-                                                        onClick={() => handleToggle(index, item.services, item.id)}
-                                                    >
-                                                        {expandedRows === index ? "Hide Details" : "View More"}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            {expandedRows === index && (
-                                                <tr>
-                                                    <td colSpan="9" className="p-0">
-                                                        <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
-                                                            <table className="min-w-full max-w-full bg-gray-100">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
-                                                                        <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Subclient</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
-                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
-                                                                        <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                            <table className="min-w-full max-w-full bg-gray-100">
-                                                                <thead>
-                                                                    <tr className='flex w-full'>
-                                                                        <th className='bg-green-500 text-white text-left border-l p-2 w-1/2'>Service</th>
-                                                                        <th className='bg-green-500 text-white text-left p-2 w-1/2'>Status</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody className="h-48 overflow-y-auto block">
 
-                                                                    {serviceHeadings[item.id]?.map((serviceValue, index) => {
+                </div>
+
+                <div className="overflow-x-auto py-6 px-4">
+                    {loading ? (
+                        <div className='flex justify-center items-center py-6 h-full'>
+                            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+                        </div>
+                    ) : currentItems.length > 0 ? (
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className='bg-green-500'>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">SL NO</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Application ID</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">NAME OF THE APPLICANT</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">APPLICANT EMPLOYEE ID</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Initiation Date</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Download Status</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Overall Status</th>
+                                    <th className="py-3 px-4 border-b text-left border-r-2 uppercase whitespace-nowrap text-white">Report Data</th>
+                                    <th className="py-3 px-4 border-b text-center uppercase whitespace-nowrap text-white">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentItems.map((item, index) => (
+                                    <React.Fragment key={item.id}>
+                                        <tr>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                <input type="checkbox" className='me-2' />     {index + 1 + (currentPage - 1) * itemsPerPage}
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.application_id}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.name}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.employee_id}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"><button className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white" onClick={() => handleDownloadPdf(item.id, item.branch_id)}>Download Report</button></td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{item.overall_status}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                <button className="bg-green-400 rounded-md text-white p-3" onClick={() => generateReport(item.id, item.services)}>Generate Report</button>
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                <button
+                                                    className="bg-green-500 hover:bg-green-400 rounded-md p-3 text-white"
+                                                    onClick={() => handleToggle(index, item.services, item.id)}
+                                                >
+                                                    {expandedRows === index ? "Hide Details" : "View More"}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {expandedRows === index && (
+                                            <tr>
+                                                <td colSpan="9" className="p-0">
+                                                    <div className='collapseMenu overflow-auto w-full max-w-[1500px]'>
+                                                        <table className="min-w-full max-w-full bg-gray-100">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">TAT Day</th>
+                                                                    <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Batch No</th>
+                                                                    <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap">Subclient</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.tatday}</td>
+                                                                    <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.batch_number}</td>
+                                                                    <td className="py-3 px-4 border-b whitespace-nowrap capitalize">{item.sub_client}</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                        <table className="min-w-full max-w-full bg-gray-100">
+                                                            <thead>
+                                                                <tr className='flex w-full'>
+                                                                    <th className='bg-green-500 text-white text-left border-l p-2 w-1/2'>Service</th>
+                                                                    <th className='bg-green-500 text-white text-left p-2 w-1/2'>Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="h-48 overflow-y-auto block">
+                                                                {loading ? (
+                                                                    <tr className="flex w-full justify-center items-center h-full">
+                                                                        <td colSpan={2} className="py-4">
+                                                                            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+                                                                        </td>
+                                                                    </tr>
+                                                                ) : serviceHeadings[item.id]?.length > 0 ? (
+                                                                    serviceHeadings[item.id].map((serviceValue, index) => {
                                                                         const formattedService = serviceValue?.replace(/\//g, '').toUpperCase() || 'NIL';
 
                                                                         // Check if dbHeadingsStatus has a corresponding index for the service
                                                                         const statusValue = dbHeadingsStatus[item.id]?.[index]?.status || 'NIL';
                                                                         const formattedStatus = statusValue
-                                                                            .replace(/_/g, ' ') // Replace underscores with spaces
-                                                                            .toLowerCase() // Convert the whole string to lowercase
-                                                                            .split(' ') // Split the string into words
+                                                                            .replace(/_/g, ' ')
+                                                                            .toLowerCase()
+                                                                            .split(' ')
                                                                             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                                                                             .join(' ');
 
                                                                         return (
                                                                             <tr key={index} className="flex w-full">
-
                                                                                 <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
                                                                                     {formattedService}
                                                                                 </td>
-
                                                                                 <td className="py-3 px-4 border-b whitespace-nowrap capitalize w-1/2">
                                                                                     {formattedStatus}
                                                                                 </td>
                                                                             </tr>
                                                                         );
-                                                                    })}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </tbody>
-                            </table>
+                                                                    })
+                                                                ) : (
+                                                                    <tr className="flex w-full justify-center items-center h-full">
+                                                                        <td colSpan={2} className="py-4 text-center">
+                                                                            No Data Available
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
 
-                        </>) : (
 
-                        <><p className='text-center p-5'>No Data Available</p></>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="text-center py-6">
+                            <p>No Data Found</p>
+                        </div>
                     )}
-                </div>
-                <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                    <button
-                        type='button'
-                        onClick={showPrev}
-                        disabled={currentPage === 1}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Previous page"
-                    >
-                        <MdArrowBackIosNew />
-                    </button>
-                    <div className="flex items-center">
-                        {renderPagination()}
-                    </div>
-                    <button
-                        type="button"
-                        onClick={showNext}
-                        disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        aria-label="Next page"
-                    >
-                        <MdArrowForwardIos />
-                    </button>
-                </div>
 
+                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                        <button
+                            onClick={showPrev}
+                            disabled={currentPage === 1}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Previous page"
+                        >
+                            <MdArrowBackIosNew />
+                        </button>
+                        <div className="flex items-center">
+                            {renderPagination()}
+                        </div>
+                        <button
+                            onClick={showNext}
+                            disabled={currentPage === totalPages}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Next page"
+                        >
+                            <MdArrowForwardIos />
+                        </button>
+                    </div>
+                </div>
             </div>
         </>
 
