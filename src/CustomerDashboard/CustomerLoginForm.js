@@ -28,7 +28,7 @@ const CustomerLoginForm = () => {
 
     const getPassword = async (email) => {
         const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
-        const storedToken = localStorage.getItem('_token');
+        const storedToken = localStorage.getItem('branch_token');
 
         try {
             const response = await fetch(`${API_URL}/customer/fetch-branch-password?branch_email=${email}&admin_id=${admin_id}&_token=${storedToken}`);

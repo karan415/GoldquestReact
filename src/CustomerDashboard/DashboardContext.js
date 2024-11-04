@@ -14,14 +14,14 @@ const DashboardProvider = ({ children }) => {
         try {
             const branch = JSON.parse(localStorage.getItem("branch"));
             const branch_id = branch?.id;
-            const _token = localStorage.getItem("branch_token");
+            const branch_token = localStorage.getItem("branch_token");
 
-            if (!branch_id || !_token) {
+            if (!branch_id || !branch_token) {
                 console.error("Branch ID or token is missing.");
                 return;
             }
 
-            const url = `${API_URL}/branch?branch_id=${branch_id}&_token=${_token}`;
+            const url = `${API_URL}/branch?branch_id=${branch_id}&_token=${branch_token}`;
             setLoading(true);
 
             const response = await fetch(url, { method: "GET", redirect: "follow" });

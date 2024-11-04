@@ -131,9 +131,9 @@ const CandidateList = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
-                const token = localStorage.getItem("branch_token");
+                const branch_token = localStorage.getItem("branch_token");
 
-                if (!branchId || !token) {
+                if (!branchId || !branch_token) {
                     console.error("Branch ID or token is missing.");
                     return;
                 }
@@ -145,7 +145,7 @@ const CandidateList = () => {
                     },
                 };
 
-                fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${token}`, requestOptions)
+                fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
                     .then(response => {
                         if (!response.ok) {
                             return response.text().then(text => {
@@ -157,7 +157,7 @@ const CandidateList = () => {
                         return response.json();
                     })
                     .then(result => {
-                        const newToken = result._token || result.token;
+                        const newToken = result.branch_token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
