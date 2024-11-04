@@ -10,13 +10,21 @@ const InactiveClients = () => {
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  // Calculate total pages based on current filtered data
+  const filteredData = data.filter(item => 
+    item.item_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.single_point_of_contact.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   useEffect(() => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    setCurrentItems(data.slice(indexOfFirstItem, indexOfLastItem));
-  }, [data, currentPage, itemsPerPage]);
+    // Set current items based on the filtered data
+    setCurrentItems(filteredData.slice(indexOfFirstItem, indexOfLastItem));
+  }, [filteredData, currentPage, itemsPerPage]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -108,7 +116,6 @@ const InactiveClients = () => {
       cancelButtonText: 'No, keep inactive',
     });
 
-
     if (confirm.isConfirmed) {
       const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
       const storedToken = localStorage.getItem("_token");
@@ -136,8 +143,6 @@ const InactiveClients = () => {
         console.error('Fetch error:', error);
         Swal.fire('Error', `Failed to unblock the client ${name}: ${error.message}`, 'error');
       }
-
-
     }
   };
 
@@ -152,6 +157,8 @@ const InactiveClients = () => {
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
+    <h2 className='text-center text-2xl font-bold my-5'>InActive Clients</h2>
+
       <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
           <form action="">
@@ -188,7 +195,7 @@ const InactiveClients = () => {
 
       <div className="overflow-x-auto py-6 px-4">
         {currentItems.length === 0 ? (
-          <p>No Inactive Clients Found</p>
+          <p className='text-center'>No Inactive Clients Found</p>
         ) : (
           <table className="min-w-full">
             <thead>
@@ -211,7 +218,6 @@ const InactiveClients = () => {
                   <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
                     <input type="checkbox" className='me-2' />
                     {index + 1 + (currentPage - 1) * itemsPerPage}
-
                   </td>
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.item_unique_id}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
@@ -249,15 +255,27 @@ const InactiveClients = () => {
         )}
       </div>
 
-      <div className="flex items-center gap-2 mt-4 justify-center">
-        <button type="button" onClick={showPrev} className="bg-gray-300 px-2 py-1 rounded">
-          <MdArrowBackIosNew />
-        </button>
+      <div className="flex items-center justify-end rounded-md bg-white px-4 py-2">
+      <button
+        onClick={showPrev}
+        disabled={currentPage === 1}
+        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        aria-label="Previous page"
+      >
+        <MdArrowBackIosNew />
+      </button>
+      <div className="flex items-center">
         {renderPagination()}
-        <button type="button" onClick={showNext} className="bg-gray-300 px-2 py-1 rounded">
-          <MdArrowForwardIos />
-        </button>
       </div>
+      <button
+        onClick={showNext}
+        disabled={currentPage === totalPages}
+        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        aria-label="Next page"
+      >
+        <MdArrowForwardIos />
+      </button>
+    </div>
     </div>
   );
 };
