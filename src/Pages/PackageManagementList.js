@@ -8,7 +8,7 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 const PackageManagementList = () => {
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
-    const { editPackage, data, loading, fetchData, error, setError } = usePackage();
+    const { editPackage, data, loading, fetchData, setError } = usePackage();
     const [searchTerm, setSearchTerm] = useState('');
     const API_URL = useApi();
     useEffect(() => {

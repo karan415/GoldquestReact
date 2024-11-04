@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
@@ -8,7 +8,7 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const HolidayManagement = () => {
     const API_URL = useApi();
-    const { editService, fetchData, loading, data, error } = useHoliday();
+    const { editService, fetchData, loading, data } = useHoliday();
     const [itemsPerPage, setItemPerPage] = useState(10);
     useEffect(() => {
         fetchData();

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Multiselect from 'multiselect-react-dropdown';
 import { useEditClient } from './ClientEditContext';
 import { useApi } from '../ApiContext';
@@ -10,7 +10,7 @@ const ServiceEditForm = () => {
     const [paginated, setPaginated] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedPackages, setSelectedPackages] = useState({});
+    const [selectedPackages, ] = useState({});
     const [priceData, setPriceData] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -125,7 +125,7 @@ const ServiceEditForm = () => {
         
 
 
-    }, [serviceData, clientData.services, priceData,]);
+    }, [serviceData, clientData.services,clientData, priceData,]);
    
 
 
@@ -182,16 +182,16 @@ const ServiceEditForm = () => {
             setClientData(prev => ({ ...prev, services: filteredServices }));
 
 
-            const serviceDetails = paginated.find(service => service.service_id === serviceId);
-            if (serviceDetails) {
-                const details = `
-                    Service ID: ${serviceDetails.service_id}
-                    Service Name: ${serviceDetails.service_title}
-                    Price: ${priceData[serviceId]?.price || serviceDetails.price || ''}
-                    Packages: ${JSON.stringify(isCurrentlySelected ? selectedPackages[serviceId] || {} : {})}
-                `;
+            // const serviceDetails = paginated.find(service => service.service_id === serviceId);
+            // if (serviceDetails) {
+            //     const details = `
+            //         Service ID: ${serviceDetails.service_id}
+            //         Service Name: ${serviceDetails.service_title}
+            //         Price: ${priceData[serviceId]?.price || serviceDetails.price || ''}
+            //         Packages: ${JSON.stringify(isCurrentlySelected ? selectedPackages[serviceId] || {} : {})}
+            //     `;
 
-            }
+            // }
 
             return updatedSelection;
         });

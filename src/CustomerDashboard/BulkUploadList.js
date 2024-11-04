@@ -1,9 +1,6 @@
-import React, { useContext, useEffect, useState, useMemo } from 'react';
-import PaginationContext from '../Pages/PaginationContext';
-import Pagination from '../Pages/Pagination';
+import React, { useMemo } from 'react';
 
 const BulkUploadList = () => {
-  const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
 
   const bulkList = useMemo(() => [
     {
@@ -16,15 +13,7 @@ const BulkUploadList = () => {
     },
   ], []);
 
-  const [paginated, setPaginated] = useState([]);
-
-  useEffect(() => {
-    setTotalResults(bulkList.length);
-    const startIndex = (currentItem - 1) * showPerPage;
-    const endIndex = startIndex + showPerPage;
-    setPaginated(bulkList.slice(startIndex, endIndex));
-  }, [currentItem, setTotalResults, bulkList, showPerPage]);
-
+ 
   return (
     <>
       <div className="overflow-x-auto">
@@ -41,8 +30,8 @@ const BulkUploadList = () => {
             </tr>
           </thead>
           <tbody>
-            {paginated.length > 0 ? (
-              paginated.map((item, index) => (
+            {bulkList.length > 0 ? (
+              bulkList.map((item, index) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{item.sl}</td>
                   <td className="py-2 px-4 border-b whitespace-nowrap border-r-2">{item.org_name}</td>
@@ -61,7 +50,6 @@ const BulkUploadList = () => {
           </tbody>
         </table>
       </div>
-      <Pagination />
     </>
   );
 };

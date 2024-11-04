@@ -1,8 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import PaginationContext from '../Pages/PaginationContext';
-import Pagination from '../Pages/Pagination';
+import React, {  useMemo } from 'react';
 const CreateSubUserList = () => {
-    const { currentItem, showPerPage, setTotalResults } = useContext(PaginationContext);
 
     const userList=useMemo(()=>[
         {
@@ -10,15 +7,7 @@ const CreateSubUserList = () => {
          Username:"info@rightpick.co.in"
         },
     ],[]);
-    const [paginated, setPaginated] = useState([]);
-
-    useEffect(() => {
-        setTotalResults(userList.length);
-        const startIndex = (currentItem - 1) * showPerPage;
-        const endIndex = startIndex + showPerPage;
-        setPaginated(userList.slice(startIndex, endIndex));
-    }, [currentItem, setTotalResults,userList,showPerPage]);
-
+   
 
     return (
         <>
@@ -34,7 +23,7 @@ const CreateSubUserList = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {paginated.map((item, index) => (
+                    {userList.map((item, index) => (
                         <tr key={index}>
                             <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{item.sl}</td>
                             <td className="py-2 px-4 border-b whitespace-nowrap  border-r-2">{item.Username}</td>
@@ -44,7 +33,6 @@ const CreateSubUserList = () => {
                     ))}
                 </tbody>
             </table>
-            <Pagination/>
         </div>
         </>
     )

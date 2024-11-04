@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Swal from 'sweetalert2';
 import { useClient } from "./ClientManagementContext";
 import ClientManagementData from "./ClientManagementData";
@@ -20,7 +20,7 @@ const options = states.map(state => ({ value: state.isoCode, label: state.name }
 const ClientManagement = () => {
   const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
 
-  const [insertId, setInsertId] = useState();
+  const [, setInsertId] = useState();
   const [files, setFiles] = useState([]);
   const API_URL = useApi();
   const { clientData, setClientData } = useClient();

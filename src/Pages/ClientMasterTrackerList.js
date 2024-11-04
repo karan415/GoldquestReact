@@ -46,7 +46,6 @@ const ClientMasterTrackerList = () => {
             .then(response => {
                 if (!response.ok) {
                     return response.text().then(text => {
-                        const errorData = JSON.parse(text);
 
                         throw new Error(text);
                     });
@@ -64,7 +63,7 @@ const ClientMasterTrackerList = () => {
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
-    }, [setData]);
+    }, [setData,API_URL]);
 
     const handleBranches = useCallback((id) => {
         setLoading(true);
@@ -128,7 +127,7 @@ const ClientMasterTrackerList = () => {
                 setOptions(result.filterOptions);
             })
             .catch((error) => console.error('Error fetching options:', error));
-    }, []);
+    }, [API_URL]);
 
 
     useEffect(() => {

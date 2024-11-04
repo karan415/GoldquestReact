@@ -1,7 +1,6 @@
 import React from 'react';
 import AddUserForm from './AddUserForm';
 import CreateSubUserList from './CreateSubUserList';
-import SearchBar from '../Pages/SearchBar';
 
 const AddUser = () => {
   return (
@@ -14,7 +13,6 @@ const AddUser = () => {
           <AddUserForm />
         </div>
         <div className="bg-white shadow-md rounded-md p-3">
-          <SearchBar />
           <CreateSubUserList />
         </div>
       </div>
