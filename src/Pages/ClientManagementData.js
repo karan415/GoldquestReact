@@ -3,7 +3,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Multiselect from 'multiselect-react-dropdown';
 import { useClient } from './ClientManagementContext';
 import { useApi } from '../ApiContext';
-
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const ClientManagementData = () => {
     const [selectedServices, setSelectedServices] = useState({});
@@ -26,7 +26,6 @@ const ClientManagementData = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = paginated.slice(indexOfFirstItem, indexOfLastItem);
 
-
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -37,6 +36,55 @@ const ClientManagementData = () => {
 
     const showNext = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
+
+
+    const renderPagination = () => {
+        const pageNumbers = [];
+
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.push(i);
+            }
+        } else {
+            pageNumbers.push(1);
+
+            if (currentPage > 3) {
+                pageNumbers.push('...');
+            }
+
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pageNumbers.includes(i)) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            if (currentPage < totalPages - 2) {
+                pageNumbers.push('...');
+            }
+
+
+            if (!pageNumbers.includes(totalPages)) {
+                pageNumbers.push(totalPages);
+            }
+        }
+
+
+
+        return pageNumbers.map((number, index) => (
+            number === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+            ) : (
+                <button
+                    type="button"
+                    key={`page-${number}`} // Unique key for page buttons
+                    onClick={() => handlePageChange(number)}
+                    className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                >
+                    {number}
+                </button>
+            )
+        ));
     };
 
     const fetchServices = useCallback(async () => {
@@ -59,6 +107,10 @@ const ClientManagementData = () => {
                 price: '',
                 selectedPackages: []
             }));
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
             setService(processedServices);
         } catch (error) {
             console.error("Error fetching services:", error);
@@ -84,6 +136,10 @@ const ClientManagementData = () => {
                 ...item,
                 service_id: item.id,
             }));
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
             setPackageList(processedPackages);
         } catch (error) {
             console.error("Error fetching packages:", error);
@@ -114,7 +170,6 @@ const ClientManagementData = () => {
 
     useEffect(() => {
         const updatedServiceData = service.map((item) => {
-
             const packageObject = (selectedPackages[item.service_id] || []).reduce((acc, pkgId) => {
                 const pkg = packageList.find(p => p.id === pkgId);
                 if (pkg) {
@@ -132,7 +187,6 @@ const ClientManagementData = () => {
         });
         const filteredSelectedData = updatedServiceData.filter(item => selectedServices[item.serviceId]);
 
-  
         setClientData(filteredSelectedData);
         setSelectedData(updatedServiceData);
 
@@ -140,9 +194,6 @@ const ClientManagementData = () => {
             setPaginated(updatedServiceData);
         }
     }, [service, selectedPackages, priceData, selectedServices, setClientData, packageList]);
-
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error}</p>;
 
     const handlePackageChange = (selectedList, serviceId) => {
         const updatedPackages = selectedList.map(item => item.id);
@@ -169,82 +220,85 @@ const ClientManagementData = () => {
 
     return (
         <div className="overflow-x-auto py-6 px-0 bg-white mt-10 m-auto">
-            <table className="min-w-full">
-                <thead>
-                    <tr className='bg-green-500'>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems.map((item) => (
-                        <tr key={item.serviceId}>
-                            <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
-                                <input
-                                    type="checkbox"
-                                    className='me-2'
-                                    checked={!!selectedServices[item.serviceId]}
-                                    onChange={() => handleCheckboxChange(item.serviceId)}
-                                /> {item.serviceTitle}
-                            </td>
-                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
-                                <input
-                                    type="number"
-                                    name="price"
-                                    value={priceData[item.serviceId]?.price || ''}
-                                    onChange={(e) => handleChange(e, item.serviceId)}
-                                    className='outline-none'
-                                />
-                                {validationsErrors[item.serviceId]?.price && <span className="text-red-500">{validationsErrors[item.serviceId].price}</span>}
-                            </td>
-                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap uppercase text-left">
-                                <Multiselect
-                                    options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
-                                    selectedValues={packageList.filter(pkg => (selectedPackages[item.serviceId] || []).includes(pkg.id)).map(pkg => ({ name: pkg.title, id: pkg.id }))}
-                                    onSelect={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
-                                    onRemove={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
-                                    displayValue="name"
-                                    className='text-left'
-                                />
-                                {validationsErrors[item.serviceId]?.packages && <span className="text-red-500">{validationsErrors[item.serviceId].packages}</span>}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                <button
-                    type='button'
-                    onClick={showPrev}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    aria-label="Previous page"
-                >
-                    <MdArrowBackIosNew />
-                </button>
-                <div className="flex items-center">
-                    {Array.from({ length: totalPages }, (_, index) => (
-                        <button
-                            type='button'
-                            key={index + 1}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
+            {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <PulseLoader color={"#36D7B7"} loading={loading} size={15} aria-label="Loading Spinner" />
                 </div>
-                <button
-                    type='button'
-                    onClick={showNext}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    aria-label="Next page"
-                >
-                    <MdArrowForwardIos />
-                </button>
-            </div>
+            ) : (
+                <>
+                    {paginated.length === 0 ? (
+                        <p className="text-center py-4">No data available</p>
+                    ) : (
+                        <>
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className='bg-green-500'>
+                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
+                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
+                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {currentItems.map((item) => (
+                                        <tr key={item.serviceId}>
+                                            <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
+                                                <input
+                                                    type="checkbox"
+                                                    className='me-2'
+                                                    checked={!!selectedServices[item.serviceId]}
+                                                    onChange={() => handleCheckboxChange(item.serviceId)}
+                                                /> {item.serviceTitle}
+                                            </td>
+                                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
+                                                <input
+                                                    type="number"
+                                                    name="price"
+                                                    value={priceData[item.serviceId]?.price || ''}
+                                                    onChange={(e) => handleChange(e, item.serviceId)}
+                                                    className='outline-none'
+                                                />
+                                                {validationsErrors[item.serviceId]?.price && <span className="text-red-500">{validationsErrors[item.serviceId].price}</span>}
+                                            </td>
+                                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap uppercase text-left">
+                                                <Multiselect
+                                                    options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
+                                                    selectedValues={packageList.filter(pkg => (selectedPackages[item.serviceId] || []).includes(pkg.id)).map(pkg => ({ name: pkg.title, id: pkg.id }))}
+                                                    onSelect={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
+                                                    onRemove={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
+                                                    displayValue="name"
+                                                    className='text-left'
+                                                />
+                                                {validationsErrors[item.serviceId]?.packages && <span className="text-red-500">{validationsErrors[item.serviceId].packages}</span>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                                <button
+                                    onClick={showPrev}
+                                    disabled={currentPage === 1}
+                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    aria-label="Previous page"
+                                >
+                                    <MdArrowBackIosNew />
+                                </button>
+                                <div className="flex items-center">
+                                    {renderPagination()}
+                                </div>
+                                <button
+                                    onClick={showNext}
+                                    disabled={currentPage === totalPages}
+                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    aria-label="Next page"
+                                >
+                                    <MdArrowForwardIos />
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </>
+            )}
         </div>
     );
 };
