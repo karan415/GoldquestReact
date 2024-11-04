@@ -448,7 +448,7 @@ const CandidateApplications = () => {
             admin_id: adminData?.id,
             _token: token,
             branch_id: branch_id,
-            customer_id: 1,
+            customer_id: applications.customer_id,
             application_id: application_id,
             annexure: mainAnnexureData,
             ...formData,

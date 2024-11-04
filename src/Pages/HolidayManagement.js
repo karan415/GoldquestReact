@@ -4,6 +4,8 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 import HolidayManagementForm from './HolidayManagementForm';
 import { useHoliday } from './HolidayManagementContext';
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+
 const HolidayManagement = () => {
     const API_URL = useApi();
     const { editService, fetchData, loading, data, error } = useHoliday();
@@ -46,9 +48,58 @@ const HolidayManagement = () => {
     };
 
 
+    const renderPagination = () => {
+        const pageNumbers = [];
+
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.push(i);
+            }
+        } else {
+            pageNumbers.push(1);
+
+            if (currentPage > 3) {
+                pageNumbers.push('...');
+            }
+
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pageNumbers.includes(i)) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            if (currentPage < totalPages - 2) {
+                pageNumbers.push('...');
+            }
+
+
+            if (!pageNumbers.includes(totalPages)) {
+                pageNumbers.push(totalPages);
+            }
+        }
+
+
+
+        return pageNumbers.map((number, index) => (
+            number === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+            ) : (
+                <button
+                    type="button"
+                    key={`page-${number}`} // Unique key for page buttons
+                    onClick={() => handlePageChange(number)}
+                    className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                >
+                    {number}
+                </button>
+            )
+        ));
+    };
+
+
     const handleEditService = (service) => {
         editService(service);
-        console.log('service',service)
+        console.log('service', service)
         fetchData();
     };
 
@@ -113,14 +164,13 @@ const HolidayManagement = () => {
 
     return (
         <>
-       
+
             <div className="grid grid-cols-2 gap-7 p-8">
                 <div className=''>
                     <HolidayManagementForm />
                 </div>
                 <div className='overflow-auto'>
-                    {loading && <p>Loading...</p>}
-                    {error && <p>{error}</p>}
+
 
 
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
@@ -156,77 +206,84 @@ const HolidayManagement = () => {
                         </div>
 
                     </div>
-                    <table className="min-w-full">
-                        <thead>
-                            <tr className='bg-green-500'>
-                                <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SL</th>
-                                <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Holiday Title</th>
-                                <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Holiday Date</th>
-                                <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentItems.length > 0 ?
-                                (currentItems.map((item, index) => (
-                                    <tr key={item.index}>
-                                        <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
-                                        <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
-                                        <td className="py-2 px-4 border-r border-b ">{new Date(item.date).toLocaleString()}</td>
+                    <div className="overflow-x-auto py-6 px-4">
+                        {loading ? (
+                            <div className='flex justify-center items-center py-6 h-full'>
+                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
 
-                                        <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
-                                            <button
-                                                disabled={loading}
-                                                className='bg-green-500 rounded-md hover:bg-green-200 p-2 text-white'
-                                                onClick={() => handleEditService(item)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                disabled={loading}
-                                                className='bg-red-600 rounded-md p-2 text-white ms-2'
-                                                onClick={() => handleDelete(item.id)}
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
+                            </div>
+                        ) : currentItems.length > 0 ? (
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className='bg-green-500'>
+                                        <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SL</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Holiday Title</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Holiday Date</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Action</th>
                                     </tr>
-                                ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="py-6 px-4 border-l border-r text-center border-b whitespace-nowrap">
-                                            No data available
-                                        </td>
-                                    </tr>
-                                )}
-                        </tbody>
-                    </table>
-                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                        <button
-                            onClick={showPrev}
-                            disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Previous page"
-                        >
-                            <MdArrowBackIosNew />
-                        </button>
-                        <div className="flex items-center">
-                            {Array.from({ length: totalPages }, (_, index) => (
-                                <button
-                                    key={index + 1}
-                                    onClick={() => handlePageChange(index + 1)}
-                                    className={` px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}                        >
-                                    {index + 1}
-                                </button>
-                            ))}
+                                </thead>
+                                <tbody>
+                                    {currentItems.length > 0 ?
+                                        (currentItems.map((item, index) => (
+                                            <tr key={item.index}>
+                                                <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
+                                                <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
+                                                <td className="py-2 px-4 border-r border-b ">{new Date(item.date).toLocaleString()}</td>
+
+                                                <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
+                                                    <button
+                                                        disabled={loading}
+                                                        className='bg-green-500 rounded-md hover:bg-green-200 p-2 text-white'
+                                                        onClick={() => handleEditService(item)}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        disabled={loading}
+                                                        className='bg-red-600 rounded-md p-2 text-white ms-2'
+                                                        onClick={() => handleDelete(item.id)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="4" className="py-6 px-4 border-l border-r text-center border-b whitespace-nowrap">
+                                                    No data available
+                                                </td>
+                                            </tr>
+                                        )}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="text-center py-6">
+                                <p>No Data Found</p>
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                            <button
+                                onClick={showPrev}
+                                disabled={currentPage === 1}
+                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                aria-label="Previous page"
+                            >
+                                <MdArrowBackIosNew />
+                            </button>
+                            <div className="flex items-center">
+                                {renderPagination()}
+                            </div>
+                            <button
+                                onClick={showNext}
+                                disabled={currentPage === totalPages}
+                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                aria-label="Next page"
+                            >
+                                <MdArrowForwardIos />
+                            </button>
                         </div>
-                        <button
-                            onClick={showNext}
-                            disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Next page"
-                        >
-                            <MdArrowForwardIos />
-                        </button>
                     </div>
                 </div>
 
