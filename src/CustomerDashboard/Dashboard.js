@@ -1,54 +1,21 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useContext } from 'react';
 import CaseStudy from './CaseStudy';
 import Chart from './Chart';
 import Chart2 from './Chart2';
-import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from 'react-icons/md';
+import { useDashboard } from './DashboardContext';
+
 
 const Dashboard = () => {
     const [itemsPerPage, setItemsPerPage] = useState({}); // Track items per page for each status
     const [paginatedData, setPaginatedData] = useState({});
-    const API_URL = useApi();
-    const [tableData, setTableData] = useState({ clientApplications: {} });
-    const [loading, setLoading] = useState(true);
-
-    const fetchDashBoard = useCallback(() => {
-        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
-        const _token = localStorage.getItem("branch_token");
-
-        if (!branch_id || !_token) {
-            console.error("Branch ID or token is missing.");
-            return;
-        }
-
-        const url = `${API_URL}/branch?branch_id=${branch_id}&_token=${_token}`;
-
-        setLoading(true);
-
-        fetch(url, {
-            method: "GET",
-            redirect: "follow",
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((result) => {
-                if (result.clientApplications) {
-                    setTableData(result);
-                } else {
-                    console.error("clientApplications is missing in the response");
-                }
-            })
-            .catch((error) => console.error('Fetch error:', error))
-            .finally(() => setLoading(false));
-    }, [API_URL]);
+  
+      const {fetchDashboard, tableData, setTableData ,loading,setLoading} = useDashboard();
+ 
 
     useEffect(() => {
-        fetchDashBoard();
-    }, [fetchDashBoard]);
+        fetchDashboard();
+    }, [fetchDashboard]);
 
     const formatKey = (key) => key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 

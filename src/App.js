@@ -34,6 +34,8 @@ import UpdatePassword from './Pages/UpdatePassword';
 import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
 import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
+import DashboardProvider from './CustomerDashboard/DashboardContext';
+
 const App = () => {
   return (
     <GenerateReportProvider>
@@ -51,6 +53,7 @@ const App = () => {
                             <ServiceProvider>
                             <CustomFunctionsProvider>
                             <HolidayManagementProvider>
+                            <DashboardProvider>
                               <Router basename='/'>
                                 <Routes>
                                   <Route path='/' element={<Admin><Render /></Admin>} />
@@ -71,6 +74,7 @@ const App = () => {
                                   <Route path='/PDF' element={<PdfTableGenerator />} />
                                 </Routes>
                               </Router>
+                              </DashboardProvider>
                               </HolidayManagementProvider>
                               </CustomFunctionsProvider>
                             </ServiceProvider>

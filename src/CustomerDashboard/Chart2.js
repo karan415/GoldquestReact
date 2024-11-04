@@ -1,9 +1,15 @@
-import React from 'react';
+import {React,useEffect} from 'react';
 import CanvasJSReact from '@canvasjs/react-charts';
+import { useDashboard } from './DashboardContext';
 
 const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 const Chart2 = () => {
+
+    const {fetchDashboard, tableData, setTableData ,loading,setLoading} = useDashboard();
+    useEffect(()=>{
+        fetchDashboard();
+    },[fetchDashboard]);
     const options = {
         animationEnabled: true,
         title: {
