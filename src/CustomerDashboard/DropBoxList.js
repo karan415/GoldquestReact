@@ -11,16 +11,16 @@ const DropBoxList = () => {
     const [itemsPerPage, setItemPerPage] = useState(10)
     const API_URL = useApi();
     const [currentPage, setCurrentPage] = useState(1);
-    const { handleEditDrop, fetchClientDrop, listData,loading } = useContext(DropBoxContext)
+    const { handleEditDrop, fetchClientDrop, listData, loading } = useContext(DropBoxContext)
     useEffect(() => {
         fetchClientDrop();
     }, [fetchClientDrop]);
 
     const filteredItems = listData.filter(item => {
         return (
-            item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+            item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
 
         );
     });
@@ -254,7 +254,10 @@ const DropBoxList = () => {
                                             </td>
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{report.application_id}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.name}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.created_at}</td>
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">
+                                                {new Date(report.created_at).toLocaleDateString()}
+                                            </td>
+
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client}</td>

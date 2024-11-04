@@ -2,9 +2,10 @@ import React, { useState, useContext, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
+import PulseLoader from 'react-spinners/PulseLoader';
 
 const CandidateForm = () => {
-    const { services, uniquePackages, selectedDropBox, fetchClient } = useContext(DropBoxContext);
+    const { services, uniquePackages, selectedDropBox, fetchClient ,loading} = useContext(DropBoxContext);
     const [, setBranchId] = useState(null);
     const [, setStoredToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
@@ -21,6 +22,7 @@ const CandidateForm = () => {
         package: '',
         candidate_application_id: ''
     });
+    const branch_name = JSON.parse(localStorage.getItem("branch"));
 
     const [error, setError] = useState({});
 
@@ -152,7 +154,7 @@ const CandidateForm = () => {
                     return response.json();
                 })
                 .then(data => {
-                    const newToken = data._token || data.token;
+                    const newToken = data.branch_token || data.token;
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken);
                     }
@@ -193,7 +195,7 @@ const CandidateForm = () => {
                     <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                         <div className="mb-4">
                             <label htmlFor="applicant_name" className='text-sm'>Name of the organisation:</label>
-                            <input type="text" name="applicant_name" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.applicant_name} />
+                            <input type="text" name="applicant_name" className="border w-full rounded-md p-2 mt-2" disabled value={branch_name?.name} />
                             {error.applicant_name && <p className='text-red-500'>{error.applicant_name}</p>}
                         </div>
                         <div className="mb-4">
@@ -220,8 +222,12 @@ const CandidateForm = () => {
                     <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                         <div className="flex flex-wrap flex-col-reverse">
                             <div>
-                                <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
-                                {services.length > 0 ? (
+                                <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200 mt-5'>Service Names</h2>
+                                {loading ? ( // Check for loading state
+                                    <div className="flex justify-center py-5">
+                                        <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                                    </div>
+                                ) : services.length > 0 ? (
                                     <ul>
                                         {services.map((item) => (
                                             <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${input.services.includes(item.serviceId) ? 'selected' : ''}`}>
@@ -242,7 +248,11 @@ const CandidateForm = () => {
                             </div>
                             <div>
                                 <strong>Packages:</strong>
-                                {uniquePackages.length > 0 ? (
+                                {loading ? ( // Check for loading state
+                                    <div className="flex justify-center py-5">
+                                        <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                                    </div>
+                                ) : uniquePackages.length > 0 ? (
                                     <select
                                         className='border w-full rounded-md p-2 mt-2 outline-none'
                                         name="package"

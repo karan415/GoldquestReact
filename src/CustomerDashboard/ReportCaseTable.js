@@ -91,9 +91,9 @@ const ReportCaseTable = () => {
         }
     }, [expandedRows, API_URL]);
     const filteredItems = listData.filter(item => (
-        item.application_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+        item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
     ));
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);

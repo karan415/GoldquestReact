@@ -4,8 +4,9 @@ import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import axios from 'axios';
 import Multiselect from 'multiselect-react-dropdown';
-
+import PulseLoader from 'react-spinners/PulseLoader';
 const ClientForm = () => {
+    const branch_name = JSON.parse(localStorage.getItem("branch"));
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
     const branch_token = localStorage.getItem("branch_token");
     const API_URL = useApi();
@@ -24,7 +25,7 @@ const ClientForm = () => {
         client_application_id: '',
     });
 
-    const { selectedDropBox, fetchClientDrop, services, uniquePackages } = useContext(DropBoxContext);
+    const { selectedDropBox, fetchClientDrop, services, uniquePackages,loading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
     const [isLoading, setIsLoading] = useState(false); 
@@ -196,7 +197,7 @@ const ClientForm = () => {
                     new_application_id = data.result.new_application_id;
                 }
 
-                const newToken = data._token || data.token;
+                const newToken = data.branch_token || data.token;
                 if (newToken) {
                     localStorage.setItem("branch_token", newToken);
                 }
@@ -251,7 +252,7 @@ const ClientForm = () => {
                         <div className="md:flex gap-5">
                             <div className="mb-4 md:w-6/12">
                                 <label htmlFor="organisation_name" className='text-sm'>Name of the organisation:</label>
-                                <input type="text" name="organisation_name" id="Organisation_Name" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.organisation_name} />
+                                <input type="text" name="organisation_name" id="Organisation_Name" className="border w-full capitalize rounded-md p-2 mt-2" disabled value={branch_name?.name} />
                                 {inputError.organisation_name && <p className='text-red-500'>{inputError.organisation_name}</p>}
                             </div>
                             <div className="mb-4 md:w-6/12">
@@ -301,11 +302,13 @@ const ClientForm = () => {
                         </div>
                     </div>
                     <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
-                        <div className="flex flex-wrap flex-col-reverse">
-                            <div className='mt-4'>
-                                <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
-                                {services.length > 0 ? (
-                                    <ul>
+                    <div className="flex flex-wrap flex-col-reverse">
+                        <div className='mt-4'>
+                            <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
+                            {loading ? ( // Check for loading state
+                                <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                            ) : services.length > 0 ? (
+                                <ul>
                                     {services.map((item) => (
                                         <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(item.serviceId) ? 'selected' : ''}`}>
                                             <input
@@ -314,33 +317,34 @@ const ClientForm = () => {
                                                 value={String(item.serviceId)}
                                                 onChange={handleChange}
                                                 checked={clientInput.services.includes(String(item.serviceId))}
-                                                />
+                                            />
                                             <div className='font-bold'>{item.serviceTitle}</div>
                                         </li>
                                     ))}
-                                    
-                                    </ul>
-                                ) : (
-                                    <p>No services available</p>
-                                )}
-                            </div>
-                            <div>
-                                <strong className='mb-2'>Packages:</strong>
-                                {uniquePackages.length > 0 ? (
-                                    <Multiselect
-                                        options={uniquePackages.map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
-                                        selectedValues={uniquePackages.filter(pkg => (clientInput.package || []).includes(pkg.id)).map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
-                                        onSelect={handlePackageChange}
-                                        onRemove={handlePackageChange}
-                                        displayValue="name"
-                                        className='text-left'
-                                    />
-                                ) : (
-                                    <p>No packages available</p>
-                                )}
-                            </div>
+                                </ul>
+                            ) : (
+                                <p>No services available</p>
+                            )}
+                        </div>
+                        <div className='mt-5'>
+                            <strong className='mb-2'>Packages:</strong>
+                            {loading ? ( // Check for loading state
+                                <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                            ) : uniquePackages.length > 0 ? (
+                                <Multiselect
+                                    options={uniquePackages.map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
+                                    selectedValues={uniquePackages.filter(pkg => (clientInput.package || []).includes(pkg.id)).map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
+                                    onSelect={handlePackageChange}
+                                    onRemove={handlePackageChange}
+                                    displayValue="name"
+                                    className='text-left'
+                                />
+                            ) : (
+                                <p>No packages available</p>
+                            )}
                         </div>
                     </div>
+                </div>
                 </div>
                 <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={isLoading}>
                     {isLoading ? 'Submitting...' : (isEditClient ? "Edit" : "Send")}
