@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const Acknowledgement = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,7 +59,7 @@ const Acknowledgement = () => {
 
   const filteredItems = emailsData.filter(item => {
     return (
-      item.client_unique_id.toLowerCase().includes(searchTerm.toLowerCase()) || ''
+      item.client_unique_id?.toLowerCase().includes(searchTerm.toLowerCase()) || ''
     )
   });
 
@@ -70,15 +71,64 @@ const Acknowledgement = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-  };
+};
 
-  const showPrev = () => {
+const showPrev = () => {
     if (currentPage > 1) handlePageChange(currentPage - 1);
-  };
+};
 
-  const showNext = () => {
+const showNext = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
-  };
+};
+
+
+const renderPagination = () => {
+    const pageNumbers = [];
+
+    if (totalPages <= 5) {
+        for (let i = 1; i <= totalPages; i++) {
+            pageNumbers.push(i);
+        }
+    } else {
+        pageNumbers.push(1);
+
+        if (currentPage > 3) {
+            pageNumbers.push('...');
+        }
+
+        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+            if (!pageNumbers.includes(i)) {
+                pageNumbers.push(i);
+            }
+        }
+
+        if (currentPage < totalPages - 2) {
+            pageNumbers.push('...');
+        }
+
+
+        if (!pageNumbers.includes(totalPages)) {
+            pageNumbers.push(totalPages);
+        }
+    }
+
+
+
+    return pageNumbers.map((number, index) => (
+        number === '...' ? (
+            <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+        ) : (
+            <button
+                type="button"
+                key={`page-${number}`} // Unique key for page buttons
+                onClick={() => handlePageChange(number)}
+                className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+            >
+                {number}
+            </button>
+        )
+    ));
+};
 
   useEffect(() => {
     fetchEmails();
@@ -128,83 +178,73 @@ const Acknowledgement = () => {
         </div>
 
       </div>
-      <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-4">
-        {loading ? (
-          <div className="text-center py-4">
-            <p>Loading...</p>
+      <div className="overflow-x-auto py-6 px-4">
+      {loading ? (
+          <div className='flex justify-center items-center py-6 h-full'>
+              <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+    
           </div>
-        ) : currentItems.length > 0 ? (
-          <>
-            <table className="min-w-full">
-              <thead>
-                <tr className='bg-green-500'>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">SL</th>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Client Code</th>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Company Name</th>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Application Count</th>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Case RCVD Date</th>
-                  <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Send Notification</th>
+      ) : currentItems.length > 0 ? (
+          <table className="min-w-full mb-4">
+            <thead>
+              <tr className='bg-green-500'>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">SL</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Client Code</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Company Name</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Application Count</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Case RCVD Date</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Send Notification</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((email, index) => (
+                <tr key={index}>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{index + 1}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.caseReceivedDate || 'N/A'}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
+                    <button
+                      className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200"
+                      type="button"
+                      onClick={() => sendApproval(email.id)}
+                    >
+                      Send
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((email, index) => (
-                  <tr key={index}>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{index + 1}</td>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.caseReceivedDate || 'N/A'}</td>
-                    <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
-                      <button
-                        className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200"
-                        type="button"
-                        onClick={() => sendApproval(email.id)}
-                      >
-                        Send
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <p className='text-center'>No data found</p>
-        )}
-      </div>
-
-      <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-        <button
-          type='button'
+              ))}
+            </tbody>
+          </table>
+      ) : (
+          <div className="text-center py-6">
+              <p>No Data Found</p>
+          </div>
+      )}
+    
+      <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+      <button
           onClick={showPrev}
           disabled={currentPage === 1}
           className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Previous page"
-        >
+      >
           <MdArrowBackIosNew />
-        </button>
-        <div className="flex items-center">
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              type="button"
-              key={index + 1}
-              onClick={() => handlePageChange(index + 1)}
-              className={`px-3 py-1 rounded-0 ${currentPage === index + 1 ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
+      </button>
+      <div className="flex items-center">
+          {renderPagination()}
+      </div>
+      <button
           onClick={showNext}
           disabled={currentPage === totalPages}
           className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Next page"
-        >
+      >
           <MdArrowForwardIos />
-        </button>
-      </div>
+      </button>
+    </div>
+    </div>
     </div>
   );
 };
