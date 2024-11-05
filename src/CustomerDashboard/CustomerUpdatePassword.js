@@ -66,12 +66,18 @@ const CustomerUpdatePassword = () => {
 
             fetch("https://octopus-app-www87.ondigitalocean.app/branch/update-password", requestOptions)
                 .then((response) => {
+
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
                     return response.json();
                 })
                 .then((result) => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
+
                     console.log(result);
                     // Clear form and errors on successful update
                     Swal.fire({
@@ -84,6 +90,10 @@ const CustomerUpdatePassword = () => {
                     setPassError({});
                 })
                 .catch((error) => {
+                    const newToken = error._token || error.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
                     console.error('Error:', error);
                     Swal.fire({
                         title: 'Error',

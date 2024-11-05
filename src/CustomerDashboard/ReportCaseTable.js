@@ -31,13 +31,13 @@ const ReportCaseTable = () => {
         const _token = localStorage.getItem("branch_token");
         const newExpandedRow = expandedRows === index ? null : index;
         setExpandedRows(newExpandedRow);
-
+    
         if (newExpandedRow === index && services) {
-            setLoading(true); // Set loading to true while fetching service data
+            setLoading(true);
             const servicesArray = services.split(',').map(Number);
             const uniqueServiceHeadings = new Set();
             const uniqueStatuses = new Set();
-
+    
             Promise.all(
                 servicesArray.map(serviceId => {
                     const url = `${API_URL}/branch/report-case-status/report-form-json-by-service-id?service_id=${serviceId}&branch_id=${branch_id}&_token=${_token}`;
@@ -47,26 +47,31 @@ const ReportCaseTable = () => {
                             return response.json();
                         })
                         .then(result => {
-                            setLoading(false); // Stop loading once data is fetched
-                            const { reportFormJson } = result;
+                            const { reportFormJson, _token: newToken, token } = result;
+    
+                            // Store new token if available
+                            const updatedToken = newToken || token;
+                            if (updatedToken) {
+                                localStorage.setItem("branch_token", updatedToken);
+                            }
+    
+                            setLoading(false);
                             const parsedData = JSON.parse(reportFormJson.json);
                             const { heading, db_table } = parsedData;
-
+    
                             uniqueServiceHeadings.add(heading);
                             setServiceHeadings(prev => ({
                                 ...prev,
                                 [id]: Array.from(uniqueServiceHeadings)
                             }));
-
-                            const newToken = result._token || result.token;
-                            if (newToken) localStorage.setItem("branch_token", newToken);
+    
                             return db_table;
                         })
                         .catch(error => console.error('Fetch error:', error));
                 })
             ).then(parsedDbs => {
                 const uniqueDbNames = [...new Set(parsedDbs.filter(Boolean))];
-
+    
                 return Promise.all(uniqueDbNames.map(db_name => {
                     const url = `${API_URL}/branch/report-case-status/annexure-data?application_id=${id}&db_table=${db_name}&branch_id=${branch_id}&_token=${_token}`;
                     return fetch(url)
@@ -75,7 +80,15 @@ const ReportCaseTable = () => {
                             return response.json();
                         })
                         .then(result => {
-                            const status = result?.annexureData?.status || 'N/A';
+                            const { annexureData, _token: newToken, token } = result;
+    
+                            // Store new token if available
+                            const updatedToken = newToken || token;
+                            if (updatedToken) {
+                                localStorage.setItem("branch_token", updatedToken);
+                            }
+    
+                            const status = annexureData?.status || 'N/A';
                             uniqueStatuses.add(status);
                             return { db_table: db_name, status };
                         })
@@ -87,9 +100,12 @@ const ReportCaseTable = () => {
                     }));
                 });
             }).catch(error => console.error("Error during fetch: ", error))
-              .finally(() => setLoading(false)); // Stop loading after fetching both data
+              .finally(() => setLoading(false));
         }
     }, [expandedRows, API_URL]);
+    
+
+
     const filteredItems = listData.filter(item => (
         item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

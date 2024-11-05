@@ -124,9 +124,10 @@ const DropBoxList = () => {
                 const _token = localStorage.getItem("branch_token");
 
                 if (!branch_id || !_token) {
-                    console.error("Admin ID or token is missing.");
+                    console.error("Branch ID or token is missing.");
                     return;
                 }
+
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
@@ -154,6 +155,8 @@ const DropBoxList = () => {
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
+
+                        // Refresh the client drop data after deletion
                         fetchClientDrop();
                         Swal.fire(
                             'Deleted!',
@@ -163,10 +166,16 @@ const DropBoxList = () => {
                     })
                     .catch(error => {
                         console.error('Fetch error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'An unexpected error occurred while deleting.',
+                            'error'
+                        );
                     });
             }
         });
     };
+
     return (
         <>
             <div className=" py-4 md:py-16">
