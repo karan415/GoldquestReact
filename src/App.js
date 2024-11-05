@@ -15,7 +15,6 @@ import { ServiceProvider } from './Pages/ServiceContext';
 import { LoaderProvider } from './LoaderContext';
 import { ClientProvider } from './Pages/ClientManagementContext';
 import { ClientEditProvider } from './Pages/ClientEditContext';
-import AddClient from './Pages/AddClient';
 import { BranchEditProvider } from './Pages/BranchEditContext';
 import { DropBoxProvider } from './CustomerDashboard/DropBoxContext'
 import { DataProvider } from './Pages/DataContext';
@@ -65,7 +64,6 @@ const App = () => {
                                       <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
                                       <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
                                       <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
-                                      <Route path='/addclient' element={<Admin><AddClient /></Admin>} />
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
                                       <Route path='/background_form' element={<BackgroundForm />} />
                                       <Route path='/digital_form' element={<DigitalAddressVerification />} />

@@ -10,7 +10,7 @@ const CandidateApplications = () => {
     const renderedServices = new Set();
 
     const [allInputDetails, setAllInputDetails] = useState([]);
- 
+
     const [, setAnnexureData] = useState({});
     const { service_id, branch_id, application_id } = useContext(BranchContextExel);
     const [annexure, setAnnexure] = useState({});
@@ -261,6 +261,10 @@ const CandidateApplications = () => {
                 return response.json();
             })
             .then((result) => {
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
                 if (result && result.annexureData) {
                     return result.annexureData;
                 } else {
@@ -303,7 +307,10 @@ const CandidateApplications = () => {
                 return res.json();
             })
             .then(data => {
-
+                const newToken = data._token || data.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
                 const applicationsData = data.application;
                 setApplications(applicationsData)
                 console.log('applications', applications)
@@ -335,8 +342,7 @@ const CandidateApplications = () => {
                     }
                 });
 
-                const newToken = data._token || data.token;
-                if (newToken) localStorage.setItem("_token", newToken);
+                
             })
             .catch(error => {
                 console.error('Fetch error:', error);
@@ -482,7 +488,7 @@ const CandidateApplications = () => {
                     localStorage.setItem("_token", newToken);
                 }
 
-                console.log('newToken',newToken)
+                console.log('newToken', newToken)
 
                 uploadCustomerLogo(email_status);
                 const newToken2 = result._token || result.token;

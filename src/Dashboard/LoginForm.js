@@ -50,10 +50,7 @@ const LoginForm = () => {
               icon: 'error',
               confirmButtonText: 'Ok'
             });
-            const newToken = response._token || response.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
+           
           } else {
 
             const adminData = response.data.adminData;
@@ -67,7 +64,10 @@ const LoginForm = () => {
               icon: "success",
               confirmButtonText: "Ok"
             })
-
+            const newToken = response._token || response.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
 
             navigate('/', { state: { from: location }, replace: true });
             setError({});

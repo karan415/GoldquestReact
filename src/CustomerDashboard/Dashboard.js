@@ -173,7 +173,7 @@ const Dashboard = () => {
                                         paginatedApplications.map((application, appIndex) => (
                                             <tr key={appIndex}>
                                                 <td className="py-3 px-4 border-b text-green-600 whitespace-nowrap">{(currentPage - 1) * currentItemsPerPage + appIndex + 1}</td>
-                                                <td className="py-3 px-4 border-b whitespace-nowrap">{application.client_application_id}</td>
+                                                <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_id}</td>
                                                 <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_name}</td>
                                             </tr>
                                         ))
