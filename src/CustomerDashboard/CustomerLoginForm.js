@@ -28,7 +28,7 @@ const CustomerLoginForm = () => {
 
     const getPassword = async (email) => {
         const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
-        const storedToken = localStorage.getItem('branch_token');
+        const storedToken = localStorage.getItem('_token');
 
         try {
             const response = await fetch(`${API_URL}/customer/fetch-branch-password?branch_email=${email}&admin_id=${admin_id}&_token=${storedToken}`);
@@ -92,10 +92,7 @@ const CustomerLoginForm = () => {
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
-                    const newToken = result.branch_token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("branch_token", newToken);
-                    }
+
                 } else {
                     const branchData = result.branchData;
                     const branch_token = result.token;
@@ -126,9 +123,6 @@ const CustomerLoginForm = () => {
             setError(validateError);
         }
     };
-    const forgotPassword=()=>{
-        navigate('/customer-forgotpassword');
-    }
 
     return (
         <div className="w-full md:max-w-7xl mx-auto p-4">
@@ -169,8 +163,9 @@ const CustomerLoginForm = () => {
                         <input className="mr-2 leading-tight" type="checkbox" />
                         <span className="text-sm">Remember me</span>
                     </label>
-                   
-                    <button className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800" onClick={forgotPassword}>Forgot Password</button>
+                    <a href="#" className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800">
+                        Forgot Password?
+                    </a>
                 </div>
                 <div className="flex items-center justify-between">
                     <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">

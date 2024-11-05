@@ -50,7 +50,7 @@ export const DropBoxProvider = ({ children }) => {
             const data = await response.json();
     
             // Store new token if available
-            const newToken = data?.branch_token || data?.token;
+            const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
             }
@@ -116,7 +116,7 @@ export const DropBoxProvider = ({ children }) => {
             const data = await response.json();
     
             // Store new token if available
-            const newToken = data?.branch_token || data?.token;
+            const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken); // Store the new token in local storage
             }

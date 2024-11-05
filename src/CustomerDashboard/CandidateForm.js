@@ -154,7 +154,7 @@ const CandidateForm = () => {
                     return response.json();
                 })
                 .then(data => {
-                    const newToken = data.branch_token || data.token;
+                    const newToken = data._token || data.token;
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken);
                     }
@@ -180,6 +180,10 @@ const CandidateForm = () => {
                 })
                 .catch(error => {
                     console.error("There was an error!", error);
+                    const newToken = error._token || error.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
                 })
                 .finally(() => setIsSubmitting(false));
         } else {

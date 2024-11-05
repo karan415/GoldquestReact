@@ -157,7 +157,7 @@ const CandidateList = () => {
                         return response.json();
                     })
                     .then(result => {
-                        const newToken = result.branch_token || result.token;
+                        const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }

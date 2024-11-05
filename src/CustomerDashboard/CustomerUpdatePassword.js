@@ -54,7 +54,7 @@ const CustomerUpdatePassword = () => {
             const raw = JSON.stringify({
                 new_password: newPass.newpass,
                 branch_id: storedBranchData,
-                _token: branch_token,
+                branch_token: branch_token,
             });
 
             const requestOptions = {

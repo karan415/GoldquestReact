@@ -197,7 +197,7 @@ const ClientForm = () => {
                     new_application_id = data.result.new_application_id;
                 }
 
-                const newToken = data.branch_token || data.token;
+                const newToken = data._token || data.token;
                 if (newToken) {
                     localStorage.setItem("branch_token", newToken);
                 }

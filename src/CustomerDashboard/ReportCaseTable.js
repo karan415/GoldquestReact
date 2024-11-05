@@ -58,7 +58,7 @@ const ReportCaseTable = () => {
                                 [id]: Array.from(uniqueServiceHeadings)
                             }));
 
-                            const newToken = result.branch_token || result.token;
+                            const newToken = result._token || result.token;
                             if (newToken) localStorage.setItem("branch_token", newToken);
                             return db_table;
                         })
