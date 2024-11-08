@@ -5,12 +5,13 @@ import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
 
 const CandidateForm = () => {
-    const { services, uniquePackages, selectedDropBox, fetchClient ,loading} = useContext(DropBoxContext);
+    const { services, uniquePackages,fetchServices, selectedDropBox, fetchClient ,loading} = useContext(DropBoxContext);
     const [, setBranchId] = useState(null);
     const [, setStoredToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
     const [, setIsSubmitting] = useState(false);
     const API_URL = useApi();
+   
 
     const [input, setInput] = useState({
         name: "",
@@ -46,7 +47,10 @@ const CandidateForm = () => {
         }
     };
 
-
+    useEffect(()=>{
+        fetchServices();
+        fetchClient();
+    },[fetchServices,fetchClient])
 
     useEffect(() => {
         const storedBranchData = JSON.parse(localStorage.getItem("branch"));

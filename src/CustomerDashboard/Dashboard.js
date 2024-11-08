@@ -137,7 +137,7 @@ const Dashboard = () => {
                                 <div className="col">
                                     <select
                                         onChange={(e) => handleSelectChange(e, key)}
-                                        className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'
+                                        className='outline-none pe-14 ps-2 text-left rounded-md w-10/12 border-b'
                                         value={itemsPerPage[key] || 10}
                                     >
                                         <option value="10">10 Rows</option>
@@ -151,7 +151,7 @@ const Dashboard = () => {
                                     </select>
                                     <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
                                 </div>
-                                <div className="col md:flex justify-end">
+                                <div className="col md:flex justify-end gap-3">
                                     <input
                                         type="search"
                                         className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'

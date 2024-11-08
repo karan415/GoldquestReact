@@ -25,7 +25,7 @@ const ClientForm = () => {
         client_application_id: '',
     });
 
-    const { selectedDropBox, fetchClientDrop, services, uniquePackages,loading } = useContext(DropBoxContext);
+    const { selectedDropBox, fetchClientDrop,fetchServices, services, uniquePackages,loading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
     const [isLoading, setIsLoading] = useState(false); 
@@ -91,6 +91,10 @@ const ClientForm = () => {
         }
     };
     
+    useEffect(()=>{
+        fetchServices();
+        fetchClientDrop();
+    },[fetchServices,fetchClientDrop])
     
 
     const handleFileChange = (fileName, e) => {

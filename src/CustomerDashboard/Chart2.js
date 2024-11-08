@@ -89,3 +89,4 @@ const Chart2 = () => {
 };
 
 export default Chart2;
+

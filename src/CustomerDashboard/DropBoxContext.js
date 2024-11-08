@@ -28,14 +28,18 @@ export const DropBoxProvider = ({ children }) => {
 
     const fetchServices = useCallback(async () => {
         setLoading(true);
-
-        if (!branchId || !customerId || !token) {
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
+        if (!branch_id || !_token) {
             setLoading(false);
             return;
+
         }
 
+
+
         try {
-            const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customerId}&branch_id=${branchId}&branch_token=${token}`, {
+            const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customerId}&branch_id=${branch_id}&branch_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
@@ -92,14 +96,15 @@ export const DropBoxProvider = ({ children }) => {
 
     const fetchClient = useCallback(async () => {
         setLoading(true);
-
-        if (!branchId || !token) {
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
+        if (!branch_id || !_token) {
             setLoading(false);
             return;
         }
 
         try {
-            const response = await fetch(`${API_URL}/branch/candidate-application/list?branch_id=${branchId}&_token=${token}`, {
+            const response = await fetch(`${API_URL}/branch/candidate-application/list?branch_id=${branch_id}&_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
@@ -129,14 +134,16 @@ export const DropBoxProvider = ({ children }) => {
 
     const fetchClientDrop = useCallback(async () => {
         setLoading(true);
-
-        if (!branchId || !token) {
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
+        if (!branch_id || !_token) {
             setLoading(false);
+
             return;
         }
 
         try {
-            const response = await fetch(`${API_URL}/branch/client-application/list?branch_id=${branchId}&_token=${token}`, {
+            const response = await fetch(`${API_URL}/branch/client-application/list?branch_id=${branch_id}&_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
