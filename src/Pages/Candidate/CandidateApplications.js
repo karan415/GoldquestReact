@@ -641,7 +641,7 @@ const CandidateApplications = () => {
     };
 
 
-    console.log('formData', formData)
+
 
     return (
         <form onSubmit={handleFormSubmit}>
