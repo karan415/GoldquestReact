@@ -11,6 +11,7 @@ import PulseLoader from 'react-spinners/PulseLoader';
 const Dashboard = () => {
 
     const color = "#36A2EB"; // Define loader color
+    const [searchTerm, setSearchTerm] = useState(''); // New state for search term
 
     const override = {
         display: "block",
@@ -151,13 +152,13 @@ const Dashboard = () => {
                         return (
                             <div className="overflow-x-auto p-4" key={key}>
                                 <h2 className="font-bold text-2xl pb-6 w-full text-center uppercase">
-                                    {formatKey(key)}
+                                    {formatKey(key) || 'NIL'}
                                 </h2>
                                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-                                    <div className="col">
+                                    <div className="col md:flex gap-3">
                                         <select
                                             onChange={(e) => handleSelectChange(e, key)}
-                                            className='outline-none pe-14 ps-2 text-left rounded-md w-10/12 border-b'
+                                            className='outline-none pe-3 ps-2 text-left rounded-md w-10/12 border '
                                             value={itemsPerPage[key] || 10}
                                         >
                                             <option value="10">10 Rows</option>
@@ -175,14 +176,14 @@ const Dashboard = () => {
                                             type='button'
                                         >
                                             Excel
-                                        </button>                                </div>
+                                        </button>
+                                    </div>
                                     <div className="col md:flex justify-end gap-3">
                                         <input
                                             type="search"
                                             className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
                                             placeholder='Search by Client Code, Company Name, or Client Spoc'
                                         />
-                                        <button className='bg-green-500 p-3 rounded-md hover:bg-green-200 text-white'>Search</button>
                                     </div>
                                 </div>
                                 <table className="min-w-full bg-white border">

@@ -108,7 +108,7 @@ const ClientForm = () => {
         for (const [index, [key, value]] of Object.entries(files).entries()) {
             const customerLogoFormData = new FormData();
             customerLogoFormData.append('branch_id', storedBranchData?.id);
-            customerLogoFormData.append('branch_token', branch_token);
+            customerLogoFormData.append('_token', branch_token);
             customerLogoFormData.append('customer_code', customer_code);
             customerLogoFormData.append('client_application_id', insertedId);
 
@@ -153,7 +153,7 @@ const ClientForm = () => {
                     customer_id,
                     branch_id,
                     send_mail: 1,
-                    branch_token: branch_token,
+                     _token: branch_token,
                     ...clientInput
                 };
             }
@@ -162,7 +162,7 @@ const ClientForm = () => {
                     customer_id,
                     branch_id,
                     send_mail: 0,
-                    branch_token: branch_token,
+                 _token: branch_token,
                     ...clientInput
                 };
             }
