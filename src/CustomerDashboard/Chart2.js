@@ -6,74 +6,95 @@ const CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 const Chart2 = () => {
   const { fetchDashboard, tableData } = useDashboard();
-  const [chartData, setChartData] = useState([]); // To store the dynamic data for the chart
+  const [chartData, setChartData] = useState([]);
 
-  // Fetch the dashboard data on component mount
   useEffect(() => {
     console.log("Fetching dashboard data...");
     fetchDashboard();
   }, [fetchDashboard]);
 
-  // Process the data whenever `tableData` changes
   useEffect(() => {
     if (tableData && tableData.clientApplications) {
       console.log("Found clientApplications data:", tableData.clientApplications);
 
-      // Combine all applications into a single wave
-      const dataPoints = Object.values(tableData.clientApplications).flatMap((statusData) =>
-        statusData.applications.map((app) => ({
-          x: new Date(app.created_at), // Date on X-axis
-          y: app.applicationCount, // Application count for Y-axis
-        }))
-      );
+      const dateMap = {};
+
+      // Aggregate by day
+      Object.values(tableData.clientApplications).forEach((statusData) => {
+        statusData.applications.forEach((app) => {
+          // Parse date, check for validity
+          const date = new Date(app.created_at);
+          if (isNaN(date.getTime())) {
+            console.error("Invalid date encountered:", app.created_at);
+            return; // Skip invalid dates
+          }
+
+          // Extract just the date part to group by day
+          const day = date.toISOString().split('T')[0];
+
+          if (!dateMap[day]) {
+            dateMap[day] = 0;
+          }
+          dateMap[day] += 1; // Increment count for each application on that day
+        });
+      });
+
+      // Transform dateMap into dataPoints array
+      const dataPoints = Object.entries(dateMap).map(([day, count]) => {
+        const parsedDate = new Date(day);
+        console.log("Parsed Date:", parsedDate, "Count:", count);
+        return {
+          x: parsedDate,
+          y: count,
+        };
+      });
 
       console.log("Transformed Data Points for Chart:", dataPoints);
       setChartData([
         {
-          type: "splineArea", // Wave style
+          type: "splineArea",
           showInLegend: true,
           legendText: "Applications",
           dataPoints,
-          color: "#2196F3", // Color for the wave
+          color: "#2196F3",
           name: "Applications",
         },
       ]);
     } else {
       console.log("No clientApplications found in tableData");
     }
-  }, [tableData]); // Only rerun this effect if `tableData` changes
+  }, [tableData]);
 
-  // Chart options with enhanced visuals
   const options = {
     animationEnabled: true,
     title: {
-      text: "Client Applications Over Time", // Chart title
+      text: "Client Applications Over Time",
       fontSize: 20,
       fontColor: "#333",
     },
     axisX: {
-      title: "Date", // X-axis title
-      valueFormatString: "DD MMM YYYY", // Date format for X-axis
-      labelAngle: -45, // Tilt labels for better readability
+      title: "Date",
+      valueFormatString: "DD MMM YYYY",
+      labelAngle: -45,
     },
     axisY: {
-      title: "Application Count", // Y-axis title
-      includeZero: true, // Start Y-axis from 0
-      gridThickness: 1, // Make grid lines visible
+      title: "Application Count",
+      includeZero: true,
+      gridThickness: 1,
       labelFormatter: function (e) {
-        return e.value.toLocaleString(); // Format Y-axis values with commas
+        return e.value.toLocaleString();
       },
     },
     toolTip: {
-      shared: true, // Show shared tooltip when hovering over multiple series
-      content: "Applications: {y} on {x}", // Custom tooltip format
+      shared: true,
+      content: "Applications: {y} on {x}",
     },
-    data: chartData, // Use the single wave data here
+    data: chartData,
     legend: {
       verticalAlign: "top",
       horizontalAlign: "center",
     },
-    backgroundColor: "#f4f4f9", // Light background color for the chart
+    backgroundColor: "#f4f4f9",
     subTitle: {
       text: "Total applications created over time",
       fontSize: 14,
@@ -89,4 +110,3 @@ const Chart2 = () => {
 };
 
 export default Chart2;
-

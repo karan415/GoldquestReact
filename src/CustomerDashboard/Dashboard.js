@@ -4,7 +4,7 @@ import Chart from './Chart';
 import Chart2 from './Chart2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from 'react-icons/md';
 import { useDashboard } from './DashboardContext';
-
+import * as XLSX from 'xlsx';
 import PulseLoader from 'react-spinners/PulseLoader';
 
 
@@ -93,6 +93,26 @@ const Dashboard = () => {
         );
     };
 
+
+    const exportToExcel = (applications, key) => {
+        // Map data to export format
+        const dataToExport = applications.map((app, index) => ({
+            No: index + 1,
+            "Application ID": app.application_id,
+            "Application Name": app.application_name,
+        }));
+
+        // Create worksheet and workbook
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, key);
+
+        // Download the Excel file
+        XLSX.writeFile(workbook, `${key}_Applications.xlsx`);
+    };
+
+
+
     return (
         <div className="md:p-14 p-4">
             <CaseStudy />
@@ -107,117 +127,122 @@ const Dashboard = () => {
                 </div>
             </div>
             <div className="grid md:grid-cols-2 grid-cols-1 gap-6 border-t-2">
-            {loading ? (
-                <div className="flex justify-center items-center w-full py-10">
-                    <PulseLoader
-                        color={color}
-                        loading={loading}
-                        cssOverride={override}
-                        size={15}
-                        aria-label="Loading Spinner"
-                        data-testid="loader"
-                    />
-                </div>
-            ) : Object.keys(tableData.clientApplications).length > 0 ? (
-                Object.keys(tableData.clientApplications).map((key) => {
-                    const applicationGroup = tableData.clientApplications[key];
-                    const currentPage = paginatedData[key]?.pageNumber || 1;
-                    const currentItemsPerPage = itemsPerPage[key] || 10;
-                    const paginatedApplications = applicationGroup.applications.slice(
-                        (currentPage - 1) * currentItemsPerPage,
-                        currentPage * currentItemsPerPage
-                    );
-        
-                    return (
-                        <div className="overflow-x-auto p-4" key={key}>
-                            <h2 className="font-bold text-2xl pb-6 w-full text-center uppercase">
-                                {formatKey(key)}
-                            </h2>
-                            <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-                                <div className="col">
-                                    <select
-                                        onChange={(e) => handleSelectChange(e, key)}
-                                        className='outline-none pe-14 ps-2 text-left rounded-md w-10/12 border-b'
-                                        value={itemsPerPage[key] || 10}
-                                    >
-                                        <option value="10">10 Rows</option>
-                                        <option value="20">20 Rows</option>
-                                        <option value="50">50 Rows</option>
-                                        <option value="100">100 Rows</option>
-                                        <option value="200">200 Rows</option>
-                                        <option value="300">300 Rows</option>
-                                        <option value="400">400 Rows</option>
-                                        <option value="500">500 Rows</option>
-                                    </select>
-                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
+                {loading ? (
+                    <div className="flex justify-center items-center w-full py-10">
+                        <PulseLoader
+                            color={color}
+                            loading={loading}
+                            cssOverride={override}
+                            size={15}
+                            aria-label="Loading Spinner"
+                            data-testid="loader"
+                        />
+                    </div>
+                ) : Object.keys(tableData.clientApplications).length > 0 ? (
+                    Object.keys(tableData.clientApplications).map((key) => {
+                        const applicationGroup = tableData.clientApplications[key];
+                        const currentPage = paginatedData[key]?.pageNumber || 1;
+                        const currentItemsPerPage = itemsPerPage[key] || 10;
+                        const paginatedApplications = applicationGroup.applications.slice(
+                            (currentPage - 1) * currentItemsPerPage,
+                            currentPage * currentItemsPerPage
+                        );
+
+                        return (
+                            <div className="overflow-x-auto p-4" key={key}>
+                                <h2 className="font-bold text-2xl pb-6 w-full text-center uppercase">
+                                    {formatKey(key)}
+                                </h2>
+                                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                                    <div className="col">
+                                        <select
+                                            onChange={(e) => handleSelectChange(e, key)}
+                                            className='outline-none pe-14 ps-2 text-left rounded-md w-10/12 border-b'
+                                            value={itemsPerPage[key] || 10}
+                                        >
+                                            <option value="10">10 Rows</option>
+                                            <option value="20">20 Rows</option>
+                                            <option value="50">50 Rows</option>
+                                            <option value="100">100 Rows</option>
+                                            <option value="200">200 Rows</option>
+                                            <option value="300">300 Rows</option>
+                                            <option value="400">400 Rows</option>
+                                            <option value="500">500 Rows</option>
+                                        </select>
+                                        <button
+                                            onClick={() => exportToExcel(applicationGroup.applications, key)}
+                                            className="bg-green-600 text-white py-3 px-8 rounded-md capitalize"
+                                            type='button'
+                                        >
+                                            Excel
+                                        </button>                                </div>
+                                    <div className="col md:flex justify-end gap-3">
+                                        <input
+                                            type="search"
+                                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                            placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                        />
+                                        <button className='bg-green-500 p-3 rounded-md hover:bg-green-200 text-white'>Search</button>
+                                    </div>
                                 </div>
-                                <div className="col md:flex justify-end gap-3">
-                                    <input
-                                        type="search"
-                                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                        placeholder='Search by Client Code, Company Name, or Client Spoc'
-                                    />
-                                    <button className='bg-green-500 p-3 rounded-md hover:bg-green-200 text-white'>Search</button>
-                                </div>
-                            </div>
-                            <table className="min-w-full bg-white border">
-                                <thead>
-                                    <tr className='bg-green-500'>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">No</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">Application ID</th>
-                                        <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">Application Name</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedApplications.length > 0 ? (
-                                        paginatedApplications.map((application, appIndex) => (
-                                            <tr key={appIndex}>
-                                                <td className="py-3 px-4 border-b text-green-600 whitespace-nowrap">{(currentPage - 1) * currentItemsPerPage + appIndex + 1}</td>
-                                                <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_id}</td>
-                                                <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_name}</td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="3" className="py-3 px-4 border-b text-center text-gray-500">No applications available</td>
+                                <table className="min-w-full bg-white border">
+                                    <thead>
+                                        <tr className='bg-green-500'>
+                                            <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">No</th>
+                                            <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">Application ID</th>
+                                            <th className="py-3 px-4 border-b text-left border-r-2 text-white whitespace-nowrap uppercase">Application Name</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-        
-                            <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                                <button
-                                    type='button'
-                                    onClick={() => showPrev(key)}
-                                    disabled={currentPage === 1}
-                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    aria-label="Previous page"
-                                >
-                                    <MdArrowBackIosNew />
-                                </button>
-                                <div className="flex items-center">
-                                    {renderPagination(key)}
+                                    </thead>
+                                    <tbody>
+                                        {paginatedApplications.length > 0 ? (
+                                            paginatedApplications.map((application, appIndex) => (
+                                                <tr key={appIndex}>
+                                                    <td className="py-3 px-4 border-b text-green-600 whitespace-nowrap">{(currentPage - 1) * currentItemsPerPage + appIndex + 1}</td>
+                                                    <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_id}</td>
+                                                    <td className="py-3 px-4 border-b whitespace-nowrap">{application.application_name}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="3" className="py-3 px-4 border-b text-center text-gray-500">No applications available</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+
+                                <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                                    <button
+                                        type='button'
+                                        onClick={() => showPrev(key)}
+                                        disabled={currentPage === 1}
+                                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        aria-label="Previous page"
+                                    >
+                                        <MdArrowBackIosNew />
+                                    </button>
+                                    <div className="flex items-center">
+                                        {renderPagination(key)}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => showNext(key)}
+                                        disabled={currentPage >= calculateTotalPages(applicationGroup, currentItemsPerPage)}
+                                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        aria-label="Next page"
+                                    >
+                                        <MdArrowForwardIos />
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => showNext(key)}
-                                    disabled={currentPage >= calculateTotalPages(applicationGroup, currentItemsPerPage)}
-                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    aria-label="Next page"
-                                >
-                                    <MdArrowForwardIos />
-                                </button>
                             </div>
-                        </div>
-                    );
-                })
-            ) : (
-                <div className="flex justify-center items-center w-full py-10">
-                    <p className="text-center text-lg">No applications available</p>
-                </div>
-            )}
-        </div>
-        
+                        );
+                    })
+                ) : (
+                    <div className="flex justify-center items-center w-full py-10">
+                        <p className="text-center text-lg">No applications available</p>
+                    </div>
+                )}
+            </div>
+
 
 
         </div>

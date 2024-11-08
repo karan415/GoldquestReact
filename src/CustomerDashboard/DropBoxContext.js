@@ -12,13 +12,11 @@ export const DropBoxProvider = ({ children }) => {
     const [selectedDropBox, setSelectedDropBox] = useState(null);
     const [branchId, setBranchId] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [customerId, setCustomerId] = useState(null);
     const [token, setToken] = useState(null);
 
     useEffect(() => {
         const branch = JSON.parse(localStorage.getItem('branch'));
         setBranchId(branch?.id);
-        setCustomerId(branch?.customer_id);
         setToken(localStorage.getItem('branch_token'));
     }, []);
 
@@ -29,6 +27,7 @@ export const DropBoxProvider = ({ children }) => {
     const fetchServices = useCallback(async () => {
         setLoading(true);
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
         if (!branch_id || !_token) {
             setLoading(false);
@@ -39,7 +38,7 @@ export const DropBoxProvider = ({ children }) => {
 
 
         try {
-            const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customerId}&branch_id=${branch_id}&branch_token=${_token}`, {
+            const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch_id}&branch_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
@@ -92,7 +91,7 @@ export const DropBoxProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [API_URL, branchId, customerId, token]);
+    }, [API_URL, branchId, token]);
 
     const fetchClient = useCallback(async () => {
         setLoading(true);
