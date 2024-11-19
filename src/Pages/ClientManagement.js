@@ -284,9 +284,8 @@ const resetFormFields = () => {
 
 
 const uploadCustomerLogo = async (adminId, token, customerInsertId, password) => {
-
-
   const fileCount = Object.keys(files).length;
+
   for (const [index, [key, value]] of Object.entries(files).entries()) {
     const customerLogoFormData = new FormData();
     customerLogoFormData.append('admin_id', adminId);
@@ -297,14 +296,14 @@ const uploadCustomerLogo = async (adminId, token, customerInsertId, password) =>
       customerLogoFormData.append('images', file);
       customerLogoFormData.append('upload_category', key);
     }
-    if (fileCount === (index + 1)) {
+    if (fileCount === index + 1) {
       customerLogoFormData.append('send_mail', 1);
       customerLogoFormData.append('company_name', input.company_name);
       customerLogoFormData.append('password', password);
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/customer/upload`,
         customerLogoFormData,
         {
@@ -313,11 +312,19 @@ const uploadCustomerLogo = async (adminId, token, customerInsertId, password) =>
           },
         }
       );
+
+      // Save new token
+      const newToken = response.data._token || response.data.token;
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+        token = newToken; // Update token for subsequent requests
+      }
     } catch (err) {
       Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
     }
   }
 };
+
 
 
 const addMoreFields = () => {

@@ -15,7 +15,6 @@ const CandidateForm = () => {
 
     const [input, setInput] = useState({
         name: "",
-        applicant_name: "",
         employee_id: "",
         mobile_number: "",
         email: "",
@@ -62,7 +61,6 @@ const CandidateForm = () => {
         if (selectedDropBox) {
             setInput({
                 name: selectedDropBox.name,
-                applicant_name: selectedDropBox.applicant_name,
                 employee_id: selectedDropBox.employee_id,
                 mobile_number: selectedDropBox.mobile_number,
                 email: selectedDropBox.email,
@@ -74,7 +72,6 @@ const CandidateForm = () => {
         } else {
             setInput({
                 name: "",
-                applicant_name: "",
                 employee_id: "",
                 mobile_number: "",
                 email: "",
@@ -89,7 +86,6 @@ const CandidateForm = () => {
     const validate = () => {
         const NewErr = {};
         if (!input.name) NewErr.name = 'This is required';
-        if (!input.applicant_name) NewErr.applicant_name = 'This is required';
         if (!input.employee_id) NewErr.employee_id = 'This is required';
         if (!input.mobile_number) {
             NewErr.mobile_number = 'This is required';
@@ -127,7 +123,6 @@ const CandidateForm = () => {
                 branch_id,
                 _token: branch_token,
                 name: input.name,
-                applicant_name: input.applicant_name,
                 employee_id: input.employee_id,
                 mobile_number: input.mobile_number,
                 email: input.email,
@@ -164,7 +159,6 @@ const CandidateForm = () => {
                     }
                     setInput({
                         name: "",
-                        applicant_name: "",
                         employee_id: "",
                         mobile_number: "",
                         email: "",
@@ -204,7 +198,6 @@ const CandidateForm = () => {
                         <div className="mb-4">
                             <label htmlFor="applicant_name" className='text-sm'>Name of the organisation:</label>
                             <input type="text" name="applicant_name" className="border w-full rounded-md p-2 mt-2" disabled value={branch_name?.name} />
-                            {error.applicant_name && <p className='text-red-500'>{error.applicant_name}</p>}
                         </div>
                         <div className="mb-4">
                             <label htmlFor="name" className='text-sm'>Full name of the applicant *</label>

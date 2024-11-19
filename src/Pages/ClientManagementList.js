@@ -1,15 +1,15 @@
 import React, { useEffect, useState, } from 'react';
 import Swal from 'sweetalert2';
-import Popup from 'reactjs-popup';
 import { useSidebar } from '../Sidebar/SidebarContext';
 import 'reactjs-popup/dist/index.css';
 import { useEditClient } from './ClientEditContext';
-import BranchEditForm from './BranchEditForm';
-import { useEditBranch } from './BranchEditContext';
 import { useData } from './DataContext';
 import PulseLoader from "react-spinners/PulseLoader";
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root');
 const ClientManagementList = () => {
 
   const { handleTabChange } = useSidebar();
@@ -17,8 +17,81 @@ const ClientManagementList = () => {
 
   const API_URL = useApi();
   const { setClientData } = useEditClient();
-  const { setBranchEditData } = useEditBranch();
-  const { loading, error, listData, fetchData, toggleAccordion, branches, openAccordionId, isOpen, setIsOpen } = useData();
+
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [editData, setEditData] = useState({ id: null, name: '', email: '' });
+
+  const openPopup = (branch) => {
+    setEditData({ id: branch.id, name: branch.name, email: branch.email });
+    setIsPopupOpen(true); // Only open the popup
+  };
+  
+  const handleEditBranch = async (e) => {
+    e.preventDefault();
+  
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+  
+    // Validate required fields
+    if (!editData.id || !editData.name || !editData.email) {
+      Swal.fire(
+        'Error!',
+        'Missing required fields: Branch ID, Name, or Email',
+        'error'
+      );
+      return;
+    }
+  
+    // Prepare the request payload
+    const raw = JSON.stringify({
+      id: editData.id,
+      name: editData.name,
+      email: editData.email,
+      admin_id,
+      _token: storedToken,
+    });
+  
+    const requestOptions = {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: raw,
+    };
+  
+    try {
+      const response = await fetch(`${API_URL}/branch/update`, requestOptions);
+  
+      if (!response.ok) {
+        // Handle server errors gracefully
+        const errorData = await response.json();
+        Swal.fire('Error!', `An error occurred: ${errorData.message || response.statusText}`, 'error');
+        return;
+      }
+  
+      // Handle success
+      const result = await response.json();
+      const newToken = result._token || result.token; // Update token if provided
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+      }
+  
+      Swal.fire('Success!', 'Branch updated successfully.', 'success');
+      toggleAccordion(); // Refresh UI or reload data
+      setIsPopupOpen(false); // Close the popup
+      closePopup();
+    } catch (error) {
+      Swal.fire('Error!', 'There was a problem with the update operation.', 'error');
+      console.error('Fetch error:', error);
+    }
+  };
+  
+
+  const closePopup = () => {
+    setIsPopupOpen(false);
+    setEditData({ id: null, name: '', email: '' });
+  };
+
+ 
+  const { loading, listData, fetchData, toggleAccordion, branches, openAccordionId, isOpen, setIsOpen } = useData();
 
   const [showAllServicesState, setShowAllServicesState] = useState({});
   const toggleAccordions = (id) => {
@@ -485,11 +558,11 @@ const ClientManagementList = () => {
                         </button>
                       )}
                       {/* Branches Accordion */}
-                      {openAccordionId === item.main_id && (
+                      {openAccordionId === item.main_id &&
                         branches.map((branch) => {
                           const isActive = branch.status === 0;
                           const isBlocked = branch.status === 1;
-
+                      
                           return (
                             <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
                               <div
@@ -501,33 +574,89 @@ const ClientManagementList = () => {
                               </div>
                               {isOpen === branch.id && (
                                 <div className="accordion_body">
-                                  <ul className='flex gap-2 items-center'>
+                                  <ul className="flex gap-2 items-center">
                                     <li>{branch.email}</li>
-                                    <Popup
-                                      trigger={<button className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white">Edit</button>}
-                                      position="right center"
-                                      onOpen={() => setBranchEditData({
-                                        id: branch.id,
-                                        name: branch.name,
-                                        email: branch.email
-                                      })}
+                                    <button
+                                      className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                      onClick={() => openPopup(branch)}
                                     >
-                                      <BranchEditForm />
-                                    </Popup>
-                                    <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(branch.id, 'branch')}>Delete</button>
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                      onClick={() => handleDelete(branch.id, 'branch')}
+                                    >
+                                      Delete
+                                    </button>
                                     {isActive && (
-                                      <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockBranch(branch.id)}>Block</button>
+                                      <button
+                                        className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                        onClick={() => blockBranch(branch.id)}
+                                      >
+                                        Block
+                                      </button>
                                     )}
                                     {isBlocked && (
-                                      <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2" onClick={() => unblockBranch(branch.id)}>Unblock</button>
+                                      <button
+                                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                        onClick={() => unblockBranch(branch.id)}
+                                      >
+                                        Unblock
+                                      </button>
                                     )}
                                   </ul>
                                 </div>
                               )}
                             </div>
                           );
-                        })
-                      )}
+                        })}
+                      
+                      <Modal
+                        isOpen={isPopupOpen}
+                        onRequestClose={closePopup}
+                        contentLabel="Edit Branch"
+                        className="modal"
+                        overlayClassName="overlay"
+                      >
+                        <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
+                        <form>
+                          <div className="mb-4">
+                            <label className="block text-gray-700">Name:</label>
+                            <input
+                              type="text"
+                              value={editData.name}
+                              onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                              className="border rounded-md w-full p-2"
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-gray-700">Email:</label>
+                            <input
+                              type="email"
+                              value={editData.email}
+                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                              className="border rounded-md w-full p-2"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              className="bg-gray-300 rounded-md px-4 py-2"
+                              onClick={closePopup}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              className="bg-green-600 text-white rounded-md px-4 py-2"
+                              onClick={handleEditBranch}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      </Modal>
+                      
                     </td>
                   </tr>
                 );

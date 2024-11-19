@@ -15,9 +15,8 @@ export const ClientEditProvider = ({ children }) => {
 
 
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
-
-
         const fileCount = Object.keys(files).length;
+    
         for (const [index, [key, value]] of Object.entries(files).entries()) {
             const customerLogoFormData = new FormData();
             customerLogoFormData.append('admin_id', admin_id);
@@ -31,9 +30,9 @@ export const ClientEditProvider = ({ children }) => {
             if (fileCount === (index + 1)) {
                 customerLogoFormData.append('company_name', clientData.name);
             }
-
+    
             try {
-                await axios.post(
+                const response = await axios.post(
                     `${API_URL}/customer/upload`,
                     customerLogoFormData,
                     {
@@ -42,11 +41,19 @@ export const ClientEditProvider = ({ children }) => {
                         },
                     }
                 );
+    
+                // Extract new token from response and update localStorage
+                const newToken = response.data._token || response.data.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                    storedToken = newToken; // Update the token for subsequent requests
+                }
             } catch (err) {
                 Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
             }
         }
     };
+    
 
     const handleClientChange = (e, index) => {
         const { name, value, type, files } = e.target;

@@ -1,46 +1,43 @@
-
 import { useEditClient } from './ClientEditContext';
 import ServicesEditForm from './ServicesEditForm';
 import { State } from 'country-state-city';
 
 const states = State.getStatesOfCountry('IN');
+
 export const ClientEditForm = () => {
-
     const options = states.map(state => ({ value: state.isoCode, label: state.name }));
-
     const { clientData, loading, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
     const formattedDate = clientData.agreement_date.split("T")[0];
 
-
     let emails = clientData.emails;
 
-    // Check if emails is a string (not yet parsed)
+    // Safely parse emails
     if (typeof emails === 'string') {
         try {
-            // Try to parse the string as JSON if it's not already an array
             emails = JSON.parse(emails);
         } catch (error) {
-            // Handle the case where JSON parsing fails, maybe log an error
             console.error("Error parsing emails JSON:", error);
-            emails = []; // Fallback to an empty array if parsing fails
+            emails = [];
         }
     }
-    
+
     const newEmails = Array.isArray(emails) ? emails : [];
-    
+
     const handleEmailChange = (index, value) => {
         const updatedEmails = [...newEmails];
         updatedEmails[index] = value;
         handleClientChange({ target: { name: 'emails', value: updatedEmails } });
     };
-    
-    
+
+    const addNewEmailField = () => {
+        const updatedEmails = [...newEmails, ""];
+        handleClientChange({ target: { name: 'emails', value: updatedEmails } });
+    };
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files);
         setFiles((prevFiles) => ({ ...prevFiles, [fileName]: selectedFiles }));
     };
-
 
     return (
         <>
@@ -232,8 +229,8 @@ export const ClientEditForm = () => {
                     />
                 </div>
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="emails">Emails:</label>
-                    <div className="flex gap-3 flex-wrap">
+                <label className="text-gray-500" htmlFor="emails">Emails:</label>
+                <div className="flex gap-3 flex-wrap">
                     {newEmails.length > 0 ? (
                         newEmails.map((email, index) => (
                             <input
@@ -241,15 +238,21 @@ export const ClientEditForm = () => {
                                 type="email"
                                 value={email}
                                 className="border w-3/12 rounded-md p-2 mt-2 outline-none"
-                                onChange={(e) => handleEmailChange(index, e.target.value)} // onChange triggers handleEmailChange
+                                onChange={(e) => handleEmailChange(index, e.target.value)}
                             />
                         ))
                     ) : (
                         <p>No emails available</p>
                     )}
                 </div>
-                
-                </div>
+                <button
+                    type="button"
+                    className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    onClick={addNewEmailField}
+                >
+                    Add Email
+                </button>
+            </div>
 
                 <div className="mb-4">
                     <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
