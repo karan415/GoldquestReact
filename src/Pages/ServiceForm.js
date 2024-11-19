@@ -13,6 +13,8 @@ const ServiceForm = () => {
     const [serviceInput, setServiceInput] = useState({
         name: "",
         d_name: "",
+        short_code: "",
+        sac_code: ""
     });
     const [error, setError] = useState({});
 
@@ -25,12 +27,16 @@ const ServiceForm = () => {
             setServiceInput({
                 name: selectedService.title || '',
                 d_name: selectedService.description || '',
+                sac_code: selectedService.sac_code || '',
+                short_code: selectedService.short_code || '',
             });
             setIsEdit(true);
         } else {
             setServiceInput({
                 name: "",
                 d_name: "",
+                short_code: "",
+                sac_code: ""
             });
             setIsEdit(false);
         }
@@ -43,6 +49,12 @@ const ServiceForm = () => {
         }
         if (!serviceInput.d_name) {
             newErrors.d_name = 'This Field is Required!';
+        }
+        if (!serviceInput.sac_code) {
+            newErrors.sac_code = 'This Field is Required!';
+        }
+        if (!serviceInput.short_code) {
+            newErrors.short_code = 'This Field is Required!';
         }
         return newErrors;
     };
@@ -69,6 +81,8 @@ const ServiceForm = () => {
                     id: selectedService?.id || '',
                     title: serviceInput.name,
                     description: serviceInput.d_name,
+                    short_code: serviceInput.short_code,
+                    sac_code: serviceInput.sac_code,
                     admin_id: adminId,
                     _token: storedToken,
                 }),
@@ -112,7 +126,7 @@ const ServiceForm = () => {
                         updateServiceList(prevList => [...prevList, result]);
                     }
                     fetchData();
-                    setServiceInput({ name: "", d_name: "" });
+                    setServiceInput({ name: "", d_name: "" ,sac_code:"",short_code:""});
                     setIsEdit(false);
                 })
                 .catch((error) => {
@@ -149,6 +163,28 @@ const ServiceForm = () => {
                     onChange={handleChange}
                     className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
                 {error.d_name && <p className='text-red-500'>{error.d_name}</p>}
+            </div>
+            <div className="mb-4">
+                <label htmlFor="ServiceDisplayName" className="block">SAC</label>
+                <input
+                    type="text"
+                    name="sac_code"
+                    id="ServiceDisplayName"
+                    value={serviceInput.sac_code}
+                    onChange={handleChange}
+                    className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
+                {error.sac_code && <p className='text-red-500'>{error.sac_code}</p>}
+            </div>
+            <div className="mb-4">
+                <label htmlFor="ServiceDisplayName" className="block">Short Code</label>
+                <input
+                    type="text"
+                    name="short_code"
+                    id="ServiceDisplayName"
+                    value={serviceInput.short_code}
+                    onChange={handleChange}
+                    className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
+                {error.short_code && <p className='text-red-500'>{error.short_code}</p>}
             </div>
             <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit' disabled={loading}>
                 {loading ? 'Processing...' : isEdit ? 'Update' : 'Add'}

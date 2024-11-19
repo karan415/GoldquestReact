@@ -213,6 +213,8 @@ const ServiceList = () => {
                   <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SL</th>
                   <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
                   <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Description</th>
+                  <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SAC Code</th>
+                  <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Short Code</th>
                   <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Action</th>
                 </tr>
               </thead>
@@ -222,6 +224,8 @@ const ServiceList = () => {
                     <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
                     <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
                     <td className="py-2 px-4 border-r border-b">{item.description}</td>
+                    <td className="py-2 px-4 border-r border-b">{item.sac_code}</td>
+                    <td className="py-2 px-4 border-r border-b">{item.short_code}</td>
                     <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
                       <button
                         disabled={loading}

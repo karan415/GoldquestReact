@@ -91,7 +91,7 @@ const InactiveClients = () => {
     const storedToken = localStorage.getItem('_token');
 
     try {
-      const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
+      const response = await fetch(`https://goldquestreact.onrender.com/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -133,7 +133,7 @@ const InactiveClients = () => {
       }
 
       try {
-        const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
+        const response = await fetch(`https://goldquestreact.onrender.com/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
         if (!response.ok) {
           const errorData = await response.json();
           Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');

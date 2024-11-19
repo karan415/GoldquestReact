@@ -111,7 +111,7 @@ const DigitalAddressVerification = () => {
 
     const isApplicationExists = useCallback(() => {
         if (isValidApplication && decodedValues.app_id && decodedValues.branch_id && decodedValues.customer_id) {
-            fetch(`https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
+            fetch(`https://goldquestreact.onrender.com/branch/candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
                 .then(res => res.json())
                 .then(result => {
                     if (!result.status) {
@@ -165,7 +165,7 @@ const DigitalAddressVerification = () => {
             redirect: "follow"
         };
 
-        fetch("https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/submit", requestOptions)
+        fetch("https://goldquestreact.onrender.com/branch/candidate-application/digital-address-verification/submit", requestOptions)
             .then(response => response.json())
             .then(result => {
                 if (result.status) {

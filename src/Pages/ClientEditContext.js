@@ -11,30 +11,7 @@ export const ClientEditProvider = ({ children }) => {
     const API_URL = useApi();
     const [loading, setLoading] = useState(false);
 
-    const [clientData, setClientData] = useState({
-        company_name: '',
-        client_code: '',
-        address: '',
-        emails: '',
-        mobile_number: '',
-        contact_person: '',
-        state: '',
-        name_of_escalation: '',
-        state_code: '',
-        client_spoc: '',
-        gstin: '',
-        tat: '',
-        date_agreement: '',
-        client_standard: '',
-        agreement_period: 'Unless terminated',
-        agr_upload: null,
-        custom_template: 'no',
-        custom_logo: null,
-        custom_address: '',
-        additional_login: 'No',
-        username: '',
-        services: [],
-    });
+    const [clientData, setClientData] = useState();
 
 
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
@@ -45,14 +22,14 @@ export const ClientEditProvider = ({ children }) => {
             const customerLogoFormData = new FormData();
             customerLogoFormData.append('admin_id', admin_id);
             customerLogoFormData.append('_token', storedToken);
-            customerLogoFormData.append('customer_code', clientData.client_code);
+            customerLogoFormData.append('customer_code', clientData.client_unique_id);
             customerLogoFormData.append('customer_id', customerInsertId);
             for (const file of value) {
                 customerLogoFormData.append('images', file);
                 customerLogoFormData.append('upload_category', key);
             }
             if (fileCount === (index + 1)) {
-                customerLogoFormData.append('company_name', clientData.company_name);
+                customerLogoFormData.append('company_name', clientData.name);
             }
 
             try {
@@ -71,8 +48,6 @@ export const ClientEditProvider = ({ children }) => {
         }
     };
 
-    const { fetchData } = useData();
-
     const handleClientChange = (e, index) => {
         const { name, value, type, files } = e.target;
         setClientData(prevData => ({
@@ -87,7 +62,7 @@ export const ClientEditProvider = ({ children }) => {
         const storedToken = localStorage.getItem("_token");
         setLoading(true); // Start loading
     
-        if (!clientData.company_name || !clientData.client_code || !clientData.address) {
+        if (!clientData.name || !clientData.client_unique_id) {
             Swal.fire('Error!', 'Missing required fields: Branch ID, Name, Email', 'error');
             setLoading(false); // Stop loading if there's an error
             return;

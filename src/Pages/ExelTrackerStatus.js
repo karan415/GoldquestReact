@@ -215,7 +215,7 @@ const ExelTrackerStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://goldquestreact.onrender.com/client-master-tracker/customer-info?customer_id=${applicationData[0]?.customer_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -336,7 +336,7 @@ const ExelTrackerStatus = () => {
 
         try {
             const response = await fetch(
-                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
+                `https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${id}&branch_id=${branch_id}&admin_id=${adminId}&_token=${storedToken}`,
                 {
                     method: 'GET',
                     headers: {
@@ -370,8 +370,8 @@ const ExelTrackerStatus = () => {
                         redirect: "follow",
                     };
 
-                    const serviceInfoUrl = `https://octopus-app-www87.ondigitalocean.app/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
-                    const applicationServiceUrl = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
+                    const serviceInfoUrl = `https://goldquestreact.onrender.com/service/service-info?id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`;
+                    const applicationServiceUrl = `https://goldquestreact.onrender.com/client-master-tracker/application-service?service_id=${serviceId}&application_id=${id}&admin_id=${adminId}&_token=${storedToken}`;
 
                     const [serviceResponse, applicationResponse] = await Promise.all([
                         fetch(serviceInfoUrl, requestOptions),
@@ -406,7 +406,7 @@ const ExelTrackerStatus = () => {
             await Promise.all(
                 servicesArray.map(async (serviceId) => {
                     const response = await fetch(
-                        `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
+                        `https://goldquestreact.onrender.com/client-master-tracker/report-form-json-by-service-id?service_id=${serviceId}&admin_id=${adminId}&_token=${storedToken}`,
                         {
                             method: 'GET',
                             headers: {
@@ -437,7 +437,7 @@ const ExelTrackerStatus = () => {
 
                     if (parsedJson.db_table && parsedJson.heading) {
                         const annexureHeading = parsedJson.heading;
-                        const annexureURL = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
+                        const annexureURL = `https://goldquestreact.onrender.com/client-master-tracker/annexure-data?application_id=${id}&db_table=${parsedJson.db_table}&admin_id=${adminId}&_token=${storedToken}`;
 
                         const annexureResponse = await fetch(annexureURL, { method: "GET", redirect: "follow" });
                         if (!annexureResponse.ok) {
@@ -698,7 +698,7 @@ const ExelTrackerStatus = () => {
                         annexureImageArr.forEach(async (imageUrl) => {
                             console.log(`Checking annexureImage URL - `, imageUrl);
 
-                            const imagePath = "https://octopus-app-www87.ondigitalocean.app/" + imageUrl;
+                            const imagePath = "https://goldquestreact.onrender.com/" + imageUrl;
 
                             try {
                                 // Perform a HEAD request to check if the image exists

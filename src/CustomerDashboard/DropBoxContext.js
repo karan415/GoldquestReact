@@ -14,11 +14,7 @@ export const DropBoxProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [token, setToken] = useState(null);
 
-    useEffect(() => {
-        const branch = JSON.parse(localStorage.getItem('branch'));
-        setBranchId(branch?.id);
-        setToken(localStorage.getItem('branch_token'));
-    }, []);
+  
 
     const handleEditDrop = (pkg) => {
         setSelectedDropBox(pkg);
@@ -170,18 +166,7 @@ export const DropBoxProvider = ({ children }) => {
         }
     }, [API_URL, branchId, token]);
 
-    useEffect(() => {
-        const initializeFetch = () => {
-            fetchServices();
-            fetchClient();
-            fetchClientDrop();
-        };
-
-        window.onload = initializeFetch; // Trigger fetches on window load
-
-        return () => window.onload = null; // Cleanup on unmount
-    }, [fetchServices, fetchClient, fetchClientDrop]);
-
+  
     return (
         <DropBoxContext.Provider value={{
             services,

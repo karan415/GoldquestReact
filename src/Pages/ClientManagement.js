@@ -45,6 +45,7 @@ const ClientManagement = () => {
     custom_address: "",
     username: "",
   });
+  console.log('clientData',clientData)
 
   const handleFileChange = (fileName, e) => {
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array

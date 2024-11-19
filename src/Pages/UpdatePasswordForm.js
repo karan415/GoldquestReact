@@ -50,7 +50,7 @@ const UpdatePasswordForm = () => {
                 redirect: "follow"
             };
 
-            fetch("https://octopus-app-www87.ondigitalocean.app/admin/update-password", requestOptions)
+            fetch("https://goldquestreact.onrender.com/admin/update-password", requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');

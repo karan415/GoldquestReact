@@ -53,7 +53,7 @@ const CreateInvoice = () => {
       method: "GET",
       redirect: "follow",
     };
-    fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
+    fetch(`https://goldquestreact.onrender.com/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

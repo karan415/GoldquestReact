@@ -61,6 +61,9 @@ export const ServiceProvider = ({ children }) => {
                 index: index + 1,
                 title: item.title,
                 description: item.description,
+                sac_code: item.sac_code,
+                short_code: item.short_code,
+
                 id: item.id,
             }));
 
