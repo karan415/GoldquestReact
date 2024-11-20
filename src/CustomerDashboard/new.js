@@ -8,7 +8,7 @@ import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
-const AdminChekin = () => {
+const ReportCaseTable = () => {
     const tableRef = useRef(null); // Create a reference for the table
 
     const { handleTabChange } = useSidebar();
@@ -27,17 +27,17 @@ const AdminChekin = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const API_URL = useApi();
-    const { branch_id } = useContext(BranchContextExel);
 
     const queryParams = new URLSearchParams(location.search);
     const clientId = queryParams.get('clientId');
-    const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-    const token = localStorage.getItem('_token');
-    console.log('data', data)
+   
 
     // Fetch data from the main API
     const fetchData = useCallback(() => {
-        if (!branch_id || !adminId || !token) {
+
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
+        if (!branch_id ) {
             return;
         }
         else {
@@ -48,7 +48,7 @@ const AdminChekin = () => {
             redirect: "follow"
         };
 
-        fetch(`${API_URL}/client-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`${API_URL}/report-case-status/list?branch_id=${branch_id}&_token=${_token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 setLoading(false);
@@ -65,9 +65,8 @@ const AdminChekin = () => {
 
     const fetchAdminList = useCallback(() => {
         setLoading(true);
-        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-        const token = localStorage.getItem('_token');
-
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
         const requestOptions = {
             method: "GET",
             headers: {
@@ -76,7 +75,7 @@ const AdminChekin = () => {
             redirect: "follow"
         };
 
-        fetch(`${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`${API_URL}/branch/report-case-status/services-annexure-data?application_id=1&service_ids=1,2,3&branch_id=${branch_id}&_token=${_token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || '';
@@ -185,29 +184,7 @@ const AdminChekin = () => {
     };
 
 
-    const fetchSelectOptions = useCallback(() => {
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-
-        const requestOptions = {
-            method: "GET",
-            redirect: "follow"
-        };
-
-        fetch(`${API_URL}/client-master-tracker/branch-filter-options?branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then((result) => {
-                setOptions(result.filterOptions);
-                const newToken = result._token || result.token;
-                if (newToken) localStorage.setItem("_token", newToken);
-            })
-            .catch((error) => console.error('Error fetching options:', error));
-    }, []);
+  
 
 
     useEffect(() => {
@@ -255,401 +232,7 @@ const AdminChekin = () => {
     };
 
 
-    const generatePDF = async (index) => {
-        const applicationInfo = data[index];
-        console.log('applicationInfo', applicationInfo)
-
-        const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
-        console.log('servicesData', servicesData)
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.getWidth();
-        let yPosition = 10;
-        const backgroundColor = '#ccc'
-        // const pageHeight = doc.internal.pageSize.getHeight();
-
-        doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
-
-        // Title
-        doc.setFontSize(20); // Reduced font size
-        doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
-
-        // First Table
-        const firstTableData = [
-            [
-                { content: 'Name of the Candidate', styles: { cellWidth: 'auto' } },
-                { content: applicationInfo?.name || 'N/A' },
-                { content: 'Client Name' },
-                { content: applicationInfo[0]?.client_name || 'N/A' },
-            ],
-            [
-                { content: 'Application ID' },
-                { content: applicationInfo?.application_id || 'N/A' },
-                { content: 'Report Status' },
-                { content: applicationInfo?.report_status || 'N/A' },
-            ],
-            [
-                { content: 'Date of Birth' },
-                { content: applicationInfo?.dob ? new Date(applicationInfo.dob).toLocaleDateString() : 'N/A' },
-                { content: 'Application Received' },
-                { content: applicationInfo?.updated_at ? new Date(applicationInfo.updated_at).toLocaleDateString() : 'N/A' },
-            ],
-            [
-                { content: 'Candidate Employee ID' },
-                { content: applicationInfo?.employee_id || 'N/A' },
-                { content: 'Insuff Cleared/Reopened' },
-                { content: applicationInfo?.application_id || 'N/A' },
-            ],
-            [
-                { content: 'Report Type' },
-                { content: applicationInfo?.report_type || 'N/A' },
-                { content: 'Final Report Date' },
-                { content: applicationInfo?.report_date ? new Date(applicationInfo.report_date).toLocaleDateString() : 'N/A' },
-            ],
-            [
-                { content: 'Verification Purpose' },
-                { content: applicationInfo?.overall_status || 'N/A' },
-                { content: 'Overall Report Status' },
-                { content: applicationInfo?.status || 'N/A' },
-            ],
-        ];
-
-        doc.autoTable({
-            head: [['', '', '', '']],
-            body: firstTableData,
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' }, // Reduced font size
-            theme: 'grid',
-            margin: { top: 50 },
-        });
-
-        const secondTableHeaders = [
-            { title: 'Report Components', dataKey: 'component' },
-            { title: 'Information Source', dataKey: 'source' },
-            { title: 'Completed Date', dataKey: 'completedDate' },
-            { title: 'Verification Status', dataKey: 'status' },
-        ];
-
-        const secondTableData = servicesData.map(item => {
-            console.log(`item - `, item);
-            // Dynamically find keys for 'source' and 'completedDate'
-            const sourceKey = Object.keys(item.annexureData).find(key => key.startsWith('info_source') || key.startsWith('information_source'));
-            const dateKey = Object.keys(item.annexureData).find(key => key.includes('verified_date'));
-            console.log(sourceKey, dateKey);
-            const logData = {
-                component: item.heading || 'NIL',
-                source: sourceKey ? item.annexureData[sourceKey] : 'NIL',
-                completedDate: dateKey && item.annexureData[dateKey] && !isNaN(new Date(item.annexureData[dateKey]).getTime())
-                    ? new Date(item.annexureData[dateKey]).toLocaleDateString()
-                    : 'NIL',
-                status: item.annexureData.status ? item.annexureData.status.replace(/[_-]/g, ' ') : 'NIL',
-            };
-
-            return logData;
-        });
-
-        doc.autoTable({
-            head: [secondTableHeaders.map(header => header.title)],
-            body: secondTableData.map(row => [
-                row.component,
-                row.source,
-                row.completedDate,
-                row.status,
-            ]),
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
-            theme: 'grid',
-            margin: { top: 20 },
-        });
-
-
-
-        doc.autoTable({
-            head: [
-                [
-                    { content: "COLOR CODE / ADJUDICATION MATRIX", colSpan: 5, styles: { halign: 'center', fontStyle: 'bold', fillColor: [246, 246, 246] } }
-                ],
-                [
-                    { content: 'MAJOR DISCREPANCY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'MINOR DISCREPANCY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'UNABLE TO VERIFY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'PENDING FROM SOURCE', styles: { halign: 'center', cellWidth: 'nowrap', minCellWidth: 10 } },
-                    { content: 'ALL CLEAR', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } }
-                ]
-            ],
-            body: [
-                [
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 0, 0],  // Red
-                            cellPadding: 10,  // Increase padding inside the cell
-                            margin: [5, 5, 5, 5]  // Add margin around the cell
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 255, 0],  // Yellow
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 165, 0],  // Orange
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 192, 203],  // Pink
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [0, 128, 0],  // Green
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    }
-                ]
-
-
-            ],
-            startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 10,
-            styles: {
-                fontSize: 8,
-                cellPadding: 2,
-                halign: 'center',
-                valign: 'middle',
-                lineWidth: 0.5,
-                lineColor: [62, 118, 165],
-            },
-            theme: 'grid',
-            headStyles: {
-                fillColor: [246, 246, 246],
-                textColor: [0, 0, 0],
-                fontStyle: 'bold'
-            },
-            tableLineColor: [62, 118, 165],
-            tableLineWidth: 0.5,
-            margin: { left: 10, right: 10 },
-            tableWidth: 'auto',
-            columnStyles: {
-                0: { cellWidth: 38, cellMargin: 5 }, // Adjust cell width and Margin as needed
-                1: { cellWidth: 38, cellMargin: 5 },
-                2: { cellWidth: 38, cellMargin: 5 },
-                3: { cellWidth: 38, cellMargin: 5 },
-                4: { cellWidth: 38, cellMargin: 5 }
-            },
-        });
-        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20; // Initial yPosition with spacing
-
-        // Function to handle image format
-        const getImageFormat = (url) => {
-            const ext = url.split('.').pop().toLowerCase();
-            if (ext === 'png') return 'PNG';
-            if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
-            if (ext === 'webp') return 'WEBP';
-            return 'PNG'; // Default to PNG if not recognized
-        };
-
-        // Image load function with promise
-        function loadImage(imageUrl) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error('Error loading image: ' + imageUrl));
-                img.src = imageUrl;
-            });
-        }
-
-        // Function to scale the image
-        function scaleImage(img, maxWidth, maxHeight) {
-            const imgWidth = img.width;
-            const imgHeight = img.height;
-
-            let width = imgWidth;
-            let height = imgHeight;
-
-            // Scale image to fit within maxWidth and maxHeight
-            if (imgWidth > maxWidth) {
-                width = maxWidth;
-                height = (imgHeight * maxWidth) / imgWidth;
-            }
-
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = (imgWidth * maxHeight) / imgHeight;
-            }
-
-            return { width, height };
-        }
-
-        // Add services data handling and table creation
-        let annexureIndex = 1;
-
-
-
-
-       for (const service of servicesData) {
-    const { annexureData, reportFormJson } = service;
-    const rows = JSON.parse(reportFormJson.json).rows;
-
-    const reportDetailsData = [];
-    const verifiedDetailsData = [];
-    const inputNameMap = new Map();
-
-    // Collect data for tables
-    rows.forEach((row) => {
-        row.inputs.forEach(({ label, name }) => {
-            const inputValue = annexureData[name];
-            const verificationKey = `verified_${name}`;
-            const verified = annexureData[verificationKey];
-
-            reportDetailsData.push({ label, value: inputValue, verified: verified || '' });
-
-            if (!inputNameMap.has(label) && verified) {
-                verifiedDetailsData.push({ label, value: inputValue, verified });
-                inputNameMap.set(label, true);
-            }
-        });
-    });
-
-    if (reportDetailsData.length === 0) continue;
-
-    // Setup table properties
-    const columnWidth = 60;
-    const pageWidth = doc.internal.pageSize.width;
-    const startX = (pageWidth - (2 * columnWidth)) / 2;
-    let yPosition = 20;
-
-    // Add Report Details Table
-    const tableWidth = columnWidth * 2;
-    yPosition = createHeading(doc, "REPORT DETAILS", yPosition, tableWidth, startX);
-
-    doc.autoTable({
-        head: [["LABEL", "VALUE"]],
-        body: reportDetailsData.map((data) => [data.label, data.value]),
-        startY: yPosition,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 },
-    });
-
-    yPosition = doc.lastAutoTable.finalY + 20;
-
-    // Add Verified Details Table
-    if (verifiedDetailsData.length > 0) {
-        const verifiedTableWidth = columnWidth * 3;
-        yPosition = createHeading(doc, "VERIFIED DETAILS", yPosition, verifiedTableWidth, startX);
-
-        doc.autoTable({
-            head: [["LABEL", "VALUE", "VERIFIED"]],
-            body: verifiedDetailsData.map((data) => [data.label, data.value, data.verified]),
-            startY: yPosition,
-            theme: 'grid',
-            styles: { fontSize: 9, cellPadding: 3 },
-        });
-
-        yPosition = doc.lastAutoTable.finalY + 20;
-    }
-
-    // Add Annexure Images
-    const annexureImagesKey = Object.keys(annexureData).find(
-        (key) => key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
-    );
-
-    if (annexureImagesKey) {
-        const annexureImagesSplitArr = (annexureData[annexureImagesKey] || "").split(',');
-        yPosition = await addAnnexureImages(doc, annexureImagesSplitArr, API_URL, yPosition);
-    } else {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(10);
-        doc.setTextColor(150, 150, 150);
-        doc.text("No annexure images available.", 10, yPosition);
-        yPosition += 15;
-    }
-}
-
-
-
-
-        // Initial yPosition with spacing
-        // Calculate initial yPosition with spacing
-        // Calculate initial yPosition with spacing
-        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20;
-
-        // Define Disclaimer Button Dimensions
-        const disclaimerButtonHeight = 12;
-        const disclaimerButtonWidth = doc.internal.pageSize.width - 20;
-        const disclaimerX = 10;
-
-        // Define Disclaimer Text
-        const disclaimerText = `This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided. The Client is responsible for employment decisions based on the information provided in this report.
-You can mail us at compliance@screeningstar.com for any clarifications.`;
-
-        // Dynamically calculate disclaimer text height
-        doc.setFontSize(10);
-        const disclaimerLines = doc.splitTextToSize(disclaimerText, disclaimerButtonWidth);
-        const disclaimerTextHeight = disclaimerLines.length * 5; // Assuming 5px per line for small font
-
-        // Calculate initial Y position for disclaimer button
-        let disclaimerY = Math.max(
-            doc.internal.pageSize.height - disclaimerTextHeight - disclaimerButtonHeight - 40,
-            yPosition + 20
-        );
-
-        // Add new page if disclaimer doesn't fit
-        if (disclaimerY + disclaimerButtonHeight + disclaimerTextHeight > doc.internal.pageSize.height - 20) {
-            doc.addPage();
-            disclaimerY += 20;
-        }
-
-        // Draw Disclaimer Button
-        doc.setDrawColor(62, 118, 165); // Set border color
-        doc.setFillColor(backgroundColor); // Set fill color
-        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-        doc.setTextColor(0, 0, 0); // Set text color
-        doc.text(
-            'DISCLAIMER',
-            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('DISCLAIMER') / 2),
-            disclaimerY + 8
-        );
-
-        // Draw Disclaimer Text
-        doc.setTextColor(100, 100, 100); // Original light gray text color
-        doc.text(disclaimerLines, 10, disclaimerY + disclaimerButtonHeight + 5);
-
-        // Calculate position for "END OF DETAIL REPORT" button
-        let endOfDetailY = disclaimerY + disclaimerButtonHeight + disclaimerTextHeight + 5;
-
-        // Add new page if "END OF DETAIL REPORT" doesn't fit
-        if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 10) {
-            doc.addPage();
-            endOfDetailY = 20; // Reset position on the new page
-        }
-
-        // Draw "END OF DETAIL REPORT" Button
-        doc.setDrawColor(62, 118, 165); // Original button style
-        doc.setFillColor(backgroundColor); // Original fill color
-        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-        doc.setTextColor(0, 0, 0); // Original text color
-        doc.text(
-            'END OF DETAIL REPORT',
-            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('END OF DETAIL REPORT') / 2),
-            endOfDetailY + 8
-        );
-
-        // Save the PDF
-        doc.save('report.pdf');
-    };
-
+   
 
 
 
@@ -1005,4 +588,4 @@ You can mail us at compliance@screeningstar.com for any clarifications.`;
 
 };
 
-export default AdminChekin;
+export default ReportCaseTable;
