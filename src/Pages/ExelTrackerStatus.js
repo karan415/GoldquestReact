@@ -450,6 +450,9 @@ const AdminChekin = () => {
         yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20; // Initial yPosition with spacing
 
         // Function to handle image format
+        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20; // Initial yPosition with spacing
+
+        // Function to handle image format
         const getImageFormat = (url) => {
             const ext = url.split('.').pop().toLowerCase();
             if (ext === 'png') return 'PNG';
@@ -491,96 +494,134 @@ const AdminChekin = () => {
         }
 
         // Add services data handling and table creation
-        let annexureIndex = 1;
+        let annexureIndex = 1; // Index for annexures
+        for (const service of servicesData) {
+            const reportFormJson = JSON.parse(service.reportFormJson.json);
+            const rows = reportFormJson.rows;
+            console.log('rows', rows);
+            const headers = reportFormJson.headers;
 
+            const tableData = rows.map(row => {
+                const applicationDetails = [];
+                const reportDetails = [];
 
+                row.inputs.forEach((input, index) => {
+                    const label = input.label;
+                    const value = service.annexureData[input.name] || "N/A";
 
+                    if (index % 2 === 0) {
+                        // First label-value pair for the Application Details column
+                        applicationDetails.push(`${label} ${value}`);
+                        reportDetails.push("");  // Leave this empty for the report details column
+                    } else {
+                        // Second label-value pair for the Report Details column
+                        applicationDetails.push("");
+                        reportDetails.push(`${label} ${value}`);  // Place value under report details column
+                    }
+                });
 
-       for (const service of servicesData) {
-    const { annexureData, reportFormJson } = service;
-    const rows = JSON.parse(reportFormJson.json).rows;
+                // Return two arrays for the respective columns
+                return [applicationDetails, reportDetails];
+            });
 
-    const reportDetailsData = [];
-    const verifiedDetailsData = [];
-    const inputNameMap = new Map();
+            // Add section heading
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.setTextColor(255, 255, 255);
+            doc.rect(10, yPosition, doc.internal.pageSize.width - 20, 10, "F");
+            doc.text(reportFormJson.heading, 15, yPosition + 7);
+            yPosition += 15;
 
-    // Collect data for tables
-    rows.forEach((row) => {
-        row.inputs.forEach(({ label, name }) => {
-            const inputValue = annexureData[name];
-            const verificationKey = `verified_${name}`;
-            const verified = annexureData[verificationKey];
+            // Add table with autoTable
+            doc.autoTable({
+                startY: yPosition,
+                head: [headers],
+                body: tableData,
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 6,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.2,
+                    halign: "center",
+                    valign: "middle",
+                },
+                headStyles: {
+                    textColor: [255, 255, 255],
+                    fontSize: 11,
+                    fontStyle: "bold",
+                },
+                bodyStyles: {
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                },
+                theme: "grid",
+                columnStyles: {
+                    0: { cellWidth: doc.internal.pageSize.width / 2 - 10, halign: "left" },  // Left align Application Details, 50% width
+                    1: { cellWidth: doc.internal.pageSize.width / 2 - 10, halign: "left" },  // Right align Report Details, 50% width
+                },
+            });
 
-            reportDetailsData.push({ label, value: inputValue, verified: verified || '' });
+            yPosition = doc.lastAutoTable.finalY + 10; // Update yPosition for next section
 
-            if (!inputNameMap.has(label) && verified) {
-                verifiedDetailsData.push({ label, value: inputValue, verified });
-                inputNameMap.set(label, true);
+            // Handle annexure images
+            const annexureImagesKey = Object.keys(service.annexureData).find(key =>
+                key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
+            );
+
+            if (annexureImagesKey) {
+                const annexureImagesStr = service.annexureData[annexureImagesKey];
+                const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(',') : [];
+
+                if (annexureImagesSplitArr.length === 0) {
+                    // No images found
+                    doc.setFont("helvetica", "italic");
+                    doc.setFontSize(10);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text("No annexure images available.", 10, yPosition);
+                    yPosition += 15;
+                } else {
+                    for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
+                        const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
+                        const imageFormat = getImageFormat(imageUrlFull);
+                        console.log('imageUrlFull')
+                        try {
+                            const img = await loadImage(imageUrlFull);
+                            const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
+
+                            if (yPosition + height > doc.internal.pageSize.height - 20) {
+                                doc.addPage();
+                                yPosition = 20;
+                            }
+
+                            const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
+                            const textWidth = doc.getTextWidth(annexureText);
+                            const centerX = (doc.internal.pageSize.width - textWidth) / 2;
+                            doc.setFont("helvetica", "normal");
+                            doc.setFontSize(10);
+                            doc.text(annexureText, centerX, yPosition);
+                            yPosition += 15;
+
+                            const centerXImage = (doc.internal.pageSize.width - width) / 2;
+                            doc.addImage(imageUrlFull, imageFormat, centerXImage, yPosition, width, height);
+                            yPosition += height + 15;
+                        } catch (error) {
+                            console.error(`Failed to load image: ${imageUrlFull}`, error);
+                        }
+                    }
+                }
+            } else {
+                // No annexure key found
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text("No annexure images available.", 10, yPosition);
+                yPosition += 15;
             }
-        });
-    });
 
-    if (reportDetailsData.length === 0) continue;
-
-    // Setup table properties
-    const columnWidth = 60;
-    const pageWidth = doc.internal.pageSize.width;
-    const startX = (pageWidth - (2 * columnWidth)) / 2;
-    let yPosition = 20;
-
-    // Add Report Details Table
-    const tableWidth = columnWidth * 2;
-    yPosition = createHeading(doc, "REPORT DETAILS", yPosition, tableWidth, startX);
-
-    doc.autoTable({
-        head: [["LABEL", "VALUE"]],
-        body: reportDetailsData.map((data) => [data.label, data.value]),
-        startY: yPosition,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 },
-    });
-
-    yPosition = doc.lastAutoTable.finalY + 20;
-
-    // Add Verified Details Table
-    if (verifiedDetailsData.length > 0) {
-        const verifiedTableWidth = columnWidth * 3;
-        yPosition = createHeading(doc, "VERIFIED DETAILS", yPosition, verifiedTableWidth, startX);
-
-        doc.autoTable({
-            head: [["LABEL", "VALUE", "VERIFIED"]],
-            body: verifiedDetailsData.map((data) => [data.label, data.value, data.verified]),
-            startY: yPosition,
-            theme: 'grid',
-            styles: { fontSize: 9, cellPadding: 3 },
-        });
-
-        yPosition = doc.lastAutoTable.finalY + 20;
-    }
-
-    // Add Annexure Images
-    const annexureImagesKey = Object.keys(annexureData).find(
-        (key) => key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
-    );
-
-    if (annexureImagesKey) {
-        const annexureImagesSplitArr = (annexureData[annexureImagesKey] || "").split(',');
-        yPosition = await addAnnexureImages(doc, annexureImagesSplitArr, API_URL, yPosition);
-    } else {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(10);
-        doc.setTextColor(150, 150, 150);
-        doc.text("No annexure images available.", 10, yPosition);
-        yPosition += 15;
-    }
-}
+            annexureIndex++;
+        }
 
 
-
-
-        // Initial yPosition with spacing
-        // Calculate initial yPosition with spacing
-        // Calculate initial yPosition with spacing
         yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20;
 
         // Define Disclaimer Button Dimensions
