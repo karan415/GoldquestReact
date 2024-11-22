@@ -7,7 +7,7 @@ const BranchEditContext = createContext();
 
 export const BranchEditProvider = ({ children }) => {
     const API_URL = useApi();
-    const {toggleAccordion}=useData()
+    const { toggleAccordion } = useData()
     const [branchEditData, setBranchEditData] = useState({
         id: '',
         name: '',
@@ -52,6 +52,11 @@ export const BranchEditProvider = ({ children }) => {
 
         try {
             const response = await fetch(`${API_URL}/branch/update`, requestOptions);
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
             if (!response.ok) {
                 return response.text().then(text => {
                     const errorData = JSON.parse(text);
@@ -61,10 +66,6 @@ export const BranchEditProvider = ({ children }) => {
                         'error'
                     );
                 });
-            }
-            const newToken = response._token || response.token; 
-            if (newToken) {
-                localStorage.setItem("_token", newToken); 
             }
             Swal.fire(
                 'Success!',

@@ -128,6 +128,11 @@ const ServiceList = () => {
 
                 fetch(`${API_URL}/service/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then(response => {
+                      const result = response.json();
+                      const newToken = result._token || result.token;
+                      if (newToken) {
+                          localStorage.setItem("_token", newToken);
+                      }
                         if (!response.ok) {
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
@@ -139,13 +144,10 @@ const ServiceList = () => {
                                 throw new Error(text);
                             });
                         }
-                        return response.json();
+                        return result;
                     })
                     .then(result => {
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("_token", newToken);
-                        }
+
                         fetchData();
                         Swal.fire(
                             'Deleted!',

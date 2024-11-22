@@ -79,9 +79,6 @@ const DropBoxList = () => {
             }
         }
 
-        // Log to verify page numbers
-        console.log(pageNumbers);
-
         return pageNumbers.map((number, index) => (
             number === '...' ? (
                 <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
@@ -137,6 +134,11 @@ const DropBoxList = () => {
 
                 fetch(`${API_URL}/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`, requestOptions)
                     .then(response => {
+                        const result = response.json();
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
                         if (!response.ok) {
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
@@ -148,7 +150,7 @@ const DropBoxList = () => {
                                 throw new Error(text);
                             });
                         }
-                        return response.json();
+                        return result;
                     })
                     .then(result => {
                         const newToken = result._token || result.token;

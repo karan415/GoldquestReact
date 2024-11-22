@@ -66,11 +66,15 @@ const CustomerUpdatePassword = () => {
 
             fetch("https://goldquestreact.onrender.com/branch/update-password", requestOptions)
                 .then((response) => {
-
+                    const result = response.json();
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
-                    return response.json();
+                    return result;
                 })
                 .then((result) => {
                     const newToken = result._token || result.token;
@@ -78,7 +82,6 @@ const CustomerUpdatePassword = () => {
                         localStorage.setItem("branch_token", newToken);
                     }
 
-                    console.log(result);
                     // Clear form and errors on successful update
                     Swal.fire({
                         title: 'Success',

@@ -87,9 +87,6 @@ const CandidateList = () => {
             }
         }
 
-        // Log to verify page numbers
-        console.log(pageNumbers);
-
         return pageNumbers.map((number, index) => (
             number === '...' ? (
                 <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
@@ -147,6 +144,11 @@ const CandidateList = () => {
 
                 fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
                     .then(response => {
+                        const result = response.json();
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
                         if (!response.ok) {
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
@@ -154,7 +156,7 @@ const CandidateList = () => {
                                 throw new Error(text);
                             });
                         }
-                        return response.json();
+                        return result;
                     })
                     .then(result => {
                         const newToken = result._token || result.token;

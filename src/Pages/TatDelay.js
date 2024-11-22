@@ -130,7 +130,6 @@ const TatDelay = () => {
             }))
           )
         );
-        console.log(applications);
         setTatData(applications)
 
         // Handle the result here (e.g., set state)
@@ -147,7 +146,6 @@ const TatDelay = () => {
     const selectedValue = e.target.value;
     setItemPerPage(selectedValue)
   }
-  console.log(tatData)
 
   return (
     <>

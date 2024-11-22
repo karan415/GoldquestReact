@@ -87,31 +87,47 @@ const ClientManagementData = () => {
         ));
     };
 
-    const fetchServices = useCallback(async () => {
+    const fetchServicesAndPackages = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
-            const res = await fetch(`${API_URL}/service/list?admin_id=${admin_id}&_token=${storedToken}`);
+            const res = await fetch(`${API_URL}/customer/add-customer-listings?admin_id=${admin_id}&_token=${storedToken}`);
 
-            if (!res.ok) throw new Error(`Network response was not ok: ${res.status}`);
+            if (!res.ok) {
+                throw new Error(`Network response was not ok: ${res.status}`);
+            }
 
             const result = await res.json();
-            if (!result || !Array.isArray(result.services)) throw new Error('Invalid response format');
-
-            const processedServices = result.services.map(item => ({
-                ...item,
-                service_id: item.id,
-                service_title: item.title,
-                price: '',
-                selectedPackages: []
-            }));
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+
+            if (!result || !result.data || !Array.isArray(result.data.services)) {
+                throw new Error('Invalid response format: Missing or invalid services data');
+            }
+
+            const processedServices = result.data.services.map(item => ({
+                ...item,
+                service_id: item.id,
+                service_title: item.title,
+                price: '', // Assuming this is still required
+                selectedPackages: [] // Assuming this is still required
+            }));
             setService(processedServices);
+
+            if (!Array.isArray(result.data.packages)) {
+                throw new Error('Invalid response format: Missing or invalid packages data');
+            }
+
+            const processedPackages = result.data.packages.map(item => ({
+                ...item,
+                service_id: item.id
+            }));
+            setPackageList(processedPackages);
+
         } catch (error) {
             console.error("Error fetching services:", error);
             setError(error.message);
@@ -120,37 +136,9 @@ const ClientManagementData = () => {
         }
     }, [API_URL]);
 
-    const fetchPackage = useCallback(async () => {
-        setError(null);
-        try {
-            const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
-            const storedToken = localStorage.getItem("_token");
-            if (!storedToken) throw new Error('No token found in local storage');
-
-            const res = await fetch(`${API_URL}/package/list?admin_id=${admin_id}&_token=${storedToken}`);
-
-            if (!res.ok) throw new Error(`Network response was not ok: ${res.status}`);
-
-            const result = await res.json();
-            const processedPackages = result.packages.map(item => ({
-                ...item,
-                service_id: item.id,
-            }));
-            const newToken = result._token || result.token;
-            if (newToken) {
-                localStorage.setItem("_token", newToken);
-            }
-            setPackageList(processedPackages);
-        } catch (error) {
-            console.error("Error fetching packages:", error);
-            setError(error.message);
-        }
-    }, [API_URL]);
-
     useEffect(() => {
-        fetchServices();
-        fetchPackage();
-    }, [fetchServices, fetchPackage]);
+        fetchServicesAndPackages();
+    }, [fetchServicesAndPackages]);
 
     const validateServices = () => {
         const errors = {};

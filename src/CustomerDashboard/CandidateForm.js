@@ -5,13 +5,13 @@ import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
 
 const CandidateForm = () => {
-    const { services, uniquePackages,fetchServices, selectedDropBox, fetchClient ,loading} = useContext(DropBoxContext);
+    const { services, uniquePackages, fetchServices, selectedDropBox, fetchClient, loading } = useContext(DropBoxContext);
     const [, setBranchId] = useState(null);
     const [, setStoredToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
     const [, setIsSubmitting] = useState(false);
     const API_URL = useApi();
-   
+
 
     const [input, setInput] = useState({
         name: "",
@@ -46,10 +46,10 @@ const CandidateForm = () => {
         }
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         fetchServices();
         fetchClient();
-    },[fetchServices,fetchClient])
+    }, [fetchServices, fetchClient])
 
     useEffect(() => {
         const storedBranchData = JSON.parse(localStorage.getItem("branch"));
@@ -143,6 +143,11 @@ const CandidateForm = () => {
 
             fetch(url, requestOptions)
                 .then(response => {
+                    const result = response.json();
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
                     if (!response.ok) {
                         return response.text().then(text => {
                             const errorData = JSON.parse(text);
@@ -150,13 +155,9 @@ const CandidateForm = () => {
                             throw new Error(text);
                         });
                     }
-                    return response.json();
+                    return result;
                 })
                 .then(data => {
-                    const newToken = data._token || data.token;
-                    if (newToken) {
-                        localStorage.setItem("branch_token", newToken);
-                    }
                     setInput({
                         name: "",
                         employee_id: "",
@@ -178,10 +179,6 @@ const CandidateForm = () => {
                 })
                 .catch(error => {
                     console.error("There was an error!", error);
-                    const newToken = error._token || error.token;
-                    if (newToken) {
-                        localStorage.setItem("branch_token", newToken);
-                    }
                 })
                 .finally(() => setIsSubmitting(false));
         } else {

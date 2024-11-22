@@ -59,7 +59,6 @@ const Acknowledgement = () => {
         if (newToken) {
             localStorage.setItem("_token", newToken);
         }
-        console.log(result);
         fetchEmails();
       })
       .catch((error) => console.error(error));

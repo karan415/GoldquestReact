@@ -52,10 +52,15 @@ const UpdatePasswordForm = () => {
 
             fetch("https://goldquestreact.onrender.com/admin/update-password", requestOptions)
                 .then((response) => {
+                    const result = response.json();
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
-                    return response.json(); // Use JSON response
+                    return result; // Use JSON response
                 })
                 .then((result) => {
                     console.log(result);

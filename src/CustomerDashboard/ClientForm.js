@@ -25,10 +25,10 @@ const ClientForm = () => {
         client_application_id: '',
     });
 
-    const { selectedDropBox, fetchClientDrop,fetchServices, services, uniquePackages,loading } = useContext(DropBoxContext);
+    const { selectedDropBox, fetchClientDrop, fetchServices, services, uniquePackages, loading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
-    const [isLoading, setIsLoading] = useState(false); 
+    const [isLoading, setIsLoading] = useState(false);
 
     const validate = () => {
         const newErrors = {};
@@ -72,30 +72,23 @@ const ClientForm = () => {
 
     const handleChange = (event) => {
         const { name, value, checked } = event.target;
-    
-        console.log('Checked:', checked);
-        console.log('Value:', value);
-        console.log('Current Services:', clientInput.services);
-    
         if (name === 'services') {
             setClientInput(prev => {
                 const updatedServices = checked
                     ? [...prev.services, value]
                     : prev.services.filter(serviceId => serviceId !== value);
-    
-                console.log('Updated Services:', updatedServices);
                 return { ...prev, services: updatedServices };
             });
         } else {
             setClientInput(prev => ({ ...prev, [name]: value }));
         }
     };
-    
-    useEffect(()=>{
+
+    useEffect(() => {
         fetchServices();
         fetchClientDrop();
-    },[fetchServices,fetchClientDrop])
-    
+    }, [fetchServices, fetchClientDrop])
+
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -153,7 +146,7 @@ const ClientForm = () => {
                     customer_id,
                     branch_id,
                     send_mail: 1,
-                     _token: branch_token,
+                    _token: branch_token,
                     ...clientInput
                 };
             }
@@ -162,7 +155,7 @@ const ClientForm = () => {
                     customer_id,
                     branch_id,
                     send_mail: 0,
-                 _token: branch_token,
+                    _token: branch_token,
                     ...clientInput
                 };
             }
@@ -181,7 +174,11 @@ const ClientForm = () => {
                         body: JSON.stringify(requestBody)
                     }
                 );
-
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("branch_token", newToken);
+                }
                 if (!response.ok) {
                     const errorData = await response.json();
                     Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
@@ -201,10 +198,6 @@ const ClientForm = () => {
                     new_application_id = data.result.new_application_id;
                 }
 
-                const newToken = data._token || data.token;
-                if (newToken) {
-                    localStorage.setItem("branch_token", newToken);
-                }
                 setClientInput({
                     name: '',
                     employee_id: '',
@@ -226,11 +219,11 @@ const ClientForm = () => {
                     icon: "success",
                     confirmButtonText: "Ok"
                 });
-               
+
                 if (fileCount !== 0) {
                     await uploadCustomerLogo(insertedId, new_application_id);
                 }
-               
+
             } catch (error) {
                 console.error("There was an error!", error);
             } finally {
@@ -249,7 +242,7 @@ const ClientForm = () => {
     return (
         <>
 
-        
+
             <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 grid-cols-2 mb-4">
                     <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
@@ -306,49 +299,49 @@ const ClientForm = () => {
                         </div>
                     </div>
                     <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
-                    <div className="flex flex-wrap flex-col-reverse">
-                        <div className='mt-4'>
-                            <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
-                            {loading ? ( // Check for loading state
-                                <PulseLoader color="#36A2EB" loading={loading} size={15} />
-                            ) : services.length > 0 ? (
-                                <ul>
-                                    {services.map((item) => (
-                                        <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(item.serviceId) ? 'selected' : ''}`}>
-                                            <input
-                                                type="checkbox"
-                                                name="services"
-                                                value={String(item.serviceId)}
-                                                onChange={handleChange}
-                                                checked={clientInput.services.includes(String(item.serviceId))}
-                                            />
-                                            <div className='font-bold'>{item.serviceTitle}</div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No services available</p>
-                            )}
-                        </div>
-                        <div className='mt-5'>
-                            <strong className='mb-2'>Packages:</strong>
-                            {loading ? ( // Check for loading state
-                                <PulseLoader color="#36A2EB" loading={loading} size={15} />
-                            ) : uniquePackages.length > 0 ? (
-                                <Multiselect
-                                    options={uniquePackages.map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
-                                    selectedValues={uniquePackages.filter(pkg => (clientInput.package || []).includes(pkg.id)).map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
-                                    onSelect={handlePackageChange}
-                                    onRemove={handlePackageChange}
-                                    displayValue="name"
-                                    className='text-left'
-                                />
-                            ) : (
-                                <p>No packages available</p>
-                            )}
+                        <div className="flex flex-wrap flex-col-reverse">
+                            <div className='mt-4'>
+                                <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
+                                {loading ? ( // Check for loading state
+                                    <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                                ) : services.length > 0 ? (
+                                    <ul>
+                                        {services.map((item) => (
+                                            <li key={item.serviceId} className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(item.serviceId) ? 'selected' : ''}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    name="services"
+                                                    value={String(item.serviceId)}
+                                                    onChange={handleChange}
+                                                    checked={clientInput.services.includes(String(item.serviceId))}
+                                                />
+                                                <div className='font-bold'>{item.serviceTitle}</div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>No services available</p>
+                                )}
+                            </div>
+                            <div className='mt-5'>
+                                <strong className='mb-2'>Packages:</strong>
+                                {loading ? ( // Check for loading state
+                                    <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                                ) : uniquePackages.length > 0 ? (
+                                    <Multiselect
+                                        options={uniquePackages.map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
+                                        selectedValues={uniquePackages.filter(pkg => (clientInput.package || []).includes(pkg.id)).map(pkg => ({ name: pkg.name || "No Name", id: pkg.id }))}
+                                        onSelect={handlePackageChange}
+                                        onRemove={handlePackageChange}
+                                        displayValue="name"
+                                        className='text-left'
+                                    />
+                                ) : (
+                                    <p>No packages available</p>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
                 </div>
                 <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={isLoading}>
                     {isLoading ? 'Submitting...' : (isEditClient ? "Edit" : "Send")}

@@ -44,26 +44,28 @@ const ClientMasterTrackerList = () => {
             }
         })
             .then(response => {
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
                 if (!response.ok) {
                     return response.text().then(text => {
 
                         throw new Error(text);
                     });
                 }
-                return response.json();
+                return result;
             })
-            .then((data) => {
-                const newToken = data._token || data.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                setData(data.customers || []);
+            .then((result) => {
+                setData(result.data.customers || []);
+                setOptions(result.data.filterOptions);
             })
             .catch((error) => {
                 setError('Failed to load data');
             })
             .finally(() => setLoading(false));
-    }, [setData,API_URL]);
+    }, [setData, API_URL]);
 
     const handleBranches = useCallback((id) => {
         setLoading(true);
@@ -78,6 +80,11 @@ const ClientMasterTrackerList = () => {
             }
         })
             .then(response => {
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
                 if (!response.ok) {
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
@@ -85,7 +92,7 @@ const ClientMasterTrackerList = () => {
                         throw new Error(text);
                     });
                 }
-                return response.json();
+                return result;
             })
             .then((data) => {
                 const newToken = data._token || data.token;
@@ -105,35 +112,6 @@ const ClientMasterTrackerList = () => {
     useEffect(() => {
         fetchClient();
     }, [fetchClient]);
-
-
-    const fetchSelectOptions = useCallback(() => {
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-
-        const requestOptions = {
-            method: "GET",
-            redirect: "follow"
-        };
-
-        fetch(`${API_URL}/client-master-tracker/filter-options?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then((result) => {
-                setOptions(result.filterOptions);
-            })
-            .catch((error) => console.error('Error fetching options:', error));
-    }, [API_URL]);
-
-
-    useEffect(() => {
-        fetchSelectOptions();
-    }, [fetchSelectOptions])
-
 
 
     const filteredItems = data.filter(item => {

@@ -73,9 +73,7 @@ const GenerateReportProvider = ({ children }) => {
     };
 
     const handleInputChange = (e) => {
-        console.log(`HEllo`);
         const { name, value } = e.target;
-        console.log(`name - ${name} // value - ${value}`);
 
         setFormData((prevFormData) => {
             const updatedFormData = { ...prevFormData };

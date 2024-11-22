@@ -55,7 +55,6 @@ const CustomerResetPassword = () => {
         return response.json(); // Parse the JSON response
       })
       .then((result) => {
-        console.log(result);
         Swal.fire({
           title: 'Success',
           text: 'Password has been successfully reset!',

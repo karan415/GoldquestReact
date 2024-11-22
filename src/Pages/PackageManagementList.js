@@ -126,6 +126,11 @@ const PackageManagementList = () => {
 
                 fetch(`${API_URL}/package/delete?id=${packageId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => {
+                        const result = response.json();
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("_token", newToken);
+                        }
                         if (!response.ok) {
                             return response.text().then((text) => {
                                 const errorData = JSON.parse(text);
@@ -133,13 +138,10 @@ const PackageManagementList = () => {
                                 throw new Error(errorData.message);
                             });
                         }
-                        return response.json();
+                        return result;
                     })
                     .then((result) => {
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("_token", newToken);
-                        }
+
                         setError(null); // Reset error state
                         // Refresh data after deletion
                         Swal.fire('Deleted!', 'Your package has been deleted.', 'success');

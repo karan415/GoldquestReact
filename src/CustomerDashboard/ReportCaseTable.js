@@ -58,38 +58,6 @@ const ReportCaseTable = () => {
 
     }, [setData]);
 
-    const fetchAdminList = useCallback(() => {
-        setLoading(true);
-        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
-        const _token = localStorage.getItem("branch_token");
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            redirect: "follow"
-        };
-
-        fetch(`${API_URL}/branch/report-case-status/services-annexure-data?application_id=1&service_ids=1,2,3&branch_id=${branch_id}&_token=${_token}`, requestOptions)
-            .then((response) => response.json())
-            .then((result) => {
-                const newToken = result.token || result._token || '';
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                const tat_days = result.customers.map(spoc => spoc.tat_days);
-                setAdminTAT(tat_days);  // Store the tat_days in state
-            })
-            .catch((error) => console.error(error)).finally(() => {
-                setLoading(false);
-            });
-    }, []);
-
-
-    useEffect(() => {
-        fetchAdminList();
-    }, [fetchAdminList]);
-
     const handleStatusChange = (event) => {
         setSelectedStatus(event.target.value);
     };
@@ -187,9 +155,8 @@ const ReportCaseTable = () => {
 
 
     const fetchServicesData = async (applicationId, servicesList) => {
-        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-        const token = localStorage.getItem("_token");
-
+        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+        const _token = localStorage.getItem("branch_token");
         // Return an empty array if servicesList is empty or undefined
         if (!servicesList || servicesList.length === 0) {
             return [];
@@ -197,7 +164,7 @@ const ReportCaseTable = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `${API_URL}/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `${API_URL}/branch/report-case-status/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&application_id=${encodeURIComponent(applicationId)}&branch_id=${encodeURIComponent(branch_id)}&_token=${encodeURIComponent(_token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -232,10 +199,6 @@ const ReportCaseTable = () => {
     useEffect(() => {
         fetchData();
     }, [clientId]);
-    useEffect(() => {
-        fetchAdminList();
-    }, [fetchAdminList]);
-
 
     const handleViewMore = async (index) => {
         // If the clicked row is already expanded, collapse it and scroll to the table
@@ -423,7 +386,7 @@ const ReportCaseTable = () => {
                                                     <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
                                                     <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
                                                     <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.updated_at).toLocaleDateString()}</td>
-                                                   
+
 
                                                     <td className="border px-4  py-2" >
                                                         <button

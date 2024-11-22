@@ -9,13 +9,11 @@ const Chart2 = () => {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    console.log("Fetching dashboard data...");
     fetchDashboard();
   }, [fetchDashboard]);
 
   useEffect(() => {
     if (tableData && tableData.clientApplications) {
-      console.log("Found clientApplications data:", tableData.clientApplications);
 
       const dateMap = {};
 
@@ -42,14 +40,12 @@ const Chart2 = () => {
       // Transform dateMap into dataPoints array
       const dataPoints = Object.entries(dateMap).map(([day, count]) => {
         const parsedDate = new Date(day);
-        console.log("Parsed Date:", parsedDate, "Count:", count);
         return {
           x: parsedDate,
           y: count,
         };
       });
 
-      console.log("Transformed Data Points for Chart:", dataPoints);
       setChartData([
         {
           type: "splineArea",
@@ -60,8 +56,6 @@ const Chart2 = () => {
           name: "Applications",
         },
       ]);
-    } else {
-      console.log("No clientApplications found in tableData");
     }
   }, [tableData]);
 

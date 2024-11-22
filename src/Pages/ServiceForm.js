@@ -94,6 +94,11 @@ const ServiceForm = () => {
 
             fetch(url, requestOptions)
                 .then(response => {
+                    const result = response.json();
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
                     if (!response.ok) {
                         return response.text().then(text => {
                             const errorData = JSON.parse(text);
@@ -105,13 +110,10 @@ const ServiceForm = () => {
                             throw new Error(text);
                         });
                     }
-                    return response.json();
+                    return result;
                 })
                 .then((result) => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
+
                     setError({});
                     Swal.fire({
                         title: "Success",
@@ -126,7 +128,7 @@ const ServiceForm = () => {
                         updateServiceList(prevList => [...prevList, result]);
                     }
                     fetchData();
-                    setServiceInput({ name: "", d_name: "" ,sac_code:"",short_code:""});
+                    setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "" });
                     setIsEdit(false);
                 })
                 .catch((error) => {

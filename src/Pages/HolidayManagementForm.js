@@ -83,6 +83,11 @@ const HolidayManagementForm = () => {
 
             fetch(url, requestOptions)
                 .then(response => {
+                    const result = response.json();
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
                     if (!response.ok) {
                         return response.text().then(text => {
                             const errorData = JSON.parse(text);
@@ -94,13 +99,9 @@ const HolidayManagementForm = () => {
                             throw new Error(text);
                         });
                     }
-                    return response.json();
+                    return result;
                 })
                 .then((result) => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
                     setError({});
                     Swal.fire({
                         title: "Success",

@@ -25,12 +25,15 @@ const DashboardProvider = ({ children }) => {
             setLoading(true);
 
             const response = await fetch(url, { method: "GET", redirect: "follow" });
-            
+            const result = await response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("branch_token", newToken);
+            }
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const result = await response.json();
 
             if (result.clientApplications) {
                 setTableData(result);
@@ -38,10 +41,7 @@ const DashboardProvider = ({ children }) => {
                 console.error("clientApplications is missing in the response");
             }
 
-            const newToken = result._token || result.token;
-            if (newToken) {
-                localStorage.setItem("branch_token", newToken);
-            }
+
         } catch (error) {
             console.error('Fetch error:', error);
         } finally {

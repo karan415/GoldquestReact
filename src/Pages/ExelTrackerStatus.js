@@ -33,7 +33,6 @@ const AdminChekin = () => {
     const clientId = queryParams.get('clientId');
     const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem('_token');
-    console.log('data', data)
 
     // Fetch data from the main API
     const fetchData = useCallback(() => {
@@ -52,8 +51,8 @@ const AdminChekin = () => {
             .then((response) => response.json())
             .then((result) => {
                 setLoading(false);
-                setData(result.customers || []);
-
+                setData(result.data.customers || []);
+                setOptions(result.data.filterOptions);
             })
             .catch((error) => {
                 console.error('Fetch error:', error);
@@ -184,38 +183,6 @@ const AdminChekin = () => {
         ));
     };
 
-
-    const fetchSelectOptions = useCallback(() => {
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-
-        const requestOptions = {
-            method: "GET",
-            redirect: "follow"
-        };
-
-        fetch(`${API_URL}/client-master-tracker/branch-filter-options?branch_id=${branch_id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then((result) => {
-                setOptions(result.filterOptions);
-                const newToken = result._token || result.token;
-                if (newToken) localStorage.setItem("_token", newToken);
-            })
-            .catch((error) => console.error('Error fetching options:', error));
-    }, []);
-
-
-    useEffect(() => {
-        fetchSelectOptions();
-    }, [fetchSelectOptions])
-
-
-
     const fetchServicesData = async (applicationId, servicesList) => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
@@ -257,10 +224,8 @@ const AdminChekin = () => {
 
     const generatePDF = async (index) => {
         const applicationInfo = data[index];
-        console.log('applicationInfo', applicationInfo)
 
         const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
-        console.log('servicesData', servicesData)
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         let yPosition = 10;
@@ -329,11 +294,9 @@ const AdminChekin = () => {
         ];
 
         const secondTableData = servicesData.map(item => {
-            console.log(`item - `, item);
             // Dynamically find keys for 'source' and 'completedDate'
             const sourceKey = Object.keys(item.annexureData).find(key => key.startsWith('info_source') || key.startsWith('information_source'));
             const dateKey = Object.keys(item.annexureData).find(key => key.includes('verified_date'));
-            console.log(sourceKey, dateKey);
             const logData = {
                 component: item.heading || 'NIL',
                 source: sourceKey ? item.annexureData[sourceKey] : 'NIL',
@@ -632,29 +595,29 @@ const AdminChekin = () => {
             const rows = reportFormJson.rows;
             const headers = reportFormJson.headers;
             const serviceHeading = reportFormJson.heading || "No Service Heading";  // Ensure a heading is available
-        
+
             // Set up font and text color for the heading
             doc.setFont("helvetica", "bold");
             doc.setFontSize(14);
             doc.setTextColor(0, 0, 0);
-        
+
             // Calculate the position for centering the heading
             const headingWidth = doc.getTextWidth(serviceHeading);
             const centerXHeading = (doc.internal.pageSize.width - headingWidth) / 2;
-        
+
             // Position the heading
             doc.text(serviceHeading, centerXHeading, yPosition);
             yPosition += 10;  // Add space after the service heading
-        
+
             // Add the table data for this service
             const tableData = rows.map((row, rowIndex) => {
                 const applicationDetails = [];
                 const reportDetails = [];
-        
+
                 row.inputs.forEach((input, index) => {
                     const label = input.label;
                     const value = service.annexureData[input.name] || "N/A";
-        
+
                     if (index % 2 === 0) {
                         // First label-value pair for the Application Details column
                         applicationDetails.push(`${label} ${value}`);
@@ -665,14 +628,14 @@ const AdminChekin = () => {
                         reportDetails.push(`${label} ${value}`);  // Under report details column
                     }
                 });
-        
+
                 return [applicationDetails, reportDetails];
             });
-        
+
             // Calculate table width and X-position for centering
             const tableWidth = doc.internal.pageSize.width - 20;  // Width of the table (with padding)
             const tableX = (doc.internal.pageSize.width - tableWidth) / 2; // Calculate X to center the table
-        
+
             // Generate the table with autoTable
             doc.autoTable({
                 startY: yPosition, // Start table directly after heading
@@ -702,18 +665,18 @@ const AdminChekin = () => {
                     1: { cellWidth: (doc.internal.pageSize.width - 20) / 2, halign: "left" },
                 },
             });
-        
+
             yPosition = doc.lastAutoTable.finalY + 10; // Update yPosition after table
-        
+
             // Handle annexure images (if any)
             const annexureImagesKey = Object.keys(service.annexureData).find(key =>
                 key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
             );
-        
+
             if (annexureImagesKey) {
                 const annexureImagesStr = service.annexureData[annexureImagesKey];
                 const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(',') : [];
-        
+
                 if (annexureImagesSplitArr.length === 0) {
                     // No images found
                     doc.setFont("helvetica", "italic");
@@ -725,16 +688,16 @@ const AdminChekin = () => {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
                         const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);  // Assuming getImageFormat is implemented
-        
+
                         try {
                             const img = await loadImage(imageUrlFull);  // Assuming loadImage function is available
                             const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);  // Assuming scaleImage function is available
-        
+
                             if (yPosition + height > doc.internal.pageSize.height - 20) {
                                 doc.addPage();
                                 yPosition = 20;
                             }
-        
+
                             const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
                             const textWidth = doc.getTextWidth(annexureText);
                             const centerX = (doc.internal.pageSize.width - textWidth) / 2;
@@ -742,7 +705,7 @@ const AdminChekin = () => {
                             doc.setFontSize(10);
                             doc.text(annexureText, centerX, yPosition);
                             yPosition += 15;
-        
+
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
                             doc.addImage(imageUrlFull, imageFormat, centerXImage, yPosition, width, height);
                             yPosition += height + 15;
@@ -759,436 +722,436 @@ const AdminChekin = () => {
                 doc.text("No annexure images available.", 10, yPosition);
                 yPosition += 15;
             }
-        
+
             annexureIndex++;
         }
-        
 
 
-            yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20;
 
-            // Define Disclaimer Button Dimensions
-            const disclaimerButtonHeight = 12;
-            const disclaimerButtonWidth = doc.internal.pageSize.width - 20;
-            const disclaimerX = 10;
+        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20;
 
-            // Define Disclaimer Text
-            const disclaimerText = `This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided. The Client is responsible for employment decisions based on the information provided in this report.
+        // Define Disclaimer Button Dimensions
+        const disclaimerButtonHeight = 12;
+        const disclaimerButtonWidth = doc.internal.pageSize.width - 20;
+        const disclaimerX = 10;
+
+        // Define Disclaimer Text
+        const disclaimerText = `This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided. The Client is responsible for employment decisions based on the information provided in this report.
 You can mail us at compliance@screeningstar.com for any clarifications.`;
 
-            // Dynamically calculate disclaimer text height
-            doc.setFontSize(10);
-            const disclaimerLines = doc.splitTextToSize(disclaimerText, disclaimerButtonWidth);
-            const disclaimerTextHeight = disclaimerLines.length * 5; // Assuming 5px per line for small font
+        // Dynamically calculate disclaimer text height
+        doc.setFontSize(10);
+        const disclaimerLines = doc.splitTextToSize(disclaimerText, disclaimerButtonWidth);
+        const disclaimerTextHeight = disclaimerLines.length * 5; // Assuming 5px per line for small font
 
-            // Calculate initial Y position for disclaimer button
-            let disclaimerY = Math.max(
-                doc.internal.pageSize.height - disclaimerTextHeight - disclaimerButtonHeight - 40,
-                yPosition + 20
-            );
+        // Calculate initial Y position for disclaimer button
+        let disclaimerY = Math.max(
+            doc.internal.pageSize.height - disclaimerTextHeight - disclaimerButtonHeight - 40,
+            yPosition + 20
+        );
 
-            // Add new page if disclaimer doesn't fit
-            if (disclaimerY + disclaimerButtonHeight + disclaimerTextHeight > doc.internal.pageSize.height - 20) {
-                doc.addPage();
-                disclaimerY = 20; // Start from the top of the new page if space is insufficient
-            }
+        // Add new page if disclaimer doesn't fit
+        if (disclaimerY + disclaimerButtonHeight + disclaimerTextHeight > doc.internal.pageSize.height - 20) {
+            doc.addPage();
+            disclaimerY = 20; // Start from the top of the new page if space is insufficient
+        }
 
-            // Draw Disclaimer Button
-            doc.setDrawColor(62, 118, 165); // Set border color
-            doc.setFillColor(backgroundColor); // Set fill color
-            doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-            doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-            doc.setTextColor(0, 0, 0); // Set text color
-            doc.text(
-                'DISCLAIMER',
-                disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('DISCLAIMER') / 2),
-                disclaimerY + 8
-            );
+        // Draw Disclaimer Button
+        doc.setDrawColor(62, 118, 165); // Set border color
+        doc.setFillColor(backgroundColor); // Set fill color
+        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
+        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
+        doc.setTextColor(0, 0, 0); // Set text color
+        doc.text(
+            'DISCLAIMER',
+            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('DISCLAIMER') / 2),
+            disclaimerY + 8
+        );
 
-            // Draw Disclaimer Text
-            doc.setTextColor(100, 100, 100); // Original light gray text color
-            doc.text(disclaimerLines, 10, disclaimerY + disclaimerButtonHeight + 5);
+        // Draw Disclaimer Text
+        doc.setTextColor(100, 100, 100); // Original light gray text color
+        doc.text(disclaimerLines, 10, disclaimerY + disclaimerButtonHeight + 5);
 
-            // Calculate position for "END OF DETAIL REPORT" button
-            let endOfDetailY = disclaimerY + disclaimerButtonHeight + disclaimerTextHeight + 10; // Tighten the gap
+        // Calculate position for "END OF DETAIL REPORT" button
+        let endOfDetailY = disclaimerY + disclaimerButtonHeight + disclaimerTextHeight + 10; // Tighten the gap
 
-            // Add new page if "END OF DETAIL REPORT" doesn't fit
-            if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 10) {
-                doc.addPage();
-                endOfDetailY = 20; // Reset position on the new page
-            }
+        // Add new page if "END OF DETAIL REPORT" doesn't fit
+        if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 10) {
+            doc.addPage();
+            endOfDetailY = 20; // Reset position on the new page
+        }
 
-            // Draw "END OF DETAIL REPORT" Button
-            doc.setDrawColor(62, 118, 165); // Original button style
-            doc.setFillColor(backgroundColor); // Original fill color
-            doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-            doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-            doc.setTextColor(0, 0, 0); // Original text color
-            doc.text(
-                'END OF DETAIL REPORT',
-                disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('END OF DETAIL REPORT') / 2),
-                endOfDetailY + 8
-            );
-
-
-            // Save the PDF
-            doc.save('report.pdf');
-        };
+        // Draw "END OF DETAIL REPORT" Button
+        doc.setDrawColor(62, 118, 165); // Original button style
+        doc.setFillColor(backgroundColor); // Original fill color
+        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
+        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
+        doc.setTextColor(0, 0, 0); // Original text color
+        doc.text(
+            'END OF DETAIL REPORT',
+            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('END OF DETAIL REPORT') / 2),
+            endOfDetailY + 8
+        );
 
 
+        // Save the PDF
+        doc.save('report.pdf');
+    };
 
 
 
-        useEffect(() => {
-            fetchData();
-        }, [clientId, branch_id]);
-        useEffect(() => {
-            fetchAdminList();
-        }, [fetchAdminList]);
 
 
-        const handleViewMore = async (index) => {
-            // If the clicked row is already expanded, collapse it and scroll to the table
-            if (expandedRow && expandedRow.index === index) {
-                tableRef.current?.scrollIntoView({
-                    behavior: 'smooth', // Smooth scrolling
-                    block: 'start', // Scroll to the top of the table
-                });
-                setExpandedRow(null); // Collapse the row by setting it to null
-                return;
-            }
+    useEffect(() => {
+        fetchData();
+    }, [clientId, branch_id]);
+    useEffect(() => {
+        fetchAdminList();
+    }, [fetchAdminList]);
+
+
+    const handleViewMore = async (index) => {
+        // If the clicked row is already expanded, collapse it and scroll to the table
+        if (expandedRow && expandedRow.index === index) {
             tableRef.current?.scrollIntoView({
                 behavior: 'smooth', // Smooth scrolling
                 block: 'start', // Scroll to the top of the table
             });
-            // Fetch data for the selected application
-            const applicationInfo = data[index];
+            setExpandedRow(null); // Collapse the row by setting it to null
+            return;
+        }
+        tableRef.current?.scrollIntoView({
+            behavior: 'smooth', // Smooth scrolling
+            block: 'start', // Scroll to the top of the table
+        });
+        // Fetch data for the selected application
+        const applicationInfo = data[index];
 
-            try {
-                const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
-                const headingsAndStatuses = [];
+        try {
+            const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
+            const headingsAndStatuses = [];
 
-                // Process each service data
-                servicesData.forEach(service => {
-                    const heading = JSON.parse(service.reportFormJson.json).heading;
-                    if (heading && service.annexureData) {
-                        let status = service.annexureData.status;
+            // Process each service data
+            servicesData.forEach(service => {
+                const heading = JSON.parse(service.reportFormJson.json).heading;
+                if (heading && service.annexureData) {
+                    let status = service.annexureData.status;
 
-                        // If status is null or an empty string, set it to 'N/A'
-                        if (!status) {
-                            status = "N/A";
-                        }
-                        // If the length of the status is less than 4, sanitize it
-                        else if (status.length < 4) {
-                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'N/A'; // Remove special chars and make uppercase
-                        }
-                        // If the length of the status is 4 or more but less than 6, format it
-                        else {
-                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ") // Remove special chars
-                                .toLowerCase()
-                                .replace(/\b\w/g, (char) => char.toUpperCase()) || 'N/A'; // Capitalize first letter of each word
-                        }
-
-                        // Push the heading and formatted status into the array
-                        headingsAndStatuses.push({ heading, status });
+                    // If status is null or an empty string, set it to 'N/A'
+                    if (!status) {
+                        status = "N/A";
                     }
-                });
+                    // If the length of the status is less than 4, sanitize it
+                    else if (status.length < 4) {
+                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'N/A'; // Remove special chars and make uppercase
+                    }
+                    // If the length of the status is 4 or more but less than 6, format it
+                    else {
+                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ") // Remove special chars
+                            .toLowerCase()
+                            .replace(/\b\w/g, (char) => char.toUpperCase()) || 'N/A'; // Capitalize first letter of each word
+                    }
 
-                // Set the expanded row with fetched data
-                setExpandedRow({
-                    index: index,
-                    headingsAndStatuses: headingsAndStatuses,
-                });
+                    // Push the heading and formatted status into the array
+                    headingsAndStatuses.push({ heading, status });
+                }
+            });
 
-            } catch (error) {
-                // Handle errors in fetching or processing the services data
-                console.error('Error fetching or processing service data:', error);
-            }
-        };
+            // Set the expanded row with fetched data
+            setExpandedRow({
+                index: index,
+                headingsAndStatuses: headingsAndStatuses,
+            });
 
-
-
-        const handleSelectChange = (e) => {
-
-            const selectedValue = e.target.value;
-            setItemPerPage(selectedValue)
+        } catch (error) {
+            // Handle errors in fetching or processing the services data
+            console.error('Error fetching or processing service data:', error);
         }
-
-
-
-        const handleUpload = (applicationId, branchid) => {
-            navigate(`/candidate?applicationId=${applicationId}&branchid=${branchid}`);
-        };
-
-        function sanitizeText(text) {
-            if (!text) return text;
-            return text.replace(/_[^\w\s]/gi, ''); // Removes all non-alphanumeric characters except spaces.
-        }
-
-        const Loader = () => (
-            <div className="flex w-full justify-center items-center h-20">
-                <div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin"></div>
-            </div>
-        );
-        return (
-            <div className="bg-[#c1dff2]">
-                <div className="space-y-4 py-[30px] px-[51px] bg-white">
-
-                    <div className='flex gap-4 justify-end p-4'>
-                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
-                            {options.map((item, index) => {
-                                return item.status !== 'closed' ? (
-                                    <option key={index} value={item.status}>
-                                        {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
-                                    </option>
-                                ) : null;
-                            })}
-
-
-                        </select>
-                    </div>
-                    <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
-                        <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-                            <div className="col">
-                                <form action="">
-                                    <div className="flex gap-5 justify-between">
-                                        <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                            <option value="10">10 Rows</option>
-                                            <option value="20">20 Rows</option>
-                                            <option value="50">50 Rows</option>
-                                            <option value="100">100 Rows</option>
-                                            <option value="200">200 Rows</option>
-                                            <option value="300">300 Rows</option>
-                                            <option value="400">400 Rows</option>
-                                            <option value="500">500 Rows</option>
-                                        </select>
-                                        <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-                                        <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
-
-                                    </div>
-                                </form>
-                            </div>
-                            <div className="col md:flex justify-end ">
-                                <form action="">
-                                    <div className="flex md:items-stretch items-center  gap-3">
-                                        <input
-                                            type="search"
-                                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                            placeholder='Search by Client Code, Company Name, or Client Spoc'
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                        <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                        </div>
-
-                    </div>
-                    <div className="overflow-x-auto py-6 px-4">
-                        {loading ? (
-                            <div className='flex justify-center items-center py-6 h-full'>
-                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
-
-                            </div>
-                        ) : currentItems.length > 0 ? (
-                            <table className="min-w-full border-collapse border overflow-scroll rounded-lg whitespace-nowrap">
-                                <thead className='rounded-lg'>
-                                    <tr className="bg-green-500 text-white">
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">SL NO</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">TAT Days</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Location</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Name</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Reference Id</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Photo</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Applicant Employe Id</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Initiation Date</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Deadline Date</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Report Data</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Download Status</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">View More</th>
-                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Overall Status</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loading ? (
-
-                                        <tr>
-                                            <td colSpan={17} className="py-4 text-center text-gray-500">
-                                                <Loader className="text-center" />
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        <>
-                                            {currentItems.map((data, index) => (
-                                                <React.Fragment key={data.id}>
-                                                    <tr className="text-center">
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{adminTAT || 'NIL'}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.location || 'NIL'}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                            <img src={`${API_URL}/${data.photo}`} alt={data.name} className="w-10 h-10 rounded-full" />
-                                                        </td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.updated_at).toLocaleDateString()}</td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                            <button
-                                                                className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
-                                                                onClick={() => handleUpload(data.id, data.branch_id)}
-                                                            >
-                                                                Generate Report
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                            <button
-                                                                onClick={() => generatePDF(index)}
-                                                                className="bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500"
-                                                            >
-                                                                {data.overall_status || 'WIP'}
-                                                            </button>
-                                                        </td>
-                                                        <td className="border px-4  py-2" >
-                                                            <button
-                                                                className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
-                                                                onClick={() => handleViewMore(index)}
-                                                            >
-                                                                {expandedRow && expandedRow.index === index ? ' Less' : 'View '}
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
-
-                                                    </tr>
-
-                                                    {expandedRow && expandedRow.index === index && (
-                                                        <>
-                                                            <tr>
-                                                                <td colSpan="100%" className="text-center p-4 bg-gray-100">
-                                                                    {/* Table structure to display headings in the first column and statuses in the second column */}
-                                                                    <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
-                                                                        <table className="w-full table-auto">
-                                                                            <tbody className='h-[160px] overflow-y-auto block'>
-                                                                                {/* Loop through headings and statuses, displaying heading in the first column and status in the second */}
-                                                                                {expandedRow.headingsAndStatuses &&
-                                                                                    expandedRow.headingsAndStatuses.map((item, idx) => (
-                                                                                        <tr key={`row-${idx}`}>
-                                                                                            <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                                                                {sanitizeText(item.heading)}
-                                                                                            </td>
-                                                                                            <td className="text-left p-2 border border-black capitalize">
-                                                                                                {sanitizeText(item.status)}
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    ))
-                                                                                }
-                                                                                <tr>
-                                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Type</th>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_type || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Date</th>
-                                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                                        {data.report_date ? new Date(data.report_date).toLocaleDateString('en-US', {
-                                                                                            year: 'numeric',
-                                                                                            month: 'long',
-                                                                                            day: 'numeric'
-                                                                                        }) : 'N/A'}
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Generated By</th>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200">QC Done By</th>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Date</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_date) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Reopen Date</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_reopened_date) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff Date</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{data.second_insuff_date ? sanitizeText(new Date(data.second_insuff_date).toLocaleDateString()) : 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Marks</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Date</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{data.third_insuff_date ? sanitizeText(new Date(data.third_insuff_date).toLocaleDateString()) : 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Reopen Date</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insuff_reopened_date) || 'N/A'}</td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Reason For Delay</td>
-                                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'N/A'}</td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-
-                                                                </td>
-                                                            </tr>
-                                                        </>
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                        </>
-                                    )}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <div className="text-center py-6">
-                                <p>No Data Found</p>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                            <button
-                                onClick={showPrev}
-                                disabled={currentPage === 1}
-                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                aria-label="Previous page"
-                            >
-                                <MdArrowBackIosNew />
-                            </button>
-                            <div className="flex items-center">
-                                {renderPagination()}
-                            </div>
-                            <button
-                                onClick={showNext}
-                                disabled={currentPage === totalPages}
-                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                aria-label="Next page"
-                            >
-                                <MdArrowForwardIos />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div >
-        );
-
     };
 
-    export default AdminChekin;
+
+
+    const handleSelectChange = (e) => {
+
+        const selectedValue = e.target.value;
+        setItemPerPage(selectedValue)
+    }
+
+
+
+    const handleUpload = (applicationId, branchid) => {
+        navigate(`/candidate?applicationId=${applicationId}&branchid=${branchid}`);
+    };
+
+    function sanitizeText(text) {
+        if (!text) return text;
+        return text.replace(/_[^\w\s]/gi, ''); // Removes all non-alphanumeric characters except spaces.
+    }
+
+    const Loader = () => (
+        <div className="flex w-full justify-center items-center h-20">
+            <div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin"></div>
+        </div>
+    );
+    return (
+        <div className="bg-[#c1dff2]">
+            <div className="space-y-4 py-[30px] px-[51px] bg-white">
+
+                <div className='flex gap-4 justify-end p-4'>
+                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+                        {options.map((item, index) => {
+                            return item.status !== 'closed' ? (
+                                <option key={index} value={item.status}>
+                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                </option>
+                            ) : null;
+                        })}
+
+
+                    </select>
+                </div>
+                <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
+                    <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                        <div className="col">
+                            <form action="">
+                                <div className="flex gap-5 justify-between">
+                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                        <option value="10">10 Rows</option>
+                                        <option value="20">20 Rows</option>
+                                        <option value="50">50 Rows</option>
+                                        <option value="100">100 Rows</option>
+                                        <option value="200">200 Rows</option>
+                                        <option value="300">300 Rows</option>
+                                        <option value="400">400 Rows</option>
+                                        <option value="500">500 Rows</option>
+                                    </select>
+                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+                                    <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
+
+                                </div>
+                            </form>
+                        </div>
+                        <div className="col md:flex justify-end ">
+                            <form action="">
+                                <div className="flex md:items-stretch items-center  gap-3">
+                                    <input
+                                        type="search"
+                                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                        placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div className="overflow-x-auto py-6 px-4">
+                    {loading ? (
+                        <div className='flex justify-center items-center py-6 h-full'>
+                            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+                        </div>
+                    ) : currentItems.length > 0 ? (
+                        <table className="min-w-full border-collapse border overflow-scroll rounded-lg whitespace-nowrap">
+                            <thead className='rounded-lg'>
+                                <tr className="bg-green-500 text-white">
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">SL NO</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">TAT Days</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Location</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Name</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Reference Id</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Photo</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Applicant Employe Id</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Initiation Date</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Deadline Date</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Report Data</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Download Status</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">View More</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Overall Status</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+
+                                    <tr>
+                                        <td colSpan={17} className="py-4 text-center text-gray-500">
+                                            <Loader className="text-center" />
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <>
+                                        {currentItems.map((data, index) => (
+                                            <React.Fragment key={data.id}>
+                                                <tr className="text-center">
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{adminTAT || 'NIL'}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.location || 'NIL'}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                        <img src={`${API_URL}/${data.photo}`} alt={data.name} className="w-10 h-10 rounded-full" />
+                                                    </td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.updated_at).toLocaleDateString()}</td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                        <button
+                                                            className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
+                                                            onClick={() => handleUpload(data.id, data.branch_id)}
+                                                        >
+                                                            Generate Report
+                                                        </button>
+                                                    </td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                        <button
+                                                            onClick={() => generatePDF(index)}
+                                                            className="bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500"
+                                                        >
+                                                            {data.overall_status || 'WIP'}
+                                                        </button>
+                                                    </td>
+                                                    <td className="border px-4  py-2" >
+                                                        <button
+                                                            className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
+                                                            onClick={() => handleViewMore(index)}
+                                                        >
+                                                            {expandedRow && expandedRow.index === index ? ' Less' : 'View '}
+                                                        </button>
+                                                    </td>
+                                                    <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
+
+                                                </tr>
+
+                                                {expandedRow && expandedRow.index === index && (
+                                                    <>
+                                                        <tr>
+                                                            <td colSpan="100%" className="text-center p-4 bg-gray-100">
+                                                                {/* Table structure to display headings in the first column and statuses in the second column */}
+                                                                <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
+                                                                    <table className="w-full table-auto">
+                                                                        <tbody className='h-[160px] overflow-y-auto block'>
+                                                                            {/* Loop through headings and statuses, displaying heading in the first column and status in the second */}
+                                                                            {expandedRow.headingsAndStatuses &&
+                                                                                expandedRow.headingsAndStatuses.map((item, idx) => (
+                                                                                    <tr key={`row-${idx}`}>
+                                                                                        <td className="text-left p-2 border border-black capitalize bg-gray-200">
+                                                                                            {sanitizeText(item.heading)}
+                                                                                        </td>
+                                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                                            {sanitizeText(item.status)}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                ))
+                                                                            }
+                                                                            <tr>
+                                                                                <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Type</th>
+                                                                                <td className="text-left p-2 border border-black capitalize">{data.report_type || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Date</th>
+                                                                                <td className="text-left p-2 border border-black capitalize">
+                                                                                    {data.report_date ? new Date(data.report_date).toLocaleDateString('en-US', {
+                                                                                        year: 'numeric',
+                                                                                        month: 'long',
+                                                                                        day: 'numeric'
+                                                                                    }) : 'N/A'}
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th className="text-left p-2 border border-black uppercase bg-gray-200">Report Generated By</th>
+                                                                                <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th className="text-left p-2 border border-black uppercase bg-gray-200">QC Done By</th>
+                                                                                <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Date</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_date) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Reopen Date</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_reopened_date) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff Date</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{data.second_insuff_date ? sanitizeText(new Date(data.second_insuff_date).toLocaleDateString()) : 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Marks</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Date</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{data.third_insuff_date ? sanitizeText(new Date(data.third_insuff_date).toLocaleDateString()) : 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Reopen Date</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insuff_reopened_date) || 'N/A'}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td className="text-left p-2 border border-black uppercase bg-gray-200">Reason For Delay</td>
+                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'N/A'}</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+
+                                                            </td>
+                                                        </tr>
+                                                    </>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </>
+                                )}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="text-center py-6">
+                            <p>No Data Found</p>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                        <button
+                            onClick={showPrev}
+                            disabled={currentPage === 1}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Previous page"
+                        >
+                            <MdArrowBackIosNew />
+                        </button>
+                        <div className="flex items-center">
+                            {renderPagination()}
+                        </div>
+                        <button
+                            onClick={showNext}
+                            disabled={currentPage === totalPages}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Next page"
+                        >
+                            <MdArrowForwardIos />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div >
+    );
+
+};
+
+export default AdminChekin;

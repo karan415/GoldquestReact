@@ -18,7 +18,6 @@ const Admin = ({ children }) => {
       const storedToken = localStorage.getItem("_token");
 
       if (!storedAdminData || !storedToken) {
-        console.log(`localStorage - `, localStorage);
         localStorage.clear();
         redirectToLogin();
         return;

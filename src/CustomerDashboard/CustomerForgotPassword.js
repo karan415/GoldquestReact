@@ -44,7 +44,6 @@ const CustomerForgotPassword = () => {
         return response.json();
       })
       .then((result) => {
-        console.log(result);
         Swal.fire({
           title: 'Success',
           text: result.message,

@@ -55,10 +55,15 @@ const CreateInvoice = () => {
     };
     fetch(`https://goldquestreact.onrender.com/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
+        const result = response.json();
+        const newToken = result._token || result.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
+        }
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.text();
+        return result;
       })
       .then((dataRaw) => {
         const data = JSON.parse(dataRaw);
@@ -124,12 +129,12 @@ const CreateInvoice = () => {
 
     // Set Logo (Uncomment and update the path if you have a logo image)
     // const logoImg = 'path/to/your/logo.png';
- 
+
     const logoImg = "https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1";
     const imgWidth = 50;
     const imgHeight = 20;
     doc.addImage(logoImg, 'PNG', 10, yPosition, imgWidth, imgHeight);
-    
+
     const addressLines = companyInfo.address.split(',');
     // Add Company Information
 
@@ -170,7 +175,7 @@ const CreateInvoice = () => {
 
     // Align text to the right of the logo
     companyInfoArray.forEach((line, index) => {
-        doc.text(line, 10 + imgWidth + 10, yPosition + (index * 5)); // Positioned to the right of the logo
+      doc.text(line, 10 + imgWidth + 10, yPosition + (index * 5)); // Positioned to the right of the logo
     });
 
     yPosition += imgHeight + 10;
@@ -291,7 +296,7 @@ const CreateInvoice = () => {
     doc.text("Invoice Amount in Words:", 10, invoiceYPosition);
     doc.setFont("helvetica", "normal");
     const words = wordify(parseInt(newOverallServiceAmount + cgstTax + sgstTax));
-    doc.text(words+' Rupees Only', 10, invoiceYPosition + 5);
+    doc.text(words + ' Rupees Only', 10, invoiceYPosition + 5);
 
     // Application Details Table
     const serviceCodes = serviceNames.map(service => service.shortCode);
@@ -353,15 +358,15 @@ const CreateInvoice = () => {
       "Payments received after due date shall be liable of interest @ 3% per month, part of month taken as full month.",
       "Any discrepancy shall be intimated within 3 working days of receipt of bill.",
       "Please email us at accounts@goldquestglobal.com / Contact Us: +91 9945891310"
-  ];
+    ];
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
 
-  let footerY = pageHeight - 30; // Position the footer near the bottom
-  footerText.forEach((line, index) => {
+    let footerY = pageHeight - 30; // Position the footer near the bottom
+    footerText.forEach((line, index) => {
       doc.text(line, 10, footerY + (index * 4));
-  });
+    });
 
     // Finalize and Save PDF
     doc.save('invoice.pdf');

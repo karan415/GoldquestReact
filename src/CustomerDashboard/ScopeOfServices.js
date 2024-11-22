@@ -24,30 +24,30 @@ const ScopeOfServices = () => {
             setLoading(false);
             return;
         }
-    
+
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch.id}&branch_token=${branch_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-    
+
             const data = await response.json();
-    
+
             // Store new token if available
             const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
-             
+
             }
-    
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
             if (data.customers && data.customers.length > 0) {
                 const servicesData = data.customers[0].services;
-    
+
                 try {
                     const parsedServices = JSON.parse(servicesData);
                     setServices(parsedServices || []);
@@ -65,7 +65,7 @@ const ScopeOfServices = () => {
             setLoading(false);
         }
     }, [API_URL, customer_id, branch?.id, branch_token]);
-    
+
     useEffect(() => {
         fetchServicePackage();
     }, [fetchServicePackage]);

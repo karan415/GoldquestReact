@@ -23,7 +23,6 @@ const Login = () => {
     }
 
     if (preAdminData || storedToken) {
-      console.log(`Dashboard Redirecting`);
 
       navigate('/', { state: { from: location }, replace: true });
       return;

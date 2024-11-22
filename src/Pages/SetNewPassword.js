@@ -46,7 +46,7 @@ const SetNewPassword = () => {
             })
             .then((result) => {
                 console.log(result);
-                setMessage('Password has been successfully reset!'); // Success message
+                setMessage(result.message);
             })
             .catch((error) => {
                 console.error('Error:', error);

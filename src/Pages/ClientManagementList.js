@@ -25,13 +25,13 @@ const ClientManagementList = () => {
     setEditData({ id: branch.id, name: branch.name, email: branch.email });
     setIsPopupOpen(true); // Only open the popup
   };
-  
+
   const handleEditBranch = async (e) => {
     e.preventDefault();
-  
+
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
     // Validate required fields
     if (!editData.id || !editData.name || !editData.email) {
       Swal.fire(
@@ -41,7 +41,7 @@ const ClientManagementList = () => {
       );
       return;
     }
-  
+
     // Prepare the request payload
     const raw = JSON.stringify({
       id: editData.id,
@@ -50,30 +50,28 @@ const ClientManagementList = () => {
       admin_id,
       _token: storedToken,
     });
-  
+
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: raw,
     };
-  
+
     try {
       const response = await fetch(`${API_URL}/branch/update`, requestOptions);
-  
+      const result = await response.json();
+      const newToken = result._token || result.token; // Update token if provided
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+      }
+
       if (!response.ok) {
         // Handle server errors gracefully
         const errorData = await response.json();
         Swal.fire('Error!', `An error occurred: ${errorData.message || response.statusText}`, 'error');
         return;
       }
-  
-      // Handle success
-      const result = await response.json();
-      const newToken = result._token || result.token; // Update token if provided
-      if (newToken) {
-        localStorage.setItem("_token", newToken);
-      }
-  
+
       Swal.fire('Success!', 'Branch updated successfully.', 'success');
       toggleAccordion(); // Refresh UI or reload data
       setIsPopupOpen(false); // Close the popup
@@ -83,14 +81,14 @@ const ClientManagementList = () => {
       console.error('Fetch error:', error);
     }
   };
-  
+
 
   const closePopup = () => {
     setIsPopupOpen(false);
     setEditData({ id: null, name: '', email: '' });
   };
 
- 
+
   const { loading, listData, fetchData, toggleAccordion, branches, openAccordionId, isOpen, setIsOpen } = useData();
 
   const [showAllServicesState, setShowAllServicesState] = useState({});
@@ -235,7 +233,11 @@ const ClientManagementList = () => {
 
         fetch(url, requestOptions)
           .then(response => {
-            console.log(response);
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+              localStorage.setItem("_token", newToken);
+            }
             if (!response.ok) {
               return response.text().then(text => {
                 const errorData = JSON.parse(text);
@@ -247,13 +249,9 @@ const ClientManagementList = () => {
                 throw new Error(text);
               });
             }
-            return response.json(response);
+            return result;
           })
           .then(result => {
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
             fetchData();
             Swal.fire(
               'Deleted!',
@@ -294,6 +292,11 @@ const ClientManagementList = () => {
           },
         })
           .then((response) => {
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+              localStorage.setItem("_token", newToken);
+            }
             if (!response.ok) {
               return response.text().then((text) => {
                 const errorData = JSON.parse(text);
@@ -301,13 +304,9 @@ const ClientManagementList = () => {
                 throw new Error(errorData.message);
               });
             }
-            return response.json();
+            return result;
           })
           .then((result) => {
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
             Swal.fire('Blocked!', 'Your Branch has been Blocked.', 'success');
             toggleAccordion();
           })
@@ -345,6 +344,11 @@ const ClientManagementList = () => {
           },
         })
           .then((response) => {
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+              localStorage.setItem("_token", newToken);
+            }
             if (!response.ok) {
               return response.text().then((text) => {
                 const errorData = JSON.parse(text);
@@ -352,13 +356,9 @@ const ClientManagementList = () => {
                 throw new Error(errorData.message);
               });
             }
-            return response.json();
+            return result;
           })
           .then((result) => {
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
             Swal.fire('Unblocked!', 'Your Branch has been Unblocked.', 'success');
             toggleAccordion();
           })
@@ -396,6 +396,11 @@ const ClientManagementList = () => {
           },
         })
           .then((response) => {
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+              localStorage.setItem("_token", newToken);
+            }
             if (!response.ok) {
               return response.text().then((text) => {
                 const errorData = JSON.parse(text);
@@ -403,13 +408,9 @@ const ClientManagementList = () => {
                 throw new Error(errorData.message);
               });
             }
-            return response.json();
+            return result;
           })
           .then((result) => {
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
             Swal.fire('Blocked!', 'Your Client has been Blocked.', 'success');
             fetchData();
           })
@@ -425,9 +426,6 @@ const ClientManagementList = () => {
     // Change the tab to 'edit'
     setClientData(item)
     handleTabChange('edit');
-
-    // Log the array to console
-    console.log(item);
   };
 
 
@@ -562,7 +560,7 @@ const ClientManagementList = () => {
                         branches.map((branch) => {
                           const isActive = branch.status === 0;
                           const isBlocked = branch.status === 1;
-                      
+
                           return (
                             <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
                               <div
@@ -610,7 +608,7 @@ const ClientManagementList = () => {
                             </div>
                           );
                         })}
-                      
+
                       <Modal
                         isOpen={isPopupOpen}
                         onRequestClose={closePopup}
@@ -656,7 +654,7 @@ const ClientManagementList = () => {
                           </div>
                         </form>
                       </Modal>
-                      
+
                     </td>
                   </tr>
                 );

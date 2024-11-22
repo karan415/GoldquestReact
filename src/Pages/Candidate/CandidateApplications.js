@@ -401,10 +401,15 @@ const GenerateReport = () => {
 
         fetch(url, requestOptions)
             .then((response) => {
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json();
+                return result;
             })
             .then((result) => {
                 setLoading(false);
@@ -602,16 +607,17 @@ const GenerateReport = () => {
                 requestOptions
             );
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
             const result = await response.json();
-            Swal.fire("Success!", "Application updated successfully.", "success");
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            Swal.fire("Success!", "Application updated successfully.", "success");
+
 
             uploadCustomerLogo(result.email_status);
         } catch (error) {
@@ -716,7 +722,7 @@ const GenerateReport = () => {
                                             src={`https://goldquestreact.onrender.com/${image.trim()}`}
                                             alt={`${index + 1}`}
                                             className="cursor-pointer h-[200px] mt-0 object-contain"
-                                           
+
                                         />
                                     ))}
                                 </div>
@@ -1124,7 +1130,6 @@ const GenerateReport = () => {
                             </div>
 
                             <div className="container mx-auto mt-5 px-8">
-                                {console.log(`servicesDataInfo - `, servicesDataInfo)}
                                 {servicesDataInfo && servicesDataInfo.map((serviceData, index) => {
                                     if (serviceData.serviceStatus) {
                                         const formJson = JSON.parse(serviceData.reportFormJson.json);
@@ -1220,7 +1225,7 @@ const GenerateReport = () => {
                             </div>
 
 
-                          
+
 
                         </div>
 

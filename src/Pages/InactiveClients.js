@@ -92,14 +92,16 @@ const InactiveClients = () => {
 
     try {
       const response = await fetch(`https://goldquestreact.onrender.com/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
-
+      const result = await response.json();
+      const newToken = result._token || result.token;
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+      }
       if (!response.ok) {
         const errorData = await response.json();
         Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
         return;
       }
-
-      const result = await response.json();
       setData(result.customers || []);
     } catch (error) {
       console.error('Fetch error:', error);
@@ -134,16 +136,18 @@ const InactiveClients = () => {
 
       try {
         const response = await fetch(`https://goldquestreact.onrender.com/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
-        if (!response.ok) {
-          const errorData = await response.json();
-          Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-          return;
-        }
+
         const result = await response.json();
         const newToken = result._token || result.token;
         if (newToken) {
           localStorage.setItem("_token", newToken);
         }
+        if (!response.ok) {
+          const errorData = await response.json();
+          Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+          return;
+        }
+
         Swal.fire('Success!', `The client ${name} has been successfully unblocked.`, 'success');
         fetchClients();
       } catch (error) {
