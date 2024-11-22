@@ -1,17 +1,17 @@
-import React, { useContext, useEffect} from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios'; 
+import axios from 'axios';
 import { LoaderContext } from '../LoaderContext';
 import Loader from '../Loader'
 import { useApi } from '../ApiContext';
 const Admin = ({ children }) => {
 
 
-  const {loading, setLoading} = useContext(LoaderContext);
+  const { loading, setLoading } = useContext(LoaderContext);
   const API_URL = useApi();
   const navigate = useNavigate();
   const location = useLocation();
- 
+
   useEffect(() => {
     const checkAuthentication = async () => {
       const storedAdminData = localStorage.getItem("admin");
@@ -41,6 +41,7 @@ const Admin = ({ children }) => {
         if (response.data.status) {
           setLoading(false);
         } else {
+          localStorage.clear();
           redirectToLogin();
         }
       } catch (error) {
@@ -51,21 +52,22 @@ const Admin = ({ children }) => {
     };
 
     const redirectToLogin = () => {
+      localStorage.clear();
       navigate('/admin-login', { state: { from: location }, replace: true });
     };
 
     checkAuthentication();
-  }, [navigate,setLoading, location]);
+  }, [navigate, setLoading, location]);
 
   if (loading) {
     return (
-    <>
-    <Loader/>
-    </>
+      <>
+        <Loader />
+      </>
     );
   }
 
-  return children; 
+  return children;
 };
 
 export default Admin;

@@ -3,14 +3,18 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+
 const LoginForm = () => {
   const [input, setInput] = useState({
     username: '',
     password: '',
   });
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false); // State for OTP modal
+  const [isOtpLoading, setIsOtpLoading] = useState(false); // State for OTP button
   const API_URL = useApi();
-  const [message,] = useState('');
+  const [message] = useState('');
   const [error, setError] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,7 +38,7 @@ const LoginForm = () => {
     event.preventDefault();
     const errors = validateError();
     if (Object.keys(errors).length === 0) {
-      setLoading(true); // Start loading
+      setLoading(true);
 
       const loginData = {
         username: input.username,
@@ -43,34 +47,20 @@ const LoginForm = () => {
 
       axios.post(`${API_URL}/admin/login`, loginData)
         .then((response) => {
-          if (!response.data.status) {
+          const result = response.data;
+          if (!result.status) {
             Swal.fire({
               title: 'Error!',
-              text: `An error occurred: ${response.data.message}`,
+              text: `An error occurred: ${result.message}`,
               icon: 'error',
-              confirmButtonText: 'Ok'
+              confirmButtonText: 'Ok',
             });
-           
           } else {
-
-            const adminData = response.data.adminData;
-            const _token = response.data.token;
-
-            localStorage.setItem('admin', JSON.stringify(adminData));
-            localStorage.setItem('_token', _token);
-            Swal.fire({
-              title: "Success",
-              text: 'Login Successfull',
-              icon: "success",
-              confirmButtonText: "Ok"
-            })
-            const newToken = response._token || response.token;
-            if (newToken) {
-                localStorage.setItem("_token", newToken);
+            if (result.message === 'OTP sent successfully.') {
+              setShowOtpModal(true); // Show OTP modal
+            } else {
+              handleLoginSuccess(result);
             }
-
-            navigate('/', { state: { from: location }, replace: true });
-            setError({});
           }
         })
         .catch((error) => {
@@ -78,7 +68,7 @@ const LoginForm = () => {
             title: 'Error!',
             text: `Error: ${error.response?.data?.message || error.message}`,
             icon: 'error',
-            confirmButtonText: 'Ok'
+            confirmButtonText: 'Ok',
           });
         })
         .finally(() => {
@@ -89,9 +79,61 @@ const LoginForm = () => {
     }
   };
 
+  const handleLoginSuccess = (result) => {
+    const adminData = result.adminData;
+    const _token = result.token;
+
+    localStorage.setItem('admin', JSON.stringify(adminData));
+    localStorage.setItem('_token', _token);
+
+    Swal.fire({
+      title: 'Success',
+      text: 'Login Successful',
+      icon: 'success',
+      confirmButtonText: 'Ok',
+    });
+
+    navigate('/', { state: { from: location }, replace: true });
+  };
+
+  const handleOtpSubmit = () => {
+    setIsOtpLoading(true);
+
+    axios
+      .post(`${API_URL}/admin/verify-two-factor`, {
+        username: input.username,
+        otp,
+      })
+      .then((response) => {
+        const result = response.data;
+        if (!result.status) {
+          Swal.fire({
+            title: 'Error!',
+            text: result.message,
+            icon: 'error',
+            confirmButtonText: 'Ok',
+          });
+        } else {
+          setShowOtpModal(false); // Hide OTP modal
+          handleLoginSuccess(result); // Handle success response
+        }
+      })
+      .catch((error) => {
+        Swal.fire({
+          title: 'Error!',
+          text: `Error: ${error.response?.data?.message || error.message}`,
+          icon: 'error',
+          confirmButtonText: 'Ok',
+        });
+      })
+      .finally(() => {
+        setIsOtpLoading(false);
+      });
+  };
+
   const goToForgotPassword = () => {
-       navigate('/ForgotPassword')
-  }
+    navigate('/ForgotPassword');
+  };
 
   return (
     <div className="bg-transparent md:p-8 p-3 rounded-md shadow-md w-full max-w-sm">
@@ -127,44 +169,37 @@ const LoginForm = () => {
           />
           {error.password && <p className="text-red-500">{error.password}</p>}
         </div>
-        <div className="flex items-center justify-between mb-4">
-          <label className="block text-gray-700 text-sm font-bold">
-            <input className="mr-2 leading-tight" type="checkbox" />
-            <span className="text-sm">Remember me</span>
-          </label>
-          <button
-            type="button"
-            className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800"
-            onClick={goToForgotPassword}
-          >
-            Forgot Password?
-          </button>
-        </div>
-        <div className="flex items-center justify-between">
-          <button
-            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            type="submit"
-            disabled={loading} // Disable button when loading
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </div>
+        <button
+          className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Signing In...' : 'Sign In'}
+        </button>
       </form>
-      <div className="text-center my-4">
-        <p className="text-sm">
-          Don't have an account?
-          <button
-            type="button"
-            className="text-red-500 hover:text-blue-800 font-bold"
-            onClick={goToForgotPassword}
-          >
-            Sign up
-          </button>
-        </p>
-      </div>
 
-
-      {message && <p className="text-red-500 text-center mt-4">{message}</p>}
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-xl font-bold mb-4">Enter OTP</h3>
+            <input
+              className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              type="text"
+              placeholder="Enter 6-digit OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            <button
+              className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={handleOtpSubmit}
+              disabled={isOtpLoading}
+            >
+              {isOtpLoading ? 'Verifying...' : 'Verify'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
