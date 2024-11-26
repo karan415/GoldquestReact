@@ -1,13 +1,65 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useData } from './DataContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
-
+import { useApi } from '../ApiContext';
+import Swal from 'sweetalert2'
 const ExternalLoginData = () => {
-  const { listData, fetchData, toggleAccordion, branches, openAccordionId ,loading} = useData();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [branches, setBranches] = useState([]);
+  const [openAccordionId, setOpenAccordionId] = useState(null);
+
+  const { listData, fetchData } = useData();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const API_URL = useApi();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const toggleAccordion = useCallback((id) => {
+    setBranches([]);
+    setOpenAccordionId((prevId) => (prevId === id ? null : id));
+    setLoading(true);
+    setIsOpen(null);
+    setError(null);
+
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+
+    fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then((response) => {
+        return response.json().then(result => {
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+          if (!response.ok) {
+            Swal.fire({
+              title: 'Error!',
+              text: `An error occurred: ${result.message}`,
+              icon: 'error',
+              confirmButtonText: 'Ok'
+            });
+            throw new Error('Network response was not ok');
+          }
+          return result;
+        });
+      })
+      .then((data) => {
+        setBranches(data.branches || []);
+      })
+      .catch((error) => {
+        console.error('Fetch error:', error);
+        setError('Failed to load data');
+      })
+      .finally(() => setLoading(false));
+  }, [API_URL]);
+
+
 
   useEffect(() => {
     fetchData();
@@ -179,20 +231,23 @@ const ExternalLoginData = () => {
                     </td>
                   </tr>
 
-                  {openAccordionId === item.main_id && branches.map(branch => (
-                    <tr key={branch.id} className='border'>
-                      <td className="py-2 px-4 border-b text-center whitespace-nowrap">{branch.name}</td>
-                      <td className="py-2 px-4 border-b whitespace-nowrap">{branch.email}</td>
-                      <td className="py-2 px-4 border-b whitespace-nowrap text-center uppercase text-blue-500 font-bold">
-                        <button onClick={() => getEmail(branch.email)}>
-                          Go
-                        </button>
-                      </td>
-                      <td className="py-2 px-4 border-b whitespace-nowrap text-center">
-                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
+                  {openAccordionId === item.main_id && branches.length > 0 && (
+                    branches.map((branch) => (
+                      <tr key={branch.id} className="border">
+                        <td className="py-2 px-4 border-b text-center whitespace-nowrap">{branch.name}</td>
+                        <td className="py-2 px-4 border-b whitespace-nowrap">{branch.email}</td>
+                        <td className="py-2 px-4 border-b whitespace-nowrap text-center uppercase text-blue-500 font-bold">
+                          <button onClick={() => getEmail(branch.email)}>
+                            Go
+                          </button>
+                        </td>
+                        <td className="py-2 px-4 border-b whitespace-nowrap text-center">
+                          <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">Delete</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+
                 </React.Fragment>
               ))}
             </tbody>

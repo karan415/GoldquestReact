@@ -93,25 +93,32 @@ const ServiceForm = () => {
                 : `${API_URL}/service/create`;
 
             fetch(url, requestOptions)
-                .then(response => {
-                    const result = response.json();
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            const errorData = JSON.parse(text);
-                            Swal.fire(
-                                'Error!',
-                                `An error occurred: ${errorData.message}`,
-                                'error'
-                            );
-                            throw new Error(text);
-                        });
-                    }
-                    return result;
-                })
+            .then(response => {
+                // Parse the response JSON
+                return response.json().then(result => {
+                  // Check if response is successful
+                  if (!response.ok) {
+                    // Handle the error if the response is not ok
+                    const errorMessage = result.message || 'Unknown error occurred';
+                    Swal.fire(
+                      'Error!',
+                      `An error occurred: ${errorMessage}`,
+                      'error'
+                    );
+                    throw new Error(errorMessage);
+                  }
+              
+                  // If the response is ok, handle the token (if exists)
+                  const newToken = result._token || result.token;
+                  if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                  }
+              
+                  // Return the result if everything is fine
+                  return result;
+                });
+              })
+              
                 .then((result) => {
 
                     setError({});

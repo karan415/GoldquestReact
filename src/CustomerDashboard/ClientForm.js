@@ -137,11 +137,13 @@ const ClientForm = () => {
         e.preventDefault();
         let requestBody;
         const errors = validate();
+    
         if (Object.keys(errors).length === 0) {
             setIsLoading(true); // Set loading state to true
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
-            if (fileCount == 0) {
+    
+            if (fileCount === 0) {
                 requestBody = {
                     customer_id,
                     branch_id,
@@ -149,8 +151,7 @@ const ClientForm = () => {
                     _token: branch_token,
                     ...clientInput
                 };
-            }
-            else {
+            } else {
                 requestBody = {
                     customer_id,
                     branch_id,
@@ -159,8 +160,7 @@ const ClientForm = () => {
                     ...clientInput
                 };
             }
-
-
+    
             try {
                 const response = await fetch(
                     isEditClient
@@ -174,30 +174,38 @@ const ClientForm = () => {
                         body: JSON.stringify(requestBody)
                     }
                 );
-                const result = response.json();
+    
+                const result = await response.json(); // Ensure the response is parsed as JSON
+    
+                if (!response.ok) {
+                    // Handle error response from API
+                    const errorMessage = result.message || 'Unknown error occurred';
+                    Swal.fire(
+                        'Error!',
+                        `An error occurred: ${errorMessage}`,
+                        'error'
+                    );
+                    throw new Error(errorMessage); // Throw error to prevent further code execution
+                }
+    
                 const newToken = result._token || result.token;
                 if (newToken) {
-                    localStorage.setItem("branch_token", newToken);
+                    localStorage.setItem("branch_token", newToken); // Store new token if provided
                 }
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                    throw new Error(errorData.message);
-                }
-
-                const data = await response.json();
-                fetchClientDrop();
+    
+                // After successful response
+                fetchClientDrop(); // Fetch client dropdowns or any other data
+    
                 let insertedId;
-                let new_application_id
+                let new_application_id;
                 if (isEditClient) {
-                    insertedId = clientInput.client_application_id
+                    insertedId = clientInput.client_application_id;
                     new_application_id = clientInput.application_id;
-
                 } else {
-                    insertedId = data.result.results.insertId;
-                    new_application_id = data.result.new_application_id;
+                    insertedId = result.result.results.insertId;
+                    new_application_id = result.result.new_application_id;
                 }
-
+    
                 setClientInput({
                     name: '',
                     employee_id: '',
@@ -209,30 +217,41 @@ const ClientForm = () => {
                     package: '',
                     client_application_id: ''
                 });
-                setFiles({})
-                setInputError({});
-
-
+    
+                setFiles({}); // Clear files
+                setInputError({}); // Reset input errors
+    
+                // Success message
                 Swal.fire({
                     title: "Success",
                     text: isEditClient ? 'Client Application edited successfully' : 'Client Application added successfully',
                     icon: "success",
                     confirmButtonText: "Ok"
                 });
-
+    
+                console.log('insertedId', insertedId, 'new_application_id', new_application_id);
+                fetchClientDrop(); // Refresh the client data
                 if (fileCount !== 0) {
-                    await uploadCustomerLogo(insertedId, new_application_id);
+                    await uploadCustomerLogo(insertedId, new_application_id); // Upload customer logo if files exist
                 }
-
+    
             } catch (error) {
                 console.error("There was an error!", error);
+    
+                // Show an error message for a failed request
+                Swal.fire(
+                    'Error!',
+                    'There was an error with the request. Please try again later.',
+                    'error'
+                );
             } finally {
-                setIsLoading(false); // Reset loading state
+                setIsLoading(false); // Reset loading state after the request is done
             }
         } else {
-            setInputError(errors);
+            setInputError(errors); // Set the input errors if validation fails
         }
     };
+    
 
     const handlePackageChange = (selectedList) => {
         const selectedIds = selectedList.map(pkg => pkg.id);
