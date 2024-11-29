@@ -221,7 +221,115 @@ const AdminChekin = () => {
         }
     };
 
+    function addFooter(doc) {
+        // Define the height of the footer and its position
+        const footerHeight = 15; // Footer height
+        const pageHeight = doc.internal.pageSize.height; // Get the total page height
+        const footerYPosition = pageHeight - footerHeight + 10; // Position footer closer to the bottom
 
+        // Define page width and margins
+        const pageWidth = doc.internal.pageSize.width;
+        const margin = 10; // Margins on the left and right
+
+        // Space between sections (adjust dynamically based on page width)
+        const availableWidth = pageWidth - 2 * margin; // Usable width excluding margins
+        const centerX = pageWidth / 2; // Center of the page
+
+        // Insert text into the center column (centered)
+        const footerText = "No 293/154/172, 4th Floor, Outer Ring Road, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.goldquestglobal.in";
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(footerText, centerX, footerYPosition - 3, { align: 'center' }); // Adjusted vertical position
+
+        // Insert page number into the right column (right-aligned)
+        const pageCount = doc.internal.getNumberOfPages(); // Get total number of pages
+        const currentPage = doc.internal.getCurrentPageInfo().pageNumber; // Get current page number
+        const pageNumberText = `Page ${currentPage} / ${pageCount}`;
+        const pageNumberWidth = doc.getTextWidth(pageNumberText); // Calculate text width
+
+        // Right-align page number with respect to the page width
+        const pageNumberX = pageWidth - margin - pageNumberWidth;
+        doc.text(pageNumberText, pageNumberX, footerYPosition - 3); // Adjusted vertical position
+
+        // Draw a line above the footer
+        doc.setLineWidth(0.5);
+        doc.line(margin, footerYPosition - 7, pageWidth - margin, footerYPosition - 7); // Line above the footer
+    }
+
+
+    async function checkImageExists(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            return response.ok; // Returns true if HTTP status is 200-299
+        } catch (error) {
+            console.error(`Error checking image existence at ${url}:`, error);
+            return false;
+        }
+    }
+
+    // Helper function to load and validate the image
+    async function validateImage(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.warn(`Image fetch failed for URL: ${url}`);
+                return null;
+            }
+
+            const blob = await response.blob();
+            const img = new Image();
+            img.src = URL.createObjectURL(blob);
+
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            return img; // Return the validated image
+        } catch (error) {
+            console.error(`Error validating image from ${url}:`, error);
+            return null;
+        }
+    }
+    const getImageFormat = (url) => {
+        const ext = url.split('.').pop().toLowerCase();
+        if (ext === 'png') return 'PNG';
+        if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
+        if (ext === 'webp') return 'WEBP';
+        return 'PNG'; // Default to PNG if not recognized
+    };
+
+    // Image load function with promise
+    function loadImage(imageUrl) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Error loading image: ' + imageUrl));
+            img.src = imageUrl;
+        });
+    }
+
+    // Function to scale the image
+    function scaleImage(img, maxWidth, maxHeight) {
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+
+        let width = imgWidth;
+        let height = imgHeight;
+
+        // Scale image to fit within maxWidth and maxHeight
+        if (imgWidth > maxWidth) {
+            width = maxWidth;
+            height = (imgHeight * maxWidth) / imgWidth;
+        }
+
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = (imgWidth * maxHeight) / imgHeight;
+        }
+
+        return { width, height };
+    }
     const generatePDF = async (index) => {
         const applicationInfo = data[index];
 
@@ -229,456 +337,463 @@ const AdminChekin = () => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         let yPosition = 10;
-        const backgroundColor = '#ccc'
-        // const pageHeight = doc.internal.pageSize.getHeight();
+        const backgroundColor = '#f5f5f5';
 
-        doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, 10, 50, 20);
+        // Left image
+        doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, yPosition, 50, 20);
+
+        // Right image
+        const rightImageX = pageWidth - 10 - 50; // Page width minus margin (10) and image width (50)
+        doc.addImage("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjDtQL92lFVchI1eVL0Gpb7xrNnkqW1J7c1A&s", 'PNG', rightImageX, yPosition, 50, 30);
 
         // Title
-        doc.setFontSize(20); // Reduced font size
+        // Set the font size and style
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10); // Set font size
+
+        // Set the text color to black (#000)
+        doc.setTextColor(0, 0, 0); // RGB for black
+
+        // Add the text, centered on the page
         doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
 
         // First Table
         const firstTableData = [
             [
-                { content: 'Name of the Candidate', styles: { cellWidth: 'auto' } },
+                { content: 'Name of the Candidate', styles: { cellWidth: 'auto', fontStyle: 'bold' } },
                 { content: applicationInfo?.name || 'N/A' },
-                { content: 'Client Name' },
+                { content: 'Client Name', styles: { cellWidth: 'auto', fontStyle: 'bold' } },
                 { content: applicationInfo[0]?.client_name || 'N/A' },
             ],
             [
-                { content: 'Application ID' },
+                { content: 'Application ID', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.application_id || 'N/A' },
-                { content: 'Report Status' },
+                { content: 'Report Status', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.report_status || 'N/A' },
             ],
             [
-                { content: 'Date of Birth' },
+                { content: 'Date of Birth', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.dob ? new Date(applicationInfo.dob).toLocaleDateString() : 'N/A' },
-                { content: 'Application Received' },
+                { content: 'Application Received', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.updated_at ? new Date(applicationInfo.updated_at).toLocaleDateString() : 'N/A' },
             ],
             [
-                { content: 'Candidate Employee ID' },
+                { content: 'Candidate Employee ID', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.employee_id || 'N/A' },
-                { content: 'Insuff Cleared/Reopened' },
+                { content: 'Insuff Cleared/Reopened', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.application_id || 'N/A' },
             ],
             [
-                { content: 'Report Type' },
+                { content: 'Report Type', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.report_type || 'N/A' },
-                { content: 'Final Report Date' },
+                { content: 'Final Report Date', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.report_date ? new Date(applicationInfo.report_date).toLocaleDateString() : 'N/A' },
             ],
             [
-                { content: 'Verification Purpose' },
+                { content: 'Verification Purpose', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.overall_status || 'N/A' },
-                { content: 'Overall Report Status' },
+                { content: 'Overall Report Status', styles: { fontStyle: 'bold' } },
                 { content: applicationInfo?.status || 'N/A' },
             ],
         ];
 
+
         doc.autoTable({
-            head: [['', '', '', '']],
+            head: [], // Remove the header by setting it to an empty array
             body: firstTableData,
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' }, // Reduced font size
+            styles: {
+                cellPadding: 3,
+                fontSize: 10,
+                valign: 'middle',
+                lineColor: [62, 118, 165],
+                lineWidth: 0.4,     // Reduced border width (you can adjust this value further)
+                textColor: '#000',  // Set text color to black (#000)
+            },
+            headStyles: {
+                fillColor: [255, 255, 255], // Ensure no background color for header
+                textColor: 0,               // Optional: Ensure header text color is reset (not needed if header is removed)
+                lineColor: [62, 118, 165],
+                lineWidth: 0.2,             // Reduced border width for header (if header is re-enabled)
+            },
             theme: 'grid',
             margin: { top: 50 },
         });
 
-        const secondTableHeaders = [
-            { title: 'Report Components', dataKey: 'component' },
-            { title: 'Information Source', dataKey: 'source' },
-            { title: 'Completed Date', dataKey: 'completedDate' },
-            { title: 'Verification Status', dataKey: 'status' },
-        ];
-
+        addFooter(doc);
         const secondTableData = servicesData.map(item => {
-            // Dynamically find keys for 'source' and 'completedDate'
-            const sourceKey = Object.keys(item.annexureData).find(key => key.startsWith('info_source') || key.startsWith('information_source'));
-            const dateKey = Object.keys(item.annexureData).find(key => key.includes('verified_date'));
-            const logData = {
+            const sourceKey = item.annexureData
+                ? Object.keys(item.annexureData).find(key => key.startsWith('info_source') || key.startsWith('information_source'))
+                : undefined;
+            const dateKey = item.annexureData && Object.keys(item.annexureData).find(key => key.includes('verified_date'));
+
+            return {
                 component: item.heading || 'NIL',
                 source: sourceKey ? item.annexureData[sourceKey] : 'NIL',
                 completedDate: dateKey && item.annexureData[dateKey] && !isNaN(new Date(item.annexureData[dateKey]).getTime())
                     ? new Date(item.annexureData[dateKey]).toLocaleDateString()
                     : 'NIL',
-                status: item.annexureData.status ? item.annexureData.status.replace(/[_-]/g, ' ') : 'NIL',
+                status: item.annexureData && item.annexureData.status ? item.annexureData.status.replace(/[_-]/g, ' ') : 'NIL',
             };
-
-            return logData;
         });
 
-        doc.autoTable({
-            head: [secondTableHeaders.map(header => header.title)],
-            body: secondTableData.map(row => [
-                row.component,
-                row.source,
-                row.completedDate,
-                row.status,
-            ]),
-            styles: { cellPadding: 3, fontSize: 12, valign: 'middle' },
-            theme: 'grid',
-            margin: { top: 20 },
-        });
-
-
-
+        // Generate the Second Table
         doc.autoTable({
             head: [
                 [
-                    { content: "COLOR CODE / ADJUDICATION MATRIX", colSpan: 5, styles: { halign: 'center', fontStyle: 'bold', fillColor: [246, 246, 246] } }
-                ],
-                [
-                    { content: 'MAJOR DISCREPANCY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'MINOR DISCREPANCY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'UNABLE TO VERIFY', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } },
-                    { content: 'PENDING FROM SOURCE', styles: { halign: 'center', cellWidth: 'nowrap', minCellWidth: 10 } },
-                    { content: 'ALL CLEAR', styles: { halign: 'center', cellWidth: 'wrap', minCellWidth: 10 } }
+                    { content: 'REPORT COMPONENT', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'INFORMATION SOURCE', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPLETED DATE', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPONENT STATUS', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
                 ]
             ],
-            body: [
-                [
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 0, 0],  // Red
-                            cellPadding: 10,  // Increase padding inside the cell
-                            margin: [5, 5, 5, 5]  // Add margin around the cell
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 255, 0],  // Yellow
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 165, 0],  // Orange
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 192, 203],  // Pink
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [0, 128, 0],  // Green
-                            cellPadding: 10,
-                            margin: [5, 5, 5, 5]
-                        }
-                    }
-                ]
-
-
-            ],
-            startY: doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 10,
+            body: secondTableData.map(row => [
+                row.component,
+                row.source,
+                row.completedDate, // Show completedDate in its own column
+                row.status, // Show status in its own column
+            ]),
             styles: {
-                fontSize: 8,
-                cellPadding: 2,
-                halign: 'center',
+                cellPadding: 3,
+                fontSize: 10,
                 valign: 'middle',
                 lineWidth: 0.5,
-                lineColor: [62, 118, 165],
+                lineColor: [61, 117, 166],
             },
             theme: 'grid',
             headStyles: {
-                fillColor: [246, 246, 246],
-                textColor: [0, 0, 0],
-                fontStyle: 'bold'
+                lineWidth: 0, // No border for the header
+                fillColor: [61, 117, 166], // Color for the header background
+                textColor: [0, 0, 0], // Text color for the header
+                fontStyle: 'bold',
             },
-            tableLineColor: [62, 118, 165],
-            tableLineWidth: 0.5,
-            margin: { left: 10, right: 10 },
-            tableWidth: 'auto',
+            bodyStyles: {
+                lineWidth: 0.5, // Border for the body rows
+                lineColor: [61, 117, 166], // Border color for the body
+            },
             columnStyles: {
-                0: { cellWidth: 38, cellMargin: 5 }, // Adjust cell width and Margin as needed
-                1: { cellWidth: 38, cellMargin: 5 },
-                2: { cellWidth: 38, cellMargin: 5 },
-                3: { cellWidth: 38, cellMargin: 5 },
-                4: { cellWidth: 38, cellMargin: 5 }
+                0: { halign: 'left' },
+                1: { halign: 'center' },
+                2: { halign: 'center' }, // Center alignment for the completed date column
+                3: { halign: 'center' }, // Center alignment for the status column
             },
         });
-        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20; // Initial yPosition with spacing
 
-        // Function to handle image format
-        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20; // Initial yPosition with spacing
+        addFooter(doc);
 
-        // Function to handle image format
-        const getImageFormat = (url) => {
-            const ext = url.split('.').pop().toLowerCase();
-            if (ext === 'png') return 'PNG';
-            if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
-            if (ext === 'webp') return 'WEBP';
-            return 'PNG'; // Default to PNG if not recognized
-        };
-
-        // Image load function with promise
-        function loadImage(imageUrl) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error('Error loading image: ' + imageUrl));
-                img.src = imageUrl;
-            });
-        }
-
-        // Function to scale the image
-        function scaleImage(img, maxWidth, maxHeight) {
-            const imgWidth = img.width;
-            const imgHeight = img.height;
-
-            let width = imgWidth;
-            let height = imgHeight;
-
-            // Scale image to fit within maxWidth and maxHeight
-            if (imgWidth > maxWidth) {
-                width = maxWidth;
-                height = (imgHeight * maxWidth) / imgWidth;
-            }
-
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = (imgWidth * maxHeight) / imgHeight;
-            }
-
-            return { width, height };
-        }
-
-        // Add services data handling and table creation
-        let annexureIndex = 1; // Index for annexures
-        // for (const service of servicesData) {
-        //     const reportFormJson = JSON.parse(service.reportFormJson.json);
-        //     const rows = reportFormJson.rows;
-        //     const headers = reportFormJson.headers;
-
-        //     // Add service heading
-        //     const serviceHeading = reportFormJson.heading || "No Service Heading";  // Ensure a heading is available
-        //     doc.setFont("helvetica", "bold");
-        //     doc.setFontSize(14);
-        //     doc.setTextColor(0, 0, 0);
-        //     doc.text(serviceHeading, 10, yPosition);
-        //     yPosition += 10;  // Space after the service heading
-
-        //     const tableData = rows.map((row, rowIndex) => {
-        //         const applicationDetails = [];
-        //         const reportDetails = [];
-
-        //         row.inputs.forEach((input, index) => {
-        //             const label = input.label;
-        //             const value = service.annexureData[input.name] || "N/A";
-
-        //             if (index % 2 === 0) {
-        //                 // First label-value pair for the Application Details column
-        //                 applicationDetails.push(`${label} ${value}`);
-        //                 reportDetails.push("");  // Empty for report details column
-        //             } else {
-        //                 // Second label-value pair for the Report Details column
-        //                 applicationDetails.push("");
-        //                 reportDetails.push(`${label} ${value}`);  // Under report details column
-        //             }
-        //         });
-
-        //         return [applicationDetails, reportDetails];
-        //     });
-
-        //     // Add section heading (one per report form)
-        //     doc.setFont("helvetica", "bold");
-        //     doc.setFontSize(12);
-        //     doc.setTextColor(255, 255, 255);
-        //     doc.rect(10, yPosition, doc.internal.pageSize.width - 20, 10, "F");
-        //     yPosition += 15;
-
-        //     // Add table with autoTable
-        //     doc.autoTable({
-        //         startY: yPosition,
-        //         head: [headers],
-        //         body: tableData,
-        //         styles: {
-        //             fontSize: 10,
-        //             cellPadding: 6,
-        //             lineColor: [0, 0, 0],
-        //             lineWidth: 0.2,
-        //             halign: "center",
-        //             valign: "middle",
-        //         },
-        //         headStyles: {
-        //             textColor: [255, 255, 255],
-        //             fontSize: 11,
-        //             fontStyle: "bold",
-        //         },
-        //         bodyStyles: {
-        //             textColor: [0, 0, 0],
-        //             lineColor: [0, 0, 0],
-        //         },
-        //         theme: "grid",
-        //         columnStyles: {
-        //             0: { cellWidth: doc.internal.pageSize.width / 2 - 10, halign: "left" },
-        //             1: { cellWidth: doc.internal.pageSize.width / 2 - 10, halign: "left" },
-        //         },
-        //     });
-
-        //     yPosition = doc.lastAutoTable.finalY + 10; // Update yPosition after table
-
-        //     // Handle annexure images
-        //     const annexureImagesKey = Object.keys(service.annexureData).find(key =>
-        //         key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
-        //     );
-
-        //     if (annexureImagesKey) {
-        //         const annexureImagesStr = service.annexureData[annexureImagesKey];
-        //         const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(',') : [];
-
-        //         if (annexureImagesSplitArr.length === 0) {
-        //             // No images found
-        //             doc.setFont("helvetica", "italic");
-        //             doc.setFontSize(10);
-        //             doc.setTextColor(150, 150, 150);
-        //             doc.text("No annexure images available.", 10, yPosition);
-        //             yPosition += 15;
-        //         } else {
-        //             for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-        //                 const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
-        //                 const imageFormat = getImageFormat(imageUrlFull);  // Assuming getImageFormat is implemented
-
-        //                 try {
-        //                     const img = await loadImage(imageUrlFull);  // Assuming loadImage function is available
-        //                     const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);  // Assuming scaleImage function is available
-
-        //                     if (yPosition + height > doc.internal.pageSize.height - 20) {
-        //                         doc.addPage();
-        //                         yPosition = 20;
-        //                     }
-
-        //                     const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
-        //                     const textWidth = doc.getTextWidth(annexureText);
-        //                     const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-        //                     doc.setFont("helvetica", "normal");
-        //                     doc.setFontSize(10);
-        //                     doc.text(annexureText, centerX, yPosition);
-        //                     yPosition += 15;
-
-        //                     const centerXImage = (doc.internal.pageSize.width - width) / 2;
-        //                     doc.addImage(imageUrlFull, imageFormat, centerXImage, yPosition, width, height);
-        //                     yPosition += height + 15;
-        //                 } catch (error) {
-        //                     console.error(`Failed to load image: ${imageUrlFull}`, error);
-        //                 }
-        //             }
-        //         }
-        //     } else {
-        //         // No annexure key found
-        //         doc.setFont("helvetica", "italic");
-        //         doc.setFontSize(10);
-        //         doc.setTextColor(150, 150, 150);
-        //         doc.text("No annexure images available.", 10, yPosition);
-        //         yPosition += 15;
-        //     }
-
-        //     annexureIndex++;
-        // }
-
-
-        for (const service of servicesData) {
-            const reportFormJson = JSON.parse(service.reportFormJson.json);
-            const rows = reportFormJson.rows;
-            const headers = reportFormJson.headers;
-            const serviceHeading = reportFormJson.heading || "No Service Heading";  // Ensure a heading is available
-
-            // Set up font and text color for the heading
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
-
-            // Calculate the position for centering the heading
-            const headingWidth = doc.getTextWidth(serviceHeading);
-            const centerXHeading = (doc.internal.pageSize.width - headingWidth) / 2;
-
-            // Position the heading
-            doc.text(serviceHeading, centerXHeading, yPosition);
-            yPosition += 10;  // Add space after the service heading
-
-            // Add the table data for this service
-            const tableData = rows.map((row, rowIndex) => {
-                const applicationDetails = [];
-                const reportDetails = [];
-
-                row.inputs.forEach((input, index) => {
-                    const label = input.label;
-                    const value = service.annexureData[input.name] || "N/A";
-
-                    if (index % 2 === 0) {
-                        // First label-value pair for the Application Details column
-                        applicationDetails.push(`${label} ${value}`);
-                        reportDetails.push("");  // Empty for report details column
-                    } else {
-                        // Second label-value pair for the Report Details column
-                        applicationDetails.push("");
-                        reportDetails.push(`${label} ${value}`);  // Under report details column
+        // Add the Legend with Color Boxes and Text
+        doc.autoTable({
+            head: [
+                [
+                    {
+                        content: 'End of summary report',
+                        colSpan: 10,
+                        styles: {
+                            halign: 'center',
+                            fontStyle: 'bold',
+                            fillColor: [255, 255, 255],
+                            fontSize: 12,
+                            textColor: [0, 0, 0],
+                            cellPadding: 2,
+                            lineColor: [255, 255, 255]// Reduced padding for header
+                        }
                     }
+                ],
+            ],
+            body: [
+                [
+                    // LEGEND COLUMN HEADER
+                    { content: 'Legend:', styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 } },
+
+                    // Major Discrepancy Text and Box
+                    {
+                        content: 'Major discrepancy',
+                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
+                    },
+                    {
+                        content: '',
+                        styles: {
+                            fillColor: [255, 0, 0], // Red
+                            minCellHeight: 5, // Smaller height for the box
+                            minCellWidth: 10, // Smaller width for the box
+                            cellPadding: 1, // Reduced padding
+                        }
+                    },
+
+                    // Minor Discrepancy Text and Box
+                    {
+                        content: 'Minor discrepancy',
+                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
+                    },
+                    {
+                        content: '',
+                        styles: {
+                            fillColor: [255, 255, 0], // Yellow
+                            minCellHeight: 5, // Smaller height for the box
+                            minCellWidth: 10, // Smaller width for the box
+                            cellPadding: 1, // Reduced padding
+                        }
+                    },
+
+                    // Unable to Verify Text and Box
+                    {
+                        content: 'Unable to verify',
+                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
+                    },
+                    {
+                        content: '',
+                        styles: {
+                            fillColor: [255, 165, 0], // Orange
+                            minCellHeight: 5, // Smaller height for the box
+                            minCellWidth: 10, // Smaller width for the box
+                            cellPadding: 1, // Reduced padding
+                        }
+                    },
+
+                    // Pending from Source Text and Box
+                    {
+                        content: 'Pending from source',
+                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
+                    },
+                    {
+                        content: '',
+                        styles: {
+                            fillColor: [255, 192, 203], // Pink
+                            minCellHeight: 5, // Smaller height for the box
+                            minCellWidth: 10, // Smaller width for the box
+                            cellPadding: 1, // Reduced padding
+                        }
+                    },
+
+                    // All Clear Text and Box
+                    {
+                        content: 'All clear',
+                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
+                    },
+                    {
+                        content: '',
+                        styles: {
+                            fillColor: [0, 255, 0], // Green
+                            minCellHeight: 5, // Smaller height for the box
+                            minCellWidth: 10, // Smaller width for the box
+                            cellPadding: 1, // Reduced padding
+                        }
+                    },
+                ]
+            ],
+            startY: doc.previousAutoTable.finalY + 10, // Position below the previous table
+            styles: {
+                cellPadding: 1, // Reduced padding for body cells
+                fontSize: 10,
+                halign: 'center',
+                valign: 'middle',
+                lineColor: [62, 118, 165],
+                lineWidth: 0.5,
+            },
+            theme: 'grid', // Light gridlines to distinguish cells
+        });
+
+
+
+        addFooter(doc);
+
+
+        yPosition = 20; // Initialize yPosition for the first page
+        let annexureIndex = 1;
+        for (const service of servicesData) {
+            // Add a new page for each service
+            doc.addPage();
+            addFooter(doc);
+
+            let yPosition = 20; // Reset yPosition to the top margin
+
+            const reportFormJson = JSON.parse(service.reportFormJson.json);
+            const rows = reportFormJson.rows || [];
+            const serviceData = [];
+            console.log('rows', rows);
+
+            rows.forEach((row) => {
+                console.log("Processing row:", row); // Log the current row being processed
+            
+                // Use the first input label as the row label or set to an empty string if not available
+                const inputLabel = row.inputs.length > 0 ? row.inputs[0].label || "Unnamed Label" : "Unnamed Label";
+                console.log("Input label:", inputLabel); // Log the input label
+            
+                const valuesObj = {}; // Object to store the input values
+                console.log("Initializing valuesObj:", valuesObj);
+            
+                row.inputs.forEach((input) => {
+                    const inputName = input.name;
+                    console.log("Processing input:", input);
+            
+                    // Adjust report details name generation to match your data's structure
+                    let reportDetailsInputName = inputName.includes("report_details_") ? inputName : `report_details_${inputName}`;
+                    console.log("Generated reportDetailsInputName:", reportDetailsInputName);
+            
+                    // Clean up input labels by removing colons
+                    if (input.label && typeof input.label === "string") {
+                        input.label = input.label.replace(/:/g, "");
+                    }
+                    console.log("Cleaned label:", input.label);
+            
+                    // Fetch value and reportdetails value from service.annexureData
+                    const value = service.annexureData[inputName] || "";
+                    const reportDetailsValue = service.annexureData[reportDetailsInputName] || "";
+                    console.log("Fetched value:", value, "Fetched reportDetailsValue:", reportDetailsValue);
+            
+                    // Dynamically set isReportDetailsExist based on whether reportDetailsValue exists
+                    valuesObj[inputName] = value;
+                    valuesObj["isReportDetailsExist"] = !!reportDetailsValue; // Set isReportDetailsExist to true if reportDetailsValue exists
+                    if (reportDetailsValue) valuesObj[reportDetailsInputName] = reportDetailsValue; // Store reportdetails value if present
+            
+                    console.log("Updated valuesObj:", valuesObj);
+            
+                    // Store the simplified name for later use
+                    valuesObj["name"] = inputName.replace("report_details_", ""); // Clean up name for further use
+                    console.log("Simplified name stored:", valuesObj["name"]);
                 });
-
-                return [applicationDetails, reportDetails];
+            
+                // Add processed row to serviceData after all inputs are processed
+                serviceData.push({
+                    label: inputLabel,
+                    values: valuesObj,
+                });
             });
+            
+            
+                
 
-            // Calculate table width and X-position for centering
-            const tableWidth = doc.internal.pageSize.width - 20;  // Width of the table (with padding)
-            const tableX = (doc.internal.pageSize.width - tableWidth) / 2; // Calculate X to center the table
+            const tableData = serviceData
+            .map((data) => {
+                console.log("Processing data for table:", data);
+        
+                if (!data || !data.values) {
+                    console.log("Skipping invalid data (empty values).");
+                    return null; // Skip empty or invalid data
+                }
+        
+                const name = data.values.name;
+                console.log("Processing name:", name);
+        
+                if (!name || name.startsWith("annexure")) {
+                    console.log("Skipping annexure data for name:", name);
+                    return null; // Skip annexure-related rows
+                }
+        
+                const isReportDetailsExist = data.values.isReportDetailsExist;
+                const value = data.values[name];
+                const reportDetails = data.values[`report_details_${name}`];
+        
+                console.log("isReportDetailsExist:", isReportDetailsExist, "value:", value, "reportDetails:", reportDetails);
+        
+                if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
+                    console.log("Skipping data due to missing value or report details.");
+                    return null;
+                }
+        
+                if (isReportDetailsExist && reportDetails) {
+                    console.log("Row with reportDetails:", [data.label, value, reportDetails]);
+                    return [data.label, value, reportDetails]; // Include reportdetails value if it exists
+                } else {
+                    console.log("Row without reportDetails:", [data.label, value]);
+                    return [data.label, value]; // Only value if no reportdetails status
+                }
+            })
+            .filter(Boolean); // Remove any null entries
+        
+        console.log("Final tableData:", tableData);
+                    
+            const pageWidth = doc.internal.pageSize.width;
 
-            // Generate the table with autoTable
+            // Add heading
+            const headingText = reportFormJson.heading.toUpperCase();
+            const backgroundColor = "#f5f5f5";
+            const borderColor = "#3d75a6";
+            const xsPosition = 10;
+            const rectHeight = 10;
+
+            doc.setFillColor(backgroundColor);
+            doc.setDrawColor(borderColor);
+            doc.rect(xsPosition, yPosition, pageWidth - 20, rectHeight, "FD");
+
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+
+            const textHeight = doc.getTextDimensions(headingText).h;
+            const verticalCenter = yPosition + rectHeight / 2 + textHeight / 4;
+
+            doc.text(headingText, pageWidth / 2, verticalCenter, { align: "center" });
+
+            yPosition += rectHeight; // Adjust yPosition
+
+            // Add table
             doc.autoTable({
-                startY: yPosition, // Start table directly after heading
-                startX: tableX,  // Center the table horizontally using the calculated position
-                head: [headers],
-                body: tableData,
+                head: [
+                    [
+                        { content: "PARTICULARS", styles: { halign: "left"} },
+                        "APPLICATION DETAILS",
+                        "REPORT DETAILS",
+                    ],
+                ],
+                body: tableData.map((row) => {
+                    if (row.length === 2) {
+                        return [
+                            { content: row[0], styles: { halign: "left" } },
+                            { content: row[1], colSpan: 2, styles: { halign: "left" } },
+                        ];
+                    } else {
+                        return [
+                            { content: row[0], styles: { halign: "left",fontStyle:'bold' } },
+                            { content: row[1], styles: { halign: "left" } },
+                            { content: row[2], styles: { halign: "left" } },
+                        ];
+                    }
+                }),
+                startY: yPosition,
                 styles: {
-                    fontSize: 10,
-                    cellPadding: 6,
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.2,
-                    halign: "center",
-                    valign: "middle",
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineWidth: 0.5,
+                    lineColor: [62, 118, 165],
                 },
+                theme: "grid",
                 headStyles: {
-                    textColor: [255, 255, 255],
-                    fontSize: 11,
-                    fontStyle: "bold",
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    halign: "center",
+                    fontSize: 10,
                 },
                 bodyStyles: {
                     textColor: [0, 0, 0],
-                    lineColor: [0, 0, 0],
+                    halign: "left",
                 },
-                theme: "grid", // This ensures the grid style with borders
-                columnStyles: {
-                    0: { cellWidth: (doc.internal.pageSize.width - 20) / 2, halign: "left" },
-                    1: { cellWidth: (doc.internal.pageSize.width - 20) / 2, halign: "left" },
-                },
+                tableLineColor: [62, 118, 165],
+                tableLineWidth: 0.5,
+                margin: { horizontal: 10 },
             });
 
-            yPosition = doc.lastAutoTable.finalY + 10; // Update yPosition after table
+            yPosition = doc.lastAutoTable.finalY + 10;
 
-            // Handle annexure images (if any)
-            const annexureImagesKey = Object.keys(service.annexureData).find(key =>
-                key.toLowerCase().startsWith('annexure') && !key.includes('[') && !key.includes(']')
+            // Add Remarks
+            const remarksData = serviceData.find((data) => data.label === "Remarks");
+            if (remarksData) {
+                const remarks = service.annexureData[remarksData.values.name] || "No remarks available.";
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Remarks: ${remarks}`, 10, yPosition);
+                yPosition += 10;
+            }
+
+            // Handle annexure images
+            const annexureImagesKey = Object.keys(service.annexureData).find((key) =>
+                key.toLowerCase().startsWith("annexure") && !key.includes("[") && !key.includes("]")
             );
 
             if (annexureImagesKey) {
                 const annexureImagesStr = service.annexureData[annexureImagesKey];
-                const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(',') : [];
+                const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(",") : [];
 
                 if (annexureImagesSplitArr.length === 0) {
-                    // No images found
                     doc.setFont("helvetica", "italic");
                     doc.setFontSize(10);
                     doc.setTextColor(150, 150, 150);
@@ -686,13 +801,16 @@ const AdminChekin = () => {
                     yPosition += 15;
                 } else {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-                        const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
-                        const imageFormat = getImageFormat(imageUrlFull);  // Assuming getImageFormat is implemented
+                        const imageUrlFull = `https://screeningstar-new.onrender.com/${imageUrl.trim()}`;
+                        const imageFormat = getImageFormat(imageUrlFull);
+
+                        if (!(await checkImageExists(imageUrlFull))) continue;
+
+                        const img = await validateImage(imageUrlFull);
+                        if (!img) continue;
 
                         try {
-                            const img = await loadImage(imageUrlFull);  // Assuming loadImage function is available
-                            const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);  // Assuming scaleImage function is available
-
+                            const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
                             if (yPosition + height > doc.internal.pageSize.height - 20) {
                                 doc.addPage();
                                 yPosition = 20;
@@ -707,15 +825,14 @@ const AdminChekin = () => {
                             yPosition += 15;
 
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
-                            doc.addImage(imageUrlFull, imageFormat, centerXImage, yPosition, width, height);
+                            doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
                             yPosition += height + 15;
                         } catch (error) {
-                            console.error(`Failed to load image: ${imageUrlFull}`, error);
+                            console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
                         }
                     }
                 }
             } else {
-                // No annexure key found
                 doc.setFont("helvetica", "italic");
                 doc.setFontSize(10);
                 doc.setTextColor(150, 150, 150);
@@ -723,75 +840,140 @@ const AdminChekin = () => {
                 yPosition += 15;
             }
 
+            addFooter(doc);
             annexureIndex++;
+            yPosition += 30;
         }
 
-
-
-        yPosition = doc.autoTable.previous?.finalY ? doc.autoTable.previous.finalY + 20 : 20;
+        // Add disclaimer after all services
+        doc.addPage();
+        addFooter(doc);
 
         // Define Disclaimer Button Dimensions
-        const disclaimerButtonHeight = 12;
-        const disclaimerButtonWidth = doc.internal.pageSize.width - 20;
-        const disclaimerX = 10;
+        const disclaimerButtonHeight = 10; // Button height (without padding)
+        const disclaimerButtonWidth = doc.internal.pageSize.width - 20; // Full width minus margins
+
+        // Constants for additional spacing
+        const buttonBottomPadding = 5; // Padding below the button
+        const disclaimerTextTopMargin = 5; // Margin from top of the disclaimer text
+
+        // Adjusted Disclaimer Button Height (includes padding)
+        const adjustedDisclaimerButtonHeight = disclaimerButtonHeight + buttonBottomPadding;
 
         // Define Disclaimer Text
-        const disclaimerText = `This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided. The Client is responsible for employment decisions based on the information provided in this report.
-You can mail us at compliance@screeningstar.com for any clarifications.`;
+        const disclaimerTextPart1 = `This report is confidential and is meant for the exclusive use of the Client. This report has been prepared solely for the purpose set out pursuant to our letter of engagement (LoE)/Agreement signed with you and is not to be used for any other purpose. The Client recognizes that we are not the source of the data gathered and our reports are based on the information provided. The Client is responsible for employment decisions based on the information provided in this report.You can mail us at `;
+        const anchorText = "compliance@screeningstar.com";
+        const disclaimerTextPart2 = " for any clarifications.";
 
         // Dynamically calculate disclaimer text height
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
-        const disclaimerLines = doc.splitTextToSize(disclaimerText, disclaimerButtonWidth);
-        const disclaimerTextHeight = disclaimerLines.length * 5; // Assuming 5px per line for small font
+        doc.setTextColor(0, 0, 0); // Set text color to #000 (black)
+        const disclaimerLinesPart1 = doc.splitTextToSize(disclaimerTextPart1, disclaimerButtonWidth);
+        const disclaimerLinesPart2 = doc.splitTextToSize(disclaimerTextPart2, disclaimerButtonWidth);
 
-        // Calculate initial Y position for disclaimer button
-        let disclaimerY = Math.max(
-            doc.internal.pageSize.height - disclaimerTextHeight - disclaimerButtonHeight - 40,
-            yPosition + 20
-        );
+        // Adjusted Y position for disclaimer text
+        const lineHeight = 7; // Increased line height for better readability
+        const disclaimerTextHeight =
+            disclaimerLinesPart1.length * lineHeight +
+            disclaimerLinesPart2.length * lineHeight +
+            lineHeight; // Include space for anchor
+
+        // Calculate total space required for the disclaimer (button + text)
+        const totalContentHeight = adjustedDisclaimerButtonHeight + disclaimerTextHeight + disclaimerTextTopMargin;
+
+        // Calculate the available space from top to bottom
+        const availableSpace = doc.internal.pageSize.height - 40; // Total page height minus some margin
+
+        // Calculate the starting position for the content to be centered vertically
+        let disclaimerY = (availableSpace - totalContentHeight) / 2 + 20; // Add top margin (20)
 
         // Add new page if disclaimer doesn't fit
-        if (disclaimerY + disclaimerButtonHeight + disclaimerTextHeight > doc.internal.pageSize.height - 20) {
+        if (disclaimerY < 20) {
             doc.addPage();
+            addFooter(doc);
             disclaimerY = 20; // Start from the top of the new page if space is insufficient
         }
 
-        // Draw Disclaimer Button
+        // Draw Disclaimer Button (centered horizontally)
+        const disclaimerButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2; // Centering horizontally
         doc.setDrawColor(62, 118, 165); // Set border color
         doc.setFillColor(backgroundColor); // Set fill color
-        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-        doc.rect(disclaimerX, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-        doc.setTextColor(0, 0, 0); // Set text color
-        doc.text(
-            'DISCLAIMER',
-            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('DISCLAIMER') / 2),
-            disclaimerY + 8
-        );
+        doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
+        doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
+        doc.setTextColor(0, 0, 0); // Set text color to black
+        doc.setFont("helvetica", "bold");
 
-        // Draw Disclaimer Text
-        doc.setTextColor(100, 100, 100); // Original light gray text color
-        doc.text(disclaimerLines, 10, disclaimerY + disclaimerButtonHeight + 5);
+        // Center the 'DISCLAIMER' text inside the button both horizontally and vertically
+        const disclaimerButtonTextWidth = doc.getTextWidth('DISCLAIMER'); // Width of the button text
+        const buttonTextHeight = doc.getFontSize(); // Height of the text (font size)
 
-        // Calculate position for "END OF DETAIL REPORT" button
-        let endOfDetailY = disclaimerY + disclaimerButtonHeight + disclaimerTextHeight + 10; // Tighten the gap
+        // Horizontal centering of text inside the button
+        const disclaimerTextXPosition =
+            disclaimerButtonXPosition + disclaimerButtonWidth / 2 - disclaimerButtonTextWidth / 2 - 1;
+        // Vertical centering of text inside the button
+        const disclaimerTextYPosition = disclaimerY + disclaimerButtonHeight / 2 + buttonTextHeight / 4 - 1;
 
-        // Add new page if "END OF DETAIL REPORT" doesn't fit
-        if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 10) {
+        // Add 'DISCLAIMER' text to the button, centered both horizontally and vertically
+        doc.text('DISCLAIMER', disclaimerTextXPosition, disclaimerTextYPosition);
+
+        // Draw Disclaimer Text (Split parts)
+        let currentY = disclaimerY + adjustedDisclaimerButtonHeight + disclaimerTextTopMargin;
+
+        // Draw Part 1 of the Disclaimer (Black Text)
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        disclaimerLinesPart1.forEach((line) => {
+            doc.text(line, 10, currentY);
+            currentY += lineHeight;
+        });
+
+        // Add Anchor Text (Blue and Clickable)
+        doc.setTextColor(0, 0, 255);
+        doc.textWithLink(anchorText, 10 + doc.getTextWidth(disclaimerLinesPart1[disclaimerLinesPart1.length - 1]), currentY - lineHeight, {
+            url: "mailto:compliance@screeningstar.com",
+        });
+
+        // Draw Part 2 of the Disclaimer (Black Text)
+        doc.setTextColor(0, 0, 0);
+        disclaimerLinesPart2.forEach((line) => {
+            doc.text(line, 10, currentY);
+            currentY += lineHeight;
+        });
+
+        // Place "END OF DETAIL REPORT" button immediately after the disclaimer text
+        let endOfDetailY = currentY + disclaimerTextTopMargin - 5;
+
+        // Add new page if "END OF DETAIL REPORT" button doesn't fit
+        if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 20) {
             doc.addPage();
-            endOfDetailY = 20; // Reset position on the new page
+            endOfDetailY = 20; // Start from the top of the new page
         }
 
-        // Draw "END OF DETAIL REPORT" Button
-        doc.setDrawColor(62, 118, 165); // Original button style
-        doc.setFillColor(backgroundColor); // Original fill color
-        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-        doc.rect(disclaimerX, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
-        doc.setTextColor(0, 0, 0); // Original text color
-        doc.text(
-            'END OF DETAIL REPORT',
-            disclaimerX + (disclaimerButtonWidth / 2) - (doc.getTextWidth('END OF DETAIL REPORT') / 2),
-            endOfDetailY + 8
-        );
+        // Draw "END OF DETAIL REPORT" Button (centered horizontally)
+        const endButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2; // Centering horizontally
+        doc.setDrawColor(62, 118, 165);
+        doc.setFillColor(backgroundColor);
+        doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F');
+        doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D');
+        doc.setTextColor(0, 0, 0); // Set text color to black for the button text
+        doc.setFont("helvetica", "bold");
+
+        // Center the 'END OF DETAIL REPORT' text inside the button both horizontally and vertically
+        const endButtonTextWidth = doc.getTextWidth('END OF DETAIL REPORT'); // Width of the button text
+        const endButtonTextHeight = doc.getFontSize(); // Height of the text (font size)
+
+        // Horizontal centering of text inside the button
+        const endButtonTextXPosition =
+            endButtonXPosition + disclaimerButtonWidth / 2 - endButtonTextWidth / 2 - 1;
+        // Vertical centering of text inside the button
+        const endButtonTextYPosition = endOfDetailY + disclaimerButtonHeight / 2 + endButtonTextHeight / 4 - 1;
+
+        // Add 'END OF DETAIL REPORT' text to the button, centered both horizontally and vertically
+        doc.text('END OF DETAIL REPORT', endButtonTextXPosition, endButtonTextYPosition);
+
+        // Ensure footer is added
+        addFooter(doc);
 
 
         // Save the PDF
