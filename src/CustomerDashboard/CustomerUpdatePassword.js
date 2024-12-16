@@ -64,7 +64,7 @@ const CustomerUpdatePassword = () => {
                 redirect: "follow",
             };
 
-            fetch("https://goldquestreact.onrender.com/branch/update-password", requestOptions)
+            fetch("https://octopus-app-www87.ondigitalocean.app/branch/update-password", requestOptions)
                 .then((response) => {
                     const result = response.json();
                     const newToken = result._token || result.token;

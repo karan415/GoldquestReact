@@ -35,7 +35,7 @@ const ForgotPassword = () => {
       redirect: "follow",
     };
 
-    fetch("https://goldquestreact.onrender.com/admin/forgot-password-request", requestOptions)
+    fetch("https://octopus-app-www87.ondigitalocean.app/admin/forgot-password-request", requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

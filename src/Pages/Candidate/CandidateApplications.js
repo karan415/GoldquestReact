@@ -143,7 +143,7 @@ const GenerateReport = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `https://goldquestreact.onrender.com/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -214,7 +214,7 @@ const GenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`https://goldquestreact.onrender.com/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
 
@@ -392,7 +392,7 @@ const GenerateReport = () => {
         }
 
         // Construct the URL with query parameters
-        const url = `https://goldquestreact.onrender.com/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://octopus-app-www87.ondigitalocean.app/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',  // GET request doesn't need a body
@@ -479,7 +479,7 @@ const GenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    `https://goldquestreact.onrender.com/client-master-tracker/upload`,
+                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/upload`,
                     customerLogoFormData,
                     {
                         headers: {
@@ -603,7 +603,7 @@ const GenerateReport = () => {
             };
 
             const response = await fetch(
-                `https://goldquestreact.onrender.com/client-master-tracker/generate-report`,
+                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`,
                 requestOptions
             );
 
@@ -719,7 +719,7 @@ const GenerateReport = () => {
                                     {annexureImagesSplitArr.map((image, index) => (
                                         <img
                                             key={index}
-                                            src={`https://goldquestreact.onrender.com/${image.trim()}`}
+                                            src={`https://octopus-app-www87.ondigitalocean.app/${image.trim()}`}
                                             alt={`${index + 1}`}
                                             className="cursor-pointer h-[200px] mt-0 object-contain"
 

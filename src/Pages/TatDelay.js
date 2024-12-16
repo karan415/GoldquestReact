@@ -100,7 +100,7 @@ const TatDelay = () => {
     }
 
     // Use template literals for better readability
-    const url = `https://goldquestreact.onrender.com/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://octopus-app-www87.ondigitalocean.app/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     fetch(url, {
       method: "GET",

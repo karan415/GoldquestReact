@@ -784,7 +784,7 @@ const AdminChekin = () => {
                     yPosition += 10;
                 } else {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-                        const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
+                        const imageUrlFull = `https://octopus-app-www87.ondigitalocean.app/${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);
 
                         if (!(await checkImageExists(imageUrlFull))) continue;

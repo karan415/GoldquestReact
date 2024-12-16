@@ -53,7 +53,7 @@ const CreateInvoice = () => {
       method: "GET",
       redirect: "follow",
     };
-    fetch(`https://goldquestreact.onrender.com/generate-invoice?${queryString}`, requestOptions)
+    fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         const result = response.json();
         const newToken = result._token || result.token;
