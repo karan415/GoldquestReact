@@ -16,7 +16,7 @@ const Acknowledgement = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
 
-    fetch(`https://octopus-app-www87.ondigitalocean.app/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
+    fetch(`https://goldquestreact.onrender.com/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
       .then(response => response.json())
       .then(data => {
         const newToken = data._token || data.token;
@@ -52,7 +52,7 @@ const Acknowledgement = () => {
       redirect: "follow"
     };
 
-    fetch("https://octopus-app-www87.ondigitalocean.app/acknowledgement/send-notification", requestOptions)
+    fetch("https://goldquestreact.onrender.com/acknowledgement/send-notification", requestOptions)
       .then((response) => response.text())
       .then((result) => {
         const newToken = result._token || result.token;

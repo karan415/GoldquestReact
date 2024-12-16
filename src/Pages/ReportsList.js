@@ -92,7 +92,7 @@ const ReportsList = () => {
 
     setLoading(true); // Start loading before the fetch request
 
-    fetch(`https://octopus-app-www87.ondigitalocean.app/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+    fetch(`https://goldquestreact.onrender.com/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           // Handle HTTP errors

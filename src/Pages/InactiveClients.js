@@ -91,7 +91,7 @@ const InactiveClients = () => {
     const storedToken = localStorage.getItem('_token');
 
     try {
-      const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
+      const response = await fetch(`https://goldquestreact.onrender.com/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
       const result = await response.json();
       const newToken = result._token || result.token;
       if (newToken) {
@@ -135,7 +135,7 @@ const InactiveClients = () => {
       }
 
       try {
-        const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
+        const response = await fetch(`https://goldquestreact.onrender.com/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
 
         const result = await response.json();
         const newToken = result._token || result.token;
