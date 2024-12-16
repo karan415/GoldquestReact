@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 import { FaGraduationCap, FaBriefcase, FaIdCard } from 'react-icons/fa';
+import { useApi } from '../ApiContext';
 const BackgroundForm = () => {
+    const [files, setFiles] = useState({});
+    const { API_URL } = useApi();
     const [serviceData, setServiceData] = useState([]);
+    const [status, setStatus] = useState([]);
+    const [serviceIds, setServiceIds] = useState(''); // Expecting a comma-separated string
     const [formData, setFormData] = useState({
-
         personal_information: {
             resume_file: '',
             govt_id: '',
@@ -23,15 +28,36 @@ const BackgroundForm = () => {
             marital_status: '',
             signature: '',
             name_declaration: '',
-            declaration_date: ''
+            declaration_date: '',
+            blood_group: '',
+            pan_card_name: '',
+            aadhar_card_name: '',
+            food_cuppon: '',
+            emergency_details_name: '',
+            emergency_details_relation: '',
+            emergency_details_contact_number: '',
+            pf_details_pf_number: '',
+            pf_details_pf_type: '',
+            pf_details_pg_nominee: '',
+            nps_details_details_pran_number: '',
+            nps_details_details_nominee_details: '',
+            nps_details_details_nps_contribution: '',
+            bank_details_account_number: '',
+            bank_details_bank_name: '',
+            bank_details_branch_name: '',
+            bank_details_ifsc_code: '',
+            insurance_details_name: '',
+            insurance_details_nominee_relation: '',
+            insurance_details_nominee_dob: '',
+            insurance_details_contact_number: ''
         },
     });
-
+    console.log('status', status)
     const [isValidApplication, setIsValidApplication] = useState(true);
     const location = useLocation();
     const currentURL = location.pathname + location.search;
 
-    function getValuesFromUrl(currentURL) {
+    const getValuesFromUrl = (currentURL) => {
         const result = {};
         const keys = [
             "YXBwX2lk",
@@ -45,22 +71,22 @@ const BackgroundForm = () => {
             result[key] = match && match[1] ? match[1] : null;
         });
 
-        function isValidBase64(str) {
+        const isValidBase64 = (str) => {
             const base64Pattern = /^[A-Za-z0-9+/]+={0,2}$/;
             return base64Pattern.test(str) && (str.length % 4 === 0);
-        }
+        };
 
-        function decodeKeyValuePairs(obj) {
+        const decodeKeyValuePairs = (obj) => {
             return Object.entries(obj).reduce((acc, [key, value]) => {
                 const decodedKey = isValidBase64(key) ? atob(key) : key;
                 const decodedValue = value && isValidBase64(value) ? atob(value) : null;
                 acc[decodedKey] = decodedValue;
                 return acc;
             }, {});
-        }
+        };
 
         return decodeKeyValuePairs(result);
-    }
+    };
 
     const decodedValues = getValuesFromUrl(currentURL);
 
@@ -78,40 +104,75 @@ const BackgroundForm = () => {
             });
         }
     };
- 
+    const handleServiceChange = (serviceKey, inputName, value) => {
+        setFormData((prevData) => ({
+            ...prevData,
+            [serviceKey]: {
+                ...prevData[serviceKey],
+                [inputName]: value,
+            },
+        }));
+    };
+    const handleFileChange = (fileName, e) => {
+        const selectedFiles = Array.from(e.target.files);
+        setFiles(prevFiles => ({ ...prevFiles, [fileName]: selectedFiles }));
+    };
+
 
     const isApplicationExists = useCallback(() => {
-        if (isValidApplication && decodedValues.app_id && decodedValues.branch_id && decodedValues.customer_id) {
-            fetch(`https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
-                .then(res => res.json())
-                .then(result => {
-                    if (!result.status) {
+        if (
+            isValidApplication &&
+            decodedValues.app_id &&
+            decodedValues.branch_id &&
+            decodedValues.customer_id
+        ) {
+            fetch(
+                `https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+            )
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then((result) => {
+                    console.log('Result:', result);
+
+                    if (result?.status) {
+                        // Extract services (comma-separated string)
+                        setServiceIds(result.data?.services || '');
+                        setStatus(result.data?.is_custom_bgv || '');
+                    } else {
                         setIsValidApplication(false);
                         Swal.fire({
                             title: 'Error',
-                            text:result.message,
+                            text: result.message || 'An error occurred.',
                             icon: 'error',
-                            confirmButtonText: 'OK'
+                            confirmButtonText: 'OK',
                         });
                         const form = document.getElementById('bg-form');
                         if (form) form.remove();
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     Swal.fire({
                         title: 'Error',
-                        text: err.message,
+                        text: err.message || 'An unexpected error occurred.',
                         icon: 'error',
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'OK',
                     });
                 });
         }
     }, [isValidApplication, decodedValues]);
 
-    const fetchData = useCallback(() => {
-        const serviceStr = '4,5,6';
-        const serviceArr = serviceStr.split(',').map(Number);
+    useEffect(() => {
+        isApplicationExists();
+    }, [isApplicationExists]);
 
+    const fetchData = useCallback(() => {
+        if (!serviceIds) return; // No service IDs to fetch
+
+        const serviceArr = serviceIds.split(',').map(Number);
         const requestOptions = {
             method: "GET",
             redirect: "follow"
@@ -143,78 +204,101 @@ const BackgroundForm = () => {
                 setServiceData(parsedData);
             })
             .catch(err => console.error('Fetch error:', err));
-    }, []);
+    }, [serviceIds]);
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, serviceIds]); // Trigger when serviceIds updates
 
-    useEffect(() => {
-        isApplicationExists();
-    }, [isValidApplication, decodedValues]);
+    console.log('Service Data:', serviceData);
+
+    const uploadCustomerLogo = async () => {
+        const fileCount = Object.keys(files).length;
+        for (const [index, [key, value]] of Object.entries(files).entries()) {
+            const customerLogoFormData = new FormData();
+            customerLogoFormData.append('candidate_application_id', 1);
+
+            for (const file of value) {
+                customerLogoFormData.append('images', file);
+                customerLogoFormData.append('upload_category', key);
+            }
+
+            if (fileCount === (index + 1)) {
+
+                customerLogoFormData.append('send_mail', 1);
+            }
+            try {
+                await axios.post(`${API_URL}/client-application/upload`, customerLogoFormData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+            } catch (err) {
+                Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
+            }
+        }
+    };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
-    
-        const submittedData = {}; 
-    
+
+        const submittedData = {};
+
         serviceData.forEach((service) => {
             const serviceKey = service.db_table;
-            submittedData[serviceKey] = {};
-    
-            service.rows.forEach((row) => {
-                row.inputs.forEach((input) => {
+
+            // Ensure `inputs` exists and is an array
+            if (Array.isArray(service.inputs)) {
+                submittedData[serviceKey] = {};
+                service.inputs.forEach((input) => {
                     submittedData[serviceKey][input.name] =
-                        input.type === 'checkbox' ? input.checked : input.value || '';
+                        input.type === "checkbox" ? input.checked : input.value || "";
                 });
-            });
+            } else {
+                console.warn(`Missing or invalid inputs for service: ${serviceKey}`);
+            }
         });
-    
+
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-    
+
         const raw = JSON.stringify({
-            "branch_id": decodedValues.branch_id,
-            "customer_id": decodedValues.customer_id,
-            "application_id": decodedValues.app_id,
+            branch_id: decodedValues.branch_id,
+            customer_id: decodedValues.customer_id,
+            application_id: decodedValues.app_id,
             ...formData,
-            "annexure": submittedData, 
+            annexure: submittedData,
         });
-    
+
         const requestOptions = {
             method: "PUT",
             headers: myHeaders,
             body: raw,
             redirect: "follow",
         };
-    
-        fetch("https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/submit", requestOptions)
+
+        fetch(
+            "https://goldquestreact.onrender.com/branch/candidate-application/backgroud-verification/submit",
+            requestOptions
+        )
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json(); // Assuming the server returns JSON
+                return response.json();
             })
             .then((result) => {
-                 console.log(result);
+                console.log(result);
+                uploadCustomerLogo();
             })
-            .catch((error) => console.error('Error:', error));
-    
+            .catch((error) => console.error("Error:", error));
     };
-    
+
+    console.log('serviceIds', serviceIds)
 
 
-    const handleServiceChange = (e, serviceIndex, rowIndex, inputIndex) => {
-        const { name, type, value, checked } = e.target;
-
-        setServiceData(prevData => {
-            const newData = [...prevData];
-            const inputValue = type === 'checkbox' ? checked : value;
-
-            newData[serviceIndex].rows[rowIndex].inputs[inputIndex].value = inputValue;
-            return newData;
-        });
-    };
+    console.log('serviceData', serviceData)
 
 
     return (
@@ -233,21 +317,41 @@ const BackgroundForm = () => {
                             className="form-control border rounded w-full bg-white p-3 mt-2"
                             name="resume_file"
                             id="resume_file"
-                            onChange={handleChange}
+                            onChange={(e) => handleFileChange('resume_file', e)}
 
                         />
                     </div>
+                    {status === 0 && (
+                        <div className="form-group col-span-2">
+                            <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
+                            <input
+                                type="file"
+                                className="form-control border rounded w-full bg-white p-3 mt-2"
+                                name="govt_id"
+                                onChange={(e) => handleFileChange('govt_id', e)}
+                                multiple
+                            />
+                        </div>
+                    )}
+                    {status === 1 && (
+                        <>
 
-                    <div className="form-group col-span-2">
-                        <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
-                        <input
-                            type="file"
-                            className="form-control border rounded w-full bg-white p-3 mt-2"
-                            name="govt_id"
-                            onChange={handleChange}
-                            multiple
-                        />
-                    </div>
+                            <div className="form-group col-span-2">
+                                <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
+                                <input
+                                    type="file"
+                                    className="form-control border rounded w-full bg-white p-3 mt-2"
+                                    name="passport_photo"
+                                    onChange={(e) => handleFileChange('passport_photo', e)}
+                                    multiple
+                                />
+                            </div>
+
+                        </>
+                    )}
+
+
+
                 </div>
 
                 <h4 className="text-center text-2xl my-6 font-bold ">Personal Information</h4>
@@ -411,6 +515,276 @@ const BackgroundForm = () => {
                             <option value="Separated">Separated</option>
                         </select>
                     </div>
+                    {status === 1 && (
+                        <>
+
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="blood_group"
+                                    value={formData.personal_information.blood_group}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Blood Group"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="pan_card_name"
+                                    value={formData.personal_information.pan_card_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Name as per Pan Card"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="pan_card_image"
+                                    value={formData.personal_information.pan_card_image}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Pan Card Image"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="aadhar"
+                                    value={formData.personal_information.aadhar}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Aadhar"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="aadhar_card_name"
+                                    value={formData.personal_information.aadhar_card_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Aadhar Card Name"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="aadhar_card_image"
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Aadhar Card Image"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="social_security_number"
+                                    value={formData.personal_information.social_security_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Social Security Number"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="date"
+                                    name="declaration_date"
+                                    value={formData.personal_information.declaration_date}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Declaration Date"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="food_cuppon"
+                                    value={formData.personal_information.food_cuppon}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Food Coupon"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="emergency_details_name"
+                                    value={formData.personal_information.emergency_details_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Emergency Contact Name"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="emergency_details_relation"
+                                    value={formData.personal_information.emergency_details_relation}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Emergency Contact Relation"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="emergency_details_contact_number"
+                                    value={formData.personal_information.emergency_details_contact_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Emergency Contact Number"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="pf_details_pf_number"
+                                    value={formData.personal_information.pf_details_pf_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="PF Number"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="pf_details_pf_type"
+                                    value={formData.personal_information.pf_details_pf_type}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="PF Type"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="pf_details_pg_nominee"
+                                    value={formData.personal_information.pf_details_pg_nominee}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="PF Nominee"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="nps_details_details_pran_number"
+                                    value={formData.personal_information.nps_details_details_pran_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="NPS PRAN Number"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="nps_details_details_nominee_details"
+                                    value={formData.personal_information.nps_details_details_nominee_details}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="NPS Nominee Details"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="nps_details_details_nps_contribution"
+                                    value={formData.personal_information.nps_details_details_nps_contribution}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="NPS Contribution"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="bank_details_account_number"
+                                    value={formData.personal_information.bank_details_account_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Bank Account Number"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="bank_details_bank_name"
+                                    value={formData.personal_information.bank_details_bank_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Bank Name"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="bank_details_branch_name"
+                                    value={formData.personal_information.bank_details_branch_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Bank Branch Name"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="bank_details_ifsc_code"
+                                    value={formData.personal_information.bank_details_ifsc_code}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="IFSC Code"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="insurance_details_name"
+                                    value={formData.personal_information.insurance_details_name}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Insurance Name"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="insurance_details_nominee_relation"
+                                    value={formData.personal_information.insurance_details_nominee_relation}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Insurance Nominee Relation"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="date"
+                                    name="insurance_details_nominee_dob"
+                                    value={formData.personal_information.insurance_details_nominee_dob}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Insurance Nominee DOB"
+                                />
+                            </div>
+                            <div className='form-group'>
+                                <input
+                                    type="text"
+                                    name="insurance_details_contact_number"
+                                    value={formData.personal_information.insurance_details_contact_number}
+                                    onChange={handleChange}
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                    placeholder="Insurance Contact Number"
+                                />
+                            </div>
+
+                        </>
+                    )}
+
+
+
+
+
                 </div>
 
                 <h4 className="text-center text-xl my-6">Declaration and Authorization</h4>
@@ -427,9 +801,7 @@ const BackgroundForm = () => {
                         <div className="form-group">
                             <label>Attach Signature: <span className="text-red-500">*</span></label>
                             <input
-                                onChange={handleChange}
-                                value={formData.signature}
-                                type="file"
+                                onChange={(e) => handleFileChange('signature', e)} type="file"
                                 className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
                                 name="signature"
                                 id="signature"
@@ -490,44 +862,107 @@ const BackgroundForm = () => {
                         <p>Aadhaar Card / Bank Passbook / Passport Copy / Driving License / Voter ID.</p>
                     </div>
                 </div>
-                {serviceData.map((service, serviceIndex) => (
-                    <div key={serviceIndex} className='border md:p-8 p-2 rounded-md mt-5 bg-slate-100'>
-                        <h2 className='text-center py-4 text-2xl'>{service.heading}</h2>
-                        {service.rows.map((row, rowIndex) => (
-                            <div key={rowIndex} className="mb-4">
-                                {row.heading && <h3 className='md:text-xl font-semibold mb-2'>{row.heading}</h3>}
-                                <div className="md:flex flex-wrap gap-4">
-                                    {row.inputs.map((input, inputIndex) => (
-                                        <div key={inputIndex} className="mb-2 md:flex-1 md:min-w-[30%] max-w-full">
-                                            <div className='flex items-center justify-start'>
-                                                {input.type === 'checkbox' && (
-                                                    <input
-                                                        type="checkbox"
-                                                        name={input.name}
-                                                        checked={input.value || false}
-                                                        onChange={(e) => handleServiceChange(e, serviceIndex, rowIndex, inputIndex)}
-                                                        className="form-checkbox w-auto me-3"
-                                                    />
-                                                )}
-                                                <label className="block text-slate-700 font-semibold mb-1 ">{input.label}</label>
-                                            </div>
-                                            {input.type !== 'checkbox' && (
-                                                <input
-                                                    type={input.type}
-                                                    name={input.name}
-                                                    required={input.required}
-                                                    value={input.value || ''}
-                                                    onChange={(e) => handleServiceChange(e, serviceIndex, rowIndex, inputIndex)}
-                                                    className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                {serviceData.length > 0 ? (
+                    serviceData.map((service, serviceIndex) => (
+                        <div key={serviceIndex} className="border md:p-8 p-2 rounded-md mt-5 bg-slate-100">
+                            <h2 className="text-center py-4 text-2xl">{service.heading}</h2>
+                            <div className="grid gap-4">
+                                {service.inputs.map((input, inputIndex) => (
+                                    <div key={inputIndex} className="mb-2">
+                                        <label className="block text-slate-700 font-semibold mb-1">
+                                            {input.label}
+                                        </label>
+                                        {input.type === "input" && (
+                                            <input
+                                                type="text"
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            />
+                                        )}
+                                        {input.type === "textarea" && (
+                                            <textarea
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            />
+                                        )}
+                                        {input.type === "datepicker" && (
+                                            <input
+                                                type="date"
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            />
+                                        )}
+                                        {input.type === "number" && (
+                                            <input
+                                                type="number"
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            />
+                                        )}
+                                        {input.type === "email" && (
+                                            <input
+                                                type="email"
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            />
+                                        )}
+                                        {input.type === "select" && (
+                                            <select
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.value)
+                                                }
+                                            >
+                                                {input.options.map((option, optionIndex) => (
+                                                    <option key={optionIndex} value={option}>
+                                                        {option}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        {input.type === "file" && (
+                                            <input
+                                                type="file"
+                                                name={input.name}
+                                                required={input.required}
+                                                className="mt-1 block w-full focus:outline-none"
+                                                onChange={(e) =>
+                                                    handleServiceChange(service.db_table, input.name, e.target.files[0])
+                                                }
+                                            />
+                                        )}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                ))}
+                        </div>
+                    ))
+                ) : (
+                    <p>No services available.</p>
+                )}
+
+
 
                 <p className='text-center text-sm mt-4'>
                     NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .

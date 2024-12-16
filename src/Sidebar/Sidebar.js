@@ -30,7 +30,13 @@ const tabNames = {
   generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
 
   internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
-  // report: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
+  report: {
+    icon: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
+    subItems: [
+      { id: 'report_summary', name: 'Report Summary', icon: <IoMdPersonAdd className="h-5 w-5 mr-2 text-gray-500" /> },
+      { id: 'generate_report', name: 'Generate Report', icon: <FaEye className="h-5 w-5 mr-2 text-gray-500" /> },
+    ]
+  },
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
   client_master: (<><MdOutlineTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Client Master Tracker</>),
   // exel_tracker: (<><MdTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Exel Tracker</>),
@@ -39,7 +45,6 @@ const tabNames = {
   // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
   // invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
   // email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
-  // tracker_status: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Tracker Status</>),
   holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>),
 
 };

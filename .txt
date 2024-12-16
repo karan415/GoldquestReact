@@ -1,2 +1,28 @@
 Info@ensahadvisorypartners.com
 Schema2021!
+
+#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(1) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider1-1-1.png)!important
+}
+
+#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(2) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-2-1-1.png)!important
+}
+
+#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(3) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-3-1.png)!important
+}
+
+
+
+  #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(1) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider1-1-1.png)!important
+    }
+
+    #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(2) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-2-1-1.png)!important
+    }
+
+    #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(3) {
+    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-3-1.png)!important
+    }

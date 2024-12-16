@@ -238,7 +238,8 @@ const AdminChekin = () => {
         // Insert text into the center column (centered)
         const footerText = "No 293/154/172, 4th Floor, Outer Ring Road, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.goldquestglobal.in";
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 0); // Set text color to black (RGB: 0, 0, 0)
+        doc.setFontSize(7);
         doc.text(footerText, centerX, footerYPosition - 3, { align: 'center' }); // Adjusted vertical position
 
         // Insert page number into the right column (right-aligned)
@@ -252,7 +253,8 @@ const AdminChekin = () => {
         doc.text(pageNumberText, pageNumberX, footerYPosition - 3); // Adjusted vertical position
 
         // Draw a line above the footer
-        doc.setLineWidth(0.5);
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(0, 0, 0); // Set line color to black (RGB: 0, 0, 0)
         doc.line(margin, footerYPosition - 7, pageWidth - margin, footerYPosition - 7); // Line above the footer
     }
 
@@ -339,22 +341,15 @@ const AdminChekin = () => {
         let yPosition = 10;
         const backgroundColor = '#f5f5f5';
 
-        // Left image
         doc.addImage("https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1", 'PNG', 10, yPosition, 50, 20);
 
-        // Right image
         const rightImageX = pageWidth - 10 - 50; // Page width minus margin (10) and image width (50)
         doc.addImage("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjDtQL92lFVchI1eVL0Gpb7xrNnkqW1J7c1A&s", 'PNG', rightImageX, yPosition, 50, 30);
 
-        // Title
-        // Set the font size and style
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10); // Set font size
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
 
-        // Set the text color to black (#000)
-        doc.setTextColor(0, 0, 0); // RGB for black
-
-        // Add the text, centered on the page
         doc.text("CONFIDENTIAL BACKGROUND VERIFICATION REPORT", 105, 40, { align: 'center' });
 
         // First Table
@@ -440,10 +435,10 @@ const AdminChekin = () => {
         doc.autoTable({
             head: [
                 [
-                    { content: 'REPORT COMPONENT', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'INFORMATION SOURCE', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'COMPLETED DATE', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'COMPONENT STATUS', styles: { halign: 'center', fillColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'REPORT COMPONENT', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'INFORMATION SOURCE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPLETED DATE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPONENT STATUS', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
                 ]
             ],
             body: secondTableData.map(row => [
@@ -456,12 +451,12 @@ const AdminChekin = () => {
                 cellPadding: 3,
                 fontSize: 10,
                 valign: 'middle',
-                lineWidth: 0.5,
-                lineColor: [61, 117, 166],
+                lineWidth: 0.3,
+                lineColor: "#6495ed",
             },
             theme: 'grid',
             headStyles: {
-                lineWidth: 0, // No border for the header
+                lineWidth: 0.4, // No border for the header
                 fillColor: [61, 117, 166], // Color for the header background
                 textColor: [0, 0, 0], // Text color for the header
                 fontStyle: 'bold',
@@ -478,121 +473,87 @@ const AdminChekin = () => {
             },
         });
 
+
         addFooter(doc);
 
-        // Add the Legend with Color Boxes and Text
-        doc.autoTable({
-            head: [
-                [
-                    {
-                        content: 'End of summary report',
-                        colSpan: 10,
-                        styles: {
-                            halign: 'center',
-                            fontStyle: 'bold',
-                            fillColor: [255, 255, 255],
-                            fontSize: 12,
-                            textColor: [0, 0, 0],
-                            cellPadding: 2,
-                            lineColor: [255, 255, 255]// Reduced padding for header
-                        }
-                    }
-                ],
-            ],
-            body: [
-                [
-                    // LEGEND COLUMN HEADER
-                    { content: 'Legend:', styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 } },
+        const tableStartX = 15; // Adjusted X position for full-width table
+        const tableStartY = doc.previousAutoTable.finalY + 20; // Y position of the table
+        const totalTableWidth = pageWidth - 2 * tableStartX; // Total table width
+        const legendColumnWidth = 15; // Smaller width for the "Legend" column
+        const remainingTableWidth = totalTableWidth - legendColumnWidth; // Remaining space for other columns
+        const columnCount = 5; // Number of remaining columns
+        const otherColumnWidth = remainingTableWidth / columnCount; // Width of each remaining column
+        const tableHeight = 12; // Reduced height of the table
+        const boxWidth = 5; // Width of the color box
+        const boxHeight = 9; // Height of the color box
+        const textBoxGap = 1; // Gap between text and box
 
-                    // Major Discrepancy Text and Box
-                    {
-                        content: 'Major discrepancy',
-                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 0, 0], // Red
-                            minCellHeight: 5, // Smaller height for the box
-                            minCellWidth: 10, // Smaller width for the box
-                            cellPadding: 1, // Reduced padding
-                        }
-                    },
+        // Data for the columns
+        const columns = [
+            { label: "Legend:", color: null, description: "" },
+            { label: "", color: "#FF0000", description: "-Major discrepancy" },
+            { label: "", color: "#FFFF00", description: "-Minor discrepancy" },
+            { label: "", color: "#FFA500", description: "-Unable to verify" },
+            { label: "", color: "#FFC0CB", description: "-Pending from source" },
+            { label: "", color: "#008000", description: "-All clear" },
+        ];
 
-                    // Minor Discrepancy Text and Box
-                    {
-                        content: 'Minor discrepancy',
-                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 255, 0], // Yellow
-                            minCellHeight: 5, // Smaller height for the box
-                            minCellWidth: 10, // Smaller width for the box
-                            cellPadding: 1, // Reduced padding
-                        }
-                    },
+        // Set the border color
+        doc.setDrawColor("#3e76a5");
 
-                    // Unable to Verify Text and Box
-                    {
-                        content: 'Unable to verify',
-                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 165, 0], // Orange
-                            minCellHeight: 5, // Smaller height for the box
-                            minCellWidth: 10, // Smaller width for the box
-                            cellPadding: 1, // Reduced padding
-                        }
-                    },
+        // Draw table border
+        doc.setLineWidth(0.5);
+        doc.rect(tableStartX, tableStartY, totalTableWidth, tableHeight);
 
-                    // Pending from Source Text and Box
-                    {
-                        content: 'Pending from source',
-                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [255, 192, 203], // Pink
-                            minCellHeight: 5, // Smaller height for the box
-                            minCellWidth: 10, // Smaller width for the box
-                            cellPadding: 1, // Reduced padding
-                        }
-                    },
+        // Draw columns
+        columns.forEach((col, index) => {
+            const columnStartX =
+                index === 0
+                    ? tableStartX // "Legend" column starts at tableStartX
+                    : tableStartX + legendColumnWidth + (index - 1) * otherColumnWidth; // Remaining columns start after the "Legend" column
 
-                    // All Clear Text and Box
-                    {
-                        content: 'All clear',
-                        styles: { halign: 'left', fontSize: 7, fontStyle: 'bold', whiteSpace: 'nowrap', cellPadding: 1 }
-                    },
-                    {
-                        content: '',
-                        styles: {
-                            fillColor: [0, 255, 0], // Green
-                            minCellHeight: 5, // Smaller height for the box
-                            minCellWidth: 10, // Smaller width for the box
-                            cellPadding: 1, // Reduced padding
-                        }
-                    },
-                ]
-            ],
-            startY: doc.previousAutoTable.finalY + 10, // Position below the previous table
-            styles: {
-                cellPadding: 1, // Reduced padding for body cells
-                fontSize: 10,
-                halign: 'center',
-                valign: 'middle',
-                lineColor: [62, 118, 165],
-                lineWidth: 0.5,
-            },
-            theme: 'grid', // Light gridlines to distinguish cells
+            const columnWidth = index === 0 ? legendColumnWidth : otherColumnWidth;
+
+            // Draw column separators
+            if (index > 0) {
+                doc.line(columnStartX, tableStartY, columnStartX, tableStartY + tableHeight);
+            }
+
+            // Add label text (for Legend)
+            if (col.label) {
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(7); // Reduced font size for better fit
+                doc.text(
+                    col.label,
+                    columnStartX + 3, // Padding for text inside "Legend" column
+                    tableStartY + tableHeight / 2 + 2,
+                    { baseline: "middle" }
+                );
+            }
+
+            // Add color box
+            if (col.color) {
+                const boxX = columnStartX + 3; // Adjusted padding for color box
+                const boxY = tableStartY + tableHeight / 2 - boxHeight / 2;
+                doc.setFillColor(col.color);
+                doc.rect(boxX, boxY, boxWidth, boxHeight, "F");
+            }
+
+            // Add description text
+            if (col.description) {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(7); // Reduced font size for better fit
+                const textX = columnStartX + 3 + boxWidth + textBoxGap;
+                const textY = tableStartY + tableHeight / 2 + 2;
+                doc.text(col.description, textX, textY, { baseline: "middle" });
+            }
         });
 
 
+        // Add title at the top
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("End of summary report", pageWidth / 2, doc.previousAutoTable.finalY + 10, { align: "center" });
 
         addFooter(doc);
 
@@ -613,105 +574,125 @@ const AdminChekin = () => {
 
             rows.forEach((row) => {
                 console.log("Processing row:", row); // Log the current row being processed
-            
+
                 // Use the first input label as the row label or set to an empty string if not available
                 const inputLabel = row.inputs.length > 0 ? row.inputs[0].label || "Unnamed Label" : "Unnamed Label";
                 console.log("Input label:", inputLabel); // Log the input label
-            
+
                 const valuesObj = {}; // Object to store the input values
                 console.log("Initializing valuesObj:", valuesObj);
-            
+
                 row.inputs.forEach((input) => {
                     const inputName = input.name;
                     console.log("Processing input:", input);
-            
+                
                     // Adjust report details name generation to match your data's structure
                     let reportDetailsInputName = inputName.includes("report_details_") ? inputName : `report_details_${inputName}`;
                     console.log("Generated reportDetailsInputName:", reportDetailsInputName);
-            
+                
                     // Clean up input labels by removing colons
                     if (input.label && typeof input.label === "string") {
                         input.label = input.label.replace(/:/g, "");
                     }
                     console.log("Cleaned label:", input.label);
-            
-                    // Fetch value and reportdetails value from service.annexureData
-                    const value = service.annexureData[inputName] || "";
-                    const reportDetailsValue = service.annexureData[reportDetailsInputName] || "";
-                    console.log("Fetched value:", value, "Fetched reportDetailsValue:", reportDetailsValue);
-            
-                    // Dynamically set isReportDetailsExist based on whether reportDetailsValue exists
-                    valuesObj[inputName] = value;
-                    valuesObj["isReportDetailsExist"] = !!reportDetailsValue; // Set isReportDetailsExist to true if reportDetailsValue exists
-                    if (reportDetailsValue) valuesObj[reportDetailsInputName] = reportDetailsValue; // Store reportdetails value if present
-            
-                    console.log("Updated valuesObj:", valuesObj);
-            
-                    // Store the simplified name for later use
-                    valuesObj["name"] = inputName.replace("report_details_", ""); // Clean up name for further use
-                    console.log("Simplified name stored:", valuesObj["name"]);
+                
+                    // Check if `service.annexureData` exists before trying to access it
+                    if (service.annexureData) {
+                        // Fetch value and reportdetails value from service.annexureData with null checks
+                        const value = service.annexureData[inputName] !== undefined && service.annexureData[inputName] !== null
+                            ? service.annexureData[inputName] 
+                            : ""; // Fallback to empty string if not present
+                
+                        const reportDetailsValue = service.annexureData[reportDetailsInputName] !== undefined && service.annexureData[reportDetailsInputName] !== null
+                            ? service.annexureData[reportDetailsInputName] 
+                            : ""; // Fallback to empty string if not present
+                
+                        console.log("Fetched value:", value, "Fetched reportDetailsValue:", reportDetailsValue);
+                
+                        // Dynamically set isReportDetailsExist based on whether reportDetailsValue exists
+                        valuesObj[inputName] = value;
+                        valuesObj["isReportDetailsExist"] = !!reportDetailsValue; // Set isReportDetailsExist to true if reportDetailsValue exists
+                        if (reportDetailsValue) {
+                            valuesObj[reportDetailsInputName] = reportDetailsValue; // Store reportdetails value if present
+                        }
+                
+                        console.log("Updated valuesObj:", valuesObj);
+                
+                        // Store the simplified name for later use
+                        valuesObj["name"] = inputName.replace("report_details_", ""); // Clean up name for further use
+                        console.log("Simplified name stored:", valuesObj["name"]);
+                    } else {
+                        // If `service.annexureData` is missing, log an error and continue
+                        console.error("service.annexureData is not available for input:", inputName);
+                        valuesObj[inputName] = ""; // Fallback to empty value if data is not available
+                        valuesObj["isReportDetailsExist"] = false; // No report details exist if data is missing
+                        valuesObj[reportDetailsInputName] = ""; // Ensure that reportDetailsValue is also empty
+                        console.log("service.annexureData is missing, using fallback values:", valuesObj);
+                    }
                 });
-            
+                
+
                 // Add processed row to serviceData after all inputs are processed
                 serviceData.push({
                     label: inputLabel,
                     values: valuesObj,
                 });
             });
-            
-            
-                
+
+
+
 
             const tableData = serviceData
-            .map((data) => {
-                console.log("Processing data for table:", data);
-        
-                if (!data || !data.values) {
-                    console.log("Skipping invalid data (empty values).");
-                    return null; // Skip empty or invalid data
-                }
-        
-                const name = data.values.name;
-                console.log("Processing name:", name);
-        
-                if (!name || name.startsWith("annexure")) {
-                    console.log("Skipping annexure data for name:", name);
-                    return null; // Skip annexure-related rows
-                }
-        
-                const isReportDetailsExist = data.values.isReportDetailsExist;
-                const value = data.values[name];
-                const reportDetails = data.values[`report_details_${name}`];
-        
-                console.log("isReportDetailsExist:", isReportDetailsExist, "value:", value, "reportDetails:", reportDetails);
-        
-                if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
-                    console.log("Skipping data due to missing value or report details.");
-                    return null;
-                }
-        
-                if (isReportDetailsExist && reportDetails) {
-                    console.log("Row with reportDetails:", [data.label, value, reportDetails]);
-                    return [data.label, value, reportDetails]; // Include reportdetails value if it exists
-                } else {
-                    console.log("Row without reportDetails:", [data.label, value]);
-                    return [data.label, value]; // Only value if no reportdetails status
-                }
-            })
-            .filter(Boolean); // Remove any null entries
-        
-        console.log("Final tableData:", tableData);
-                    
+                .map((data) => {
+                    console.log("Processing data for table:", data);
+
+                    if (!data || !data.values) {
+                        console.log("Skipping invalid data (empty values).");
+                        return null; // Skip empty or invalid data
+                    }
+
+                    const name = data.values.name;
+                    console.log("Processing name:", name);
+
+                    if (!name || name.startsWith("annexure")) {
+                        console.log("Skipping annexure data for name:", name);
+                        return null; // Skip annexure-related rows
+                    }
+
+                    const isReportDetailsExist = data.values.isReportDetailsExist;
+                    const value = data.values[name];
+                    const reportDetails = data.values[`report_details_${name}`];
+
+                    console.log("isReportDetailsExist:", isReportDetailsExist, "value:", value, "reportDetails:", reportDetails);
+
+                    if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
+                        console.log("Skipping data due to missing value or report details.");
+                        return null;
+                    }
+
+                    if (isReportDetailsExist && reportDetails) {
+                        console.log("Row with reportDetails:", [data.label, value, reportDetails]);
+                        return [data.label, value, reportDetails]; // Include reportdetails value if it exists
+                    } else {
+                        console.log("Row without reportDetails:", [data.label, value]);
+                        return [data.label, value]; // Only value if no reportdetails status
+                    }
+                })
+                .filter(Boolean); // Remove any null entries
+
+            console.log("Final tableData:", tableData);
+
             const pageWidth = doc.internal.pageSize.width;
 
             // Add heading
             const headingText = reportFormJson.heading.toUpperCase();
             const backgroundColor = "#f5f5f5";
-            const borderColor = "#3d75a6";
+            const backgroundColorHeading = "#6495ed";
+            const borderColor = "#6495ed";
             const xsPosition = 10;
             const rectHeight = 10;
 
-            doc.setFillColor(backgroundColor);
+            doc.setFillColor(backgroundColorHeading);
             doc.setDrawColor(borderColor);
             doc.rect(xsPosition, yPosition, pageWidth - 20, rectHeight, "FD");
 
@@ -721,6 +702,7 @@ const AdminChekin = () => {
             const textHeight = doc.getTextDimensions(headingText).h;
             const verticalCenter = yPosition + rectHeight / 2 + textHeight / 4;
 
+            doc.setTextColor("#fff"); // Set the text color to white
             doc.text(headingText, pageWidth / 2, verticalCenter, { align: "center" });
 
             yPosition += rectHeight; // Adjust yPosition
@@ -729,7 +711,7 @@ const AdminChekin = () => {
             doc.autoTable({
                 head: [
                     [
-                        { content: "PARTICULARS", styles: { halign: "left"} },
+                        { content: "PARTICULARS", styles: { halign: "left" } },
                         "APPLICATION DETAILS",
                         "REPORT DETAILS",
                     ],
@@ -737,12 +719,12 @@ const AdminChekin = () => {
                 body: tableData.map((row) => {
                     if (row.length === 2) {
                         return [
-                            { content: row[0], styles: { halign: "left" } },
+                            { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
                             { content: row[1], colSpan: 2, styles: { halign: "left" } },
                         ];
                     } else {
                         return [
-                            { content: row[0], styles: { halign: "left",fontStyle:'bold' } },
+                            { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
                             { content: row[1], styles: { halign: "left" } },
                             { content: row[2], styles: { halign: "left" } },
                         ];
@@ -752,12 +734,12 @@ const AdminChekin = () => {
                 styles: {
                     fontSize: 9,
                     cellPadding: 3,
-                    lineWidth: 0.5,
+                    lineWidth: 0.3,
                     lineColor: [62, 118, 165],
                 },
                 theme: "grid",
                 headStyles: {
-                    fillColor: [255, 255, 255],
+                    fillColor: backgroundColor,
                     textColor: [0, 0, 0],
                     halign: "center",
                     fontSize: 10,
@@ -770,8 +752,9 @@ const AdminChekin = () => {
                 tableLineWidth: 0.5,
                 margin: { horizontal: 10 },
             });
+            addFooter(doc);
 
-            yPosition = doc.lastAutoTable.finalY + 10;
+            yPosition = doc.lastAutoTable.finalY + 5;
 
             // Add Remarks
             const remarksData = serviceData.find((data) => data.label === "Remarks");
@@ -781,7 +764,7 @@ const AdminChekin = () => {
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Remarks: ${remarks}`, 10, yPosition);
-                yPosition += 10;
+                yPosition += 7;
             }
 
             // Handle annexure images
@@ -798,10 +781,10 @@ const AdminChekin = () => {
                     doc.setFontSize(10);
                     doc.setTextColor(150, 150, 150);
                     doc.text("No annexure images available.", 10, yPosition);
-                    yPosition += 15;
+                    yPosition += 10;
                 } else {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-                        const imageUrlFull = `https://screeningstar-new.onrender.com/${imageUrl.trim()}`;
+                        const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);
 
                         if (!(await checkImageExists(imageUrlFull))) continue;
@@ -813,20 +796,25 @@ const AdminChekin = () => {
                             const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
                             if (yPosition + height > doc.internal.pageSize.height - 20) {
                                 doc.addPage();
-                                yPosition = 20;
+                                yPosition = 10;
                             }
 
+                            // Ensure yPosition is adjusted before adding the annexure index text
                             const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
                             const textWidth = doc.getTextWidth(annexureText);
                             const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-                            doc.setFont("helvetica", "normal");
+
+                            // Add some vertical padding before annexure text
+                            doc.setFont("helvetica", "bold");
                             doc.setFontSize(10);
-                            doc.text(annexureText, centerX, yPosition);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text(annexureText, centerX, yPosition + 10);  // Added padding
                             yPosition += 15;
 
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
                             doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
                             yPosition += height + 15;
+
                         } catch (error) {
                             console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
                         }
@@ -838,11 +826,12 @@ const AdminChekin = () => {
                 doc.setTextColor(150, 150, 150);
                 doc.text("No annexure images available.", 10, yPosition);
                 yPosition += 15;
+
             }
 
             addFooter(doc);
             annexureIndex++;
-            yPosition += 30;
+            yPosition += 20;
         }
 
         // Add disclaimer after all services
@@ -885,22 +874,35 @@ const AdminChekin = () => {
         // Calculate the available space from top to bottom
         const availableSpace = doc.internal.pageSize.height - 40; // Total page height minus some margin
 
-        // Calculate the starting position for the content to be centered vertically
-        let disclaimerY = (availableSpace - totalContentHeight) / 2 + 20; // Add top margin (20)
+        // Calculate the starting position for the content to be centered vertically based on previous content
+        let disclaimerY = 20; // Start from the top of the page (you can adjust this if you want more margin)
 
-        // Add new page if disclaimer doesn't fit
-        if (disclaimerY < 20) {
+        if (disclaimerY + totalContentHeight > availableSpace) {
+            // Add new page if the content does not fit
             doc.addPage();
             addFooter(doc);
             disclaimerY = 20; // Start from the top of the new page if space is insufficient
         }
 
-        // Draw Disclaimer Button (centered horizontally)
+        // Define the X position of the disclaimer button after calculating the page width
         const disclaimerButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2; // Centering horizontally
-        doc.setDrawColor(62, 118, 165); // Set border color
-        doc.setFillColor(backgroundColor); // Set fill color
-        doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
-        doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
+
+        // Log values to debug
+        console.log("disclaimerButtonXPosition:", disclaimerButtonXPosition);
+        console.log("disclaimerY:", disclaimerY);
+        console.log("disclaimerButtonWidth:", disclaimerButtonWidth);
+        console.log("disclaimerButtonHeight:", disclaimerButtonHeight);
+
+        // Ensure values are valid before calling rect
+        if (disclaimerButtonWidth > 0 && disclaimerButtonHeight > 0 && !isNaN(disclaimerButtonXPosition) && !isNaN(disclaimerY)) {
+            doc.setDrawColor(62, 118, 165); // Set border color
+            doc.setFillColor(backgroundColor); // Set fill color
+            doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill the rectangle
+            doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Draw the border
+        } else {
+            console.error('Invalid rectangle dimensions:', disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight);
+        }
+
         doc.setTextColor(0, 0, 0); // Set text color to black
         doc.setFont("helvetica", "bold");
 
@@ -952,31 +954,31 @@ const AdminChekin = () => {
 
         // Draw "END OF DETAIL REPORT" Button (centered horizontally)
         const endButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2; // Centering horizontally
-        doc.setDrawColor(62, 118, 165);
-        doc.setFillColor(backgroundColor);
-        doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F');
-        doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D');
+
+        // Ensure values are valid before calling rect
+        if (disclaimerButtonWidth > 0 && disclaimerButtonHeight > 0 && !isNaN(endButtonXPosition) && !isNaN(endOfDetailY)) {
+            doc.setDrawColor(62, 118, 165);
+            doc.setFillColor(backgroundColor);
+            doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F');
+            doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D');
+        } else {
+            console.error('Invalid rectangle dimensions for END OF DETAIL REPORT button:', endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight);
+        }
+
         doc.setTextColor(0, 0, 0); // Set text color to black for the button text
         doc.setFont("helvetica", "bold");
 
-        // Center the 'END OF DETAIL REPORT' text inside the button both horizontally and vertically
         const endButtonTextWidth = doc.getTextWidth('END OF DETAIL REPORT'); // Width of the button text
         const endButtonTextHeight = doc.getFontSize(); // Height of the text (font size)
 
-        // Horizontal centering of text inside the button
         const endButtonTextXPosition =
             endButtonXPosition + disclaimerButtonWidth / 2 - endButtonTextWidth / 2 - 1;
-        // Vertical centering of text inside the button
         const endButtonTextYPosition = endOfDetailY + disclaimerButtonHeight / 2 + endButtonTextHeight / 4 - 1;
 
-        // Add 'END OF DETAIL REPORT' text to the button, centered both horizontally and vertically
         doc.text('END OF DETAIL REPORT', endButtonTextXPosition, endButtonTextYPosition);
 
-        // Ensure footer is added
         addFooter(doc);
 
-
-        // Save the PDF
         doc.save('report.pdf');
     };
 

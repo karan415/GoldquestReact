@@ -65,7 +65,7 @@ const App = () => {
                                       <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
                                       <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
-                                      <Route path='/background_form' element={<BackgroundForm />} />
+                                      <Route path='/background-form' element={<BackgroundForm />} />
                                       <Route path='/digital_form' element={<DigitalAddressVerification />} />
                                     </Routes>
                                   </Router>

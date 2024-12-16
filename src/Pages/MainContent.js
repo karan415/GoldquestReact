@@ -21,6 +21,7 @@ import ExelTrackerStatus from './ExelTrackerStatus'; // Excel Tracker Status com
 import CreateInvoice from './CreateInvoice';
 import { ClientEditForm } from './ClientEditForm';
 import HolidayManagement from './HolidayManagement';
+import GenerateReportList from './GenerateReportList';
 
 // Mapping tab keys to their respective components
 const tabComponents = {
@@ -29,7 +30,8 @@ const tabComponents = {
   package_management: <PackageManagement />,
   service_management: <ServiceMangement />,
   internal_login: <InternalLogin />,
-  report: <Reports />,
+  report_summary: <Reports />,
+  generate_report:<GenerateReportList/>,
   external: <ExternalLogin />,
   client_master: <ClientMasterTracker />,
   exel_tracker: <ExelTracker />,
