@@ -1,4 +1,4 @@
-import React, { useEffect, useState, } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
 import 'reactjs-popup/dist/index.css';
@@ -11,12 +11,15 @@ import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
 const ClientManagementList = () => {
-
+  
   const { handleTabChange } = useSidebar();
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { loading, listData, fetchData, isOpen, setIsOpen } = useData();
+  
   const API_URL = useApi();
   const { setClientData } = useEditClient();
+  const [branches, setBranches] = useState([]);
+  const [openAccordionId, setOpenAccordionId] = useState(null);
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [editData, setEditData] = useState({ id: null, name: '', email: '' });
@@ -82,6 +85,49 @@ const ClientManagementList = () => {
     }
   };
 
+  const [branchLoading, setBranchLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const toggleAccordion = useCallback((id) => {
+    setBranches([]);
+    setOpenAccordionId((prevId) => (prevId === id ? null : id));
+    setBranchLoading(true);
+    setIsOpen(null);
+    setError(null);
+
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+
+    fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then((response) => {
+        return response.json().then(result => {
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+          if (!response.ok) {
+            Swal.fire({
+              title: 'Error!',
+              text: `An error occurred: ${result.message}`,
+              icon: 'error',
+              confirmButtonText: 'Ok'
+            });
+            throw new Error('Network response was not ok');
+          }
+          return result;
+        });
+      })
+      .then((data) => {
+        setBranches(data.branches || []);
+      })
+      .catch((error) => {
+        console.error('Fetch error:', error);
+        setError('Failed to load data');
+      })
+      .finally(() => setBranchLoading(false));
+  }, [API_URL]);
 
   const closePopup = () => {
     setIsPopupOpen(false);
@@ -89,7 +135,6 @@ const ClientManagementList = () => {
   };
 
 
-  const { loading, listData, fetchData, toggleAccordion, branches, openAccordionId, isOpen, setIsOpen } = useData();
 
   const [showAllServicesState, setShowAllServicesState] = useState({});
   const toggleAccordions = (id) => {
@@ -432,41 +477,42 @@ const ClientManagementList = () => {
 
   return (
     <>
+      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4 px-4">
+      <div className="col">
+          <form action="">
+            <div className="flex gap-5 justify-between">
+              <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                <option value="10">10 Rows</option>
+                <option value="20">20 Rows</option>
+                <option value="50">50 Rows</option>
+                <option value="100">100 Rows</option>
+                <option value="200">200 Rows</option>
+                <option value="300">300 Rows</option>
+                <option value="400">400 Rows</option>
+                <option value="500">500 Rows</option>
+              </select>
+              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
+            </div>
+          </form>
+        </div>
+        <div className="col md:flex justify-end">
+          <form action="">
+            <div className="flex md:items-stretch items-center gap-3">
+              <input
+                type="search"
+                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
+            </div>
+          </form>
+        </div>
+      </div>
       <div className="overflow-x-auto py-6 px-4 border m-3">
         <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
-        <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-          <div className="col">
-            <form action="">
-              <div className="flex gap-5 justify-between">
-                <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                  <option value="10">10 Rows</option>
-                  <option value="20">20 Rows</option>
-                  <option value="50">50 Rows</option>
-                  <option value="100">100 Rows</option>
-                  <option value="200">200 Rows</option>
-                  <option value="300">300 Rows</option>
-                  <option value="400">400 Rows</option>
-                  <option value="500">500 Rows</option>
-                </select>
-                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
-              </div>
-            </form>
-          </div>
-          <div className="col md:flex justify-end">
-            <form action="">
-              <div className="flex md:items-stretch items-center gap-3">
-                <input
-                  type="search"
-                  className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                  placeholder='Search by Client Code, Company Name, or Client Spoc'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
-              </div>
-            </form>
-          </div>
-        </div>
+
         {loading ? (
           <div className='flex justify-center items-center py-6 '>
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -556,58 +602,73 @@ const ClientManagementList = () => {
                         </button>
                       )}
                       {/* Branches Accordion */}
-                      {openAccordionId === item.main_id &&
-                        branches.map((branch) => {
-                          const isActive = branch.status === 0;
-                          const isBlocked = branch.status === 1;
+                      {openAccordionId === item.main_id && (
+                        branchLoading ? (
 
-                          return (
-                            <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
-                              <div
-                                className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
-                                id={branch.id}
-                                onClick={() => toggleAccordions(branch.id)}
-                              >
-                                <h3 className="branch_name">{branch.name}</h3>
-                              </div>
-                              {isOpen === branch.id && (
-                                <div className="accordion_body">
-                                  <ul className="flex gap-2 items-center">
-                                    <li>{branch.email}</li>
-                                    <button
-                                      className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                                      onClick={() => openPopup(branch)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                      onClick={() => handleDelete(branch.id, 'branch')}
-                                    >
-                                      Delete
-                                    </button>
-                                    {isActive && (
+
+                          <div className="flex justify-center items-center py-3">
+                            <PulseLoader
+                              color="#36D7B7"
+                              loading={branchLoading}
+                              size={13}
+                              aria-label="Loading Spinner"
+                            />
+                          </div>
+
+                        ) : (
+                          branches.map((branch) => {
+                            const isActive = branch.status === 0;
+                            const isBlocked = branch.status === 1;
+
+                            return (
+                              <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
+                                <div
+                                  className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
+                                  id={branch.id}
+                                  onClick={() => toggleAccordions(branch.id)}
+                                >
+                                  <h3 className="branch_name">{branch.name}</h3>
+                                </div>
+                                {isOpen === branch.id && (
+                                  <div className="accordion_body">
+                                    <ul className="flex gap-2 items-center">
+                                      <li>{branch.email}</li>
+                                      <button
+                                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                        onClick={() => openPopup(branch)}
+                                      >
+                                        Edit
+                                      </button>
                                       <button
                                         className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                        onClick={() => blockBranch(branch.id)}
+                                        onClick={() => handleDelete(branch.id, 'branch')}
                                       >
-                                        Block
+                                        Delete
                                       </button>
-                                    )}
-                                    {isBlocked && (
-                                      <button
-                                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
-                                        onClick={() => unblockBranch(branch.id)}
-                                      >
-                                        Unblock
-                                      </button>
-                                    )}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                      {isActive && (
+                                        <button
+                                          className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                          onClick={() => blockBranch(branch.id)}
+                                        >
+                                          Block
+                                        </button>
+                                      )}
+                                      {isBlocked && (
+                                        <button
+                                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                          onClick={() => unblockBranch(branch.id)}
+                                        >
+                                          Unblock
+                                        </button>
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )
+                      )}
 
                       <Modal
                         isOpen={isPopupOpen}

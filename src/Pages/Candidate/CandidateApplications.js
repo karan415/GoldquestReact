@@ -600,31 +600,36 @@ const GenerateReport = () => {
                 headers: { "Content-Type": "application/json" },
                 body: raw,
             };
-
             const response = await fetch(
                 `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`,
                 requestOptions
             );
-
+            
             const result = await response.json();
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                // Use the error message from the response, if available
+                const errorMessage = result.message || `HTTP error! Status: ${response.status}`;
+                throw new Error(errorMessage);
             }
-            Swal.fire("Success!", "Application updated successfully.", "success");
-
-
+            
+            // Display success message from API response, if available, otherwise use a default message
+            const successMessage = result.success_message || "Application updated successfully.";
+            Swal.fire("Success!", successMessage, "success");
+            
             uploadCustomerLogo(result.email_status);
-        } catch (error) {
-            console.error("Error during submission:", error);
-            Swal.fire("Error", "Failed to submit the application. Please try again.", "error");
-        } finally {
-            setLoading(false); // Ensure loading is stopped after processing completes
-        }
+            } catch (error) {
+                console.error("Error during submission:", error);
+                // Show the error message from the API response, if available, or use a generic error message
+                Swal.fire("Error", error.message || "Failed to submit the application. Please try again.", "error");
+            } finally {
+                setLoading(false); // Ensure loading is stopped after processing completes
+            }
+            
     }, [servicesDataInfo, branchid, branchInfo, applicationId, formData, selectedStatuses, files]);
 
 

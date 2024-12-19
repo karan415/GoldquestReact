@@ -240,7 +240,7 @@ const DropBoxList = () => {
                     <div className="overflow-x-auto py-6 px-4">
                         {loading ? (
                             <div className='flex justify-center items-center py-6 h-full'>
-                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="loading Spinner" />
 
                             </div>
                         ) : currentItems.length > 0 ? (
@@ -271,7 +271,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.photo ? (
                                                     <img
-                                                        src={`https://octopus-app-www87.ondigitalocean.app/${report.photo}`}
+                                                        src={`https://webstepdev.com/demo/goldquestnode/${report.photo}`}
                                                         alt={report.photo}
                                                         className='h-20 w-20 rounded-full'
                                                     />
@@ -289,7 +289,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.attach_documents ? (
                                                     <img
-                                                        src={`https://octopus-app-www87.ondigitalocean.app/${report.attach_documents}`}
+                                                        src={`https://webstepdev.com/demo/goldquestnode/${report.attach_documents}`}
                                                         alt={report.attach_documents}
                                                         className='h-20 w-20 rounded-full'
                                                     />

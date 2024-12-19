@@ -13,12 +13,14 @@ const CandidateList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [currentPage, setCurrentPage] = useState(1);
-    const { handleEditCandidate, listData, fetchClient, loading } = useContext(DropBoxContext);
+    const { handleEditCandidate, candidateListData, fetchClient, candidateLoading } = useContext(DropBoxContext);
     const API_URL = useApi();
 
     useEffect(() => {
         fetchClient();
     }, [fetchClient]);
+
+
     const handleViewMore = (services) => {
         setModalServices(services);
         setIsModalOpen(true);
@@ -28,7 +30,7 @@ const CandidateList = () => {
         setModalServices([]);
     };
 
-    const filteredItems = listData.filter(item => {
+    const filteredItems = candidateListData.filter(item => {
         return (
             item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,9 +230,9 @@ const CandidateList = () => {
 
                     </div>
                     <div className="overflow-x-auto py-6 px-4">
-                        {loading ? (
+                        {candidateLoading ? (
                             <div className='flex justify-center items-center py-6 h-full'>
-                                <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+                                <PulseLoader color="#36D7B7" loading={candidateLoading} size={15} aria-label="candidateLoading Spinner" />
 
                             </div>
                         ) : currentItems.length > 0 ? (
@@ -259,14 +261,14 @@ const CandidateList = () => {
                                                 <div className='flex whitespace-nowrap'>
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
                                                         report.serviceNames.length === 1 ? (
-                                                           
+
                                                             <span className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm">
                                                                 {typeof report.serviceNames[0] === "string"
                                                                     ? report.serviceNames[0]
                                                                     : report.serviceNames[0].join(", ")}
                                                             </span>
                                                         ) : (
-                                                           
+
                                                             <>
                                                                 {typeof report.serviceNames[0] === "string" ? (
                                                                     <span className="px-4 py-2 bg-blue-100 border   border-blue-500 rounded-lg text-sm">

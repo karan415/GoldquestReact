@@ -64,41 +64,43 @@ export const ClientEditProvider = ({ children }) => {
     };
 
     const handleClientSubmit = async (e) => {
+        const fileCount = Object.keys(files).length;
+    
         e.preventDefault();
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true); // Start loading
-
+    
         if (!clientData.name || !clientData.client_unique_id) {
             Swal.fire('Error!', 'Missing required fields: Branch ID, Name, Email', 'error');
             setLoading(false); // Stop loading if there's an error
             return;
         }
-
+    
         const raw = JSON.stringify({
             ...clientData,
             admin_id,
             _token: storedToken
         });
-
+    
         const requestOptions = {
             method: "PUT",
             headers: { 'Content-Type': 'application/json' },
             body: raw,
             redirect: "follow"
         };
-
+    
         try {
             const response = await fetch(`${API_URL}/customer/update`, requestOptions);
             const contentType = response.headers.get("content-type");
-
+    
             const data = contentType.includes("application/json") ? await response.json() : {};
             const newToken = data._token || data.token;
-
+    
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-
+    
             if (!response.ok) {
                 if (contentType && contentType.includes("application/json")) {
                     const errorData = await response.json();
@@ -109,12 +111,29 @@ export const ClientEditProvider = ({ children }) => {
                 }
                 return;
             }
-
+    
             const customerInsertId = clientData.customer_id;
-
-            uploadCustomerLogo(admin_id, storedToken, customerInsertId);
-            Swal.fire('Success!', 'Branch updated successfully.', 'success');
-
+    
+            // Check if files exist and handle success or upload
+            if (fileCount === 0) {
+                Swal.fire({
+                    title: "Success",
+                    text: `Client Updated Successfully.`,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                });
+            } else {
+                // Proceed to upload files if files exist
+                uploadCustomerLogo(admin_id, storedToken, customerInsertId);
+    
+                Swal.fire({
+                    title: "Success",
+                    text: `Client Updated Successfully `,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                });
+            }
+    
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
             Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
@@ -122,6 +141,7 @@ export const ClientEditProvider = ({ children }) => {
             setLoading(false); // Stop loading
         }
     };
+    
 
 
 

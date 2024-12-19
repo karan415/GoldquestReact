@@ -5,10 +5,8 @@ import PulseLoader from 'react-spinners/PulseLoader';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ReportCaseTable = () => {
-    const tableRef = useRef(null); // Create a reference for the table
-
+    const tableRef = useRef(null);
     const [options, setOptions] = useState([]);
-    const [servicesDataInfo, setServicesDataInfo] = useState('');
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
     const location = useLocation();
@@ -18,9 +16,7 @@ const ReportCaseTable = () => {
     const [adminTAT, setAdminTAT] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [data, setData] = useState([]);
-    const [reportData, setReportData] = useState({});
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
     const API_URL = useApi();
 
     const queryParams = new URLSearchParams(location.search);
@@ -147,13 +143,6 @@ const ReportCaseTable = () => {
 
 
 
-
-    // useEffect(() => {
-    //     fetchSelectOptions();
-    // }, [fetchSelectOptions])
-
-
-
     const fetchServicesData = async (applicationId, servicesList) => {
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const _token = localStorage.getItem("branch_token");
@@ -163,10 +152,8 @@ const ReportCaseTable = () => {
         }
 
         try {
-            // Construct the URL with service IDs
             const url = `${API_URL}/branch/report-case-status/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&application_id=${encodeURIComponent(applicationId)}&branch_id=${encodeURIComponent(branch_id)}&_token=${encodeURIComponent(_token)}`;
 
-            // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
 
             if (response.ok) {
@@ -499,7 +486,9 @@ const ReportCaseTable = () => {
                         </div>
                     )}
 
-                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                </div>
+                
+                <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
                         <button
                             onClick={showPrev}
                             disabled={currentPage === 1}
@@ -520,7 +509,6 @@ const ReportCaseTable = () => {
                             <MdArrowForwardIos />
                         </button>
                     </div>
-                </div>
             </div>
         </div >
     );

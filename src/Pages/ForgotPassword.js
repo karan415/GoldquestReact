@@ -44,14 +44,13 @@ const ForgotPassword = () => {
       })
       .then((result) => {
         console.log(result);
-        // Navigate to the password reset page after successful request
-        // navigate('/forgotpassword/passwordreset');
+        navigate('/reset-password');
       })
       .catch((error) => console.error('Error:', error));
   };
 
   return (
-    <div className="bg-white md:w-5/12 m-auto shadow-md rounded-sm p-5 translate-y-2/4">
+    <div className="bg-white md:w-5/12 m-auto shadow-md rounded-sm p-5 translate-y-2/4 border">
       <h2 className='md:text-4xl text-2xl font-bold pb-8 md:pb-4'>Forgot Password?</h2>
       <p>We'll Send You Reset Instructions.</p>
       <form onSubmit={handleSubmit} className='mt-9 mb-9'>
@@ -73,7 +72,7 @@ const ForgotPassword = () => {
       </form>
       <span className='flex justify-center items-center gap-4 text-blue-400'>
         <FaArrowLeft />
-        <Link to='/customerlogin'>Back to Login</Link>
+        <Link to='/admin-login'>Back to Login</Link>
       </span>
     </div>
   );

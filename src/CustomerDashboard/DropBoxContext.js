@@ -9,10 +9,13 @@ export const DropBoxProvider = ({ children }) => {
     const [services, setServices] = useState([]);
     const [uniquePackages, setUniquePackages] = useState([]);
     const [listData, setListData] = useState([]);
+    const [candidateListData, setCandidateListData] = useState([]);
     const [selectedDropBox, setSelectedDropBox] = useState(null);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [branchId, setBranchId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [servicesLoading, setServicesLoading] = useState(false);
+    const [candidateLoading, setCandidateLoading] = useState(false);
     const [token, setToken] = useState(null);
 
 
@@ -25,12 +28,12 @@ export const DropBoxProvider = ({ children }) => {
     };
 
     const fetchServices = useCallback(async () => {
-        setLoading(true);
+        setServicesLoading(true);
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
         if (!branch_id || !_token) {
-            setLoading(false);
+            setServicesLoading(false);
             return;
 
         }
@@ -82,17 +85,17 @@ export const DropBoxProvider = ({ children }) => {
             console.error('Fetch error:', error);
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
         } finally {
-            setLoading(false);
+            setServicesLoading(false);
         }
     }, [API_URL, branchId, token]);
 
     const fetchClient = useCallback(async () => {
-        setLoading(true);
+        setCandidateLoading(true);
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
         if (!branch_id || !_token) {
-            setLoading(false);
+            setCandidateLoading(false);
             return;
         }
 
@@ -121,7 +124,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
             }
 
-            setListData(result.data.candidateApplications || []);
+            setCandidateListData(result.data.candidateApplications || []);
             if (result.data.customerInfo) {
                 const customer = result.data.customerInfo;
                 const customer_code = customer.client_unique_id;
@@ -146,9 +149,11 @@ export const DropBoxProvider = ({ children }) => {
             console.error('Fetch error:', error);
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
         } finally {
-            setLoading(false);
+            setCandidateLoading(false);
         }
     }, [API_URL, branchId, token]);
+
+
 
     const fetchClientDrop = useCallback(async () => {
         setLoading(true);
@@ -223,6 +228,7 @@ export const DropBoxProvider = ({ children }) => {
     return (
         <DropBoxContext.Provider value={{
             services,
+            setSelectedCandidate,
             fetchClient,
             fetchClientDrop,
             uniquePackages,
@@ -237,7 +243,10 @@ export const DropBoxProvider = ({ children }) => {
             fetchServices,
             selectedCandidate,
             setSelectedCandidate,
-            loading
+            candidateLoading,
+            loading,
+            servicesLoading,
+            candidateListData
         }}>
             {children}
         </DropBoxContext.Provider>

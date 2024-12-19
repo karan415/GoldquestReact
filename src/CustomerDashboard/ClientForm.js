@@ -3,9 +3,9 @@ import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import axios from 'axios';
-import Multiselect from 'multiselect-react-dropdown';
 import PulseLoader from 'react-spinners/PulseLoader';
 const ClientForm = () => {
+    const [formLoading, setFormLoading] = useState(false);
     const branch_name = JSON.parse(localStorage.getItem("branch"));
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
     const branch_token = localStorage.getItem("branch_token");
@@ -28,7 +28,6 @@ const ClientForm = () => {
     const { selectedDropBox, fetchClientDrop, services, uniquePackages, loading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
 
     const validate = () => {
         const newErrors = {};
@@ -128,9 +127,9 @@ const ClientForm = () => {
         e.preventDefault();
         let requestBody;
         const errors = validate();
+        setFormLoading(true);
 
         if (Object.keys(errors).length === 0) {
-            setIsLoading(true); // Set loading state to true
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
 
@@ -248,7 +247,7 @@ const ClientForm = () => {
                     'error'
                 );
             } finally {
-                setIsLoading(false); // Reset loading state after the request is done
+                setFormLoading(false);
             }
         } else {
             setInputError(errors); // Set the input errors if validation fails
@@ -312,122 +311,125 @@ const ClientForm = () => {
 
     return (
         <>
+            {formLoading ? (
+                <div className='flex justify-center'>  <PulseLoader color="#36A2EB" loading={formLoading} size={15} /></div>
+            ) : (
+
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 grid-cols-2 mb-4">
+                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="organisation_name" className='text-sm'>Name of the organisation:</label>
+                                    <input type="text" name="organisation_name" id="Organisation_Name" className="border w-full capitalize rounded-md p-2 mt-2" disabled value={branch_name?.name} />
+                                    {inputError.organisation_name && <p className='text-red-500'>{inputError.organisation_name}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="name" className='text-sm'>Full name of the applicant *</label>
+                                    <input type="text" name="name" id="Applicant-Name" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.name} />
+                                    {inputError.name && <p className='text-red-500'>{inputError.name}</p>}
+                                </div>
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="attach_documents" className='text-sm'>Attach documents: *</label>
+                                <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2" onChange={(e) => handleFileChange('attach_documents', e)} />
+                                {inputError.attach_documents && <p className='text-red-500'>{inputError.attach_documents}</p>}
+                            </div>
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="employee_id" className='text-sm'>Employee ID:</label>
+                                    <input type="text" name="employee_id" id="EmployeeId" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.employee_id} />
+                                    {inputError.employee_id && <p className='text-red-500'>{inputError.employee_id}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="spoc" className='text-sm'>Name of the SPOC:</label>
+                                    <input type="text" name="spoc" id="spoc" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.spoc} />
+                                    {inputError.spoc && <p className='text-red-500'>{inputError.spoc}</p>}
+                                </div>
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="location" className='text-sm'>Location:</label>
+                                <input type="text" name="location" id="Locations" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.location} />
+                                {inputError.location && <p className='text-red-500'>{inputError.location}</p>}
+                            </div>
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="batch_number" className='text-sm'>Batch number:</label>
+                                    <input type="text" name="batch_number" id="Batch-Number" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.batch_number} />
+                                    {inputError.batch_number && <p className='text-red-500'>{inputError.batch_number}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="sub_client" className='text-sm'>Sub client:</label>
+                                    <input type="text" name="sub_client" id="SubClient" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.sub_client} />
+                                    {inputError.sub_client && <p className='text-red-500'>{inputError.sub_client}</p>}
+                                </div>
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="photo">Upload photo:</label>
+                                <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" onChange={(e) => handleFileChange('photo', e)} />
+                                {inputError.photo && <p className='text-red-500'>{inputError.photo}</p>}
+                            </div>
+                        </div>
+                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
+                            <div className="flex flex-wrap flex-col-reverse">
+                                <div className='mt-4'>
+                                    <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
+                                    {loading ? (
+                                        <PulseLoader color="#36A2EB" loading={loading} size={15} />
+                                    ) : services.length > 0 ? (
+                                        <ul>
+                                            {services.map((item) => (
+                                                <li
+                                                    key={item.serviceId}
+                                                    className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        name="services"
+                                                        value={String(item.serviceId)} // Ensure `value` matches the service ID type
+                                                        onChange={handleChange}
+                                                        checked={clientInput.services.includes(String(item.serviceId))} // Match ID type
+                                                    />
+
+                                                    <div className='font-bold'>{item.serviceTitle}</div>
+                                                </li>
+                                            ))}
+                                        </ul>
 
 
-            <form onSubmit={handleSubmit}>
-                <div className="grid gap-4 grid-cols-2 mb-4">
-                    <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
-                        <div className="md:flex gap-5">
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="organisation_name" className='text-sm'>Name of the organisation:</label>
-                                <input type="text" name="organisation_name" id="Organisation_Name" className="border w-full capitalize rounded-md p-2 mt-2" disabled value={branch_name?.name} />
-                                {inputError.organisation_name && <p className='text-red-500'>{inputError.organisation_name}</p>}
-                            </div>
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="name" className='text-sm'>Full name of the applicant *</label>
-                                <input type="text" name="name" id="Applicant-Name" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.name} />
-                                {inputError.name && <p className='text-red-500'>{inputError.name}</p>}
-                            </div>
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="attach_documents" className='text-sm'>Attach documents: *</label>
-                            <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2" onChange={(e) => handleFileChange('attach_documents', e)} />
-                            {inputError.attach_documents && <p className='text-red-500'>{inputError.attach_documents}</p>}
-                        </div>
-                        <div className="md:flex gap-5">
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="employee_id" className='text-sm'>Employee ID:</label>
-                                <input type="text" name="employee_id" id="EmployeeId" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.employee_id} />
-                                {inputError.employee_id && <p className='text-red-500'>{inputError.employee_id}</p>}
-                            </div>
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="spoc" className='text-sm'>Name of the SPOC:</label>
-                                <input type="text" name="spoc" id="spoc" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.spoc} />
-                                {inputError.spoc && <p className='text-red-500'>{inputError.spoc}</p>}
+                                    ) : (
+                                        <p>No services available</p>
+                                    )}
+                                </div>
+                                <div className="mt-5">
+                                    <strong className="mb-2 block">Packages:</strong>
+                                    {!loading && (
+                                        <select
+                                            value={clientInput.package[0] || ""}
+                                            onChange={handlePackageChange}
+                                            className="text-left w-full border p-2 rounded-md"
+                                        >
+                                            <option value="">Select a package</option>
+                                            {uniquePackages.map(pkg => (
+                                                <option key={pkg.id} value={pkg.id}>
+                                                    {pkg.name || "No Name"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
                             </div>
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="location" className='text-sm'>Location:</label>
-                            <input type="text" name="location" id="Locations" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.location} />
-                            {inputError.location && <p className='text-red-500'>{inputError.location}</p>}
-                        </div>
-                        <div className="md:flex gap-5">
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="batch_number" className='text-sm'>Batch number:</label>
-                                <input type="text" name="batch_number" id="Batch-Number" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.batch_number} />
-                                {inputError.batch_number && <p className='text-red-500'>{inputError.batch_number}</p>}
-                            </div>
-                            <div className="mb-4 md:w-6/12">
-                                <label htmlFor="sub_client" className='text-sm'>Sub client:</label>
-                                <input type="text" name="sub_client" id="SubClient" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.sub_client} />
-                                {inputError.sub_client && <p className='text-red-500'>{inputError.sub_client}</p>}
-                            </div>
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="photo">Upload photo:</label>
-                            <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" onChange={(e) => handleFileChange('photo', e)} />
-                            {inputError.photo && <p className='text-red-500'>{inputError.photo}</p>}
-                        </div>
+
                     </div>
-                    <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
-                        <div className="flex flex-wrap flex-col-reverse">
-                            <div className='mt-4'>
-                                <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
-                                {loading ? (
-                                    <PulseLoader color="#36A2EB" loading={loading} size={15} />
-                                ) : services.length > 0 ? (
-                                    <ul>
-                                        {services.map((item) => (
-                                            <li
-                                                key={item.serviceId}
-                                                className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    name="services"
-                                                    value={String(item.serviceId)} // Ensure `value` matches the service ID type
-                                                    onChange={handleChange}
-                                                    checked={clientInput.services.includes(String(item.serviceId))} // Match ID type
-                                                />
+                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={formLoading}>
+                        { (isEditClient ? "Edit" : "Send")}
+                    </button>
+                    <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
+                </form>
+            )}
 
-                                                <div className='font-bold'>{item.serviceTitle}</div>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-
-                                ) : (
-                                    <p>No services available</p>
-                                )}
-                            </div>
-                            <div className="mt-5">
-                                <strong className="mb-2 block">Packages:</strong>
-                                {!loading && (
-                                    <select
-                                        value={clientInput.package[0] || ""}
-                                        onChange={handlePackageChange}
-                                        className="text-left w-full border p-2 rounded-md"
-                                    >
-                                        <option value="">Select a package</option>
-                                        {uniquePackages.map(pkg => (
-                                            <option key={pkg.id} value={pkg.id}>
-                                                {pkg.name || "No Name"}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-                <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={isLoading}>
-                    {isLoading ? 'Submitting...' : (isEditClient ? "Edit" : "Send")}
-                </button>
-                <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
-            </form>
-            {isLoading && <div className="loader">Loading...</div>} {/* Add a simple loader here */}
         </>
     );
 }

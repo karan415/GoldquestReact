@@ -40,10 +40,10 @@ const CreateInvoice = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true); // Show loader
-
+  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
@@ -51,35 +51,48 @@ const CreateInvoice = () => {
       month: formData.month,
       year: formData.year,
     }).toString();
-
+  
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-
+  
     fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          return response.json().then((errorData) => {
+            throw new Error(errorData.message || "Network response was not ok");
+          });
         }
         return response.json();
       })
       .then((data) => {
+        // Check if 'data' is valid
+        if (!data) {
+          throw new Error("No data returned from API.");
+        }
+  
+        // Safely handle 'applications' by checking if 'data' and 'data.applications' are defined
+        let applications = [];
+        if (data && Array.isArray(data.applications)) {
+          applications = data.applications; // If 'applications' exists and is an array, use it
+        } else {
+          applications = []; // Default to an empty array if 'applications' doesn't exist or isn't an array
+        }
+  
+        // Prepare other data
+        const serviceNames = data?.serviceNames || [];
+        const customer = data?.customer || [];
+        const companyInfo = data?.companyInfo || [];
         const {
-          serviceNames = [],
-          customer = [],
-          applications = [],
-          companyInfo = [],
-          finalArr: {
-            costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
-            serviceInfo = [],
-          } = {},
-        } = data;
-
+          costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
+          serviceInfo = [],
+        } = data?.finalArr || {};
+  
         generatePdf(
           serviceNames,
           customer,
-          applications,
+          applications, 
           companyInfo,
           overallServiceAmount,
           cgst,
@@ -88,7 +101,7 @@ const CreateInvoice = () => {
           serviceInfo,
           sgst
         );
-
+  
         Swal.fire({
           title: "Success!",
           text: "PDF generated successfully.",
@@ -108,6 +121,11 @@ const CreateInvoice = () => {
         setIsLoading(false); // Hide loader
       });
   };
+  
+  
+  
+  
+
 
   function getTotalAdditionalFeeByService(serviceId, applications) {
     let totalFee = 0;
@@ -504,36 +522,43 @@ const CreateInvoice = () => {
       let totalCost = 0;
       const appAdditionalFee = getTotalAdditionalFee(app.id, applications);
       overAllAdditionalFee += appAdditionalFee;
+  
       const applicationRow = [
-        index + 1,
-        app.application_id,
-        app.employee_id,
-        app.created_at.split("T")[0],
-        app.name,
-        ...serviceNames.map(service => {
-          if (!service || !service.id) {
-            return "NIL";
-          }
-          const serviceExists = app.statusDetails.some(
-            detail => detail.serviceId === service.id.toString()
-          );
-          if (serviceExists) {
-            const colPrice = parseInt(getServicePriceById(service.id, serviceInfo)) || 0;
-            service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice;
-            totalCost += colPrice;
-            return colPrice;
-          } else {
-            return "NIL";
-          }
-        }),
-        parseInt(appAdditionalFee) || 0,
+          index + 1,
+          app.application_id,
+          app.employee_id,
+          // Safely check if app.created_at is defined before calling .split()
+          app.created_at ? app.created_at.split("T")[0] : "N/A",  // Use "N/A" or some default value
+          app.name,
+          ...serviceNames.map(service => {
+              if (!service || !service.id) {
+                  return "NIL";
+              }
+              const serviceExists = app.statusDetails.some(
+                  detail => detail.serviceId === service.id.toString()
+              );
+              if (serviceExists) {
+                  const colPrice = parseInt(getServicePriceById(service.id, serviceInfo)) || 0;
+                  service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice;
+                  totalCost += colPrice;
+                  return colPrice;
+              } else {
+                  return "NIL";
+              }
+          }),
+          parseInt(appAdditionalFee) || 0,
       ];
+  
       const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
       const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
       applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
-      applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");
+      
+      // Safely check if app.report_date exists before calling .split()
+      applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");  // Use empty string if report_date is not defined
+  
       return applicationRow;
-    });
+  });
+  
 
     const tableWidthNew = doc.internal.pageSize.width * 0.8; // Set the width to 60% of page width
     const leftMarginNew = (doc.internal.pageSize.width - tableWidthNew) / 2; // Center the table horizontally

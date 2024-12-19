@@ -32,6 +32,7 @@ import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
 import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
 import DashboardProvider from './CustomerDashboard/DashboardContext';
+import LoginPage from './Dashboard/LoginPage';
 
 const App = () => {
   return (
@@ -67,6 +68,7 @@ const App = () => {
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
                                       <Route path='/background-form' element={<BackgroundForm />} />
                                       <Route path='/digital_form' element={<DigitalAddressVerification />} />
+                                      <Route path='/loginpage' element={<LoginPage />} />
                                     </Routes>
                                   </Router>
                                 </DashboardProvider>

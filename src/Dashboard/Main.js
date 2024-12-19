@@ -5,7 +5,7 @@ import TatDelayTable from './TatDelayTable'
 import LoginHistoryTable from './LoginHistoryTable'
 import Notification from './Notification'
 import active_client from '../Images/Icon_Order.png'
-const Main = () => {
+const Main2 = () => {
     return (
         <>
             <div className="p-4">
@@ -71,4 +71,4 @@ const Main = () => {
         </>)
 }
 
-export default Main
+export default Main2

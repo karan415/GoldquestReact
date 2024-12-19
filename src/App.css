@@ -169,3 +169,12 @@ div#popup-2 {
   .select-search-container {
     width: 100% !important;
 }
+@media(min-width:1600px){
+  .logo_img{
+    height: 200px !important;
+  }
+  .signinbtn{
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+  }
+}

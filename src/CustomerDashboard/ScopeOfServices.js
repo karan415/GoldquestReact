@@ -69,6 +69,7 @@ const ScopeOfServices = () => {
     useEffect(() => {
         fetchServicePackage();
     }, [fetchServicePackage]);
+    console.log('services', services)
 
     return (
         <>
@@ -105,7 +106,9 @@ const ScopeOfServices = () => {
                                         <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{index + 1}</td>
                                         <td className="py-2 px-4 border-b border-r-2 whitespace-nowrap">{item.serviceTitle}</td>
                                         <td className="py-2 px-4 border-b border-r-2 text-center whitespace-nowrap">{item.price} RS</td>
-                                        <td className="py-2 px-4 border-b whitespace-nowrap text-center">{item.packages?.['2']}</td>
+                                        <td className="py-2 px-4 border-b whitespace-nowrap text-center">
+                                            {Object.values(item.packages).join(', ')}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -116,6 +119,7 @@ const ScopeOfServices = () => {
                                 </tr>
                             </tbody>
                         )}
+
                     </table>
                 )}
             </div>

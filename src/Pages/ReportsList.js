@@ -95,8 +95,10 @@ const ReportsList = () => {
     fetch(`https://goldquestreact.onrender.com/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
-          // Handle HTTP errors
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          // Get the error message from the response body if available
+          return response.json().then((errorData) => {
+            throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+          });
         }
         return response.json();
       })
@@ -124,10 +126,11 @@ const ReportsList = () => {
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
+        // Show the error message from the API or a generic message if not available
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Failed to fetch data. Please try again later.",
+          text: error.message || "Failed to fetch data. Please try again later.",
           footer: `<small>${error.message}</small>`,
         });
       })
@@ -135,6 +138,7 @@ const ReportsList = () => {
         setLoading(false); // Stop loading after fetch completes
       });
   }, []);
+
 
   // Pagination logic
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -353,7 +357,7 @@ const ReportsList = () => {
                             <tr >
                               {Object.entries(report.services).map(([service, status], i) => (
 
-                                <td className="py-2 px-4">{status}</td> 
+                                <td className="py-2 px-4">{status}</td>
 
                               ))}
                             </tr>

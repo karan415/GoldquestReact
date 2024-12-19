@@ -25,7 +25,9 @@ const GenerateReportList = () => {
       method: "GET",
       redirect: "follow",
     };
-    setLoading(true)
+    
+    setLoading(true);
+    
     fetch(
       `https://octopus-app-www87.ondigitalocean.app/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
@@ -46,29 +48,37 @@ const GenerateReportList = () => {
                 applicationId: app.application_id,
                 applicantName: app.application_name,
                 status: app.overall_status,
-                services: app.services_status, 
+                services: app.services_status,
               }))
             )
           );
           setData(flattenedReports); // Set the flattened data
         } else {
           setData([]); // Handle cases with no data
+          // Show error message from API if available
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: result.message || "No data available.",
+          });
         }
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
+        // Show the API response message or a fallback error message
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Failed to fetch data. Please try again later.",
+          text: error.message || "Failed to fetch data. Please try again later.",
           footer: `<small>${error.message}</small>`,
         });
       })
       .finally(() => {
         setLoading(false); // Stop loading after fetch completes
       });
-    
+  
   }, []);
+  
 
   // Pagination logic
   const totalPages = Math.ceil(data.length / itemsPerPage);

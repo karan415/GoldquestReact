@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import logo from '../Images/Logo.png'
+import bg_img from '../Images/login-bg-img.png';
 
 const LoginForm = () => {
   const [input, setInput] = useState({
@@ -14,12 +16,11 @@ const LoginForm = () => {
   const [showOtpModal, setShowOtpModal] = useState(false); // State for OTP modal
   const [isOtpLoading, setIsOtpLoading] = useState(false); // State for OTP button
   const API_URL = useApi();
-  const [message] = useState('');
   const [error, setError] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
 
-  
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setInput((prevInput) => ({
@@ -38,20 +39,20 @@ const LoginForm = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const errors = validateError();
-  
+
     if (Object.keys(errors).length === 0) {
       setLoading(true); // Show loading indicator
-  
+
       const loginData = {
         username: input.username,
         password: input.password,
       };
-  
+
       axios
         .post(`${API_URL}/admin/login`, loginData)
         .then((response) => {
           const result = response.data;
-  
+
           // Handle the API message
           if (!result.status) {
             Swal.fire({
@@ -87,7 +88,7 @@ const LoginForm = () => {
       setError(errors); // Display validation errors
     }
   };
-  
+
 
   const handleLoginSuccess = (result) => {
     const adminData = result.adminData;
@@ -146,71 +147,108 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="bg-transparent md:p-8 p-3 rounded-md shadow-md w-full max-w-sm">
-      <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-            Username
-          </label>
-          <input
-            className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="username"
-            type="text"
-            placeholder="Username"
-            onChange={handleChange}
-            value={input.username}
-            name="username"
-          />
-          {error.username && <p className="text-red-500">{error.username}</p>}
-        </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-            Password
-          </label>
-          <input
-            className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-            id="password"
-            type="password"
-            name="password"
-            value={input.password}
-            onChange={handleChange}
-            placeholder="******************"
-          />
-          {error.password && <p className="text-red-500">{error.password}</p>}
-        </div>
-        <button
-          className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          type="submit"
-          disabled={loading}
-        >
-          {loading ? 'Signing In...' : 'Sign In'}
-        </button>
-      </form>
-
-      {/* OTP Modal */}
-      {showOtpModal && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-xl font-bold mb-4">Enter OTP</h3>
-            <input
-              className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-              type="text"
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+    <>
+     
+      <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center">
+        <div className="md:flex  bg-white w-10/12 m-auto rounded-md">
+          <div className="md:w-7/12 w-full">
+            <img
+              src={bg_img}
+              alt="Logo"
+              className=""
             />
-            <button
-              className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={handleOtpSubmit}
-              disabled={isOtpLoading}
-            >
-              {isOtpLoading ? 'Verifying...' : 'Verify'}
-            </button>
+          </div>
+
+          <div className="md:w-5/12 flex  justify-center  md:mt-0 mt-10">
+            <div className="w-full max-w-xl md:p-8">
+
+              <div className="flex flex-col items-center mb-3 md:mb-12">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="mb-4 lg:h-[150px] md:h-[160px] w-6/12 m-auto md:w-auto logo_img"
+                />
+                <h2 className="text-[18px] text-center font-bold text-[#24245a]">
+                  Building Trust - One Check At A Time
+                </h2>
+              </div>
+
+              <h2 className="text-xl font-semibold text-center text-[#24245a] mb-6 md:text-2xl">
+                Login Account
+              </h2>
+              <form className="mt-8" onSubmit={handleSubmit}>
+                <div className="mb-6">
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    className="w-full px-4 py-4 border-l-[6px] bg-[#f9f9f9] border-[#24245a] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="username"
+                    onChange={handleChange}
+                    value={input.username}
+                    name="username"
+                  />
+                  {error.username && <p className="text-red-500">{error.username}</p>}
+                </div>
+                <div className="mb-10">
+                  <input
+                    className="w-full px-4 py-4 border-l-[6px]  bg-[#f9f9f9]  border-[#24245a] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="password"
+                    type="password"
+                    name="password"
+                    value={input.password}
+                    onChange={handleChange}
+                    placeholder="Password"
+                  />
+                  {error.password && <p className="text-red-500">{error.password}</p>}
+                </div>
+                <div className="flex items-center justify-between mb-6">
+                  <label className="flex items-center">
+                    <input type="checkbox" className="mr-2 " />
+                    Remember me
+                  </label>
+                  <div onClick={goToForgotPassword}>
+                    <a href="#" className="text-red-500 hover:underline text-sm">
+                      Forgot Password?
+                    </a>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-[#24245a] hover:bg-[#24245a] xxl:py-5 text-white font-semibold py-2 md:py-3 px-4 signinbtn rounded-full text-xl tracking-widest"
+                  disabled={loading}
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </button>
+                {showOtpModal && (
+                  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-6 w-96">
+                      <h3 className="text-xl font-bold mb-4">Enter OTP</h3>
+                      <input
+                        className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text"
+                        placeholder="Enter 6-digit OTP"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                      />
+                      <button
+                        className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={handleOtpSubmit}
+                        disabled={isOtpLoading}
+                      >
+                        {isOtpLoading ? 'Verifying...' : 'Verify'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+              </form>
+            </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+
+    </>
+
   );
 };
 

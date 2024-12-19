@@ -326,7 +326,7 @@ export const ClientEditForm = () => {
                 <div className="flex justify-center">
                     <button
                         type="submit"
-                        className="bg-green-200 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
+                        className="bg-green-600 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
                     >
                         {loading ? 'Processing...' : 'Update'}
                     </button>

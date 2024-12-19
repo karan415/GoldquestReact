@@ -24,12 +24,12 @@ const ClientManagement = () => {
 
   const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
   const [dataLoading, setDataLoading] = useState(false); // New state for loading indicator
+  const [custom_bgv, setCustom_Bgv] = useState(0);
 
   const [, setInsertId] = useState();
   const [files, setFiles] = useState([]);
   const API_URL = useApi();
   const { clientData, setClientData } = useClient();
-  console.log('clientData.length', clientData)
   useEffect(() => {
 
     if (!clientData) {
@@ -60,6 +60,12 @@ const ClientManagement = () => {
     custom_address: "",
     username: "",
   });
+
+  const handleCheckBoxChange = (event) => {
+    const isChecked = event.target.checked;
+    setCustom_Bgv(isChecked ? 1 : 0);
+   
+  };
 
   const handleFileChange = (fileName, e) => {
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
@@ -210,6 +216,7 @@ const ClientManagement = () => {
         branches: branchForms,
         emails: emails,
         clientData: clientData,
+        custom_bgv:custom_bgv,
         send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files
       };
 
@@ -723,6 +730,17 @@ const ClientManagement = () => {
                 >
                   Add More Branches
                 </button>
+              </div>
+              <div className="mb-4 flex gap-2 justify-start items-center">
+                <input
+                  type="checkbox"
+                  name="custom_bgv"
+                  id="custom_bgv"
+                  className="border rounded-md p-2 mt-0 outline-none"
+                  onChange={handleCheckBoxChange}
+                  value={custom_bgv}
+                />
+                <label className="text-gray-500" htmlFor="agr_upload">Custom BGV</label>
               </div>
               <ClientManagementData />
               <div className="flex justify-center">
