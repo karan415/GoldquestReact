@@ -244,7 +244,6 @@ const CandidateList = () => {
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Email Id</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Packages</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Docs</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
                                         <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
@@ -324,7 +323,6 @@ const CandidateList = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.package}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
                                                 <button className="bg-green-600 text-white p-2 rounded-md hover:bg-green-200">{report.doc}</button>
                                             </td>

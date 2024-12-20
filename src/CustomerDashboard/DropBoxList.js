@@ -257,7 +257,6 @@ const DropBoxList = () => {
                                         <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Sub Client</th>
                                         <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Documents</th>
                                         <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Services</th>
-                                        <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Packages</th>
                                         <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Spoc Case Name</th>
                                         <th className="py-3 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Employee Id</th>
                                         <th className="py-3 text-center text-white px-4 border-b whitespace-nowrap uppercase">Action</th>
@@ -359,7 +358,6 @@ const DropBoxList = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.package || 'no data available'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{report.single_point_of_contact || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>
                                             <td className="py-3 px-4 border-b whitespace-nowrap border-r">
