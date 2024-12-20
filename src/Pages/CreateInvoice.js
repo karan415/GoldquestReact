@@ -40,10 +40,10 @@ const CreateInvoice = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true); // Show loader
-  
+
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
@@ -51,12 +51,12 @@ const CreateInvoice = () => {
       month: formData.month,
       year: formData.year,
     }).toString();
-  
+
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-  
+
     fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
@@ -71,16 +71,15 @@ const CreateInvoice = () => {
         if (!data) {
           throw new Error("No data returned from API.");
         }
-  
-        // Safely handle 'applications' by checking if 'data' and 'data.applications' are defined
+
+      
         let applications = [];
         if (data && Array.isArray(data.applications)) {
-          applications = data.applications; // If 'applications' exists and is an array, use it
+          applications = data.applications; 
         } else {
-          applications = []; // Default to an empty array if 'applications' doesn't exist or isn't an array
+          applications = []; 
         }
-  
-        // Prepare other data
+
         const serviceNames = data?.serviceNames || [];
         const customer = data?.customer || [];
         const companyInfo = data?.companyInfo || [];
@@ -88,26 +87,37 @@ const CreateInvoice = () => {
           costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
           serviceInfo = [],
         } = data?.finalArr || {};
-  
-        generatePdf(
-          serviceNames,
-          customer,
-          applications, 
-          companyInfo,
-          overallServiceAmount,
-          cgst,
-          totalTax,
-          totalAmount,
-          serviceInfo,
-          sgst
-        );
-  
-        Swal.fire({
-          title: "Success!",
-          text: "PDF generated successfully.",
-          icon: "success",
-          confirmButtonText: "Ok",
-        });
+
+        if (applications.length > 0) {
+          generatePdf(
+            serviceNames,
+            customer,
+            applications,
+            companyInfo,
+            overallServiceAmount,
+            cgst,
+            totalTax,
+            totalAmount,
+            serviceInfo,
+            sgst
+          );
+
+          Swal.fire({
+            title: "Success!",
+            text: "PDF generated successfully.",
+            icon: "success",
+            confirmButtonText: "Ok",
+          });
+        } else {
+          Swal.fire({
+            title: 'No Application Found',
+            text: 'There are no applications available to generate an invoice.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+          });
+          
+         }
+
       })
       .catch((error) => {
         Swal.fire({
@@ -121,27 +131,36 @@ const CreateInvoice = () => {
         setIsLoading(false); // Hide loader
       });
   };
-  
-  
-  
-  
+
+
+
+
 
 
   function getTotalAdditionalFeeByService(serviceId, applications) {
     let totalFee = 0;
-    for (const appGroup of applications) {
-      for (const application of appGroup.applications) {
 
-        for (const statusDetail of application.statusDetails) {
-          if (statusDetail.serviceId === String(serviceId)) {
-            const fee = parseFloat(statusDetail.additionalFee) || 0;
-            totalFee += fee;
+    // Check if applications is an array and contains elements
+    if (Array.isArray(applications) && applications.length > 0) {
+      for (const appGroup of applications) {
+        if (appGroup.applications && Array.isArray(appGroup.applications)) {
+          for (const application of appGroup.applications) {
+            if (application.statusDetails && Array.isArray(application.statusDetails)) {
+              for (const statusDetail of application.statusDetails) {
+                if (statusDetail.serviceId === String(serviceId)) {
+                  const fee = parseFloat(statusDetail.additionalFee) || 0;
+                  totalFee += fee;
+                }
+              }
+            }
           }
         }
       }
     }
+
     return totalFee;
   }
+
   function calculatePercentage(amount, percentage) {
     return (amount * percentage) / 100;
   }
@@ -518,12 +537,13 @@ const CreateInvoice = () => {
     const headers3 = [
       ["SL NO", "Application ID", "Employee ID", "Case Received", "Candidate Full Name", ...serviceCodes, "Add Fee", "CGST", "SGST", "Pricing", "Report Date"]
     ];
-    const rows3 = applications[0].applications.map((app, index) => {
-      let totalCost = 0;
-      const appAdditionalFee = getTotalAdditionalFee(app.id, applications);
-      overAllAdditionalFee += appAdditionalFee;
-  
-      const applicationRow = [
+    const rows3 = (applications[0]?.applications?.length > 0)
+      ? applications[0].applications.map((app, index) => {
+        let totalCost = 0;
+        const appAdditionalFee = getTotalAdditionalFee(app.id, applications);
+        overAllAdditionalFee += appAdditionalFee;
+
+        const applicationRow = [
           index + 1,
           app.application_id,
           app.employee_id,
@@ -531,34 +551,35 @@ const CreateInvoice = () => {
           app.created_at ? app.created_at.split("T")[0] : "N/A",  // Use "N/A" or some default value
           app.name,
           ...serviceNames.map(service => {
-              if (!service || !service.id) {
-                  return "NIL";
-              }
-              const serviceExists = app.statusDetails.some(
-                  detail => detail.serviceId === service.id.toString()
-              );
-              if (serviceExists) {
-                  const colPrice = parseInt(getServicePriceById(service.id, serviceInfo)) || 0;
-                  service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice;
-                  totalCost += colPrice;
-                  return colPrice;
-              } else {
-                  return "NIL";
-              }
+            if (!service || !service.id) {
+              return "NIL";
+            }
+            const serviceExists = app.statusDetails.some(
+              detail => detail.serviceId === service.id.toString()
+            );
+            if (serviceExists) {
+              const colPrice = parseInt(getServicePriceById(service.id, serviceInfo)) || 0;
+              service.serviceIndexPrice = (service.serviceIndexPrice || 0) + colPrice;
+              totalCost += colPrice;
+              return colPrice;
+            } else {
+              return "NIL";
+            }
           }),
           parseInt(appAdditionalFee) || 0,
-      ];
-  
-      const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
-      const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
-      applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
-      
-      // Safely check if app.report_date exists before calling .split()
-      applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");  // Use empty string if report_date is not defined
-  
-      return applicationRow;
-  });
-  
+        ];
+
+        const appCGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(cgst.percentage)) || 0;
+        const appSGSTTax = calculatePercentage(parseInt(totalCost + appAdditionalFee), parseInt(sgst.percentage)) || 0;
+        applicationRow.push(appCGSTTax, appSGSTTax, parseInt(totalCost + appCGSTTax + appSGSTTax + appAdditionalFee) || 0);
+
+        // Safely check if app.report_date exists before calling .split()
+        applicationRow.push(app.report_date ? app.report_date.split("T")[0] : "");  // Use empty string if report_date is not defined
+
+        return applicationRow;
+      })
+      : [];
+
 
     const tableWidthNew = doc.internal.pageSize.width * 0.8; // Set the width to 60% of page width
     const leftMarginNew = (doc.internal.pageSize.width - tableWidthNew) / 2; // Center the table horizontally

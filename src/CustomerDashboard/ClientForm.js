@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
+import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader';
 const ClientForm = () => {
@@ -24,7 +25,10 @@ const ClientForm = () => {
         package: [],
         client_application_id: '',
     });
-
+    const navigate = useNavigate();
+    const GotoBulk = () => {
+        navigate('/ClientBulkUpload')
+    }
     const { selectedDropBox, fetchClientDrop, services, uniquePackages, loading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
@@ -424,9 +428,9 @@ const ClientForm = () => {
 
                     </div>
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={formLoading}>
-                        { (isEditClient ? "Edit" : "Send")}
+                        {(isEditClient ? "Edit" : "Send")}
                     </button>
-                    <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
+                    <button type="button"  className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
                 </form>
             )}
 

@@ -26,6 +26,7 @@ const ClientMasterTrackerList = () => {
         setLoading(true);
         setError(null);
         let queryParams;
+    
         if (selected) {
             queryParams = new URLSearchParams({
                 admin_id: admin_id || '',
@@ -38,7 +39,7 @@ const ClientMasterTrackerList = () => {
                 _token: storedToken || ''
             }).toString();
         }
-
+    
         fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -46,28 +47,28 @@ const ClientMasterTrackerList = () => {
             }
         })
             .then(response => {
-                const result = response.json();
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                if (!response.ok) {
-                    return response.text().then(text => {
-
-                        throw new Error(text);
-                    });
-                }
-                return result;
+                return response.json().then(result => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+                    return result;
+                });
             })
             .then((result) => {
                 setData(result.data.customers || []);
                 setOptions(result.data.filterOptions);
             })
             .catch((error) => {
-                setError('Failed to load data');
+                // Show the API error message or a default message
+                setError(error.message || 'Failed to load data');
             })
             .finally(() => setLoading(false));
     }, [setData, API_URL]);
+    
 
     const handleBranches = useCallback((id) => {
         setBranchLoading(true);

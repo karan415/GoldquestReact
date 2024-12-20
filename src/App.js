@@ -33,6 +33,7 @@ import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
 import DashboardProvider from './CustomerDashboard/DashboardContext';
 import LoginPage from './Dashboard/LoginPage';
+import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 
 const App = () => {
   return (
@@ -44,7 +45,6 @@ const App = () => {
               <ClientEditProvider>
                 <BranchEditProvider>
                   <LoaderProvider>
-
                     <ClientProvider>
                       <DropBoxProvider>
                         <PackageProvider>
@@ -64,6 +64,7 @@ const App = () => {
                                       <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
                                       <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
                                       <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
+                                      <Route path='/ClientBulkUpload' element={<ClientBulkUpload />} />
                                       <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
                                       <Route path='/background-form' element={<BackgroundForm />} />
