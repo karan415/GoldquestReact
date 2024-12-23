@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState,useRef, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
 import 'reactjs-popup/dist/index.css';
@@ -84,6 +84,21 @@ const ClientManagementList = () => {
       console.error('Fetch error:', error);
     }
   };
+    const tableRef = useRef(null); // Ref for the table container
+  
+    // Function to reset expanded rows
+    const handleOutsideClick = (event) => {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setOpenAccordionId({}); // Reset to empty object instead of null
+      }
+    };
+    
+  
+    useEffect(() => {
+      document.addEventListener("mousedown", handleOutsideClick);
+      return () => {
+        document.removeEventListener("mousedown", handleOutsideClick);
+      };}, []);
 
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -519,7 +534,7 @@ const ClientManagementList = () => {
 
           </div>
         ) : currentItems.length > 0 ? (
-          <table className="min-w-full mb-4">
+          <table className="min-w-full mb-4" ref={tableRef}>
             <thead>
               <tr className='bg-green-500'>
                 <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>

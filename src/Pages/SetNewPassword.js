@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PiDotsThreeFill } from "react-icons/pi";
 import { FaArrowLeft } from 'react-icons/fa6';
 import { Link, useLocation } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const SetNewPassword = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -38,12 +38,25 @@ const SetNewPassword = () => {
         };
 
         fetch("https://octopus-app-www87.ondigitalocean.app/admin/forgot-password", requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json(); // Parse the JSON response
-            })
+        .then((response) => {
+            const result = response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
+              if (!response.ok) {
+                  return response.text().then(text => {
+                      const errorData = JSON.parse(text);
+                      Swal.fire(
+                          'Error!',
+                          `An error occurred: ${errorData.message}`,
+                          'error'
+                      );
+                      throw new Error(text);
+                  });
+              }
+              return result;
+          })
             .then((result) => {
                 console.log(result);
                 setMessage(result.message);

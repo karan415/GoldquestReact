@@ -105,7 +105,7 @@ const HolidayManagementForm = () => {
                     setError({});
                     Swal.fire({
                         title: "Success",
-                        text: isEdit ? 'Service updated successfully' : 'Service added successfully',
+                        text: isEdit ? 'Holiday updated successfully' : 'Holiday added successfully',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
@@ -133,7 +133,7 @@ const HolidayManagementForm = () => {
     return (
         <form onSubmit={handleSubmit} className='border rounded-md p-5'>
             <div className="mb-4">
-                <label htmlFor="holidaytitle" className="block">Service Name</label>
+                <label htmlFor="holidaytitle" className="block"> Name</label>
                 <input
                     type="text"
                     name="name"
@@ -144,14 +144,14 @@ const HolidayManagementForm = () => {
                 {error.name && <p className='text-red-500'>{error.name}</p>}
             </div>
             <div className="mb-4">
-                <label htmlFor="HoliDayDate" className="block">Service Description</label>
+                <label htmlFor="HoliDayDate" className="block">Date</label>
                 <input
                     type="date"
                     name="date"
                     id="HoliDayDate"
                     value={dateInput.date}
                     onChange={handleChange}
-                    className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
+                    className='outline-none pe-4 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
                 {error.date && <p className='text-red-500'>{error.date}</p>}
             </div>
             <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit' disabled={loading}>

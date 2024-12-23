@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useData } from './DataContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
@@ -58,6 +58,24 @@ const ExternalLoginData = () => {
       })
       .finally(() => setBranchLoading(false));
   }, [API_URL]);
+
+
+  const tableRef = useRef(null); // Ref for the table container
+
+  // Function to reset expanded rows
+  const handleOutsideClick = (event) => {
+    if (tableRef.current && !tableRef.current.contains(event.target)) {
+      setOpenAccordionId({}); // Reset to empty object instead of null
+    }
+  };
+
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
 
 
@@ -185,7 +203,6 @@ const ExternalLoginData = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
             </div>
           </form>
         </div>
@@ -197,7 +214,7 @@ const ExternalLoginData = () => {
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
           </div>
         ) : currentItems.length > 0 ? (
-          <table className="min-w-full mb-4">
+          <table className="min-w-full mb-4" ref={tableRef}>
             <thead>
               <tr className="bg-green-500 border">
                 <th className="py-3 px-4 border-b border-l text-white text-left uppercase">SL</th>
@@ -212,7 +229,6 @@ const ExternalLoginData = () => {
                 <React.Fragment key={item.main_id}>
                   <tr className="border">
                     <td className="py-3 px-4 border-b border-l text-left whitespace-nowrap capitalize">
-                      <input type="checkbox" className="me-2" />
                       {index + 1 + indexOfFirstItem}
                     </td>
                     <td className="py-3 px-4 border-b border-l text-center whitespace-nowrap capitalize">

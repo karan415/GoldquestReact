@@ -15,7 +15,6 @@ const GenerateReport = () => {
     const [referenceId, setReferenceId] = useState("");
     const [adminNames, setAdminNames] = useState([]);
 
-
     const [formData, setFormData] = useState({
         updated_json: {
             month_year: '',
@@ -77,7 +76,6 @@ const GenerateReport = () => {
     });
 
 
-
     const [selectedStatuses, setSelectedStatuses] = useState([]);
 
 
@@ -125,48 +123,68 @@ const GenerateReport = () => {
     }, [applicationId]); // Only rerun when applicationId changes
 
     const fetchServicesJson = useCallback(async (servicesList) => {
-        const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
-        const token = localStorage.getItem("_token");
-
-        // Return an empty array if servicesList is empty or undefined
-        if (!servicesList || servicesList.length === 0) {
-            console.warn("Services list is empty.");
-            return [];
-        }
+        setLoading(true);
 
         try {
+            const adminData = JSON.parse(localStorage.getItem("admin"));
+            const adminId = adminData?.id;
+            const token = localStorage.getItem("_token");
+
+            // Return an empty array if servicesList is empty or undefined
+            if (!servicesList || servicesList.length === 0) {
+                console.warn("Services list is empty.");
+                setLoading(false);
+                return [];
+            }
+
+            // Ensure necessary parameters are available
+            if (!adminId || !token) {
+                console.error("Missing admin ID or token.");
+                setLoading(false);
+                return [];
+            }
+
             const requestOptions = {
                 method: "GET",
                 redirect: "follow",
             };
 
             // Construct the URL with service IDs
-            const url = `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = new URL(
+                "https://octopus-app-www87.ondigitalocean.app/client-master-tracker/services-annexure-data"
+            );
+            url.searchParams.append("service_ids", servicesList);
+            url.searchParams.append("application_id", applicationId);
+            url.searchParams.append("admin_id", adminId);
+            url.searchParams.append("_token", token);
 
             const response = await fetch(url, requestOptions);
 
-            if (response.ok) {
-                const result = await response.json();
-
-                // Update the token if a new one is provided
-                const newToken = result.token || result._token || "";
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-
-                // Filter out null or invalid items
-                const filteredResults = result.results.filter((item) => item != null);
-                setServicesDataInfo(filteredResults);
-                return filteredResults;
-            } else {
+            if (!response.ok) {
                 console.error("Failed to fetch service data:", response.statusText);
+                setLoading(false);
                 return [];
             }
+
+            const result = await response.json();
+
+            // Update the token if a new one is provided
+            const newToken = result.token || result._token || "";
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
+
+            // Filter out null or invalid items
+            const filteredResults = result.results?.filter((item) => item != null) || [];
+            setServicesDataInfo(filteredResults);
+            return filteredResults;
         } catch (error) {
             console.error("Error fetching service data:", error);
             return [];
+        } finally {
+            setLoading(false); // Ensure loading is stopped in all cases
         }
-    }, []); // No dependencies are required in this version
+    }, [applicationId, setServicesDataInfo]); // Add dependencies where necessary
 
 
     useEffect(() => {
@@ -174,24 +192,17 @@ const GenerateReport = () => {
     }, [fetchServicesJson]);
 
     function parseAndConvertDate(inputDate) {
-        // Try parsing with the built-in Date constructor
         let parsedDate = new Date(inputDate);
 
-        // If the input date is invalid, attempt to handle common date formats manually
         if (isNaN(parsedDate)) {
-            // Handle potential formats manually
             if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(inputDate)) {
-                // ISO 8601 format (e.g., "2024-11-19T14:54:38.000Z")
                 parsedDate = new Date(inputDate);
             } else if (/\d{4}\/\d{2}\/\d{2}/.test(inputDate)) {
-                // "YYYY/MM/DD" format (e.g., "2023/12/11")
                 parsedDate = new Date(inputDate.replace(/\//g, '-'));
             } else if (/\d{2}-\d{2}-\d{4}/.test(inputDate)) {
-                // "DD-MM-YYYY" format (e.g., "13-11-2024")
                 const [day, month, year] = inputDate.split('-');
                 parsedDate = new Date(`${year}-${month}-${day}`);
             } else {
-                // If it's still not valid, return fallback date
                 parsedDate = 'N/A';
             }
         }
@@ -344,12 +355,14 @@ const GenerateReport = () => {
 
                     }
                 }));
-                setLoading(false);
             })
             .catch((error) => {
+                console.log('error', error)
+            }).finally(() => {
                 setLoading(false);
-            });
-    }, [applicationId, branchid, fetchServicesJson, setServicesForm, setServicesData, setBranchInfo, setCustomerInfo, setFormData, setLoading]);
+
+            })
+    }, [applicationId, branchid, fetchServicesJson, setServicesForm, setServicesData, setBranchInfo, setCustomerInfo, setFormData]);
 
     useEffect(() => {
         fetchApplicationData();
@@ -381,6 +394,7 @@ const GenerateReport = () => {
         });
     };
     const fetchAdminList = useCallback(() => {
+        setLoading(true);
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
 
@@ -411,7 +425,6 @@ const GenerateReport = () => {
                 return result;
             })
             .then((result) => {
-                setLoading(false);
 
                 if (result.status) {
                     // Map through the `client_spocs` array to get the names
@@ -503,137 +516,6 @@ const GenerateReport = () => {
     };
 
 
-
-
-    const handleSubmit = useCallback(async (e) => {
-        e.preventDefault();
-        setLoading(true); // Start loading at the beginning
-
-        try {
-            const adminData = JSON.parse(localStorage.getItem("admin"));
-            const token = localStorage.getItem("_token");
-
-            const submissionData = servicesDataInfo
-                .map((serviceData, index) => {
-                    if (serviceData.serviceStatus) {
-                        const formJson = serviceData.reportFormJson?.json
-                            ? JSON.parse(serviceData.reportFormJson.json)
-                            : null;
-                        if (!formJson) {
-                            console.warn(`Invalid formJson for service at index ${index}`);
-                            return null;
-                        }
-
-                        const annexure = {};
-
-                        formJson.rows.forEach((row) => {
-                            row.inputs.forEach((input) => {
-                                let fieldName = input.name;
-                                const fieldValue =
-                                    serviceData.annexureData && serviceData.annexureData.hasOwnProperty(fieldName)
-                                        ? serviceData.annexureData[fieldName]
-                                        : "";
-
-                                const tableKey = formJson.db_table;
-
-                                if (fieldName.endsWith("[]")) {
-                                    fieldName = fieldName.slice(0, -2);
-                                }
-
-                                if (fieldName.startsWith("annexure.")) {
-                                    const [, category, key] = fieldName.split(".");
-                                    if (!annexure[category]) annexure[category] = {};
-                                    annexure[category][key] = fieldValue;
-                                } else {
-                                    if (!annexure[tableKey]) annexure[tableKey] = {};
-                                    annexure[tableKey][fieldName] = fieldValue;
-                                }
-                            });
-                        });
-
-                        const category = formJson.db_table;
-                        const status = selectedStatuses?.[index] || "";
-                        if (annexure[category]) {
-                            annexure[category].status = status;
-                        }
-
-                        return { annexure };
-                    }
-                    return null;
-                })
-                .filter((service) => service !== null);
-
-            if (!submissionData.length) {
-                console.warn("No valid submission data found.");
-                Swal.fire("Error", "No data to submit. Please check your inputs.", "error");
-                setLoading(false);
-                return;
-            }
-
-            const rawFilteredSubmissionData = submissionData.filter((item) => item !== null);
-            const filteredSubmissionData = rawFilteredSubmissionData.reduce(
-                (acc, item) => ({ ...acc, ...item.annexure }),
-                {}
-            );
-            Object.keys(filteredSubmissionData).forEach((key) => {
-                const data = filteredSubmissionData[key];
-                Object.keys(data).forEach((subKey) => {
-                    if (subKey.startsWith("Annexure")) {
-                        delete data[subKey];
-                    }
-                });
-            });
-
-            const raw = JSON.stringify({
-                admin_id: adminData?.id,
-                _token: token,
-                branch_id: branchid,
-                customer_id: branchInfo.customer_id,
-                application_id: applicationId,
-                ...formData,
-                annexure: filteredSubmissionData,
-                send_mail: Object.keys(files).length === 0 ? 1 : 0,
-            });
-
-            const requestOptions = {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: raw,
-            };
-            const response = await fetch(
-                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`,
-                requestOptions
-            );
-            
-            const result = await response.json();
-            const newToken = result._token || result.token;
-            if (newToken) {
-                localStorage.setItem("_token", newToken);
-            }
-            
-            if (!response.ok) {
-                // Use the error message from the response, if available
-                const errorMessage = result.message || `HTTP error! Status: ${response.status}`;
-                throw new Error(errorMessage);
-            }
-            
-            // Display success message from API response, if available, otherwise use a default message
-            const successMessage = result.success_message || "Application updated successfully.";
-            Swal.fire("Success!", successMessage, "success");
-            
-            uploadCustomerLogo(result.email_status);
-            } catch (error) {
-                console.error("Error during submission:", error);
-                // Show the error message from the API response, if available, or use a generic error message
-                Swal.fire("Error", error.message || "Failed to submit the application. Please try again.", "error");
-            } finally {
-                setLoading(false); // Ensure loading is stopped after processing completes
-            }
-            
-    }, [servicesDataInfo, branchid, branchInfo, applicationId, formData, selectedStatuses, files]);
-
-
-
     const handleInputChange = useCallback((e, index) => {
         const { name, value } = e.target;
 
@@ -665,7 +547,7 @@ const GenerateReport = () => {
             case "tel":
                 return (
                     <>
-                        <label>{input.label}</label>
+                        <label className='text-sm md:text-lg'>{input.label}</label>
                         <input
                             type={input.type}
                             name={input.name}
@@ -723,7 +605,7 @@ const GenerateReport = () => {
                                     {annexureImagesSplitArr.map((image, index) => (
                                         <img
                                             key={index}
-                                            src={`https://octopus-app-www87.ondigitalocean.app/${image.trim()}`}
+                                            src={`${image.trim()}`}
                                             alt={`${index + 1}`}
                                             className="cursor-pointer h-[200px] mt-0 object-contain"
 
@@ -754,21 +636,167 @@ const GenerateReport = () => {
     };
 
 
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault();
+        setLoading(true); // Start loading spinner
+        const fileCount = Object.keys(files).length;
+
+        try {
+            const adminData = JSON.parse(localStorage.getItem("admin"));
+            const token = localStorage.getItem("_token");
+
+            // Prepare submission data
+            const submissionData = servicesDataInfo
+                .map((serviceData, index) => {
+                    if (serviceData.serviceStatus) {
+                        const formJson = serviceData.reportFormJson?.json
+                            ? JSON.parse(serviceData.reportFormJson.json)
+                            : null;
+
+                        if (!formJson) {
+                            console.warn(`Invalid formJson for service at index ${index}`);
+                            return null;
+                        }
+
+                        const annexure = {};
+
+                        // Map through rows and inputs to build annexure
+                        formJson.rows.forEach((row) => {
+                            row.inputs.forEach((input) => {
+                                let fieldName = input.name;
+                                const fieldValue =
+                                    serviceData.annexureData?.[fieldName] || "";
+
+                                if (fieldName.endsWith("[]")) {
+                                    fieldName = fieldName.slice(0, -2); // Remove array indicator
+                                }
+
+                                if (fieldName.startsWith("annexure.")) {
+                                    const [, category, key] = fieldName.split(".");
+                                    if (!annexure[category]) annexure[category] = {};
+                                    annexure[category][key] = fieldValue;
+                                } else {
+                                    const tableKey = formJson.db_table || "default_table";
+                                    if (!annexure[tableKey]) annexure[tableKey] = {};
+                                    annexure[tableKey][fieldName] = fieldValue;
+                                }
+                            });
+                        });
+
+                        const category = formJson.db_table || "default_category";
+                        const status = selectedStatuses?.[index] || "";
+                        if (annexure[category]) {
+                            annexure[category].status = status;
+                        }
+
+                        return { annexure };
+                    }
+                    return null;
+                })
+                .filter(Boolean); // Remove null values
+
+            if (!submissionData.length) {
+                console.warn("No valid submission data found.");
+                Swal.fire("Error", "No data to submit. Please check your inputs.", "error");
+                setLoading(false);
+                return;
+            }
+
+            // Flatten and clean up annexure data
+            const filteredSubmissionData = submissionData.reduce(
+                (acc, item) => ({ ...acc, ...item.annexure }),
+                {}
+            );
+
+            Object.keys(filteredSubmissionData).forEach((key) => {
+                const data = filteredSubmissionData[key];
+                Object.keys(data).forEach((subKey) => {
+                    if (subKey.startsWith("Annexure")) {
+                        delete data[subKey]; // Remove unnecessary keys
+                    }
+                });
+            });
+
+            // Prepare request payload
+            const raw = JSON.stringify({
+                admin_id: adminData?.id || "",
+                _token: token || "",
+                branch_id: branchid,
+                customer_id: branchInfo?.customer_id || "",
+                application_id: applicationId,
+                ...formData,
+                annexure: filteredSubmissionData,
+                send_mail: fileCount === 0 ? 1 : 0,
+            });
+
+            const requestOptions = {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: raw,
+            };
+
+            // API Request
+            const response = await fetch(
+                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`,
+                requestOptions
+            );
+
+            const result = await response.json();
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
+
+            if (!response.ok) {
+                const errorMessage = result.message || `HTTP error! Status: ${response.status}`;
+                throw new Error(errorMessage);
+            }
+
+            // Success Handling
+            const successMessage = result.success_message || "Application updated successfully.";
+            if (fileCount == 0) {
+                Swal.fire({
+                    title: "Success",
+                    text: successMessage,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                });
+            }
+            if (fileCount > 0) {
+                await uploadCustomerLogo(result.email_status);
+                Swal.fire({
+                    title: "Success",
+                    text: successMessage,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                });
+            }
+
+        } catch (error) {
+            console.error("Error during submission:", error);
+            Swal.fire("Error", error.message || "Failed to submit the application. Please try again.", "error");
+        } finally {
+            setLoading(false); // Ensure loading spinner stops
+        }
+    }, [servicesDataInfo, branchid, branchInfo, applicationId, formData, selectedStatuses, files]);
+
+
+
     return (
         <div className="border rounded-md">
             <h2 className="text-2xl font-bold py-3 text-center px-3 ">GENERATE REPORT</h2>
-            <div className="bg-white p-12">
+            <div className="bg-white md:p-12">
                 {loading ? (
-                      <div className='flex justify-center items-center py-6 '>
-                      <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
-          
+                    <div className='flex justify-center items-center py-6 '>
+                        <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
                     </div>
                 ) : (
-                    <form className="space-y-4" autoComplete="off" onSubmit={handleSubmit}>
+                    <form className="space-y-4 p-2" autoComplete="off" onSubmit={handleSubmit}>
 
-                        <div className=" form start space-y-4 py-[30px] px-[51px] bg-white rounded-md" id="client-spoc">
+                        <div className=" form start space-y-4 py-[30px] md:px-[51px] bg-white rounded-md" id="client-spoc">
                             <div>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="month_year">Month - Year*</label>
                                         <input
@@ -794,7 +822,7 @@ const GenerateReport = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="organization_name">Name of the Client Organization</label>
                                         <input
@@ -822,7 +850,7 @@ const GenerateReport = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="employee_id">Applicant Employee ID</label>
                                         <input
@@ -850,7 +878,7 @@ const GenerateReport = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="applicant_name">Name of the Applicant*</label>
                                         <input
@@ -878,7 +906,7 @@ const GenerateReport = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="contact_number2">Contact Number 2:</label>
                                         <input
@@ -906,7 +934,7 @@ const GenerateReport = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid md:grid-cols-3 grid-cols-1 gap-3">
                                     <div className="mb-4">
                                         <label htmlFor="gender">Gender</label>
                                         <select
@@ -954,7 +982,7 @@ const GenerateReport = () => {
                             </div>
 
                             <div className='permanentaddress '>
-                                <div className='my-4 text-center text-2xl font-semibold'>Permanent Address</div>
+                                <div className='my-4 text-center md:text-2xl text-lg font-semibold'>Permanent Address</div>
                                 <div className="form-group border p-3 rounded-md">
                                     <div className="mb-4">
                                         <label htmlFor="full_address">Full Address:</label>
@@ -970,7 +998,7 @@ const GenerateReport = () => {
 
                                     <div className="form-group">
                                         <h3 className="font-semibold text-xl mb-3">Period of Stay</h3>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                             <div className="mb-4">
                                                 <label htmlFor="permanent_sender_name">From:</label>
                                                 <input
@@ -996,7 +1024,7 @@ const GenerateReport = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                             <div className="mb-4">
                                                 <label htmlFor="permanent_landmark">Landmark:</label>
                                                 <input
@@ -1037,7 +1065,7 @@ const GenerateReport = () => {
                                 </div>
                             </div>
                             <div className='currentaddress '>
-                                <div className='my-4 text-center text-2xl font-semibold'>Current Address </div>
+                                <div className='my-4 text-center md:text-2xl text-lg font-semibold'>Current Address </div>
                                 <div className="form-group border rounded-md p-3">
                                     <div className="mb-4">
                                         <label htmlFor="full_address">Full Address:</label>
@@ -1088,8 +1116,8 @@ const GenerateReport = () => {
                         </div>
 
                         <div>
-                            <div className="SelectedServices border p-5 rounded-md mx-12">
-                                <h1 className="text-center text-2xl">SELECTED SERVICES</h1>
+                            <div className="SelectedServices border md:p-5 p-2  rounded-md md:mx-12">
+                                <h1 className="text-center md:text-2xl text-lg">SELECTED SERVICES</h1>
                                 {servicesDataInfo && servicesDataInfo.map((serviceData, index) => {
                                     if (serviceData.serviceStatus) {
                                         const formJson = JSON.parse(serviceData.reportFormJson.json);
@@ -1134,7 +1162,7 @@ const GenerateReport = () => {
                                 })}
                             </div>
 
-                            <div className="container mx-auto mt-5 px-8">
+                            <div className="container mx-auto mt-5 md:px-8">
                                 {servicesDataInfo && servicesDataInfo.map((serviceData, index) => {
                                     if (serviceData.serviceStatus) {
                                         const formJson = JSON.parse(serviceData.reportFormJson.json);
@@ -1156,12 +1184,12 @@ const GenerateReport = () => {
                                         }
 
                                         return (
-                                            <div key={index} className="mb-6">
+                                            <div key={index} className="mb-6 overflow-x-auto">
                                                 {/* Only render form if the selected status is not "nil" */}
                                                 {selectedStatuses[index] !== "nil" && (
                                                     <>
                                                         {dbTableHeading && (
-                                                            <h3 className="text-center text-2xl font-semibold mb-4">{dbTableHeading}</h3>
+                                                            <h3 className="text-center text-lg md:text-2xl font-semibold mb-4">{dbTableHeading}</h3>
                                                         )}
                                                         <table className="w-full table-auto border-collapse border border-gray-300">
                                                             <thead>
@@ -1169,8 +1197,7 @@ const GenerateReport = () => {
                                                                     {formJson.headers.map((header, idx) => (
                                                                         <th
                                                                             key={idx}
-                                                                            className={`py-2 px-4 border p-4 text-lg border-gray-300 ${idx === 0 ? "text-left" : idx === 1 ? "text-right" : ""
-                                                                                }`}
+                                                                            className={`py-2 px-4 border p-4 text-lg border-gray-300 ${idx === 0 ? "text-left" : idx === 1 ? "text-right" : ""}`}
                                                                         >
                                                                             {header}
                                                                         </th>
@@ -1188,7 +1215,7 @@ const GenerateReport = () => {
                                                                                 // If there's only one input, span the full width of the table
                                                                                 <td
                                                                                     colSpan={formJson.headers.length}
-                                                                                    className="py-2 px-4 border border-gray-300"
+                                                                                    className="py-2 px-4 border border-gray-300 w-full"
                                                                                 >
                                                                                     {renderInput(
                                                                                         index,
@@ -1198,11 +1225,11 @@ const GenerateReport = () => {
                                                                                     )}
                                                                                 </td>
                                                                             ) : (
-                                                                                // Else, distribute inputs across columns equally
+                                                                                // Else, distribute inputs across columns equally with responsive classes
                                                                                 row.inputs.map((input, i) => (
                                                                                     <td
                                                                                         key={i}
-                                                                                        className="py-2 px-4 border border-gray-300 w-1/2"
+                                                                                        className="py-2 px-4 border border-gray-300 w-full md:w-1/2"
                                                                                     >
                                                                                         {renderInput(
                                                                                             index,
@@ -1222,12 +1249,13 @@ const GenerateReport = () => {
                                                     </>
                                                 )}
                                             </div>
-
                                         );
                                     }
                                     return null;
                                 })}
                             </div>
+
+
 
 
 
@@ -1359,7 +1387,7 @@ const GenerateReport = () => {
                                 </select>
 
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4">
                                     <label className='capitalize text-gray-500' htmlFor="report date">report date</label>
                                     <input
@@ -1386,7 +1414,7 @@ const GenerateReport = () => {
 
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4">
                                     <label className='capitalize text-gray-500' htmlFor="report status">Report Type:</label>
                                     <select name="updated_json.insuffDetails.report_type" id=""
@@ -1416,7 +1444,7 @@ const GenerateReport = () => {
 
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4">
                                     <label className='capitalize text-gray-500  ' htmlFor="Is verified by quality team">Is verified by quality team</label>
                                     <select name="updated_json.insuffDetails.is_verify"
@@ -1442,7 +1470,7 @@ const GenerateReport = () => {
 
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4">
                                     <label className='capitalize text-gray-500 ' htmlFor="Address">Address</label>
                                     <select name="updated_json.insuffDetails.insuff_address"
@@ -1466,7 +1494,7 @@ const GenerateReport = () => {
 
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4 ">
                                     <label className='capitalize text-gray-500 ' htmlFor="education">education</label>
                                     <select name="updated_json.insuffDetails.education" id=""
@@ -1492,7 +1520,7 @@ const GenerateReport = () => {
 
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                                 <div className="mb-4 ">
                                     <label className='capitalize text-gray-500 block' htmlFor="Employment Spoc:">Employment Spoc:</label>
                                     <select name="updated_json.insuffDetails.emp_spoc" id=""

@@ -122,14 +122,9 @@ const ServiceEditForm = () => {
         setClientData(prev => ({ ...prev, services: prefilledData }));
        
 
-        
-
 
     }, [serviceData, clientData.services,clientData, priceData,]);
    
-
-
-
 
     const handleCheckboxChange = (serviceId) => {
 

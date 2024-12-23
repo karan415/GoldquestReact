@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import Swal from 'sweetalert2';
 const UpdatePasswordForm = () => {
     const [newPass, setNewPass] = useState({
         newpass: '',
@@ -51,17 +51,25 @@ const UpdatePasswordForm = () => {
             };
 
             fetch("https://octopus-app-www87.ondigitalocean.app/admin/update-password", requestOptions)
-                .then((response) => {
-                    const result = response.json();
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return result; // Use JSON response
-                })
+            .then(response => {
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
+                  if (!response.ok) {
+                      return response.text().then(text => {
+                          const errorData = JSON.parse(text);
+                          Swal.fire(
+                              'Error!',
+                              `An error occurred: ${errorData.message}`,
+                              'error'
+                          );
+                          throw new Error(text);
+                      });
+                  }
+                  return result;
+              })
                 .then((result) => {
                     console.log(result);
                     // Clear form and errors on successful update

@@ -231,7 +231,6 @@ const DropBoxList = () => {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                                 </div>
                             </form>
                         </div>
@@ -270,7 +269,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.photo ? (
                                                     <img
-                                                        src={`https://webstepdev.com/demo/goldquestnode/${report.photo}`}
+                                                        src={`${report.photo}`}
                                                         alt={report.photo}
                                                         className='h-20 w-20 rounded-full'
                                                     />
@@ -288,7 +287,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.attach_documents ? (
                                                     <img
-                                                        src={`https://webstepdev.com/demo/goldquestnode/${report.attach_documents}`}
+                                                        src={`${report.attach_documents}`}
                                                         alt={report.attach_documents}
                                                         className='h-20 w-20 rounded-full'
                                                     />

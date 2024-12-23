@@ -6,7 +6,7 @@ import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
-
+import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const AdminChekin = () => {
 
@@ -23,6 +23,7 @@ const AdminChekin = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [servicesLoading, setServicesLoading] = useState(false);
+    const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
     const API_URL = useApi();
     const { branch_id } = useContext(BranchContextExel);
     const queryParams = new URLSearchParams(location.search);
@@ -44,8 +45,24 @@ const AdminChekin = () => {
         };
 
         fetch(`${API_URL}/client-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
-            .then((response) => response.json())
-            .then((result) => {
+            .then(response => {
+                return response.json().then(result => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    if (!response.ok) {
+                        // Show SweetAlert if response is not OK
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+                    return result;
+                });
+            }).then((result) => {
                 setLoading(false);
                 setData(result.data.customers || []);
                 setOptions(result.data.filterOptions);
@@ -72,8 +89,24 @@ const AdminChekin = () => {
         };
 
         fetch(`${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`, requestOptions)
-            .then((response) => response.json())
-            .then((result) => {
+            .then(response => {
+                return response.json().then(result => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    if (!response.ok) {
+                        // Show SweetAlert if response is not OK
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+                    return result;
+                });
+            }).then((result) => {
                 const newToken = result.token || result._token || '';
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
@@ -105,6 +138,22 @@ const AdminChekin = () => {
             item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     });
+    const tableRef = useRef(null); // Ref for the table container
+
+    // Function to reset expanded rows
+    const handleOutsideClick = (event) => {
+        if (tableRef.current && !tableRef.current.contains(event.target)) {
+            setExpandedRow({}); // Reset to empty object instead of null
+        }
+    };
+
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, []);
 
 
 
@@ -179,46 +228,56 @@ const AdminChekin = () => {
         ));
     };
 
-    const fetchServicesData = async (applicationId, servicesList) => {
+    const fetchServicesData = async (applicationId, servicesList, reportDownload = 0) => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
 
-        // Return an empty array if servicesList is empty or undefined
         if (!servicesList || servicesList.length === 0) {
             return [];
         }
 
         try {
-            // Construct the URL with service IDs
-            const url = `${API_URL}/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `${API_URL}/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${reportDownload}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
-            // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
 
             if (response.ok) {
                 const result = await response.json();
 
-                // Update the token if a new one is provided
                 const newToken = result.token || result._token || "";
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
 
-                // Filter out null or invalid items
                 const filteredResults = result.results.filter((item) => item != null);
                 return filteredResults;
             } else {
-                console.error("Failed to fetch service data:", response.statusText);
+                const result = await response.json(); // Get the result to show the error message from API
+                const errorMessage = result.message || response.statusText || 'Failed to fetch service data';
+                console.error(errorMessage);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                });
+
                 return [];
             }
         } catch (error) {
             console.error("Error fetching service data:", error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Failed to fetch service data',
+            });
+
             return [];
         }
     };
 
     function addFooter(doc) {
-        // Define the height of the footer and its position
         const footerHeight = 15; // Footer height
         const pageHeight = doc.internal.pageSize.height; // Get the total page height
         const footerYPosition = pageHeight - footerHeight + 10; // Position footer closer to the bottom
@@ -316,10 +375,9 @@ const AdminChekin = () => {
 
         return { width, height };
     }
-    const generatePDF = async (index) => {
+    const generatePDF = async (index, reportDownloadFlag) => {
         const applicationInfo = data[index];
-
-        const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
+        const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services, reportDownloadFlag);
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         let yPosition = 10;
@@ -755,7 +813,7 @@ const AdminChekin = () => {
                     yPosition += 10;
                 } else {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-                        const imageUrlFull = `https://goldquestreact.onrender.com/${imageUrl.trim()}`;
+                        const imageUrlFull = `${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);
 
                         if (!(await checkImageExists(imageUrlFull))) continue;
@@ -927,6 +985,8 @@ const AdminChekin = () => {
 
         addFooter(doc);
 
+
+
         doc.save('report.pdf');
     };
 
@@ -1007,11 +1067,7 @@ const AdminChekin = () => {
 
     }
 
-    const Loader = () => (
-        <div className="flex w-full justify-center items-center h-20">
-            <div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin"></div>
-        </div>
-    );
+
     return (
         <div className="bg-[#c1dff2]">
             <div className="space-y-4 py-[30px] px-[51px] bg-white">
@@ -1060,7 +1116,6 @@ const AdminChekin = () => {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                                 </div>
                             </form>
                         </div>
@@ -1068,7 +1123,7 @@ const AdminChekin = () => {
                     </div>
 
                 </div>
-                <div className="overflow-x-auto py-6 px-4 shadow-md rounded-md bg-white">
+                <div ref={tableRef} className="overflow-x-auto py-6 px-4 shadow-md rounded-md bg-white">
                     {loading ? (
                         <div className='flex justify-center items-center py-6 h-full'>
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -1102,7 +1157,7 @@ const AdminChekin = () => {
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                <img src={`${API_URL}/${data.photo}`} alt={data.name} className="w-10 h-10 rounded-full" />
+                                                <img src={`${data.photo}`} alt={data.name} className="w-10 h-10 rounded-full" />
                                             </td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
@@ -1116,12 +1171,36 @@ const AdminChekin = () => {
                                                 </button>
                                             </td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+
                                                 <button
-                                                    onClick={() => generatePDF(index)}
-                                                    className="bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500"
+                                                    onClick={() => {
+                                                        const reportDownloadFlag = (data.overall_status === 'completed' && data.is_verify === 'yes') ? 1 : 0;
+                                                        console.log(`reportDownloadFlag: ${reportDownloadFlag}, index: ${index}`);
+
+                                                        // Set the button to loading
+                                                        setLoadingStates(prevState => ({
+                                                            ...prevState,
+                                                            [index]: true
+                                                        }));
+
+                                                        // Directly call generatePDF
+                                                        generatePDF(index, reportDownloadFlag).finally(() => {
+                                                            // After PDF generation, reset loading state for the clicked button
+                                                            setLoadingStates(prevState => ({
+                                                                ...prevState,
+                                                                [index]: false
+                                                            }));
+                                                        });
+                                                    }}
+                                                    className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== 'completed' || data.is_verify !== 'yes' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    disabled={data.overall_status !== 'completed' || data.is_verify !== 'yes' || loadingStates[index]} // Disable button while loading
                                                 >
-                                                    {data.overall_status || 'WIP'}
+                                                    {loadingStates[index] ? 'Please Wait, Your PDF is Generating' : data.overall_status === 'completed' ? (
+                                                        data.is_verify === 'yes' ? 'DOWNLOAD' : data.is_verify === 'no' ? 'QC PENDING' : 'NOT READY'
+                                                    ) : data.overall_status === 'wip' ? 'WIP' : data.overall_status === 'insuff' ? 'INSUFF' : 'NOT READY'}
                                                 </button>
+
+
                                             </td>
                                             <td className="border px-4 py-2">
                                                 <button
@@ -1136,8 +1215,8 @@ const AdminChekin = () => {
                                         {servicesLoading[index] ? (
                                             <tr>
                                                 <td colSpan={12} className="py-4 text-center text-gray-500">
-                                                    <div className='flex justify-center'>  
-                                                       <PulseLoader color="#36D7B7" loading={servicesLoading[index]} size={15} aria-label="Loading Spinner" />
+                                                    <div className='flex justify-center'>
+                                                        <PulseLoader color="#36D7B7" loading={servicesLoading[index]} size={15} aria-label="Loading Spinner" />
                                                     </div>
                                                 </td>
                                             </tr>

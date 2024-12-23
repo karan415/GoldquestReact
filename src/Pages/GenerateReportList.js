@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import "react-datepicker/dist/react-datepicker.css";
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
@@ -9,7 +9,7 @@ const GenerateReportList = () => {
   const [itemsPerPage, setItemPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState([]);
-
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toggleRow = (index) => {
     setExpandedRows((prev) => ({
@@ -25,20 +25,32 @@ const GenerateReportList = () => {
       method: "GET",
       redirect: "follow",
     };
-    
+
     setLoading(true);
-    
+
     fetch(
       `https://octopus-app-www87.ondigitalocean.app/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
-      .then((response) => {
+    .then((response) => {
+      const result = response.json();
+      const newToken = result._token || result.token;
+      if (newToken) {
+          localStorage.setItem("_token", newToken);
+      }
         if (!response.ok) {
-          // Handle HTTP errors
-          throw new Error(`HTTP error! Status: ${response.status}`);
+            return response.text().then(text => {
+                const errorData = JSON.parse(text);
+                Swal.fire(
+                    'Error!',
+                    `An error occurred: ${errorData.message}`,
+                    'error'
+                );
+                throw new Error(text);
+            });
         }
-        return response.json();
-      })
+        return result;
+    })
       .then((result) => {
         if (result.status) {
           // Flatten the data to match the table structure
@@ -76,15 +88,21 @@ const GenerateReportList = () => {
       .finally(() => {
         setLoading(false); // Stop loading after fetch completes
       });
-  
+
   }, []);
-  
+  const filteredItems = data.filter(item => {
+    return (
+      item.applicationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.applicantName?.toLowerCase()?.includes(searchTerm.toLowerCase()) 
+    );
+  });
+
 
   // Pagination logic
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -150,20 +168,78 @@ const GenerateReportList = () => {
       )
     ));
   };
+  const handleSelectChange = (e) => {
 
+    const selectedValue = e.target.value;
+    setItemPerPage(selectedValue)
+}
+
+
+const tableRef = useRef(null); // Ref for the table container
+
+  // Function to reset expanded rows
+  const handleOutsideClick = (event) => {
+    if (tableRef.current && !tableRef.current.contains(event.target)) {
+      setExpandedRows({}); // Reset to empty object instead of null
+    }
+  };
+  
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
 
   return (
     <>
-      <div className="overflow-x-auto py-4 px-4">
-       
-      <h2 className='text-center text-3xl font-bold py-4'>Report Generate DATA</h2>
+      <div className=" py-4 px-4">
+
+        <h2 className='text-center text-3xl font-bold py-4'>Report Generate DATA</h2>
+        <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+          <div className="col">
+            <form action="">
+              <div className="flex gap-5 justify-between">
+                <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                  <option value="10">10 Rows</option>
+                  <option value="20">20 Rows</option>
+                  <option value="50">50 Rows</option>
+                  <option value="100">100 Rows</option>
+                  <option value="200">200 Rows</option>
+                  <option value="300">300 Rows</option>
+                  <option value="400">400 Rows</option>
+                  <option value="500">500 Rows</option>
+                </select>
+                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
+
+              </div>
+            </form>
+          </div>
+          <div className="col md:flex justify-end ">
+            <form action="">
+              <div className="flex md:items-stretch items-center  gap-3">
+                <input
+                  type="search"
+                  className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                  placeholder='Search by Client Code, Company Name, or Client Spoc'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
         {loading ? (
           <div className='flex justify-center items-center py-6 h-full'>
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
 
           </div>
         ) : currentItems.length > 0 ? (
+          <div className='overflow-x-auto' ref={tableRef}>
           <table className="min-w-full">
             <thead>
               <tr className="bg-green-500">
@@ -178,11 +254,11 @@ const GenerateReportList = () => {
               {data.map((report, index) => (
                 <React.Fragment key={index}>
                   <tr>
-                    <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{index+1}</td>
+                    <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{index + 1}</td>
                     <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.applicationId}</td>
                     <td className="py-2 px-4 text-left border-b border-r whitespace-nowrap">{report.applicantName}</td>
                     <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.status}</td>
-                   
+
                     <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">
                       <button
                         className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-blue-200"
@@ -209,7 +285,7 @@ const GenerateReportList = () => {
                             <tr >
                               {Object.entries(report.services).map(([service, status], i) => (
 
-                                <td className="py-2 px-4">{status}</td> 
+                                <td className="py-2 px-4">{status}</td>
 
                               ))}
                             </tr>
@@ -224,6 +300,7 @@ const GenerateReportList = () => {
               ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="text-center py-6">
             <p>No Data Found</p>

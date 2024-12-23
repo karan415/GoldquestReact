@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
-import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
-
+import Swal from 'sweetalert2';
+import PulseLoader from 'react-spinners/PulseLoader';
 const Acknowledgement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemPerPage] = useState(10);
@@ -21,7 +21,7 @@ const Acknowledgement = () => {
       .then(data => {
         const newToken = data._token || data.token;
         if (newToken) {
-            localStorage.setItem("_token", newToken);
+          localStorage.setItem("_token", newToken);
         }
         if (data.status && data.customers && Array.isArray(data.customers.data)) {
           setEmailsData(data.customers.data);
@@ -42,7 +42,7 @@ const Acknowledgement = () => {
     const raw = JSON.stringify({
       "admin_id": admin_id,
       "_token": storedToken,
-      "customer_id": id    
+      "customer_id": id
     });
 
     const requestOptions = {
@@ -53,11 +53,28 @@ const Acknowledgement = () => {
     };
 
     fetch("https://octopus-app-www87.ondigitalocean.app/acknowledgement/send-notification", requestOptions)
-      .then((response) => response.text())
-      .then((result) => {
+      .then(response => {
+        const result = response.json();
         const newToken = result._token || result.token;
         if (newToken) {
-            localStorage.setItem("_token", newToken);
+          localStorage.setItem("_token", newToken);
+        }
+        if (!response.ok) {
+          return response.text().then(text => {
+            const errorData = JSON.parse(text);
+            Swal.fire(
+              'Error!',
+              `An error occurred: ${errorData.message}`,
+              'error'
+            );
+            throw new Error(text);
+          });
+        }
+        return result;
+      }).then((result) => {
+        const newToken = result._token || result.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
         }
         fetchEmails();
       })
@@ -78,64 +95,64 @@ const Acknowledgement = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-};
+  };
 
-const showPrev = () => {
+  const showPrev = () => {
     if (currentPage > 1) handlePageChange(currentPage - 1);
-};
+  };
 
-const showNext = () => {
+  const showNext = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
-};
+  };
 
 
-const renderPagination = () => {
+  const renderPagination = () => {
     const pageNumbers = [];
 
     if (totalPages <= 5) {
-        for (let i = 1; i <= totalPages; i++) {
-            pageNumbers.push(i);
-        }
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
     } else {
-        pageNumbers.push(1);
+      pageNumbers.push(1);
 
-        if (currentPage > 3) {
-            pageNumbers.push('...');
+      if (currentPage > 3) {
+        pageNumbers.push('...');
+      }
+
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        if (!pageNumbers.includes(i)) {
+          pageNumbers.push(i);
         }
+      }
 
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            if (!pageNumbers.includes(i)) {
-                pageNumbers.push(i);
-            }
-        }
-
-        if (currentPage < totalPages - 2) {
-            pageNumbers.push('...');
-        }
+      if (currentPage < totalPages - 2) {
+        pageNumbers.push('...');
+      }
 
 
-        if (!pageNumbers.includes(totalPages)) {
-            pageNumbers.push(totalPages);
-        }
+      if (!pageNumbers.includes(totalPages)) {
+        pageNumbers.push(totalPages);
+      }
     }
 
 
 
     return pageNumbers.map((number, index) => (
-        number === '...' ? (
-            <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
-        ) : (
-            <button
-                type="button"
-                key={`page-${number}`} // Unique key for page buttons
-                onClick={() => handlePageChange(number)}
-                className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
-            >
-                {number}
-            </button>
-        )
+      number === '...' ? (
+        <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+      ) : (
+        <button
+          type="button"
+          key={`page-${number}`} // Unique key for page buttons
+          onClick={() => handlePageChange(number)}
+          className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+        >
+          {number}
+        </button>
+      )
     ));
-};
+  };
 
   useEffect(() => {
     fetchEmails();
@@ -156,15 +173,15 @@ const renderPagination = () => {
         <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
-            <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-            <option value="10">10 Rows</option>
-            <option value="20">20 Rows</option>
-            <option value="50">50 Rows</option>
-            <option value="200">200 Rows</option>
-            <option value="300">300 Rows</option>
-            <option value="400">400 Rows</option>
-            <option value="500">500 Rows</option>
-          </select>
+              <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                <option value="10">10 Rows</option>
+                <option value="20">20 Rows</option>
+                <option value="50">50 Rows</option>
+                <option value="200">200 Rows</option>
+                <option value="300">300 Rows</option>
+                <option value="400">400 Rows</option>
+                <option value="500">500 Rows</option>
+              </select>
               <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
             </div>
           </form>
@@ -179,34 +196,33 @@ const renderPagination = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
             </div>
           </form>
         </div>
 
       </div>
       <div className="overflow-x-auto py-6 px-4">
-      {loading ? (
+        {loading ? (
           <div className='flex justify-center items-center py-6 h-full'>
-              <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
-    
+            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
           </div>
-      ) : currentItems.length > 0 ? (
-          <table className="min-w-full mb-4">
+        ) : currentItems.length > 0 ? (
+          <table className="min-w-full md:mb-4">
             <thead>
               <tr className='bg-green-500'>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">SL</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Client Code</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Company Name</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Application Count</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Case RCVD Date</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-lg">Send Notification</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">SL</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Client Code</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Company Name</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Application Count</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Case RCVD Date</th>
+                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Send Notification</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.map((email, index) => (
                 <tr key={index}>
-                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{index + 1}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 border-l-2 whitespace-nowrap">{index + 1}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
@@ -224,34 +240,35 @@ const renderPagination = () => {
               ))}
             </tbody>
           </table>
-      ) : (
+        ) : (
           <div className="text-center py-6">
-              <p>No Data Found</p>
+            <p>No Data Found</p>
           </div>
-      )}
-    
+        )}
+
+
+      </div>
       <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-      <button
+        <button
           onClick={showPrev}
           disabled={currentPage === 1}
           className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Previous page"
-      >
+        >
           <MdArrowBackIosNew />
-      </button>
-      <div className="flex items-center">
+        </button>
+        <div className="flex items-center">
           {renderPagination()}
-      </div>
-      <button
+        </div>
+        <button
           onClick={showNext}
           disabled={currentPage === totalPages}
           className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Next page"
-      >
+        >
           <MdArrowForwardIos />
-      </button>
-    </div>
-    </div>
+        </button>
+      </div>
     </div>
   );
 };

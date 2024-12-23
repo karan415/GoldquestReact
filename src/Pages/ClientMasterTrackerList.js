@@ -1,9 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext,useRef, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext'
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import Swal from 'sweetalert2'; // Make sure to import SweetAlert2
 
 const ClientMasterTrackerList = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -20,7 +21,7 @@ const ClientMasterTrackerList = () => {
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [branchLoading, setBranchLoading] = useState(false);
 
-    const fetchClient = useCallback((selected) => {
+ const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
@@ -53,6 +54,12 @@ const ClientMasterTrackerList = () => {
                         localStorage.setItem("_token", newToken);
                     }
                     if (!response.ok) {
+                        // Show SweetAlert if response is not OK
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
                         throw new Error(result.message || 'Failed to load data');
                     }
                     return result;
@@ -63,12 +70,13 @@ const ClientMasterTrackerList = () => {
                 setOptions(result.data.filterOptions);
             })
             .catch((error) => {
-                // Show the API error message or a default message
+                // Show the API error message or a default message in case of error
                 setError(error.message || 'Failed to load data');
             })
             .finally(() => setLoading(false));
     }, [setData, API_URL]);
     
+
 
     const handleBranches = useCallback((id) => {
         setBranchLoading(true);
@@ -84,21 +92,24 @@ const ClientMasterTrackerList = () => {
                 'Content-Type': 'application/json'
             }
         })
-            .then(response => {
-                const result = response.json();
+        .then(response => {
+            return response.json().then(result => {
                 const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
                 if (!response.ok) {
-                    return response.text().then(text => {
-                        const errorData = JSON.parse(text);
-
-                        throw new Error(text);
+                    // Show SweetAlert if response is not OK
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Failed to load data',
                     });
+                    throw new Error(result.message || 'Failed to load data');
                 }
                 return result;
-            })
+            });
+        })
             .then((data) => {
                 const newToken = data._token || data.token;
                 if (newToken) {
@@ -112,6 +123,23 @@ const ClientMasterTrackerList = () => {
             })
             .finally(() => setBranchLoading(false));
     }, []);
+
+     const tableRef = useRef(null); // Ref for the table container
+    
+      // Function to reset expanded rows
+      const handleOutsideClick = (event) => {
+        if (tableRef.current && !tableRef.current.contains(event.target)) {
+            setExpandedClient({}); // Reset to empty object instead of null
+        }
+      };
+      
+    
+      useEffect(() => {
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+          document.removeEventListener("mousedown", handleOutsideClick);
+        };
+      }, []);
 
     useEffect(() => {
         fetchClient();
@@ -264,7 +292,6 @@ const ClientMasterTrackerList = () => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                             </div>
                         </form>
                     </div>
@@ -278,7 +305,7 @@ const ClientMasterTrackerList = () => {
 
                         </div>
                     ) : currentItems.length > 0 ? (
-                        <table className="min-w-full mb-4">
+                        <table className="min-w-full mb-4" ref={tableRef}>
                             <thead>
                                 <tr className='bg-green-500'>
                                     <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
@@ -362,29 +389,29 @@ const ClientMasterTrackerList = () => {
                         </div>
                     )}
 
-                  
+
                 </div>
                 <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                        <button
-                            onClick={showPrev}
-                            disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Previous page"
-                        >
-                            <MdArrowBackIosNew />
-                        </button>
-                        <div className="flex items-center">
-                            {renderPagination()}
-                        </div>
-                        <button
-                            onClick={showNext}
-                            disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Next page"
-                        >
-                            <MdArrowForwardIos />
-                        </button>
+                    <button
+                        onClick={showPrev}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Previous page"
+                    >
+                        <MdArrowBackIosNew />
+                    </button>
+                    <div className="flex items-center">
+                        {renderPagination()}
                     </div>
+                    <button
+                        onClick={showNext}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Next page"
+                    >
+                        <MdArrowForwardIos />
+                    </button>
+                </div>
             </div>
         </>
     );

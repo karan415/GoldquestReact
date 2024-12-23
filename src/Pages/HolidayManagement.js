@@ -151,7 +151,7 @@ const HolidayManagement = () => {
                         fetchData();
                         Swal.fire(
                             'Deleted!',
-                            'Your service has been deleted.',
+                            'Your Holiday has been deleted.',
                             'success'
                         );
                     })
@@ -164,12 +164,13 @@ const HolidayManagement = () => {
 
     return (
         <>
+            <h2 className='text-center md:text-3xl md:mt-14 mt-3 font-bold'> Holiday Management </h2>
 
-            <div className="grid grid-cols-2 gap-7 p-8">
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-7 p-8">
                 <div className=''>
                     <HolidayManagementForm />
                 </div>
-                <div className='overflow-auto'>
+                <div className=' border p-3 rounded-md'>
 
 
 
@@ -200,7 +201,6 @@ const HolidayManagement = () => {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                                 </div>
                             </form>
                         </div>
@@ -228,7 +228,7 @@ const HolidayManagement = () => {
                                             <tr key={item.index}>
                                                 <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
                                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
-                                                <td className="py-2 px-4 border-r border-b ">{new Date(item.date).toLocaleString()}</td>
+                                                <td className="py-2 px-4 border-r border-b ">{new Date(item.date).toLocaleDateString()}</td>
 
                                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
                                                     <button
@@ -263,27 +263,28 @@ const HolidayManagement = () => {
                             </div>
                         )}
 
-                        <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                            <button
-                                onClick={showPrev}
-                                disabled={currentPage === 1}
-                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                aria-label="Previous page"
-                            >
-                                <MdArrowBackIosNew />
-                            </button>
-                            <div className="flex items-center">
-                                {renderPagination()}
-                            </div>
-                            <button
-                                onClick={showNext}
-                                disabled={currentPage === totalPages}
-                                className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                aria-label="Next page"
-                            >
-                                <MdArrowForwardIos />
-                            </button>
+
+                    </div>
+                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                        <button
+                            onClick={showPrev}
+                            disabled={currentPage === 1}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Previous page"
+                        >
+                            <MdArrowBackIosNew />
+                        </button>
+                        <div className="flex items-center">
+                            {renderPagination()}
                         </div>
+                        <button
+                            onClick={showNext}
+                            disabled={currentPage === totalPages}
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            aria-label="Next page"
+                        >
+                            <MdArrowForwardIos />
+                        </button>
                     </div>
                 </div>
 

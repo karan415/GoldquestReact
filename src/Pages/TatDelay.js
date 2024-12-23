@@ -1,17 +1,14 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
-
+import Swal from 'sweetalert2';
+import PulseLoader from 'react-spinners/PulseLoader';
 const TatDelay = () => {
-  const [selectedStatus, setSelectedStatus] = useState('');
-
   const [itemsPerPage, setItemPerPage] = useState(10)
-
   const [currentPage, setCurrentPage] = useState(1);
-
   const [searchTerm, setSearchTerm] = useState('');
-  const [tatData, setTatData] = useState([])
-
+  const [tatData, setTatData] = useState([]);
+  const [loading, setLoading] = useState(null);
 
 
   const totalPages = Math.ceil(tatData.length / itemsPerPage);
@@ -81,15 +78,8 @@ const TatDelay = () => {
   };
 
 
-
-
-
-
-
-
-
-
   const fetchTat = useCallback(() => {
+    setLoading(true);
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
 
@@ -106,11 +96,24 @@ const TatDelay = () => {
       method: "GET",
       redirect: "follow", // You can keep this if you need to follow redirects
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+      .then(response => {
+        const result = response.json();
+        const newToken = result._token || result.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
         }
-        return response.json(); // Assuming the response is JSON
+        if (!response.ok) {
+          return response.text().then(text => {
+            const errorData = JSON.parse(text);
+            Swal.fire(
+              'Error!',
+              `An error occurred: ${errorData.message}`,
+              'error'
+            );
+            throw new Error(text);
+          });
+        }
+        return result;
       })
       .then((result) => {
         const applications = result.tatDelays.applicationHierarchy.flatMap(customer =>
@@ -132,9 +135,11 @@ const TatDelay = () => {
         );
         setTatData(applications)
 
-        // Handle the result here (e.g., set state)
       })
-      .catch((error) => console.error('Fetch error:', error));
+      .catch((error) => console.error('Fetch error:', error)).finally(() => {
+        setLoading(false);
+
+      });
   }, []);
 
   useEffect(() => {
@@ -188,39 +193,55 @@ const TatDelay = () => {
           </div>
 
         </div>
-        <div className="overflow-x-auto py-6 px-4 bg-white shadow-md m-4 rounded-md ">
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr className='bg-green-500'>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">SL</th>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Tat Days</th>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Initiation Date</th>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Application Id</th>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Employee Name</th>
-                <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white ">Exceed Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems && currentItems.length > 0 ? (
-                currentItems.map((item, index) => (
-                  <tr key={index}>
-                    <td className="py-3 px-4 border-b border-l whitespace-nowrap text-center border-r">{index + 1}</td>
-                    <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.tat_days}</td>
-                    <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_created_at}</td>
-                    <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_id}</td>
-                    <td className="py-3 px-4 border-b whitespace-nowrap text-left border-r">{item.application_name}</td>
-                    <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.days_out_of_tat}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="py-3 px-4 border-b text-center text-gray-500">No TAT Delay Applications Available</td>
-                </tr>
-              )}
-            </tbody>
+        
 
-          </table>
-        </div>
+
+          <div className="overflow-x-auto py-6 px-4">
+        {loading ? (
+          <div className='flex justify-center items-center py-6 h-full'>
+            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+          </div>
+        ) : currentItems.length > 0 ? (
+          <table className="min-w-full table-auto">
+          <thead>
+            <tr className='bg-green-500'>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">SL</th>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Tat Days</th>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Initiation Date</th>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Application Id</th>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Employee Name</th>
+              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white ">Exceed Days</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentItems && currentItems.length > 0 ? (
+              currentItems.map((item, index) => (
+                <tr key={index}>
+                  <td className="py-3 px-4 border-b border-l whitespace-nowrap text-center border-r">{index + 1}</td>
+                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.tat_days}</td>
+                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_created_at}</td>
+                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_id}</td>
+                  <td className="py-3 px-4 border-b whitespace-nowrap text-left border-r">{item.application_name}</td>
+                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.days_out_of_tat}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="py-3 px-4 border-b text-center text-gray-500">No TAT Delay Applications Available</td>
+              </tr>
+            )}
+          </tbody>
+
+        </table>
+        ) : (
+          <div className="text-center py-6">
+            <p>No Data Found</p>
+          </div>
+        )}
+
+
+      </div>
         <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
           <button
             type='button'

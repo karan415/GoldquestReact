@@ -1,7 +1,7 @@
 import { React, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { Link, useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const ForgotPassword = () => {
 
   const navigate = useNavigate();
@@ -36,12 +36,25 @@ const ForgotPassword = () => {
     };
 
     fetch("https://octopus-app-www87.ondigitalocean.app/admin/forgot-password-request", requestOptions)
-      .then((response) => {
+    .then((response) => {
+      const result = response.json();
+      const newToken = result._token || result.token;
+      if (newToken) {
+          localStorage.setItem("_token", newToken);
+      }
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+            return response.text().then(text => {
+                const errorData = JSON.parse(text);
+                Swal.fire(
+                    'Error!',
+                    `An error occurred: ${errorData.message}`,
+                    'error'
+                );
+                throw new Error(text);
+            });
         }
-        return response.text();
-      })
+        return result;
+    })
       .then((result) => {
         console.log(result);
         navigate('/reset-password');

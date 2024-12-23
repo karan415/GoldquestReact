@@ -2,10 +2,9 @@ import React, { useCallback, useEffect, useRef, useState, useContext } from 'rea
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
-
+import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ReportCaseTable = () => {
-    const tableRef = useRef(null);
     const [options, setOptions] = useState([]);
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
@@ -21,6 +20,23 @@ const ReportCaseTable = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const clientId = queryParams.get('clientId');
+
+    const tableRef = useRef(null); // Ref for the table container
+
+    // Function to reset expanded rows
+    const handleOutsideClick = (event) => {
+        if (tableRef.current && !tableRef.current.contains(event.target)) {
+            setExpandedRow({}); // Reset to empty object instead of null
+        }
+    };
+
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, []);
 
 
     // Fetch data from the main API
@@ -40,7 +56,25 @@ const ReportCaseTable = () => {
         };
 
         fetch(`${API_URL}/branch/report-case-status/list?branch_id=${branch_id}&_token=${_token}`, requestOptions)
-            .then((response) => response.json())
+            .then((response) => {
+                const result = response.json();
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        const errorData = JSON.parse(text);
+                        Swal.fire(
+                            'Error!',
+                            `An error occurred: ${errorData.message}`,
+                            'error'
+                        );
+                        throw new Error(text);
+                    });
+                }
+                return result;
+            })
             .then((result) => {
                 setLoading(false);
                 setData(result.customers || []);
@@ -317,7 +351,6 @@ const ReportCaseTable = () => {
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                                 </div>
                             </form>
                         </div>
@@ -487,28 +520,28 @@ const ReportCaseTable = () => {
                     )}
 
                 </div>
-                
+
                 <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                        <button
-                            onClick={showPrev}
-                            disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Previous page"
-                        >
-                            <MdArrowBackIosNew />
-                        </button>
-                        <div className="flex items-center">
-                            {renderPagination()}
-                        </div>
-                        <button
-                            onClick={showNext}
-                            disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            aria-label="Next page"
-                        >
-                            <MdArrowForwardIos />
-                        </button>
+                    <button
+                        onClick={showPrev}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Previous page"
+                    >
+                        <MdArrowBackIosNew />
+                    </button>
+                    <div className="flex items-center">
+                        {renderPagination()}
                     </div>
+                    <button
+                        onClick={showNext}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label="Next page"
+                    >
+                        <MdArrowForwardIos />
+                    </button>
+                </div>
             </div>
         </div >
     );

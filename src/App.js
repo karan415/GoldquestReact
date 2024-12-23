@@ -23,7 +23,6 @@ import { CustomFunctionsProvider } from './CustomFunctionsContext'
 import { TabProvider } from './Pages/TabContext';
 import { BranchProviderExel } from './Pages/BranchContextExel';
 import CandidateMain from './Pages/Candidate/CandidateMain';
-import GenerateReportProvider from './Pages/GenerateReportContext';
 import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
 import 'react-select-search/style.css'
@@ -37,7 +36,7 @@ import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 
 const App = () => {
   return (
-    <GenerateReportProvider>
+    <>
       <BranchProviderExel>
         <TabProvider>
           <ApiProvider>
@@ -86,7 +85,7 @@ const App = () => {
           </ApiProvider>
         </TabProvider>
       </BranchProviderExel>
-    </GenerateReportProvider>
+    </>
   );
 };
 
