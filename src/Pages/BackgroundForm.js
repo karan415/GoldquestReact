@@ -11,6 +11,7 @@ const BackgroundForm = () => {
     const [files, setFiles] = useState({});
     const [serviceData, setServiceData] = useState([]);
     const [status, setStatus] = useState([]);
+    const [companyName, setCompanyName] = useState([]);
     const [annexureData, setAnnexureData] = useState({});
     const [serviceIds, setServiceIds] = useState(''); // Expecting a comma-separated string
     const [formData, setFormData] = useState({
@@ -147,6 +148,7 @@ const BackgroundForm = () => {
                         // Application exists and is valid
                         setServiceIds(result.data?.services || '');
                         setStatus(result.data?.is_custom_bgv || '');
+                        setCompanyName(result.data?.company_name || '');
                     } else {
                         // Application does not exist or other error: Hide the form and show an alert
                         const form = document.getElementById('bg-form');
@@ -376,7 +378,7 @@ const BackgroundForm = () => {
 
                     <div className="p-6 rounded md:w-8/12 m-auto ">
                         <div className="mb-6  p-4 rounded-md">
-                            <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{admin}</span></h5>
+                            <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6 border rounded-md  p-4">
