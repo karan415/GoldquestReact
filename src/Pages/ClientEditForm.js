@@ -6,7 +6,7 @@ const states = State.getStatesOfCountry('IN');
 
 export const ClientEditForm = () => {
     const options = states.map(state => ({ value: state.isoCode, label: state.name }));
-    const { clientData, loading, handleClientChange, handleClientSubmit, setFiles } = useEditClient();
+    const { clientData, loading, handleClientChange, handleClientSubmit, setFiles,setCustom_Bgv ,custom_bgv} = useEditClient();
     const formattedDate = clientData.agreement_date.split("T")[0];
 
     let emails = clientData.emails;
@@ -38,6 +38,11 @@ export const ClientEditForm = () => {
         const selectedFiles = Array.from(e.target.files);
         setFiles((prevFiles) => ({ ...prevFiles, [fileName]: selectedFiles }));
     };
+    const handleCheckBoxChange = (event) => {
+        const isChecked = event.target.checked;
+        setCustom_Bgv(isChecked ? 1 : 0);
+    
+      };
 
     return (
         <>
@@ -218,6 +223,29 @@ export const ClientEditForm = () => {
                         </select>
                     </div>
                 </div>
+                <div className="md:flex gap-5">
+                    <div className="mb-4">
+                        <label className="text-gray-500" htmlFor="industry_classification">Industry Classification</label>
+                        <input
+                            type="text"
+                            name="industry_classification"
+                            id="industry_classification"
+                            className="border w-full rounded-md p-2 mt-2 outline-none"
+                            onChange={handleClientChange}
+                        />
+                    </div>
+                    <div className="mb-4 flex gap-2 justify-start items-center">
+                        <input
+                            type="checkbox"
+                            name="custom_bgv"
+                            id="custom_bgv"
+                            className="border rounded-md p-2 mt-0 outline-none"
+                            onChange={handleCheckBoxChange}
+                            value={custom_bgv}
+                        />
+                        <label className="text-gray-500" htmlFor="agr_upload">Custom BGV</label>
+                    </div>
+                </div>
                 <div className="mb-4">
                     <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
                     <input
@@ -229,30 +257,30 @@ export const ClientEditForm = () => {
                     />
                 </div>
                 <div className="mb-4">
-                <label className="text-gray-500" htmlFor="emails">Emails:</label>
-                <div className="flex gap-3 flex-wrap">
-                    {newEmails.length > 0 ? (
-                        newEmails.map((email, index) => (
-                            <input
-                                key={index}
-                                type="email"
-                                value={email}
-                                className="border w-3/12 rounded-md p-2 mt-2 outline-none"
-                                onChange={(e) => handleEmailChange(index, e.target.value)}
-                            />
-                        ))
-                    ) : (
-                        <p>No emails available</p>
-                    )}
+                    <label className="text-gray-500" htmlFor="emails">Emails:</label>
+                    <div className="flex gap-3 flex-wrap">
+                        {newEmails.length > 0 ? (
+                            newEmails.map((email, index) => (
+                                <input
+                                    key={index}
+                                    type="email"
+                                    value={email}
+                                    className="border w-3/12 rounded-md p-2 mt-2 outline-none"
+                                    onChange={(e) => handleEmailChange(index, e.target.value)}
+                                />
+                            ))
+                        ) : (
+                            <p>No emails available</p>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        onClick={addNewEmailField}
+                    >
+                        Add Email
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    onClick={addNewEmailField}
-                >
-                    Add Email
-                </button>
-            </div>
 
                 <div className="mb-4">
                     <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>

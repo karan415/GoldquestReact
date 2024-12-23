@@ -10,8 +10,9 @@ export const ClientEditProvider = ({ children }) => {
     const [files, setFiles] = useState([]);
     const API_URL = useApi();
     const [loading, setLoading] = useState(false);
-
     const [clientData, setClientData] = useState();
+    const [custom_bgv, setCustom_Bgv] = useState(0);
+    
 
 
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
@@ -80,6 +81,8 @@ export const ClientEditProvider = ({ children }) => {
         const raw = JSON.stringify({
             ...clientData,
             admin_id,
+            custom_bgv: custom_bgv,
+
             _token: storedToken
         });
     
@@ -146,7 +149,7 @@ export const ClientEditProvider = ({ children }) => {
 
 
     return (
-        <ClientEditContext.Provider value={{ clientData, setClientData, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
+        <ClientEditContext.Provider value={{ clientData, setClientData,setCustom_Bgv,custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
             {children}
         </ClientEditContext.Provider>
     );

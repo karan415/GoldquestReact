@@ -134,9 +134,7 @@ const CandidateForm = () => {
         // Validate Name (non-empty check)
         if (!name) {
             NewErr.name = 'Name is required';
-        } else if (/[A-Z]/.test(name)) {
-            NewErr.name = 'Name should not contain uppercase characters';
-        }
+        } 
 
         // Validate Employee ID (non-empty check)
         if (!employee_id) {

@@ -59,12 +59,13 @@ const ClientManagement = () => {
     custom_template: "",
     custom_address: "",
     username: "",
+    industry_classification:'',
   });
 
   const handleCheckBoxChange = (event) => {
     const isChecked = event.target.checked;
     setCustom_Bgv(isChecked ? 1 : 0);
-   
+
   };
 
   const handleFileChange = (fileName, e) => {
@@ -216,7 +217,7 @@ const ClientManagement = () => {
         branches: branchForms,
         emails: emails,
         clientData: clientData,
-        custom_bgv:custom_bgv,
+        custom_bgv: custom_bgv,
         send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files
       };
 
@@ -606,6 +607,17 @@ const ClientManagement = () => {
                   onChange={(e) => handleFileChange('agr_upload', e)}
                 />
               </div>
+              <div className="mb-4">
+                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification</label>
+                <input
+                  type="text"
+                  name="industry_classification"
+                  id="industry_classification"
+                  className="border w-full rounded-md p-2 mt-2 outline-none"
+                  onChange={handleChange}
+                />
+              </div>
+              
 
               <div className="mb-4">
                 <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
@@ -622,6 +634,7 @@ const ClientManagement = () => {
                         type="file"
                         name="custom_logo"
                         id="custom_logo"
+                        className="border w-full rounded-md p-2 mt-2 outline-none"
                         onChange={(e) => handleFileChange('custom_logo', e)} />
                     </div>
                     <div className="mb-4">
