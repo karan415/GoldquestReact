@@ -248,7 +248,6 @@ const CandidateMasterTrackerList = () => {
     return (
         <>
             <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-candidatemastertrackeeeer
                 <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
