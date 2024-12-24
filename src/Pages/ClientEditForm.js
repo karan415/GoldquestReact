@@ -1,17 +1,15 @@
+import React, { useState } from "react";
 import { useEditClient } from './ClientEditContext';
 import ServicesEditForm from './ServicesEditForm';
 import { State } from 'country-state-city';
+import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
-const states = State.getStatesOfCountry('IN');
 
 export const ClientEditForm = () => {
+    const states = State.getStatesOfCountry('IN');
     const options = states.map(state => ({ value: state.isoCode, label: state.name }));
-    const { clientData, loading, handleClientChange, handleClientSubmit, setFiles,setCustom_Bgv ,custom_bgv} = useEditClient();
-    const formattedDate = clientData.agreement_date.split("T")[0];
-
+    const { refs, clientData, handleClientChange, handleClientSubmit, setFiles, errors, loading, setClientData, setErrors } = useEditClient();
     let emails = clientData.emails;
-
-    // Safely parse emails
     if (typeof emails === 'string') {
         try {
             emails = JSON.parse(emails);
@@ -20,12 +18,14 @@ export const ClientEditForm = () => {
             emails = [];
         }
     }
-
     const newEmails = Array.isArray(emails) ? emails : [];
-
     const handleEmailChange = (index, value) => {
         const updatedEmails = [...newEmails];
         updatedEmails[index] = value;
+        handleClientChange({ target: { name: 'emails', value: updatedEmails } });
+    };
+    const deleteEmails = (index) => {
+        const updatedEmails = newEmails.filter((_, i) => i !== index);
         handleClientChange({ target: { name: 'emails', value: updatedEmails } });
     };
 
@@ -34,334 +34,495 @@ export const ClientEditForm = () => {
         handleClientChange({ target: { name: 'emails', value: updatedEmails } });
     };
 
+
+
+
     const handleFileChange = (fileName, e) => {
-        const selectedFiles = Array.from(e.target.files);
-        setFiles((prevFiles) => ({ ...prevFiles, [fileName]: selectedFiles }));
+        const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
+
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // Allowed file types
+
+        let errors = [];
+
+        selectedFiles.forEach((file) => {
+            if (file.size > maxSize) {
+                errors.push(`${file.name}: File size must be less than 2MB.`);
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+            }
+        });
+
+        if (errors.length > 0) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                [fileName]: errors,
+            }));
+            return;
+        }
+
+        setFiles((prevFiles) => ({
+            ...prevFiles,
+            [fileName]: selectedFiles,
+        }));
+
+        setErrors((prevErrors) => {
+            const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+            return restErrors;
+        });
     };
-    const handleCheckBoxChange = (event) => {
-        const isChecked = event.target.checked;
-        setCustom_Bgv(isChecked ? 1 : 0);
-    
-      };
+
 
     return (
         <>
-            <form onSubmit={handleClientSubmit} className='p-5 bg-white rounded-md w-8/12 m-auto py-10 my-7 border ' >
-                <h3 className='text-center font-bold text-2xl pb-5'>Edit Client</h3>
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="name">Company Name: *</label>
-                        <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.name}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="client_unique_id">Client Code: *</label>
-                        <input
-                            type="text"
-                            name="client_unique_id"
-                            id="client_unique_id"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            disabled
-                            value={clientData.client_unique_id}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                </div>
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="address">Address: *</label>
-                        <input
-                            type="text"
-                            name="address"
-                            id="address"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.address}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="mobile">Mobile: *</label>
-                        <input
-                            type="number"
-                            name="mobile"
-                            id="mobile"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.mobile}
-                            onChange={handleClientChange}
-                        />
-                    </div>
+            <div className="py-4 md:py-16 m-4">
+                <h2 className="md:text-4xl text-2xl md:mb-8 font-bold pb-8 md:pb-4 text-center">
+                    Client Edit
+                </h2>
+                <div className="md:w-9/12 m-auto bg-white shadow-md border rounded-md p-3 md:p-10">
+                    {loading ? (
+                        <div className='flex justify-center items-center py-6 h-full'>
+                            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
 
-                </div>
+                        </div>
+                    ) :
+                        (<form onSubmit={handleClientSubmit} >
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="name">Company Name: *</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        id="name"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.name}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["name"] = el)}
 
-                <div className="md:flex gap-5">
+                                    />
+                                    {errors.name && <p className="text-red-500">{errors.name}</p>}
+                                </div>
 
-                    <div className="mb-4 md:w-6/12">
-                        <label htmlFor="contact_person_name">Contact Person: *</label>
-                        <input
-                            type="text"
-                            name="contact_person_name"
-                            id="contact_person_name"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.contact_person_name}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="state">State: *</label>
-                        <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" value={clientData.state} onChange={handleClientChange}>
-                            {options.map(option => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="client_unique_id">Client Code: *</label>
+                                    <input
+                                        type="text"
+                                        name="client_unique_id"
+                                        id="client_unique_id"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.client_unique_id}
+                                        disabled
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["client_unique_id"] = el)}
 
-                    </div>
-                </div>
+                                    />
+                                    {errors.client_unique_id && <p className="text-red-500">{errors.client_unique_id}</p>}
+                                </div>
+                            </div>
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="address">address: *</label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        id="address"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.address}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["address"] = el)}
 
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="escalation_point_contact">Name of the Escalation Point of Contact:*</label>
-                        <input
-                            type="text"
-                            name="escalation_point_contact"
-                            id="escalation_point_contact"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.escalation_point_contact}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="state_code">State Code: *</label>
-                        <input
-                            type="number"
-                            name="state_code"
-                            id="state_code"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.state_code}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                </div>
+                                    />
+                                    {errors.address && <p className="text-red-500">{errors.address}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="mobile">Mobile: *</label>
+                                    <input
+                                        type="number"
+                                        name="mobile"
+                                        id="mobile"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.mobile}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["mobile"] = el)}
 
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="single_point_of_contact">Name of The Client SPOC:*</label>
-                        <input
-                            type="text"
-                            name="single_point_of_contact"
-                            id="single_point_of_contact"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.single_point_of_contact}
-                            onChange={handleClientChange}
-                        />
-                    </div>
+                                    />
+                                    {errors.mobile && <p className="text-red-500">{errors.mobile}</p>}
+                                </div>
 
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="gstin">GSTIN: *</label>
-                        <input
-                            type="text"
-                            name="gst_number"
-                            id="gst_number"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.gst_number}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                </div>
+                            </div>
 
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="tat">TAT: *</label>
-                        <input
-                            type="text"
-                            name="tat_days"
-                            id="tat_days"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.tat_days}
-                            onChange={handleClientChange}
-                        />
-                    </div>
+                            <div className="md:flex gap-5">
 
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="agreement_date">Date of Service Agreement:*</label>
-                        <input
-                            type="date"
-                            name="agreement_date"
-                            id="agreement_date"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={formattedDate}
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label htmlFor="contact_person_name">Contact Person: *</label>
+                                    <input
+                                        type="text"
+                                        name="contact_person_name"
+                                        id="contact_person_name"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.contact_person_name}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["contact_person_name"] = el)}
 
-                <div className="md:flex gap-5">
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="client_standard">Client Standard Procedure:</label>
-                        <textarea name="client_standard"
-                            id="client_standard"
-                            rows={1}
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            value={clientData.client_standard}
-                            onChange={handleClientChange}></textarea>
-                    </div>
-                    <div className="mb-4 md:w-6/12">
-                        <label className="text-gray-500" htmlFor="agreement_duration">Agreement Period: *</label>
+                                    />
+                                    {errors.contact_person_name && <p className="text-red-500">{errors.contact_person_name}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="state">State: *</label>
+                                    <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)}
+                                        value={clientData.state} onChange={handleClientChange}>
+                                        {options.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                        <select name="agreement_duration" className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_duration" onChange={handleClientChange} value={clientData.agreement_duration}>
-                            <option value="Unless terminated" selected>Unless terminated</option>
-                            <option value="1 year">1 year</option>
-                            <option value="2 year">2 year</option>
-                            <option value="3 year">3 year</option>
-                        </select>
-                    </div>
-                </div>
-                <div className="md:flex gap-5">
-                    <div className="mb-4">
-                        <label className="text-gray-500" htmlFor="industry_classification">Industry Classification</label>
-                        <input
-                            type="text"
-                            name="industry_classification"
-                            id="industry_classification"
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            onChange={handleClientChange}
-                        />
-                    </div>
-                    <div className="mb-4 flex gap-2 justify-start items-center">
-                        <input
-                            type="checkbox"
-                            name="custom_bgv"
-                            id="custom_bgv"
-                            className="border rounded-md p-2 mt-0 outline-none"
-                            onChange={handleCheckBoxChange}
-                            value={custom_bgv}
-                        />
-                        <label className="text-gray-500" htmlFor="agr_upload">Custom BGV</label>
-                    </div>
-                </div>
-                <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
-                    <input
-                        type="file"
-                        name="agr_upload"
-                        id="agr_upload"
-                        className="border w-full rounded-md p-2 mt-2 outline-none"
-                        onChange={(e) => handleFileChange('agr_upload', e)}
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="emails">Emails:</label>
-                    <div className="flex gap-3 flex-wrap">
-                        {newEmails.length > 0 ? (
-                            newEmails.map((email, index) => (
-                                <input
-                                    key={index}
-                                    type="email"
-                                    value={email}
-                                    className="border w-3/12 rounded-md p-2 mt-2 outline-none"
-                                    onChange={(e) => handleEmailChange(index, e.target.value)}
-                                />
-                            ))
-                        ) : (
-                            <p>No emails available</p>
-                        )}
-                    </div>
-                    <button
-                        type="button"
-                        className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                        onClick={addNewEmailField}
-                    >
-                        Add Email
-                    </button>
-                </div>
+                                    {errors.state && <p className="text-red-500">{errors.state}</p>}
+                                </div>
+                            </div>
 
-                <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
-                    <select name="custom_template" id="custom_template" value={clientData.custom_template} className="border w-full rounded-md p-2 mt-2 outline-none" onChange={handleClientChange}>
-                        <option value="yes">yes</option>
-                        <option value="no">no</option>
-                    </select>
-                    {clientData.custom_template === 'yes' && (
-                        <>
-                            <div className="mb-4 mt-4">
-                                <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :*</label>
-                                <input
-                                    type="file"
-                                    name="custom_logo"
-                                    id="custom_logo"
-                                    onChange={(e) => handleFileChange('custom_logo', e)}
-                                    className="border w-full rounded-md p-2 mt-2 outline-none"
-                                />
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="state_code">State Code: *</label>
+                                    <input
+                                        type="number"
+                                        name="state_code"
+                                        id="state_code"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.state_code}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["state_code"] = el)}
+
+                                    />
+                                    {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="escalation_point_contact">Name of the Escalation Point of Contact:*</label>
+                                    <input
+                                        type="text"
+                                        name="escalation_point_contact"
+                                        id="escalation_point_contact"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.escalation_point_contact}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["escalation_point_contact"] = el)}
+
+                                    />
+                                    {errors.escalation_point_contact && <p className="text-red-500">{errors.escalation_point_contact}</p>}
+                                </div>
+
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="" className="text-gray-500">Custom Address</label>
-                                <textarea
-                                    name="custom_address"
-                                    id="custom_address"
-                                    onChange={handleClientChange}
-                                    value={clientData.custom_address}
-                                    className="border w-full rounded-md p-2 mt-2 outline-none"
-                                ></textarea>
+                                <label className="text-gray-500" htmlFor="emails">Emails:</label>
+                                <div className="grid grid-cols-3 gap-3 flex-wrap">
+                                    {newEmails.length > 0 ? (
+                                        newEmails.map((email, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    className="border rounded-md p-2 mt-2 outline-none"
+                                                    onChange={(e) => handleEmailChange(index, e.target.value)} // Handle email change
+                                                />
+                                                {/* Delete button will show only for emails except the first */}
+                                                {index > 0 && (
+                                                    <button
+                                                        className="bg-red-500 rounded-md p-2 text-white"
+                                                        type="button"
+                                                        onClick={() => deleteEmails(index)} // Delete email on click
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                                {/* Display error message for each email input */}
+                                                {errors[`email${index}`] && (
+                                                    <p className="text-red-500 text-sm whitespace-nowrap">
+                                                        {errors[`email${index}`]}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p>No emails available</p>
+                                    )}
+                                </div>
+
+
+
+
+                                <button className="bg-green-500 text-white rounded-3 p-2 mt-4 rounded-md" type="button" onClick={addNewEmailField}>ADD MORE</button>
+
                             </div>
-                        </>
-                    )}
-                </div>
-                <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="additional_login">Additional login Required</label>
-                    <div className="flex items-center gap-10 mt-4">
-                        <div>
-                            <input
-                                type="radio"
-                                name="additional_login"
-                                value="Yes"
-                                checked={clientData.additional_login === "Yes"}
-                                onChange={handleClientChange}
-                                className="me-2"
-                            />Yes
-                        </div>
-                        <div>
-                            <input
-                                type="radio"
-                                name="additional_login"
-                                value="No"
-                                checked={clientData.additional_login === "No"}
-                                onChange={handleClientChange}
-                                className="me-2"
-                            />No
-                        </div>
-                    </div>
-                    {clientData.additional_login === "Yes" && (
-                        <input
-                            type="text"
-                            name="username"
-                            id="username"
-                            placeholder="username2"
-                            value={clientData.username}
-                            className="border w-full rounded-md p-2 mt-2 outline-none"
-                            onChange={handleClientChange}
-                        />
-                    )}
-                </div>
-                <ServicesEditForm />
-
-                <div className="flex justify-center">
-                    <button
-                        type="submit"
-                        className="bg-green-600 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
-                    >
-                        {loading ? 'Processing...' : 'Update'}
-                    </button>
-                </div>
 
 
-            </form>
+
+
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="single_point_of_contact">Name of The Client SPOC:*</label>
+                                    <input
+                                        type="text"
+                                        name="single_point_of_contact"
+                                        id="single_point_of_contact"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.single_point_of_contact
+                                        }
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["single_point_of_contact"] = el)}
+
+                                    />
+                                    {errors.single_point_of_contact
+                                        && <p className="text-red-500">{errors.single_point_of_contact
+                                        }</p>}
+                                </div>
+
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="gst_number">gst_number: *</label>
+                                    <input
+                                        type="text"
+                                        name="gst_number"
+                                        id="gst_number"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.gst_number}
+                                        ref={(el) => (refs.current["gst_number"] = el)}
+
+                                        onChange={handleClientChange}
+                                    />
+                                    {errors.gst_number && <p className="text-red-500">{errors.gst_number}</p>}
+                                </div>
+                            </div>
+
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="tat_days">TAT: *</label>
+                                    <input
+                                        type="text"
+                                        name="tat_days"
+                                        id="tat_days"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.tat_days}
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["tat_days"] = el)}
+
+                                    />
+                                    {errors.tat_days && <p className="text-red-500">{errors.tat_days}</p>}
+                                </div>
+
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="agreement_date">Date of Service Agreement:*</label>
+                                    <input
+                                        type="date"
+                                        name="agreement_date"
+                                        id="agreement_date"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.agreement_date ? clientData.agreement_date.split('T')[0] : ''} // Format the date to yyyy-MM-dd
+                                        onChange={handleClientChange}
+                                        ref={(el) => (refs.current["agreement_date"] = el)}
+                                    />
+
+                                    {errors.agreement_date && <p className="text-red-500">{errors.agreement_date}</p>}
+                                </div>
+                            </div>
+
+                            <div className="md:flex gap-5">
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="client_standard">Client Standard Procedure:</label>
+                                    <textarea name="client_standard"
+                                        id="client_standard"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        value={clientData.client_standard}
+                                        rows={1}
+
+                                        onChange={handleClientChange}></textarea>
+                                </div>
+                                <div className="mb-4 md:w-6/12">
+                                    <label className="text-gray-500" htmlFor="agreement_duration">Agreement Period: *</label>
+
+                                    <select name="agreement_duration"
+                                        className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_duration" onChange={handleClientChange} value={clientData.agreement_duration}>
+                                        <option value="Unless terminated" selected>Unless terminated</option>
+                                        <option value="1 year">1 year</option>
+                                        <option value="2 year">2 year</option>
+                                        <option value="3 year">3 year</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
+
+                                <input
+                                    ref={(el) => (refs.current["agr_upload"] = el)}
+                                    type="file"
+                                    name="agr_upload"
+                                    id="agr_upload"
+                                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                                    onChange={(e) => handleFileChange('agr_upload', e)}
+                                    accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx"
+                                />
+                                {errors.agr_upload && <p className="text-red-500">{errors.agr_upload}</p>}
+
+
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                </p>
+
+                                <div className="border p-3 mt-3 rounded-md"><img src={clientData.agreement} className="w-40- h-40" /></div>
+
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification*</label>
+                                <input
+                                    type="text"
+                                    name="industry_classification"
+                                    id="industry_classification"
+                                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                                    onChange={handleClientChange}
+                                    ref={(el) => (refs.current["industry_classification"] = el)}
+                                    value={clientData.industry_classification}
+
+                                />
+                                {errors.industry_classification && <p className="text-red-500">{errors.industry_classification}</p>}
+
+                            </div>
+
+
+                            <div className="mb-4">
+                                <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
+                                <select
+                                    name="custom_template"
+                                    ref={(el) => (refs.current["custom_template"] = el)}
+                                    id="custom_template"
+                                    value={clientData.custom_template || ''}
+                                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                                    onChange={handleClientChange}
+                                >
+                                    <option value="">Select Option</option>
+                                    <option value="yes">yes</option>
+                                    <option value="no">no</option>
+                                </select>
+                                {errors.custom_template && <p className="text-red-500">{errors.custom_template}</p>}
+
+                                {clientData.custom_template === 'yes' && (
+                                    <>
+                                        <div className="mb-4 mt-3">
+                                            <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :*</label>
+                                            <input
+                                                ref={(el) => (refs.current["custom_logo"] = el)}
+                                                type="file"
+                                                name="custom_logo"
+                                                id="custom_logo"
+                                                className="border w-full rounded-md p-2 mt-2 outline-none"
+                                                onChange={(e) => handleFileChange('custom_logo', e)}
+                                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx"
+                                            />
+                                            {errors.custom_logo && <p className="text-red-500">{errors.custom_logo}</p>}
+
+                                            <p className="text-gray-500 text-sm mt-2">
+                                                Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                            </p>
+                                            <div className="border p-3 rounded-md mt-3"><img src={clientData.logo} className="w-40 h-15" /></div>
+
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <label htmlFor="custom_address" className="text-gray-500">Custom Address</label>
+                                            <textarea
+                                                name="custom_address"
+                                                id="custom_address"
+                                                onChange={handleClientChange}
+                                                value={clientData.custom_address}
+                                                className="border w-full rounded-md p-2 mt-2 outline-none"
+                                            ></textarea>
+
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="text-gray-500" htmlFor="additional_login">Additional login Required</label>
+                                <div className="flex items-center gap-10 mt-4">
+                                    <div>
+                                        <input
+                                            type="radio"
+                                            name="additional_login"
+                                            value="1"
+                                            checked={parseInt(clientData.additional_login, 10) === 1}
+                                            onChange={handleClientChange}
+                                            className="me-2"
+                                        />Yes
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="radio"
+                                            name="additional_login"
+                                            value="0"
+                                            checked={parseInt(clientData.additional_login, 10) === 0}
+                                            onChange={handleClientChange}
+                                            className="me-2"
+                                        />No
+                                    </div>
+                                </div>
+                                {parseInt(clientData.additional_login, 10) === 1 && (
+                                    <input
+                                        type="text"
+                                        name="username"
+                                        id="username"
+                                        placeholder="username2"
+                                        value={clientData.username}
+                                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                                        onChange={handleClientChange}
+                                    />
+                                )}
+                            </div>
+
+                            <div className="mb-4 flex gap-2 justify-start items-center">
+    {/* Log the current value of is_custom_bgv */}
+    {console.log(`clientData.is_custom_bgv - `, clientData.is_custom_bgv)}
+    
+    <input
+        type="checkbox"
+        name="is_custom_bgv"
+        id="is_custom_bgv"
+        className="border rounded-md p-2 mt-0"
+        onChange={(e) => 
+            setClientData((prev) => ({
+                ...prev,
+                is_custom_bgv: e.target.checked ? '1' : '0',
+            }))
+        }
+        checked={parseInt(clientData.is_custom_bgv, 10) === 1}
+        ref={(el) => (refs.current['is_custom_bgv'] = el)}
+    />
+    <label className="text-gray-500" htmlFor="is_custom_bgv">Custom BGV</label>
+</div>
+
+
+                            <ServicesEditForm />
+                            <div className="flex justify-center">
+                                <button
+                                    type="submit"
+                                    className="bg-green-500 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Processing...' : 'Update'}
+
+                                </button>
+                            </div>
+
+                        </form>)}
+                </div>
+
+            </div>
         </>
     )
 }

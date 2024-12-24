@@ -5,8 +5,10 @@ import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import CandidateForm from './CandidateForm';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useNavigate } from 'react-router-dom';
 
 const CandidateList = () => {
+    const navigate=useNavigate();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
 
@@ -139,10 +141,12 @@ const CandidateList = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
+                const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
                 const branch_token = localStorage.getItem("branch_token");
 
                 if (!branchId || !branch_token) {
                     console.error("Branch ID or token is missing.");
+                    navigate('/customer-login')
                     return;
                 }
 
@@ -164,6 +168,9 @@ const CandidateList = () => {
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
                                 Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                                if (errorData.message && errorData.message.toLowerCase().includes('invalid') && errorData.message.toLowerCase().includes('token')) {
+                                    navigate(`/customer-login?email=${branchEmail}`)
+                                }
                                 throw new Error(text);
                             });
                         }

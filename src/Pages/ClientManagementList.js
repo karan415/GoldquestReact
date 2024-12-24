@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useSidebar } from '../Sidebar/SidebarContext';
 import 'reactjs-popup/dist/index.css';
@@ -11,11 +11,11 @@ import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
 const ClientManagementList = () => {
-  
+
   const { handleTabChange } = useSidebar();
   const [searchTerm, setSearchTerm] = useState('');
   const { loading, listData, fetchData, isOpen, setIsOpen } = useData();
-  
+
   const API_URL = useApi();
   const { setClientData } = useEditClient();
   const [branches, setBranches] = useState([]);
@@ -84,25 +84,16 @@ const ClientManagementList = () => {
       console.error('Fetch error:', error);
     }
   };
-    const tableRef = useRef(null); // Ref for the table container
-  
-    // Function to reset expanded rows
-    const handleOutsideClick = (event) => {
-      if (tableRef.current && !tableRef.current.contains(event.target)) {
-        setOpenAccordionId({}); // Reset to empty object instead of null
-      }
-    };
-    
-  
-    useEffect(() => {
-      document.addEventListener("mousedown", handleOutsideClick);
-      return () => {
-        document.removeEventListener("mousedown", handleOutsideClick);
-      };}, []);
 
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
   const toggleAccordion = useCallback((id) => {
+
+    const tdElement = document.getElementById('Branches');
+    if (tdElement) {
+      tdElement.focus();
+    }
+  
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
@@ -152,9 +143,7 @@ const ClientManagementList = () => {
 
 
   const [showAllServicesState, setShowAllServicesState] = useState({});
-  const toggleAccordions = (id) => {
-    setIsOpen((prevId) => (prevId === id ? null : id));
-  };
+ 
   const handleSelectChange = (e) => {
     const checkedStatus = e.target.value;
     setItemPerPage(checkedStatus);
@@ -493,7 +482,7 @@ const ClientManagementList = () => {
   return (
     <>
       <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4 px-4">
-      <div className="col">
+        <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
               <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
@@ -534,7 +523,7 @@ const ClientManagementList = () => {
 
           </div>
         ) : currentItems.length > 0 ? (
-          <table className="min-w-full mb-4" ref={tableRef}>
+          <table className="min-w-full mb-4" >
             <thead>
               <tr className='bg-green-500'>
                 <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
@@ -557,182 +546,195 @@ const ClientManagementList = () => {
                 const displayedServices = showAllServices ? services : services.slice(0, 1);
 
                 return (
-                  <tr key={item.main_id}>
-                    <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
-                      <input type="checkbox" className="me-2" />
-                      {index + 1 + (currentPage - 1) * itemsPerPage}
-                    </td>
-                    <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
-                      {new Date(item.agreement_date).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.client_standard || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
-                      {services.length > 0 ? (
-                        <div>
-                          {displayedServices.map((service, idx) => (
-                            <div key={idx} className='flex gap-3'>
-                              <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle || 'NIL'}</p>
-                              <p className='whitespace-nowrap capitalize text-left'>Price: {service.price || 'NIL'}</p>
-                              <p className='whitespace-nowrap capitalize text-left'>
-                                Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
-                              </p>
-                            </div>
-                          ))}
-                          {services.length > 1 && !showAllServices && (
-                            <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
-                              Show more
-                            </button>
-                          )}
-                          {showAllServices && (
-                            <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
-                              Show less
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <p className='whitespace-nowrap capitalize'>No services available.</p>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.address || 'NIL'}</td>
-                    <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
-                      <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
-                      <button
-                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                        onClick={() => handleEditForm(item)}
-                      >
-                        Edit
-                      </button>
-                      <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
-                      {item.branch_count > 1 && (
+                  <>
+                    <tr key={item.main_id}>
+                      <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
+                        <input type="checkbox" className="me-2" />
+                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
+                        {new Date(item.agreement_date).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.client_standard || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
+                        {services.length > 0 ? (
+                          <div>
+                            {displayedServices.map((service, idx) => (
+                              <div key={idx} className='flex gap-3'>
+                                <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle || 'NIL'}</p>
+                                <p className='whitespace-nowrap capitalize text-left'>Price: {service.price || 'NIL'}</p>
+                                <p className='whitespace-nowrap capitalize text-left'>
+                                  Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
+                                </p>
+                              </div>
+                            ))}
+                            {services.length > 1 && !showAllServices && (
+                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
+                                Show more
+                              </button>
+                            )}
+                            {showAllServices && (
+                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
+                                Show less
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <p className='whitespace-nowrap capitalize'>No services available.</p>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 border-b border-r whitespace-wrap capitalize">{item.address || 'NIL'}</td>
+                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
                         <button
                           className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                          onClick={() => toggleAccordion(item.main_id)}
+                          onClick={() => handleEditForm(item)}
                         >
-                          View Branches
+                          Edit
                         </button>
-                      )}
-                      {/* Branches Accordion */}
-                      {openAccordionId === item.main_id && (
-                        branchLoading ? (
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        {item.branch_count > 1 && (
+                          <button
+                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                            onClick={() => toggleAccordion(item.main_id)}
+                          >
+                            View Branches
+                          </button>
+                        )}
 
 
-                          <div className="flex justify-center items-center py-3">
-                            <PulseLoader
-                              color="#36D7B7"
-                              loading={branchLoading}
-                              size={13}
-                              aria-label="Loading Spinner"
-                            />
-                          </div>
+                        <Modal
+                          isOpen={isPopupOpen}
+                          onRequestClose={closePopup}
+                          contentLabel="Edit Branch"
+                          className="modal"
+                          overlayClassName="overlay"
+                        >
+                          <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
+                          <form>
+                            <div className="mb-4">
+                              <label className="block text-gray-700">Name:</label>
+                              <input
+                                type="text"
+                                value={editData.name}
+                                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                className="border rounded-md w-full p-2"
+                              />
+                            </div>
+                            <div className="mb-4">
+                              <label className="block text-gray-700">Email:</label>
+                              <input
+                                type="email"
+                                value={editData.email}
+                                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                                className="border rounded-md w-full p-2"
+                              />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <button
+                                type="button"
+                                className="bg-gray-300 rounded-md px-4 py-2"
+                                onClick={closePopup}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                className="bg-green-600 text-white rounded-md px-4 py-2"
+                                onClick={handleEditBranch}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </form>
+                        </Modal>
 
-                        ) : (
-                          branches.map((branch) => {
-                            const isActive = branch.status === 0;
-                            const isBlocked = branch.status === 1;
+                      </td>
+                    </tr>
+                    {openAccordionId === item.main_id && (
+                      branchLoading ? (
 
-                            return (
-                              <div key={branch.id} className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
-                                <div
-                                  className="accordion_head bg-green-500 w-full p-2 rounded-md mb-3 text-white cursor-pointer"
-                                  id={branch.id}
-                                  onClick={() => toggleAccordions(branch.id)}
-                                >
-                                  <h3 className="branch_name">{branch.name}</h3>
-                                </div>
-                                {isOpen === branch.id && (
-                                  <div className="accordion_body">
-                                    <ul className="flex gap-2 items-center">
-                                      <li>{branch.email}</li>
-                                      <button
-                                        className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                                        onClick={() => openPopup(branch)}
-                                      >
-                                        Edit
-                                      </button>
-                                      <button
-                                        className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                        onClick={() => handleDelete(branch.id, 'branch')}
-                                      >
-                                        Delete
-                                      </button>
-                                      {isActive && (
+
+                        <div className="flex justify-center items-center py-3">
+                          <PulseLoader
+                            color="#36D7B7"
+                            loading={branchLoading}
+                            size={13}
+                            aria-label="Loading Spinner"
+                          />
+                        </div>
+
+                      ) : (
+                        branches.map((branch) => {
+                          // Use parseInt to ensure the value is treated as a number
+                          if (parseInt(branch.is_head, 10) === 1) {
+                            return; // Skip this iteration if is_head equals 1
+                          }
+                          const isActive = branch.status === 0;
+                          const isBlocked = branch.status === 1;
+
+                          return (
+                            <tr>
+                              <div className='flex justify-end'>
+                              <table key={branch.id} id="Branches" className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
+                                <thead>
+                                  <tr>
+                                    <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
+                                    <th className="px-4 py-2 text-left">Email</th>
+                                    <th className="px-4 py-2 text-left">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
+                                    <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
+                                    <td className="border px-4 py-2">
+                                      <div className="flex gap-2 items-center">
+                                        <button
+                                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                          onClick={() => openPopup(branch)}
+                                        >
+                                          Edit
+                                        </button>
                                         <button
                                           className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                          onClick={() => blockBranch(branch.id)}
+                                          onClick={() => handleDelete(branch.id, 'branch')}
                                         >
-                                          Block
+                                          Delete
                                         </button>
-                                      )}
-                                      {isBlocked && (
-                                        <button
-                                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
-                                          onClick={() => unblockBranch(branch.id)}
-                                        >
-                                          Unblock
-                                        </button>
-                                      )}
-                                    </ul>
-                                  </div>
-                                )}
+                                        {isActive && (
+                                          <button
+                                            className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                            onClick={() => blockBranch(branch.id)}
+                                          >
+                                            Block
+                                          </button>
+                                        )}
+                                        {isBlocked && (
+                                          <button
+                                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                            onClick={() => unblockBranch(branch.id)}
+                                          >
+                                            Unblock
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
                               </div>
-                            );
-                          })
-                        )
-                      )}
-
-                      <Modal
-                        isOpen={isPopupOpen}
-                        onRequestClose={closePopup}
-                        contentLabel="Edit Branch"
-                        className="modal"
-                        overlayClassName="overlay"
-                      >
-                        <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
-                        <form>
-                          <div className="mb-4">
-                            <label className="block text-gray-700">Name:</label>
-                            <input
-                              type="text"
-                              value={editData.name}
-                              onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                              className="border rounded-md w-full p-2"
-                            />
-                          </div>
-                          <div className="mb-4">
-                            <label className="block text-gray-700">Email:</label>
-                            <input
-                              type="email"
-                              value={editData.email}
-                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                              className="border rounded-md w-full p-2"
-                            />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              className="bg-gray-300 rounded-md px-4 py-2"
-                              onClick={closePopup}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              className="bg-green-600 text-white rounded-md px-4 py-2"
-                              onClick={handleEditBranch}
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </form>
-                      </Modal>
-
-                    </td>
-                  </tr>
+                            </tr>
+                          );
+                        })
+                      )
+                    )}
+                  </>
                 );
               })}
             </tbody>

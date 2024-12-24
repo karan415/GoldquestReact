@@ -9,6 +9,8 @@ import InternalLogin from '../Pages/InternalLogin'; // Internal Login component
 import Reports from '../Pages/Reports'; // Reports component
 import ExternalLogin from './ExternalLoginData'; // External Login component
 import ClientMasterTracker from '../Pages/ClientMasterTracker'; // Client Master Tracker component
+import CandidateMasterTracker from '../Pages/CandidatemasterTracker'; // Client Master Tracker component
+
 import ExelTracker from '../Pages/ExelTracker'; // Excel Tracker component
 import TatDelay from '../Pages/TatDelay'; // TAT Delay component
 import Acknowledgement from '../Pages/Acknowledgement'; // Acknowledgement component
@@ -17,11 +19,17 @@ import Invoice from './CreateInvoice'; // Invoice component
 import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component
-import ExelTrackerStatus from './ExelTrackerStatus'; // Excel Tracker Status component
+import ExelTrackerStatus from './ExelTrackerStatus'; 
+import CandidateExcelTrackerStatus from './CandidateExcelTrackerStatus'; 
+
+// Excel Tracker Status component
 import CreateInvoice from './CreateInvoice';
 import { ClientEditForm } from './ClientEditForm';
 import HolidayManagement from './HolidayManagement';
 import GenerateReportList from './GenerateReportList';
+
+
+
 
 // Mapping tab keys to their respective components
 const tabComponents = {
@@ -34,6 +42,7 @@ const tabComponents = {
   generate_report:<GenerateReportList/>,
   external: <ExternalLogin />,
   client_master: <ClientMasterTracker />,
+  candidate_master: <CandidateMasterTracker />,
   exel_tracker: <ExelTracker />,
   tat_delay: <TatDelay />,
   Acknowledgement: <Acknowledgement />,
@@ -44,6 +53,10 @@ const tabComponents = {
   active_clients: <ClientManagementList />,
   inactive_clients: <InactiveClients />,
   tracker_status: <ExelTrackerStatus />,
+  Candidate_tracker_status: <CandidateExcelTrackerStatus />,
+
+  
+
   generate_invoice: <CreateInvoice />,
   edit: <ClientEditForm />,
   holiday_management: <HolidayManagement />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axios from 'axios';
@@ -6,12 +6,14 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import LogoBgv from '../Images/LogoBgv.jpg'
 import { FaGraduationCap, FaBriefcase, FaIdCard } from 'react-icons/fa';
 const BackgroundForm = () => {
-    const admin = JSON.parse(localStorage.getItem("admin"))?.name;
+    const storedBranchData = JSON.parse(localStorage.getItem("branch"));
+    const [errors, setErrors] = useState({});
+
 
     const [files, setFiles] = useState({});
     const [serviceData, setServiceData] = useState([]);
     const [status, setStatus] = useState([]);
-    const [companyName, setCompanyName] = useState([]);
+    const [apiStatus, setApiStatus] = useState(true);
     const [annexureData, setAnnexureData] = useState({});
     const [serviceIds, setServiceIds] = useState(''); // Expecting a comma-separated string
     const [formData, setFormData] = useState({
@@ -25,8 +27,8 @@ const BackgroundForm = () => {
             gender: '',
             full_address: '',
             pin_code: '',
-            curren_address_stay_from: '',
-            curren_address_landline_number: '',
+            current_address: '',
+            current_address_landline_number: '',
             current_address_state: '',
             current_prominent_landmark: '',
             current_address_stay_to: '',
@@ -60,6 +62,10 @@ const BackgroundForm = () => {
 
         },
     });
+
+    const [companyName, setCompanyName] = useState([]);
+    const refs = useRef({});
+
     const [isValidApplication, setIsValidApplication] = useState(true);
     const location = useLocation();
     const currentURL = location.pathname + location.search;
@@ -115,6 +121,103 @@ const BackgroundForm = () => {
     };
 
 
+    const validate = () => {
+        const newErrors = {}; // Object to hold validation errors
+        const requiredFields = [
+            "full_name", "former_name", "mb_no", "father_name", "husband_name", "dob",
+            "gender", "full_address", "pin_code", "current_address", "current_address_landline_number",
+            "current_address_state", "current_prominent_landmark", "current_address_stay_to",
+            "nearest_police_station", "nationality", "marital_status",
+        ];
+
+        if (status === 1) {
+            const additionalFields = [
+                "name_declaration", "declaration_date", "pan_card_name", "aadhar_card_name",
+                "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number",
+                "bank_details_account_number", "bank_details_bank_name", "bank_details_branch_name",
+                "bank_details_ifsc_code", "insurance_details_name", "insurance_details_nominee_relation",
+                "insurance_details_nominee_dob", "insurance_details_contact_number", "icc_bank_acc", "food_coupon"
+            ];
+
+            // Concatenate the requiredFields array with additionalFields
+            requiredFields.push(...additionalFields);
+        }
+
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            "image/jpeg", "image/png", "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ]; // Allowed file types
+
+
+        const validateFile = (fileName) => {
+
+            // Check if there are existing errors and if none contain 'is required'
+            if (errors[fileName] && errors[fileName].length > 0 && !errors[fileName].some(error => error.toLowerCase().includes('is required'))) {
+                return errors[fileName];
+            } else {
+                // Correct dynamic property access to get the selected file
+                const file = files[`applications_${fileName}`]?.selectedFiles;
+
+                let fileErrors = [];
+                if (file) {
+                    // Validate each file item
+                    file.forEach((fileItem) => {
+
+                        if (fileItem.size > maxSize) {
+                            const errorMessage = `${fileItem.name}: File size must be less than 2MB.`;
+                            fileErrors.push(errorMessage);
+                        }
+
+                        if (!allowedTypes.includes(fileItem.type)) {
+                            const errorMessage = `${fileItem.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`;
+                            fileErrors.push(errorMessage);
+                        }
+                    });
+                } else {
+                    const errorMessage = `${fileName} is required.`;
+                    fileErrors.push(errorMessage);
+                }
+
+                return fileErrors;
+            }
+        };
+
+
+
+
+        const requiredFileInputs = ["govt_id", "resume_file", "signature",];
+
+        if (status === 1) {
+            const additionalImagesFields = ["passport_photo", "aadhar_card_image", "pan_card_image"];
+
+            // Concatenate the requiredFields array with additionalFields
+            requiredFileInputs.push(...additionalImagesFields);
+        }
+        requiredFileInputs.forEach((field) => {
+            const agrUploadErrors = validateFile(field);
+            if (agrUploadErrors.length > 0) {
+                newErrors[field] = agrUploadErrors;
+            }
+        });
+
+        // Validate required fields
+        requiredFields.forEach((field) => {
+            if (
+                !formData.personal_information[field] ||
+                formData.personal_information[field].trim() === ""
+            ) {
+                newErrors[field] = "This field is required*";
+            }
+        });
+
+        return newErrors;
+    };
+
+
+    let messageBoxText;
+
     const handleServiceChange = (serviceKey, inputName, value) => {
         setAnnexureData((prevData) => ({
             ...prevData,
@@ -126,72 +229,76 @@ const BackgroundForm = () => {
 
 
     };
+    const fetchApplicationStatus = async () => {
+        if (
+            isValidApplication &&
+            decodedValues.app_id &&
+            decodedValues.branch_id &&
+            decodedValues.customer_id
+        ) {
+            try {
+                const response = await fetch(
+                    `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                );
 
-    useEffect(() => {
-        const fetchApplicationStatus = async () => {
-            if (
-                isValidApplication &&
-                decodedValues.app_id &&
-                decodedValues.branch_id &&
-                decodedValues.customer_id
-            ) {
-                try {
-                    const response = await fetch(
-                        `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
-                    );
+                const result = await response.json();
 
-                    const result = await response.json();
+                console.log("Result:", result); // Debugging log
 
-                    console.log("Result:", result); // Debugging log
+                if (result?.status) {
+                    // Application exists and is valid
+                    setServiceIds(result.data?.services || '');
+                    setStatus(result.data?.is_custom_bgv || '');
+                    setCompanyName(result.data?.company_name || '');
 
-                    if (result?.status) {
-                        // Application exists and is valid
-                        setServiceIds(result.data?.services || '');
-                        setStatus(result.data?.is_custom_bgv || '');
-                        setCompanyName(result.data?.company_name || '');
+
+                } else {
+                    // Application does not exist or other error: Hide the form and show an alert
+                    const form = document.getElementById('bg-form');
+                    if (form) {
+                        form.remove();
+                        console.log("Form removed"); // Debugging log
                     } else {
-                        // Application does not exist or other error: Hide the form and show an alert
-                        const form = document.getElementById('bg-form');
-                        if (form) {
-                            form.remove();
-                            console.log("Form removed"); // Debugging log
-                        } else {
-                            console.log("Form not found"); // Debugging log
-                        }
-
-                        // Show message from the response
-                        Swal.fire({
-                            title: 'Notice',
-                            text: result.message || 'Application does not exist.',
-                            icon: 'warning',
-                            confirmButtonText: 'OK',
-                        });
+                        console.log("Form not found"); // Debugging log
                     }
-                } catch (err) {
+                    setApiStatus(false);
+                    messageBoxText = result.message;
+
+                    // Show message from the response
                     Swal.fire({
-                        title: 'Error',
-                        text: err.message || 'An unexpected error occurred.',
-                        icon: 'error',
+                        title: 'Notice',
+                        text: result.message || 'Application does not exist.',
+                        icon: 'warning',
                         confirmButtonText: 'OK',
                     });
                 }
+            } catch (err) {
+                Swal.fire({
+                    title: 'Error',
+                    text: err.message || 'An unexpected error occurred.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             }
-        };
+        }
+    };
+
+    useEffect(() => {
+
 
         fetchApplicationStatus();
     }, []); // The empty array ensures this runs only once, on mount
 
 
-
     const fetchData = useCallback(() => {
         if (!serviceIds) return; // No service IDs to fetch
-    
+
         const serviceArr = serviceIds.split(',').map(Number);
         const requestOptions = {
             method: "GET",
             redirect: "follow",
         };
-    
+
         const fetchPromises = serviceArr.map(serviceId =>
             fetch(
                 `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`,
@@ -204,7 +311,7 @@ const BackgroundForm = () => {
                     return res.json();
                 })
         );
-    
+
         Promise.all(fetchPromises)
             .then(results => {
                 const combinedResults = results.flatMap(result => result.formJson || []);
@@ -217,47 +324,46 @@ const BackgroundForm = () => {
                         return null;
                     }
                 }).filter(data => data !== null);
-    
+
                 setServiceData(parsedData);
             })
             .catch(err => console.error('Fetch error:', err));
     }, [serviceIds]);
-    
+
     useEffect(() => {
         if (serviceIds) {
             fetchData();
         }
     }, [fetchData, serviceIds]); // Dependencies to control re-run
-    
+
 
     const uploadCustomerLogo = async (cef_id) => {
         setLoading(true); // Set loading to true when starting the upload
-    
+
         const fileCount = Object.keys(files).length;
-        console.log(`files - `, files);
-    
+
         for (const [index, [key, value]] of Object.entries(files).entries()) {
             const customerLogoFormData = new FormData();
             customerLogoFormData.append('branch_id', decodedValues.branch_id);
             customerLogoFormData.append('customer_id', decodedValues.customer_id);
             customerLogoFormData.append('candidate_application_id', decodedValues.app_id);
-    
+
             const dbTableRaw = key; // Fixed the typo here
             const dbColumn = value.fileName;
             const dbTable = dbTableRaw.replace("_" + dbColumn, ''); // Removes dbColumn from dbTableRaw
-    
+
             customerLogoFormData.append('db_table', dbTable);
             customerLogoFormData.append('db_column', value.fileName);
             customerLogoFormData.append('cef_id', cef_id);
-    
+
             for (const file of value.selectedFiles) {
                 customerLogoFormData.append('images', file);
             }
-    
+
             if (fileCount === index + 1) {
                 customerLogoFormData.append('send_mail', 1);
             }
-    
+
             try {
                 await axios.post(
                     `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/upload`,
@@ -272,68 +378,128 @@ const BackgroundForm = () => {
                 Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
             }
         }
-    
+
         setLoading(false); // Set loading to false once the upload is complete
     };
 
     const handleFileChange = (dbTable, fileName, e) => {
 
-        const selectedFiles = Array.from(e.target.files);
+        const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
 
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // Allowed file types
+
+        let errors = [];
+        selectedFiles.forEach((file) => {
+            // Check file size
+            if (file.size > maxSize) {
+                errors.push(`${file.name}: File size must be less than 2MB.`);
+            }
+
+            // Check file type (MIME type)
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+            }
+        });
+
+        // If there are errors, show them and don't update the state
+        if (errors.length > 0) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                [fileName]: errors, // Set errors for this file
+            }));
+            return; // Don't update state if there are errors
+        }
+
+        // If no errors, update the state with the selected files
         setFiles((prevFiles) => ({
             ...prevFiles,
             [dbTable]: { selectedFiles, fileName },
         }));
+
+        setErrors((prevErrors) => {
+            const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+            return restErrors;
+        });
+
+
     };
 
-
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission behavior
+    
+        let newErrors = {};
+    
+        const validationError = validate();
+    
+        // Merge flat and nested validation errors
+        Object.keys(validationError).forEach((key) => {
+            if (validationError[key]) {
+                newErrors[key] = validationError[key];
+            }
+        });
+    
+        // Show errors only for the current submission
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            console.log(`newErrors - `, errors);
+    
+            // Focus on the first field with an error
+            const errorField = Object.keys(newErrors)[0];
+            if (refs.current[errorField]) {
+                refs.current[errorField].focus();
+            }
+    
+            return;
+        } else {
+            setErrors({});
+        }
+    
+        // Count files to determine if mail should be sent
+        const fileCount = Object.keys(files).length;
+    
+        // Prepare request data
+        const requestData = {
+            branch_id: decodedValues.branch_id,
+            customer_id: decodedValues.customer_id,
+            application_id: decodedValues.app_id,
+            ...formData,
+            annexure: annexureData,
+            send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files are uploaded
+        };
     
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
     
-        const fileCount = Object.keys(files).length;
-    
-        const raw = JSON.stringify({
-            branch_id: decodedValues.branch_id,
-            customer_id: decodedValues.customer_id,
-            application_id: decodedValues.app_id,
-            ...formData,
-            annexure: annexureData,
-            send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files
-        });
-    
-        console.log('raw', {
-            branch_id: decodedValues.branch_id,
-            customer_id: decodedValues.customer_id,
-            application_id: decodedValues.app_id,
-            ...formData,
-            annexure: annexureData,
-            send_mail: fileCount === 0 ? 1 : 0,
-        });
-    
         const requestOptions = {
             method: "PUT",
             headers: myHeaders,
-            body: raw,
+            body: JSON.stringify(requestData),
             redirect: "follow",
         };
     
-        setLoading(true); // Start loading
+        setLoading(true); // Start loading indicator
     
         try {
+            // Send the request
             const response = await fetch(
                 "https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/submit",
                 requestOptions
             );
     
+            // Check if the response is not OK
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorResponse = await response.json(); // Get the error message from the response body
+                throw new Error(errorResponse.message || `HTTP error! status: ${response.status}`);
             }
     
             const result = await response.json();
     
+            // Success handling based on file count
             if (fileCount === 0) {
                 Swal.fire({
                     title: "Success",
@@ -342,7 +508,7 @@ const BackgroundForm = () => {
                     confirmButtonText: "Ok",
                 });
             } else {
-                // Proceed to upload files if files exist
+                // Upload files if present
                 await uploadCustomerLogo(result.cef_id);
                 Swal.fire({
                     title: "Success",
@@ -351,14 +517,20 @@ const BackgroundForm = () => {
                     confirmButtonText: "Ok",
                 });
             }
+    
+            // Refresh application status
+            fetchApplicationStatus();
         } catch (error) {
             console.error("Error:", error);
-            Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
+    
+            // Error alert with the API message
+            Swal.fire("Error!", error.message, "error");
         } finally {
-            setLoading(false); // Stop loading in all cases
+            setLoading(false); // Stop loading indicator
         }
     };
     
+
 
 
     return (
@@ -386,12 +558,37 @@ const BackgroundForm = () => {
                                 <label>Applicant’s CV: <span className="text-red-500">*</span></label>
                                 <input
                                     type="file"
+                                    accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
                                     className="form-control border rounded w-full bg-white p-3 mt-2"
                                     name="resume_file"
                                     id="resume_file"
                                     onChange={(e) => handleFileChange("applications_resume_file", "resume_file", e)}
+                                    ref={(el) => (refs.current["resume_file"] = el)} // Attach ref here
 
                                 />
+                                {errors.resume_file && <p className="text-red-500">{errors.resume_file}</p>}
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                </p>
+                            </div>
+                            <div className="form-group col-span-2">
+                                <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
+                                <input
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
+                                    className="form-control border rounded w-full bg-white p-3 mt-2"
+                                    name="govt_id"
+                                    onChange={(e) => handleFileChange("applications_govt_id", "govt_id", e)}
+                                    multiple
+                                    ref={(el) => (refs.current["applications_govt_id"] = el)} // Attach ref here
+
+                                />
+                                {errors.govt_id && <p className="text-red-500">{errors.govt_id}</p>}
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                </p>
                             </div>
                             {status === 1 && (
                                 <>
@@ -403,17 +600,30 @@ const BackgroundForm = () => {
                                                 name="aadhar_card_name"
                                                 value={formData.personal_information.aadhar_card_name}
                                                 onChange={handleChange}
+                                                ref={(el) => (refs.current["aadhar_card_name"] = el)} // Attach ref here
+
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
+                                            {errors.aadhar_card_name && <p className="text-red-500">{errors.aadhar_card_name}</p>}
+
                                         </div>
                                         <div className='form-group'>
                                             <label>Aadhar Card Image</label>
                                             <input
                                                 type="file"
+                                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
                                                 name="aadhar_card_image"
                                                 onChange={(e) => handleFileChange("applications_aadhar_card_image", "aadhar_card_image", e)}
                                                 className="form-control border rounded w-full p-1 mt-2"
+                                                ref={(el) => (refs.current["aadhar_card_image"] = el)} // Attach ref here
+
+
                                             />
+                                            {errors.aadhar_card_image && <p className="text-red-500">{errors.aadhar_card_image}</p>}
+                                            <p className="text-gray-500 text-sm mt-2">
+                                                Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                            </p>
                                         </div>
                                         <div className='form-group'>
                                             <label>Name as per Pan Card</label>
@@ -422,18 +632,29 @@ const BackgroundForm = () => {
                                                 name="pan_card_name"
                                                 value={formData.personal_information.pan_card_name}
                                                 onChange={handleChange}
+                                                ref={(el) => (refs.current["pan_card_name"] = el)} // Attach ref here
+
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
+                                            {errors.pan_card_name && <p className="text-red-500">{errors.pan_card_name}</p>}
                                         </div>
                                         <div className='form-group'>
                                             <label>Pan Card Image</label>
                                             <input
                                                 type="file"
+                                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
                                                 name="pan_card_image"
                                                 onChange={(e) => handleFileChange("applications_pan_card_image", "pan_card_image", e)}
                                                 className="form-control border rounded w-full p-1 mt-2"
+                                                ref={(el) => (refs.current["pan_card_image"] = el)} // Attach ref here
+
 
                                             />
+                                            {errors.pan_card_image && <p className="text-red-500">{errors.pan_card_image}</p>}
+                                            <p className="text-gray-500 text-sm mt-2">
+                                                Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                            </p>
                                         </div>
                                     </div>
 
@@ -441,25 +662,21 @@ const BackgroundForm = () => {
                                         <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
                                         <input
                                             type="file"
+                                            accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
                                             className="form-control border rounded w-full bg-white p-3 mt-2"
                                             name="passport_photo"
                                             onChange={(e) => handleFileChange("applications_passport_photo", "passport_photo", e)}
                                             multiple
+                                            ref={(el) => (refs.current["passport_photo"] = el)} // Attach ref here
+
                                         />
+                                        {errors.passport_photo && <p className="text-red-500">{errors.passport_photo}</p>}
+                                        <p className="text-gray-500 text-sm mt-2">
+                                            Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                        </p>
                                     </div>
                                 </>
-                            )}
-                            {status === 0 && (
-                                <div className="form-group col-span-2">
-                                    <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="file"
-                                        className="form-control border rounded w-full bg-white p-3 mt-2"
-                                        name="govt_id"
-                                        onChange={(e) => handleFileChange("applications_govt_id", "govt_id", e)}
-                                        multiple
-                                    />
-                                </div>
                             )}
 
                         </div>
@@ -476,8 +693,10 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="full_name"
                                     name="full_name"
+                                    ref={(el) => (refs.current["full_name"] = el)}
 
                                 />
+                                {errors.full_name && <p className="text-red-500">{errors.full_name}</p>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="full_name">Full Address<span className="text-red-500">*</span></label>
@@ -488,23 +707,27 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="full_address"
                                     name="full_address"
+                                    ref={(el) => (refs.current["full_address"] = el)} // Attach ref here
 
                                 />
+                                {errors.full_address && <p className="text-red-500">{errors.full_address}</p>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="full_name">Current Address <span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
-                                    value={formData.personal_information.curren_address_stay_from}
+                                    value={formData.personal_information.current_address}
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
-                                    id="curren_address_stay_from"
-                                    name="curren_address_stay_from"
+                                    id="current_address"
+                                    name="current_address"
+                                    ref={(el) => (refs.current["current_address"] = el)} // Attach ref here
 
                                 />
+                                {errors.current_address && <p className="text-red-500">{errors.current_address}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Pin Code <span className="text-red-500">*</span></label>
+                                <label htmlFor="pin_code">Pin Code <span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
                                     value={formData.personal_information.pin_code}
@@ -512,23 +735,27 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="pin_code"
                                     name="pin_code"
+                                    ref={(el) => (refs.current["pin_code"] = el)} // Attach ref here
 
                                 />
+                                {errors.pin_code && <p className="text-red-500">{errors.pin_code}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Current Landline Number <span className="text-red-500">*</span></label>
+                                <label htmlFor="current_address_landline_number">Current Landline Number <span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
-                                    value={formData.personal_information.curren_address_landline_number}
+                                    value={formData.personal_information.current_address_landline_number}
                                     type="number"
                                     className="form-control border rounded w-full p-2 mt-2"
-                                    id="curren_address_landline_number"
-                                    name="curren_address_landline_number"
+                                    id="current_address_landline_number"
+                                    name="current_address_landline_number"
+                                    ref={(el) => (refs.current["current_address_landline_number"] = el)} // Attach ref here
 
                                 />
+                                {errors.current_address_landline_number && <p className="text-red-500">{errors.current_address_landline_number}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Current State <span className="text-red-500">*</span></label>
+                                <label htmlFor="current_address_state">Current State <span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
                                     value={formData.personal_information.current_address_state}
@@ -536,11 +763,13 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="current_address_state"
                                     name="current_address_state"
+                                    ref={(el) => (refs.current["current_address_state"] = el)} // Attach ref here
 
                                 />
+                                {errors.current_address_state && <p className="text-red-500">{errors.current_address_state}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Current Landmark<span className="text-red-500">*</span></label>
+                                <label htmlFor="current_prominent_landmark">Current Landmark<span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
                                     value={formData.personal_information.current_prominent_landmark}
@@ -548,11 +777,13 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="current_prominent_landmark"
                                     name="current_prominent_landmark"
+                                    ref={(el) => (refs.current["current_prominent_landmark"] = el)} // Attach ref here
 
                                 />
+                                {errors.current_prominent_landmark && <p className="text-red-500">{errors.current_prominent_landmark}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Current Address Stay No.<span className="text-red-500">*</span></label>
+                                <label htmlFor="current_address_stay_to">Current Address Stay No.<span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
                                     value={formData.personal_information.current_address_stay_to}
@@ -560,11 +791,13 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="current_address_stay_to"
                                     name="current_address_stay_to"
+                                    ref={(el) => (refs.current["current_address_stay_to"] = el)} // Attach ref here
 
                                 />
+                                {errors.current_address_stay_to && <p className="text-red-500">{errors.current_address_stay_to}</p>}
                             </div>
                             <div className="form-group">
-                                <label htmlFor="full_name">Nearest Police Station.<span className="text-red-500">*</span></label>
+                                <label htmlFor="nearest_police_station">Nearest Police Station.<span className="text-red-500">*</span></label>
                                 <input
                                     onChange={handleChange}
                                     value={formData.personal_information.nearest_police_station}
@@ -572,8 +805,10 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="nearest_police_station"
                                     name="nearest_police_station"
+                                    ref={(el) => (refs.current["nearest_police_station"] = el)} // Attach ref here
 
                                 />
+                                {errors.nearest_police_station && <p className="text-red-500">{errors.nearest_police_station}</p>}
                             </div>
 
                             <div className="form-group">
@@ -584,8 +819,10 @@ const BackgroundForm = () => {
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="former_name"
+                                    ref={(el) => (refs.current["former_name"] = el)} // Attach ref here
                                     name="former_name"
                                 />
+                                {errors.former_name && <p className="text-red-500">{errors.former_name}</p>}
                             </div>
 
                             <div className="form-group">
@@ -599,8 +836,10 @@ const BackgroundForm = () => {
                                     id="mob_no"
                                     minLength="10"
                                     maxLength="10"
+                                    ref={(el) => (refs.current["mob_no"] = el)} // Attach ref here
 
                                 />
+                                {errors.mb_no && <p className="text-red-500">{errors.mb_no}</p>}
                             </div>
 
                             <div className="form-group">
@@ -612,8 +851,10 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="father_name"
                                     name="father_name"
+                                    ref={(el) => (refs.current["father_name"] = el)} // Attach ref here
 
                                 />
+                                {errors.father_name && <p className="text-red-500">{errors.father_name}</p>}
                             </div>
 
                             <div className="form-group">
@@ -624,8 +865,10 @@ const BackgroundForm = () => {
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="husband_name"
+                                    ref={(el) => (refs.current["husband_name"] = el)} // Attach ref here
                                     name="husband_name"
                                 />
+                                {errors.husband_name && <p className="text-red-500">{errors.husband_name}</p>}
                             </div>
 
                             <div className="form-group">
@@ -637,8 +880,10 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     name="dob"
                                     id="dob"
+                                    ref={(el) => (refs.current["dob"] = el)} // Attach ref here
 
                                 />
+                                {errors.dob && <p className="text-red-500">{errors.dob}</p>}
                             </div>
 
                             <div className="form-group">
@@ -650,8 +895,10 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     name="gender"
                                     id="gender"
+                                    ref={(el) => (refs.current["gender"] = el)} // Attach ref here
 
                                 />
+                                {errors.gender && <p className="text-red-500">{errors.gender}</p>}
                             </div>
 
 
@@ -665,13 +912,16 @@ const BackgroundForm = () => {
                                     className="form-control border rounded w-full p-2 mt-2"
                                     name="nationality"
                                     id="nationality"
+                                    ref={(el) => (refs.current["nationality"] = el)} // Attach ref here
 
                                 />
+                                {errors.nationality && <p className="text-red-500">{errors.nationality}</p>}
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="marital_status">Marital Status: <span className="text-red-500">*</span></label>
                                 <select
+                                    ref={(el) => (refs.current["marital_status"] = el)}
                                     className="form-control border rounded w-full p-2 mt-2"
                                     name="marital_status"
                                     id="marital_status"
@@ -686,6 +936,7 @@ const BackgroundForm = () => {
                                     <option value="Divorced">Divorced</option>
                                     <option value="Separated">Separated</option>
                                 </select>
+                                {errors.marital_status && <p className="text-red-500">{errors.marital_status}</p>}
                             </div>
                         </div>
                         {status === 1 && (
@@ -711,8 +962,10 @@ const BackgroundForm = () => {
                                         name="declaration_date"
                                         value={formData.personal_information.declaration_date}
                                         onChange={handleChange}
+                                        ref={(el) => (refs.current["declaration_date"] = el)}
                                         className="form-control border rounded w-full p-2 mt-2"
                                     />
+                                    {errors.declaration_date && <p className="text-red-500">{errors.declaration_date}</p>}
                                 </div>
 
                                 <div className='border rounded-md p-3 mt-3'>
@@ -725,8 +978,11 @@ const BackgroundForm = () => {
                                                 name="emergency_details_name"
                                                 value={formData.personal_information.emergency_details_name}
                                                 onChange={handleChange}
+                                                ref={(el) => (refs.current["emergency_details_name"] = el)} // Attach ref here
+
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
+                                            {errors.emergency_details_name && <p className="text-red-500">{errors.emergency_details_name}</p>}
                                         </div>
                                         <div className='form-group'>
                                             <label>Relation</label>
@@ -735,8 +991,11 @@ const BackgroundForm = () => {
                                                 name="emergency_details_relation"
                                                 value={formData.personal_information.emergency_details_relation}
                                                 onChange={handleChange}
+                                                ref={(el) => (refs.current["emergency_details_relation"] = el)} // Attach ref here
+
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
+                                            {errors.emergency_details_relation && <p className="text-red-500">{errors.emergency_details_relation}</p>}
                                         </div>
                                         <div className='form-group'>
                                             <label>Contact Number</label>
@@ -745,8 +1004,11 @@ const BackgroundForm = () => {
                                                 name="emergency_details_contact_number"
                                                 value={formData.personal_information.emergency_details_contact_number}
                                                 onChange={handleChange}
+                                                ref={(el) => (refs.current["emergency_details_contact_number"] = el)} // Attach ref here
+
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
+                                            {errors.emergency_details_contact_number && <p className="text-red-500">{errors.emergency_details_contact_number}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -844,7 +1106,10 @@ const BackgroundForm = () => {
                                         />
                                         <label>No</label>
                                     </div>
+
                                 </div>
+                                {errors.icc_bank_acc && <p className="text-red-500">{errors.icc_bank_acc}</p>}
+
                                 <div className='border rounded-md p-3 mt-3'>
                                     <h3 className='text-center text-xl font-bold pb-2'>Banking Details: </h3>
                                     <span className='text-sm text-center block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
@@ -857,6 +1122,7 @@ const BackgroundForm = () => {
                                             onChange={handleChange}
                                             className="form-control border rounded w-full p-2 mt-2"
                                         />
+                                        {errors.bank_details_account_number && <p className="text-red-500">{errors.bank_details_account_number}</p>}
                                     </div>
                                     <div className='form-group'>
                                         <label>Bank Name</label>
@@ -867,6 +1133,7 @@ const BackgroundForm = () => {
                                             onChange={handleChange}
                                             className="form-control border rounded w-full p-2 mt-2"
                                         />
+                                        {errors.bank_details_bank_name && <p className="text-red-500">{errors.bank_details_bank_name}</p>}
                                     </div>
                                     <div className='form-group'>
                                         <label>Bank Branch Name</label>
@@ -877,6 +1144,7 @@ const BackgroundForm = () => {
                                             onChange={handleChange}
                                             className="form-control border rounded w-full p-2 mt-2"
                                         />
+                                        {errors.bank_details_branch_name && <p className="text-red-500">{errors.bank_details_branch_name}</p>}
                                     </div>
                                     <div className='form-group'>
                                         <label>IFSC Code</label>
@@ -887,6 +1155,7 @@ const BackgroundForm = () => {
                                             onChange={handleChange}
                                             className="form-control border rounded w-full p-2 mt-2"
                                         />
+                                        {errors.bank_details_ifsc_code && <p className="text-red-500">{errors.bank_details_ifsc_code}</p>}
                                     </div>
                                 </div>
 
@@ -963,10 +1232,102 @@ const BackgroundForm = () => {
                                         <label>No</label>
                                     </div>
                                 </div>
+                                {errors.food_coupon && <p className="text-red-500">{errors.food_coupon}</p>}
+
 
                                 <p className='text-left '>Food coupons are vouchers or digital meal cards given to employees to purchase food and non-alcoholic beverages. Specific amount as per your requirement would get deducted from your Basic Pay. These are tax free, considered as a non-monetary benefit and are exempt from tax up to a specified limit.</p>
 
                             </>
+                        )}
+
+
+                        {serviceData.length > 0 ? (
+                            serviceData.map((service, serviceIndex) => (
+                                <div key={serviceIndex} className="border md:p-8 p-2 rounded-md mt-5 ">
+                                    <h2 className="text-center py-4 text-xl font-bold mb-3">{service.heading}</h2>
+                                    <div className="grid gap-4 grid-cols-2">
+                                        {service.inputs.map((input, inputIndex) => (
+                                            <div key={inputIndex} className="mb-2">
+                                                <label className="block mb-1">
+                                                    {input.label}
+                                                </label>
+                                                {input.type === "input" && (
+                                                    <input
+                                                        type="text"
+                                                        name={input.name} className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    />
+                                                )}
+                                                {input.type === "textarea" && (
+                                                    <textarea
+                                                        name={input.name} cols={1}
+                                                        rows={1}
+                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    />
+                                                )}
+                                                {input.type === "datepicker" && (
+                                                    <input
+                                                        type="date"
+                                                        name={input.name} className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    />
+                                                )}
+                                                {input.type === "number" && (
+                                                    <input
+                                                        type="number"
+                                                        name={input.name} className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    />
+                                                )}
+                                                {input.type === "email" && (
+                                                    <input
+                                                        type="email"
+                                                        name={input.name} className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    />
+                                                )}
+                                                {input.type === "select" && (
+                                                    <select
+                                                        name={input.name} className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) =>
+                                                            handleServiceChange(service.db_table, input.name, e.target.value)
+                                                        }
+                                                    >
+                                                        {input.options.map((option, optionIndex) => (
+                                                            <option key={optionIndex} value={option}>
+                                                                {option}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                                {input.type === "file" && (
+                                                    <input
+                                                        type="file"
+                                                        name={input.name}
+                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
+                                                        onChange={(e) => handleFileChange(service.db_table + '_' + input.name, input.name, e)}
+                                                    />
+
+                                                )}
+
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No services available.</p>
                         )}
 
                         <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>
@@ -981,15 +1342,21 @@ const BackgroundForm = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
                                 <div className="form-group">
-                                    <label>Attach Signature: <span className="text-red-500">*</span></label>
+                                    <label>Attach signature: <span className="text-red-500">*</span></label>
                                     <input
                                         onChange={(e) => handleFileChange("applications_signature", "signature", e)}
                                         type="file"
+                                        accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+
                                         className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
                                         name="signature"
                                         id="signature"
 
                                     />
+                                    {errors.signature && <p className="text-red-500">{errors.signature}</p>}
+                                    <p className="text-gray-500 text-sm mt-2">
+                                        Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                    </p>
                                 </div>
 
                                 <div className="form-group">
@@ -1002,11 +1369,13 @@ const BackgroundForm = () => {
                                         name="name_declaration"
 
                                     />
+                                    {errors.name_declaration && <p className="text-red-500">{errors.name_declaration}</p>}
                                 </div>
 
                                 <div className="form-group">
                                     <label>Date:</label>
                                     <input
+
                                         onChange={handleChange}
                                         value={formData.declaration_date}
                                         type="date"
@@ -1014,6 +1383,7 @@ const BackgroundForm = () => {
                                         name="declaration_date"
 
                                     />
+                                    {errors.declaration_date && <p className="text-red-500">{errors.declaration_date}</p>}
                                 </div>
                             </div>
                         </div>
@@ -1045,104 +1415,7 @@ const BackgroundForm = () => {
                                 <p>Aadhaar Card / Bank Passbook / Passport Copy / Driving License / Voter ID.</p>
                             </div>
                         </div>
-                        {serviceData.length > 0 ? (
-                            serviceData.map((service, serviceIndex) => (
-                                <div key={serviceIndex} className="border md:p-8 p-2 rounded-md mt-5 ">
-                                    <h2 className="text-center py-4 text-xl font-bold mb-3">{service.heading}</h2>
-                                    <div className="grid gap-4 grid-cols-2">
-                                        {service.inputs.map((input, inputIndex) => (
-                                            <div key={inputIndex} className="mb-2">
-                                                <label className="block mb-1">
-                                                    {input.label}
-                                                </label>
-                                                {input.type === "input" && (
-                                                    <input
-                                                        type="text"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    />
-                                                )}
-                                                {input.type === "textarea" && (
-                                                    <textarea
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        cols={1}
-                                                        rows={1}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    />
-                                                )}
-                                                {input.type === "datepicker" && (
-                                                    <input
-                                                        type="date"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    />
-                                                )}
-                                                {input.type === "number" && (
-                                                    <input
-                                                        type="number"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    />
-                                                )}
-                                                {input.type === "email" && (
-                                                    <input
-                                                        type="email"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    />
-                                                )}
-                                                {input.type === "select" && (
-                                                    <select
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) =>
-                                                            handleServiceChange(service.db_table, input.name, e.target.value)
-                                                        }
-                                                    >
-                                                        {input.options.map((option, optionIndex) => (
-                                                            <option key={optionIndex} value={option}>
-                                                                {option}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                )}
-                                                {input.type === "file" && (
-                                                    <input
-                                                        type="file"
-                                                        name={input.name}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                        onChange={(e) => handleFileChange(service.db_table + '_' + input.name, input.name, e)}
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No services available.</p>
-                        )}
+
 
                         <p className='text-center text-sm mt-4'>
                             NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .
@@ -1152,6 +1425,15 @@ const BackgroundForm = () => {
                     </div>
                 </form>
             }
+
+            {
+                !apiStatus && (
+                    <div className="error-box">
+                      Application not found
+                    </div>
+                )
+            }
+
 
         </>
     );

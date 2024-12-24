@@ -23,6 +23,12 @@ import { CustomFunctionsProvider } from './CustomFunctionsContext'
 import { TabProvider } from './Pages/TabContext';
 import { BranchProviderExel } from './Pages/BranchContextExel';
 import CandidateMain from './Pages/Candidate/CandidateMain';
+import CandidateBGV from './Pages/CandidateBGV';
+
+
+import CandidateGenerateReport from './Pages/Candidate/CandidateGenerateReport';
+
+
 import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
 import 'react-select-search/style.css'
@@ -66,6 +72,10 @@ const App = () => {
                                       <Route path='/ClientBulkUpload' element={<ClientBulkUpload />} />
                                       <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
+                                      <Route path='/candidate-bgv' element={<Admin><CandidateBGV /></Admin>} />
+                                      
+                                      <Route path='/candidate_genrate_Report' element={<Admin><CandidateGenerateReport /></Admin>} />
+
                                       <Route path='/background-form' element={<BackgroundForm />} />
                                       <Route path='/digital_form' element={<DigitalAddressVerification />} />
                                       <Route path='/loginpage' element={<LoginPage />} />

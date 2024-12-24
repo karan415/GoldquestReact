@@ -178,3 +178,23 @@ div#popup-2 {
     padding-bottom: 20px !important;
   }
 }
+/* CSS to center the error box on the page */
+.error-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: 100px;
+  margin: 0 auto;
+  background-color: #f8d7da; /* Light red background */
+  color: #721c24; /* Dark red text */
+  border: 1px solid #f5c6cb; /* Red border */
+  border-radius: 8px; /* Rounded corners */
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  position: absolute;
+  top: 50%; /* Vertically center */
+  left: 50%; /* Horizontally center */
+  transform: translate(-50%, -50%); /* Offset the position to perfectly center */
+}

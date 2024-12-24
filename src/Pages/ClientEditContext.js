@@ -1,21 +1,24 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useRef,useCallback, useContext } from 'react';
 import Swal from 'sweetalert2';
-import { useData } from './DataContext';
 import { useApi } from '../ApiContext';
+
 import axios from 'axios';
 const ClientEditContext = createContext();
 
 
 export const ClientEditProvider = ({ children }) => {
+    const refs = useRef({});
+
+    const [errors, setErrors] = useState({});
     const [files, setFiles] = useState([]);
     const API_URL = useApi();
     const [loading, setLoading] = useState(false);
     const [clientData, setClientData] = useState();
     const [custom_bgv, setCustom_Bgv] = useState(0);
-    
 
 
-    const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId) => {
+
+    const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId,) => {
         const fileCount = Object.keys(files).length;
 
         for (const [index, [key, value]] of Object.entries(files).entries()) {
@@ -56,68 +59,169 @@ export const ClientEditProvider = ({ children }) => {
     };
 
 
-    const handleClientChange = (e, index) => {
+    const handleClientChange = useCallback((e) => {
         const { name, value, type, files } = e.target;
-        setClientData(prevData => ({
+        setClientData((prevData) => ({
             ...prevData,
             [name]: type === 'file' ? files[0] : value,
         }));
+    }, []);
+    
+
+
+    const validate = () => {
+        const newErrors = {};
+        const requiredFields = [
+            "name", "address", "state_code", "state", "mobile",
+            "address",
+            "contact_person_name",
+            "escalation_point_contact",
+            "single_point_of_contact",
+            "gst_number",
+            "tat_days",
+            "agreement_date",
+            "custom_template",
+            "state",
+            "state_code",
+            "is_custom_bgv",
+            "client_standard",
+            "agreement",
+            "industry_classification",
+        ];
+
+        const maxSize = 2 * 1024 * 1024;
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+
+        const validateFile = (fileName) => {
+            console.log(`errorserrors - `, errors);
+
+            if (errors[fileName] && errors[fileName].length > 0) {
+                return errors[fileName];
+            } else {
+                const file = fileName === 'custom_logo' ? files.custom_logo : files.agr_upload;
+                let errors = [];
+
+                if (file && file.length > 0) {
+                    file.forEach((file) => {
+                        if (file.size > maxSize) {
+                            errors.push(`${file.name}: File size must be less than 2MB.`);
+                        }
+
+                        if (!allowedTypes.includes(file.type)) {
+                            errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+                        }
+                    });
+                }
+
+                return errors;
+            }
+        };
+
+
+        if (clientData.custom_template === 'yes') {
+            const customLogoErrors = validateFile('custom_logo');
+            if (customLogoErrors.length > 0) {
+                newErrors.custom_logo = customLogoErrors;
+            }
+        }
+
+        const agrUploadErrors = validateFile('agr_upload');
+        if (agrUploadErrors.length > 0) {
+            newErrors.agr_upload = agrUploadErrors;
+        }
+
+        requiredFields.forEach((field) => {
+            if (!clientData[field]) {
+                newErrors[field] = "This field is required*";
+            }
+        });
+
+
+
+        return newErrors;
     };
 
     const handleClientSubmit = async (e) => {
-        const fileCount = Object.keys(files).length;
-    
         e.preventDefault();
+        const fileCount = Object.keys(files).length;
+
+        let newErrors = {};
+
+        const validationError = validate();
+
+        Object.keys(validationError).forEach((key) => {
+            if (validationError[key]) {
+                newErrors[key] = validationError[key];
+            }
+        });
+
+
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+
+            const errorField = Object.keys(newErrors)[0];
+            if (refs.current[errorField]) {
+                refs.current[errorField].focus();
+            }
+
+            setLoading(false);
+            return;
+        } else {
+            setErrors({});
+        }
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-        setLoading(true); // Start loading
-    
+
+        setLoading(true);
+
         if (!clientData.name || !clientData.client_unique_id) {
             Swal.fire('Error!', 'Missing required fields: Branch ID, Name, Email', 'error');
-            setLoading(false); // Stop loading if there's an error
+            setLoading(false);
             return;
         }
-    
+
         const raw = JSON.stringify({
             ...clientData,
             admin_id,
-            custom_bgv: custom_bgv,
-
+            custom_bgv: custom_bgv || clientData.is_custom_bgv,
             _token: storedToken
         });
-    
+
         const requestOptions = {
             method: "PUT",
             headers: { 'Content-Type': 'application/json' },
             body: raw,
             redirect: "follow"
         };
-    
+
         try {
             const response = await fetch(`${API_URL}/customer/update`, requestOptions);
             const contentType = response.headers.get("content-type");
-    
-            const data = contentType.includes("application/json") ? await response.json() : {};
+
+            const data = contentType && contentType.includes("application/json") ? await response.json() : {};
             const newToken = data._token || data.token;
-    
+
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-    
+
             if (!response.ok) {
-                if (contentType && contentType.includes("application/json")) {
-                    const errorData = await response.json();
-                    Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                } else {
-                    const errorText = await response.text();
-                    Swal.fire('Error!', `An error occurred: ${errorText}`, 'error');
-                }
+                const errorMessage = contentType && contentType.includes("application/json")
+                    ? (await response.json()).message
+                    : await response.text();
+
+                Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
                 return;
             }
-    
+
             const customerInsertId = clientData.customer_id;
-    
-            // Check if files exist and handle success or upload
+
             if (fileCount === 0) {
                 Swal.fire({
                     title: "Success",
@@ -127,29 +231,30 @@ export const ClientEditProvider = ({ children }) => {
                 });
             } else {
                 // Proceed to upload files if files exist
-                uploadCustomerLogo(admin_id, storedToken, customerInsertId);
-    
+                await uploadCustomerLogo(admin_id, storedToken, customerInsertId);
+
                 Swal.fire({
                     title: "Success",
-                    text: `Client Updated Successfully `,
+                    text: `Client Updated Successfully.`,
                     icon: "success",
                     confirmButtonText: "Ok",
                 });
             }
-    
+
         } catch (error) {
             console.error('There was a problem with the fetch operation:', error);
             Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
         } finally {
-            setLoading(false); // Stop loading
+            setLoading(false);
         }
     };
-    
+
+
 
 
 
     return (
-        <ClientEditContext.Provider value={{ clientData, setClientData,setCustom_Bgv,custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
+        <ClientEditContext.Provider value={{ loading, clientData, errors, setErrors, setClientData,setCustom_Bgv, refs, custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
             {children}
         </ClientEditContext.Provider>
     );

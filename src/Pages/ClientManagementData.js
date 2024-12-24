@@ -4,7 +4,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import { useClient } from './ClientManagementContext';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
-
+import Swal from 'sweetalert2';
 const ClientManagementData = () => {
     const [selectedServices, setSelectedServices] = useState({});
     const [, setSelectedData] = useState([]);
@@ -94,21 +94,23 @@ const ClientManagementData = () => {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
             const res = await fetch(`${API_URL}/customer/add-customer-listings?admin_id=${admin_id}&_token=${storedToken}`);
-
+    
             if (!res.ok) {
-                throw new Error(`Network response was not ok: ${res.status}`);
+                const errorResponse = await res.json();
+                const errorMessage = errorResponse.message || `Network response was not ok: ${res.status}`;
+                throw new Error(errorMessage);
             }
-
+    
             const result = await res.json();
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-
+    
             if (!result || !result.data || !Array.isArray(result.data.services)) {
                 throw new Error('Invalid response format: Missing or invalid services data');
             }
-
+    
             const processedServices = result.data.services.map(item => ({
                 ...item,
                 service_id: item.id,
@@ -117,24 +119,34 @@ const ClientManagementData = () => {
                 selectedPackages: [] // Assuming this is still required
             }));
             setService(processedServices);
-
+    
             if (!Array.isArray(result.data.packages)) {
                 throw new Error('Invalid response format: Missing or invalid packages data');
             }
-
+    
             const processedPackages = result.data.packages.map(item => ({
                 ...item,
                 service_id: item.id
             }));
             setPackageList(processedPackages);
-
+    
         } catch (error) {
             console.error("Error fetching services:", error);
-            setError(error.message);
+    
+            // Show the error message in a Swal alert
+            Swal.fire({
+                title: 'Error!',
+                text: error.message, // Display the error message from the catch block
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+    
+            setError(error.message); // Set the error state with the message
         } finally {
             setLoading(false);
         }
     }, [API_URL]);
+    
 
     useEffect(() => {
         fetchServicesAndPackages();

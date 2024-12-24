@@ -123,7 +123,7 @@ const ServiceEditForm = () => {
        
 
 
-    }, [serviceData, clientData.services,clientData, priceData,]);
+    }, [serviceData, clientData.services, priceData,]);
    
 
     const handleCheckboxChange = (serviceId) => {

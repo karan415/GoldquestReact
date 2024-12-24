@@ -148,7 +148,7 @@ const LoginForm = () => {
 
   return (
     <>
-     
+
       <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center">
         <div className="md:flex  bg-white w-10/12 m-auto rounded-md">
           <div className="md:w-7/12 w-full">
@@ -213,7 +213,7 @@ const LoginForm = () => {
                   </div>
                 </div>
                 <button
-                  type="submit"
+                  type={showOtpModal ? "button" : "submit"}
                   className="w-full bg-[#24245a] hover:bg-[#24245a] xxl:py-5 text-white font-semibold py-2 md:py-3 px-4 signinbtn rounded-full text-xl tracking-widest"
                   disabled={loading}
                 >
@@ -231,6 +231,7 @@ const LoginForm = () => {
                         onChange={(e) => setOtp(e.target.value)}
                       />
                       <button
+                      type='submit'
                         className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={handleOtpSubmit}
                         disabled={isOtpLoading}

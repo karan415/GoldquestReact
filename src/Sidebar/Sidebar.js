@@ -8,7 +8,8 @@ import { FaFileInvoiceDollar, FaEye, FaEyeSlash } from "react-icons/fa";
 import { TiCloudStorage } from "react-icons/ti";
 import { TbReportSearch } from "react-icons/tb";
 import { VscLinkExternal } from "react-icons/vsc";
-import { MdOutlineTrackChanges, MdTrackChanges, MdEmail } from "react-icons/md";
+import { MdOutlineTrackChanges, MdTrackChanges, MdEmail,MdAccessTime
+} from "react-icons/md";
 import { IoNotificationsCircle } from "react-icons/io5";
 import { GrServices } from "react-icons/gr";
 import classNames from 'classnames';
@@ -39,6 +40,9 @@ const tabNames = {
   },
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
   client_master: (<><MdOutlineTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Client Master Tracker</>),
+  candidate_master: (<><MdAccessTime
+    className="h-6 w-6 mr-3 text-gray-600" />Candidate Master Tracker</>),
+
   // exel_tracker: (<><MdTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Exel Tracker</>),
   tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />Tat Delay Notification</>),
   Acknowledgement: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgement Email</>),

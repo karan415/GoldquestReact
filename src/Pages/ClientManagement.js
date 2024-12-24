@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Swal from 'sweetalert2';
 import { useClient } from "./ClientManagementContext";
 import ClientManagementData from "./ClientManagementData";
@@ -21,15 +21,15 @@ const options = states.map(state => ({ value: state.isoCode, label: state.name }
 
 const ClientManagement = () => {
   const { handleTabChange } = useSidebar();
+  const [files, setFiles] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
   const [dataLoading, setDataLoading] = useState(false); // New state for loading indicator
   const [custom_bgv, setCustom_Bgv] = useState(0);
 
   const [, setInsertId] = useState();
-  const [files, setFiles] = useState([]);
   const API_URL = useApi();
-  const { clientData, setClientData } = useClient();
+  const { clientData, setClientData, setValidationsErrors, validationsErrors } = useClient();
   useEffect(() => {
 
     if (!clientData) {
@@ -39,6 +39,8 @@ const ClientManagement = () => {
       setDataLoading(false);
     }
   })
+  const refs = useRef({});
+
 
   const [input, setInput] = useState({
     company_name: "",
@@ -59,7 +61,7 @@ const ClientManagement = () => {
     custom_template: "",
     custom_address: "",
     username: "",
-    industry_classification:'',
+    industry_classification: '',
   });
 
   const handleCheckBoxChange = (event) => {
@@ -71,14 +73,49 @@ const ClientManagement = () => {
   const handleFileChange = (fileName, e) => {
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
 
-    // Assuming `file` is the state variable holding the files
-    setFiles((prevFiles) => {
-      return {
-        ...prevFiles,
-        [fileName]: selectedFiles,
-      };
+    const maxSize = 2 * 1024 * 1024; // 2MB size limit
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]; // Allowed file types
+
+    let errors = [];
+
+    // Validate each file
+    selectedFiles.forEach((file) => {
+      // Check file size
+      if (file.size > maxSize) {
+        errors.push(`${file.name}: File size must be less than 2MB.`);
+      }
+
+      // Check file type (MIME type)
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+      }
+    });
+
+    // If there are errors, show them and don't update the state
+    if (errors.length > 0) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [fileName]: errors, // Set errors for this file
+      }));
+      return; // Don't update state if there are errors
+    }
+
+    // If no errors, update the state with the selected files
+    setFiles((prevFiles) => ({
+      ...prevFiles,
+      [fileName]: selectedFiles,
+    }));
+
+    setErrors((prevErrors) => {
+      const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+      return restErrors;
     });
   };
+
 
 
   const [branchForms, setBranchForms] = useState([{ branch_name: "", branch_email: "" }]);
@@ -109,31 +146,79 @@ const ClientManagement = () => {
     const requiredFields = [
       "company_name", "client_code", "address", "state_code", "state", "mobile_number",
       "name_of_escalation", "client_spoc", "contact_person", "gstin", "tat",
-      "date_agreement", "agreement_period", "client_standard",
-      "additional_login", "custom_template",
+      "date_agreement", "custom_template", "additional_login", "industry_classification",
     ];
 
-    requiredFields.forEach(field => {
-      if (!input[field]) newErrors[field] = "This field is required*";
-    });
+    // Define file validation parameters
+    const maxSize = 2 * 1024 * 1024; // 2MB size limit
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]; // Allowed file types
 
-    if (input.mobile_number && input.mobile_number.length !== 10) {
-      newErrors.mobile_number = "Please enter a valid phone number, containing 10 characters";
+    // Validate if files are selected for 'custom_logo' and 'agr_upload'
+    const validateFile = (fileName) => {
+      console.log(`errorserrors - `, errors);
+      if (errors[fileName] && errors[fileName].length > 0) {
+        // If there are errors, skip validation
+        return errors[fileName];
+      } else {
+        const file = fileName === 'custom_logo' ? files.custom_logo : files.agr_upload;
+        let errors = [];
+
+        if (file && file.length > 0) {
+          file.forEach((file) => {
+            if (file.size > maxSize) {
+              errors.push(`${file.name}: File size must be less than 2MB.`);
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+              errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+            }
+          });
+        } else {
+          errors.push(`${fileName} is required.`);
+        }
+
+        return errors;
+      }
+
+    };
+
+    // Validate file errors for custom_logo and agr_upload
+    if (input.custom_template === 'yes') {
+      const customLogoErrors = validateFile('custom_logo');
+      if (customLogoErrors.length > 0) {
+        newErrors.custom_logo = customLogoErrors;
+      }
     }
 
+    const agrUploadErrors = validateFile('agr_upload');
+    if (agrUploadErrors.length > 0) {
+      newErrors.agr_upload = agrUploadErrors;
+    }
+
+    // Validate required fields
+    requiredFields.forEach((field) => {
+      if (!input[field]) {
+        newErrors[field] = "This field is required*";
+      }
+    });
+
+    // Validate emails
     const emailSet = new Set();
     emails.forEach((email, index) => {
       if (!email) {
         newErrors[`email${index}`] = "This field is required*";
       } else if (emailSet.has(email)) {
         newErrors[`email${index}`] = "This email is already used*";
-      }
-
-      else {
+      } else {
         emailSet.add(email);
       }
     });
 
+    // Validate branch emails
     branchForms.forEach((form, index) => {
       if (!form.branch_name) {
         newErrors[`branch_name_${index}`] = "This field is required*";
@@ -149,6 +234,7 @@ const ClientManagement = () => {
 
     return newErrors;
   };
+
 
 
   const handleFocusOut = useCallback(debounce((event) => {
@@ -195,17 +281,49 @@ const ClientManagement = () => {
 
 
   const handleFormSubmit = async (e) => {
+
     e.preventDefault();
     setIsLoading(true);
 
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    let newErrors = {};
+
+    const validationError = validate();
+    const ServicesErrors = validationsErrors; // Validate nested fields
+
+    // Merge flat and nested validation errors
+
+    Object.keys(validationError).forEach((key) => {
+      if (validationError[key]) {
+        newErrors[key] = validationError[key];
+      }
+    });
+
+    Object.keys(ServicesErrors).forEach((key) => {
+      Object.keys(ServicesErrors[key]).forEach((field) => {
+        if (ServicesErrors[key][field]) {
+          newErrors[`${key}_${field}`] = ServicesErrors[key][field];
+        }
+      });
+    });
+
+    // Show errors only for the current submission
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+
+      // Focus on the first field with an error
+      const errorField = Object.keys(newErrors)[0];
+      if (refs.current[errorField]) {
+        refs.current[errorField].focus();
+      }
+
       setIsLoading(false);
       return;
+    } else {
+      setErrors({})
     }
 
     try {
+      // Proceed with the submission if no errors
       const adminData = JSON.parse(localStorage.getItem("admin"));
       let token = localStorage.getItem("_token");
       const fileCount = Object.keys(files).length;
@@ -218,10 +336,9 @@ const ClientManagement = () => {
         emails: emails,
         clientData: clientData,
         custom_bgv: custom_bgv,
-        send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files
+        send_mail: fileCount === 0 ? 1 : 0,
       };
 
-      // API Call to Create Client
       const response = await fetch(`${API_URL}/customer/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -233,7 +350,7 @@ const ClientManagement = () => {
 
       if (newToken) {
         localStorage.setItem("_token", newToken);
-        token = newToken; // Update for subsequent use
+        token = newToken;
       }
 
       if (!response.ok) {
@@ -244,7 +361,6 @@ const ClientManagement = () => {
       const password = data.password;
       setInsertId(customerInsertId);
 
-      // Show success message for Client Creation
       if (fileCount === 0) {
         Swal.fire({
           title: "Success",
@@ -254,9 +370,7 @@ const ClientManagement = () => {
         });
       }
 
-
       if (fileCount > 0) {
-        // Proceed to upload files if files exist
         await uploadCustomerLogo(adminData.id, token, customerInsertId, password);
 
         Swal.fire({
@@ -267,10 +381,7 @@ const ClientManagement = () => {
         });
       }
 
-      // Redirect to the active list page
-      handleTabChange('active_clients');
-
-      // Reset form
+      handleTabChange("active_clients");
       resetFormFields();
     } catch (error) {
       console.error("Error:", error);
@@ -279,6 +390,9 @@ const ClientManagement = () => {
       setIsLoading(false);
     }
   };
+
+
+
 
   const uploadCustomerLogo = async (adminId, token, customerInsertId, password) => {
     for (const [key, value] of Object.entries(files)) {
@@ -336,6 +450,8 @@ const ClientManagement = () => {
       custom_template: "",
       custom_address: "",
       username: "",
+      industry_classification: '',
+
     });
 
     setBranchForms([{ branch_name: "", branch_email: "" }]);
@@ -343,9 +459,6 @@ const ClientManagement = () => {
     setErrors({});
     setClientData([""]);
   };
-
-
-
 
 
 
@@ -389,6 +502,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.company_name}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["company_name"] = el)} // Attach ref here
+
                   />
                   {errors.company_name && <p className="text-red-500">{errors.company_name}</p>}
                 </div>
@@ -402,6 +517,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.client_code}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["client_code"] = el)} // Attach ref here
+
                   />
                   {errors.client_code && <p className="text-red-500">{errors.client_code}</p>}
                 </div>
@@ -416,6 +533,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.address}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["address"] = el)} // Attach ref here
+
                   />
                   {errors.address && <p className="text-red-500">{errors.address}</p>}
                 </div>
@@ -428,6 +547,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.mobile_number}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["mobile_number"] = el)} // Attach ref here
+
                   />
                   {errors.mobile_number && <p className="text-red-500">{errors.mobile_number}</p>}
                 </div>
@@ -445,12 +566,15 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.contact_person}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["contact_person"] = el)} // Attach ref here
+
                   />
                   {errors.contact_person && <p className="text-red-500">{errors.contact_person}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
                   <label className="text-gray-500" htmlFor="state">State: *</label>
-                  <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" value={input.state} onChange={handleChange}>
+                  <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)} // Attach ref here
+                    value={input.state} onChange={handleChange}>
                     {options.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -472,6 +596,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.state_code}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["state_code"] = el)} // Attach ref here
+
                   />
                   {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
                 </div>
@@ -484,6 +610,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.name_of_escalation}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["name_of_escalation"] = el)} // Attach ref here
+
                   />
                   {errors.name_of_escalation && <p className="text-red-500">{errors.name_of_escalation}</p>}
                 </div>
@@ -498,8 +626,10 @@ const ClientManagement = () => {
                       name={`email${index}`}
                       value={email}
                       onChange={(e) => handleChange(e, index)}
+                      ref={(el) => (refs.current[`email${index}`] = el)} // Corrected ref key
                       className="border w-full rounded-md p-2 mt-2 outline-none emailCheck"
                     />
+
                     {errors[`email${index}`] && <p className="text-red-500 text-sm whitespace-nowrap">{errors[`email${index}`]}</p>}
                     {index > 0 && (
                       <button
@@ -528,6 +658,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.client_spoc}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["client_spoc"] = el)} // Attach ref here
+
                   />
                   {errors.client_spoc && <p className="text-red-500">{errors.client_spoc}</p>}
                 </div>
@@ -540,6 +672,8 @@ const ClientManagement = () => {
                     id="gstin"
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.gstin}
+                    ref={(el) => (refs.current["gstin"] = el)} // Attach ref here
+
                     onChange={handleChange}
                   />
                   {errors.gstin && <p className="text-red-500">{errors.gstin}</p>}
@@ -556,6 +690,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.tat}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["tat"] = el)} // Attach ref here
+
                   />
                   {errors.tat && <p className="text-red-500">{errors.tat}</p>}
                 </div>
@@ -569,6 +705,8 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.date_agreement}
                     onChange={handleChange}
+                    ref={(el) => (refs.current["date_agreement"] = el)} // Attach ref here
+
                   />
                   {errors.date_agreement && <p className="text-red-500">{errors.date_agreement}</p>}
                 </div>
@@ -582,63 +720,100 @@ const ClientManagement = () => {
                     className="border w-full rounded-md p-2 mt-2 outline-none"
                     value={input.client_standard}
                     rows={1}
+
                     onChange={handleChange}></textarea>
-                  {errors.client_standard && <p className="text-red-500">{errors.client_standard}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
                   <label className="text-gray-500" htmlFor="agreement_period">Agreement Period: *</label>
 
-                  <select name="agreement_period" className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
+                  <select name="agreement_period" // Attach ref here
+                    className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
                     <option value="Unless terminated" selected>Unless terminated</option>
                     <option value="1 year">1 year</option>
                     <option value="2 year">2 year</option>
                     <option value="3 year">3 year</option>
                   </select>
-                  {errors.agreement_period && <p className="text-red-500">{errors.agreement_period}</p>}
                 </div>
               </div>
+
               <div className="mb-4">
                 <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
+
                 <input
+                  ref={(el) => (refs.current["agr_upload"] = el)} // Attach ref here
                   type="file"
                   name="agr_upload"
                   id="agr_upload"
                   className="border w-full rounded-md p-2 mt-2 outline-none"
                   onChange={(e) => handleFileChange('agr_upload', e)}
+                  accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                 />
+                {/* Error message for file type or size */}
+                {errors.agr_upload && <p className="text-red-500">{errors.agr_upload}</p>}
+
+                {/* Informational message about file requirements */}
+                <p className="text-gray-500 text-sm mt-2">
+                  Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                </p>
               </div>
+
               <div className="mb-4">
-                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification</label>
+                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification*</label>
                 <input
                   type="text"
                   name="industry_classification"
                   id="industry_classification"
                   className="border w-full rounded-md p-2 mt-2 outline-none"
                   onChange={handleChange}
+                  ref={(el) => (refs.current["industry_classifications"] = el)} // Attach ref here
+
                 />
+                {errors.industry_classification && <p className="text-red-500">{errors.industry_classification}</p>}
+
               </div>
-              
+
 
               <div className="mb-4">
                 <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
-                <select name="custom_template" id="custom_template" value={input.custom_template} className="border w-full rounded-md p-2 mt-2 outline-none" onChange={handleChange}>
+                <select
+                  name="custom_template"
+                  ref={(el) => (refs.current["custom_template"] = el)} // Attach ref here
+                  id="custom_template"
+                  value={input.custom_template || ''} // Ensure a default empty value if undefined
+                  className="border w-full rounded-md p-2 mt-2 outline-none"
+                  onChange={handleChange}
+                >
                   <option value="">Select Option</option>
                   <option value="yes">yes</option>
-                  <option value="no" selected>no</option>
+                  <option value="no">no</option>
                 </select>
+                {errors.custom_template && <p className="text-red-500">{errors.custom_template}</p>}
+
+                {/* Only show the fields and their errors when custom_template is 'yes' */}
                 {input.custom_template === 'yes' && (
                   <>
-                    <div className="mb-4 mt-4">
+                    <div className="mb-4">
                       <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :*</label>
                       <input
+                        ref={(el) => (refs.current["custom_logo"] = el)} // Attach ref here
                         type="file"
                         name="custom_logo"
                         id="custom_logo"
                         className="border w-full rounded-md p-2 mt-2 outline-none"
-                        onChange={(e) => handleFileChange('custom_logo', e)} />
+                        onChange={(e) => handleFileChange('custom_logo', e)}
+                        accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+                      />
+                      {/* Error message for file type or size */}
+                      {errors.custom_logo && <p className="text-red-500">{errors.custom_logo}</p>}
+
+                      {/* Informational message about file requirements */}
+                      <p className="text-gray-500 text-sm mt-2">
+                        Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                      </p>
                     </div>
+
                     <div className="mb-4">
-                      <label htmlFor="" className="text-gray-500">Custom Address</label>
+                      <label htmlFor="custom_address" className="text-gray-500">Custom Address</label>
                       <textarea
                         name="custom_address"
                         id="custom_address"
@@ -646,10 +821,14 @@ const ClientManagement = () => {
                         value={input.custom_address}
                         className="border w-full rounded-md p-2 mt-2 outline-none"
                       ></textarea>
+
                     </div>
                   </>
                 )}
               </div>
+
+
+
               <div className="mb-4">
                 <label className="text-gray-500" htmlFor="additional_login">Additional login Required</label>
                 <div className="flex items-center gap-10 mt-4">
@@ -657,8 +836,8 @@ const ClientManagement = () => {
                     <input
                       type="radio"
                       name="additional_login"
-                      value="Yes"
-                      checked={input.additional_login === "Yes"}
+                      value="yes"
+                      checked={input.additional_login === "yes"}
                       onChange={handleChange}
                       className="me-2"
                     />Yes
@@ -667,14 +846,14 @@ const ClientManagement = () => {
                     <input
                       type="radio"
                       name="additional_login"
-                      value="No"
-                      checked={input.additional_login === "No"}
+                      value="no"
+                      checked={input.additional_login === "no"}
                       onChange={handleChange}
                       className="me-2"
                     />No
                   </div>
                 </div>
-                {input.additional_login === "Yes" && (
+                {input.additional_login === "yes" && (
                   <input
                     type="text"
                     name="username"
@@ -702,8 +881,10 @@ const ClientManagement = () => {
                         id={`branch_name_${index}`}
                         className="border w-full rounded-md p-2 mt-2 outline-none"
                         value={branch.branch_name}
+                        ref={(el) => (refs.current[`branch_name_${index}`] = el)} // Corrected ref key
                         onChange={(e) => handleChange(e, index)}
                       />
+
                       {errors[`branch_name_${index}`] && (
                         <p className="text-red-500">{errors[`branch_name_${index}`]}</p>
                       )}
@@ -719,6 +900,8 @@ const ClientManagement = () => {
                         className="border w-full rounded-md p-2 mt-2 outline-none emailCheck"
                         value={branch.branch_email}
                         onChange={(e) => handleChange(e, index)}
+                        ref={(el) => (refs.current[`branch_email_${index}`] = el)} // Corrected ref key
+
                       />
                       {errors[`branch_email_${index}`] && (
                         <p className="text-red-500">{errors[`branch_email_${index}`]}</p>
@@ -752,6 +935,8 @@ const ClientManagement = () => {
                   className="border rounded-md p-2 mt-0 outline-none"
                   onChange={handleCheckBoxChange}
                   value={custom_bgv}
+                  ref={(el) => (refs.current['custom_bgv'] = el)} // Corrected ref key
+
                 />
                 <label className="text-gray-500" htmlFor="agr_upload">Custom BGV</label>
               </div>
