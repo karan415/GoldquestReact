@@ -39,6 +39,7 @@ import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
 import DashboardProvider from './CustomerDashboard/DashboardContext';
 import LoginPage from './Dashboard/LoginPage';
 import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
+import CandidiateDav from './Pages/CandidateDAV';
 
 const App = () => {
   return (
@@ -75,9 +76,10 @@ const App = () => {
                                       <Route path='/candidate-bgv' element={<Admin><CandidateBGV /></Admin>} />
                                       
                                       <Route path='/candidate_genrate_Report' element={<Admin><CandidateGenerateReport /></Admin>} />
+                                      <Route path='/candidate-dav' element={<Admin><CandidiateDav /></Admin>} />
 
                                       <Route path='/background-form' element={<BackgroundForm />} />
-                                      <Route path='/digital_form' element={<DigitalAddressVerification />} />
+                                      <Route path='/digital-form' element={<DigitalAddressVerification />} />
                                       <Route path='/loginpage' element={<LoginPage />} />
                                     </Routes>
                                   </Router>

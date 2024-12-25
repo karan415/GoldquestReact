@@ -33,13 +33,7 @@ const ClientForm = () => {
     const [isEditClient, setIsEditClient] = useState(false);
     const [inputError, setInputError] = useState({});
 
-    const validate = () => {
-        const newErrors = {};
-        ['name', 'employee_id', 'spoc', 'location', 'batch_number', 'sub_client'].forEach(field => {
-            if (!clientInput[field]) newErrors[field] = "This Field is Required";
-        });
-        return newErrors;
-    };
+
 
     useEffect(() => {
         if (selectedDropBox) {
@@ -86,9 +80,104 @@ const ClientForm = () => {
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files);
-        setFiles(prevFiles => ({ ...prevFiles, [fileName]: selectedFiles }));
+
+
+
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]; // Allowed file types
+
+    let errors = [];
+
+    // Validate each file
+    selectedFiles.forEach((file) => {
+      // Check file size
+      if (file.size > maxSize) {
+        errors.push(`${file.name}: File size must be less than 2MB.`);
+      }
+
+      // Check file type (MIME type)
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+      }
+    });
+
+    // If there are errors, show them and don't update the state
+    if (errors.length > 0) {
+      setInputError((prevErrors) => ({
+        ...prevErrors,
+        [fileName]: errors, // Set errors for this file
+      }));
+      return; // Don't update state if there are errors
+    }
+
+    setFiles(prevFiles => ({ ...prevFiles, [fileName]: selectedFiles }));
+
+
+    setInputError((prevErrors) => {
+      const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+      return restErrors;
+    });
     };
 
+    const validate = () => {
+        const newErrors = {};
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // Allowed file types
+    
+        // Helper function to validate a file field
+        const validateFile = (fileName) => {
+            if (inputError[fileName] && inputError[fileName].length > 0) {
+                // If there are existing errors, return them
+                return inputError[fileName];
+            } else {
+                const selectedFiles = files[fileName]; // Get the files for this field
+                let fileErrors = [];
+    
+                if (selectedFiles && selectedFiles.length > 0) {
+                    selectedFiles.forEach((file) => {
+                        if (file.size > maxSize) {
+                            fileErrors.push(`${file.name}: File size must be less than 2MB.`);
+                        }
+    
+                        if (!allowedTypes.includes(file.type)) {
+                            fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+                        }
+                    });
+                } else {
+                    // Add "required" error if no files are uploaded
+                    fileErrors.push(`${fileName} is required.`);
+                }
+    
+                return fileErrors;
+            }
+        };
+    
+        // Validate file fields: photo and attach_documents
+        ['photo', 'attach_documents'].forEach((fileField) => {
+            const fileErrors = validateFile(fileField);
+            if (fileErrors.length > 0) {
+                newErrors[fileField] = fileErrors;
+            }
+        });
+    
+        // Validate required text fields
+        ['name', 'employee_id', 'spoc', 'location', 'batch_number', 'sub_client'].forEach((field) => {
+            if (!clientInput[field] || clientInput[field].trim() === "") {
+                newErrors[field] = "This Field is Required";
+            }
+        });
+    
+        return newErrors;
+    };
+    
     const uploadCustomerLogo = async (insertedId, new_application_id) => {
         const fileCount = Object.keys(files).length;
         const serviceData = JSON.stringify(services);
@@ -131,9 +220,10 @@ const ClientForm = () => {
         e.preventDefault();
         let requestBody;
         const errors = validate();
-        setFormLoading(true);
 
         if (Object.keys(errors).length === 0) {
+            setFormLoading(true);
+
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
 
@@ -336,8 +426,13 @@ const ClientForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="attach_documents" className='text-sm'>Attach documents: *</label>
-                                <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2" onChange={(e) => handleFileChange('attach_documents', e)} />
+                                <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2"
+                                    accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+                                    onChange={(e) => handleFileChange('attach_documents', e)} />
                                 {inputError.attach_documents && <p className='text-red-500'>{inputError.attach_documents}</p>}
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                </p>
                             </div>
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
@@ -370,8 +465,12 @@ const ClientForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="photo">Upload photo:</label>
-                                <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" onChange={(e) => handleFileChange('photo', e)} />
+                                <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
+                                    onChange={(e) => handleFileChange('photo', e)} />
                                 {inputError.photo && <p className='text-red-500'>{inputError.photo}</p>}
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
+                                </p>
                             </div>
                         </div>
                         <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
@@ -430,7 +529,7 @@ const ClientForm = () => {
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={formLoading}>
                         {(isEditClient ? "Edit" : "Send")}
                     </button>
-                    <button type="button"  className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
+                    <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
                 </form>
             )}
 

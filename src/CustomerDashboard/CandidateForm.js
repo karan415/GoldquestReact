@@ -3,13 +3,16 @@ import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useNavigate } from 'react-router-dom';
 
 const CandidateForm = () => {
-    const { services, uniquePackages, selectedCandidate, fetchClient ,candidateLoading} = useContext(DropBoxContext);
+    const { services, uniquePackages, selectedCandidate, fetchClient, candidateLoading } = useContext(DropBoxContext);
     const [isEditClient, setIsEditClient] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
     const API_URL = useApi();
+    const navigate = useNavigate();
 
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
     const [input, setInput] = useState({
         name: "",
@@ -134,7 +137,7 @@ const CandidateForm = () => {
         // Validate Name (non-empty check)
         if (!name) {
             NewErr.name = 'Name is required';
-        } 
+        }
 
         // Validate Employee ID (non-empty check)
         if (!employee_id) {
@@ -169,20 +172,20 @@ const CandidateForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setFormLoading(true);
-    
+
         // Step 1: Validate form fields first
         const errors = validate();
         if (Object.keys(errors).length === 0) {
-            // Step 2: Proceed if no validation errors
+            setError({});
             const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
             const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
             const branch_token = localStorage.getItem("branch_token");
             const myHeaders = new Headers({
                 "Content-Type": "application/json"
             });
-    
+
             const servicesString = Array.isArray(input.services) ? input.services.join(',') : '';
-    
+
             const Raw = JSON.stringify({
                 customer_id,
                 branch_id,
@@ -195,18 +198,18 @@ const CandidateForm = () => {
                 services: servicesString,
                 candidate_application_id: input.candidate_application_id
             });
-    
+
             const requestOptions = {
                 method: isEditClient ? 'PUT' : "POST",
                 headers: myHeaders,
                 body: Raw,
                 redirect: "follow"
             };
-    
+
             const url = isEditClient
                 ? `${API_URL}/branch/candidate-application/update`
                 : `${API_URL}/branch/candidate-application/create`;
-    
+
             // Step 3: Send the request
             fetch(url, requestOptions)
                 .then(response => {
@@ -215,6 +218,9 @@ const CandidateForm = () => {
                         return response.json().then(errorResult => {
                             const errorMessage = errorResult.message || 'An error occurred';
                             Swal.fire('Error!', errorMessage, 'error');
+                            if (errorMessage.message && errorMessage.message.toLowerCase().includes('invalid') && errorMessage.message.toLowerCase().includes('token')) {
+                                navigate(`/customer-login?email=${branchEmail}`)
+                            }
                             throw new Error(errorMessage);
                         });
                     }
@@ -226,7 +232,7 @@ const CandidateForm = () => {
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken);
                     }
-    
+
                     setInput({
                         name: "",
                         employee_id: "",
@@ -237,16 +243,16 @@ const CandidateForm = () => {
                         candidate_application_id: ''
                     });
                     setError({}); // Clear errors
-    
+
                     fetchClient(); // Refresh client list
-    
+
                     Swal.fire({
                         title: "Success",
                         text: isEditClient ? 'Candidate Application edited successfully' : 'Candidate Application added successfully',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
-    
+
                     setIsEditClient(false); // Reset edit mode
                 })
                 .catch(error => {
@@ -256,15 +262,15 @@ const CandidateForm = () => {
                 .finally(() => {
                     setFormLoading(false); // Stop loading state
                 });
-    
+
         } else {
             // Step 5: Handle validation errors
             setError(errors);
             setFormLoading(false); // Stop loading state
         }
     };
-    
-    
+
+
 
     return (
         <>

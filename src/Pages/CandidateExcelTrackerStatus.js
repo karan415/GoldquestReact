@@ -137,11 +137,12 @@ const CandidateExcelTrackerStatus = () => {
 
     const filteredItems = data.filter(item => {
         return (
-            item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-            item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
+            (item.application_id?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+            (item.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+            (item.employee_id?.toLowerCase() || "").includes(searchTerm.toLowerCase())
         );
     });
+
     const tableRef = useRef(null); // Ref for the table container
 
     // Function to reset expanded rows
@@ -160,11 +161,9 @@ const CandidateExcelTrackerStatus = () => {
     }, []);
 
 
-
     const filteredOptions = filteredItems.filter(item =>
-        item.status.toLowerCase().includes(selectedStatus.toLowerCase())
+        (item.status?.toLowerCase() || "").includes(selectedStatus.toLowerCase())
     );
-
 
     const totalPages = Math.ceil(filteredOptions.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -1023,10 +1022,15 @@ const CandidateExcelTrackerStatus = () => {
         return text.replace(/_[^\w\s]/gi, '');
 
     }
-    const handleBGVClick = (cef_id,branch_id,applicationId) => {
+    const handleBGVClick = (cef_id, branch_id, applicationId) => {
         // Navigate to the Candidate BGV page with the cef_id
         navigate(`/candidate-bgv?cef_id=${cef_id}&branch_id=${branch_id}&applicationId=${applicationId}`);
     };
+    const handleDAVClick = (def_id, branch_id, applicationId) => {
+        // Navigate to the Candidate BGV page with the cef_id
+        navigate(`/candidate-dav?def_id=${def_id}&branch_id=${branch_id}&applicationId=${applicationId}`);
+    };
+    
     console.log('currentItems', currentItems);
 
     return (
@@ -1034,8 +1038,7 @@ const CandidateExcelTrackerStatus = () => {
             <div className="space-y-4 py-[30px] px-[51px] bg-white">
 
 
-                <div className=" mx-4 bg-white ">
-                    Candidate_tracker_status
+                <div className=" mx-4 bg-white">
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
@@ -1083,30 +1086,47 @@ const CandidateExcelTrackerStatus = () => {
                             <thead className='rounded-lg'>
                                 <tr className="bg-green-500 text-white">
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">SL NO</th>
-                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Name</th>
-                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Applicant Employe Id</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Name of the organisation</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Full name of the applicant </th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Employee ID</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Mobile Number</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Email</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Initiation Date</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">View More</th>
-                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Overall Status</th>
-                                    {currentItems.some(item => item.cef_id) && (
+                                    {currentItems.some(item => item.cef_id) ? (
+                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
+                                            BGV
+                                        </th>
+                                    ): (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             BGV
                                         </th>
                                     )}
-                                    {currentItems.some(item => item.cef_filled_date) && (
+                                    {currentItems.some(item => item.cef_filled_date) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             CEF FILLED DATE
                                         </th>
+                                    ): (
+                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
+                                        CEF FILLED DATE
+                                    </th>
                                     )}
-                                    {currentItems.some(item => item.dav_id) && (
+                                    {currentItems.some(item => item.dav_id) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             DAV
                                         </th>
-                                    )}
-                                    {currentItems.some(item => item.dav_filled_date) && (
+                                    ): (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
-                                            dav_filled_date
+                                        DAV
+                                    </th>
+                                    )}
+                                    {currentItems.some(item => item.dav_filled_date) ? (
+                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
+                                            DAV FILLED DATE
+                                        </th>
+                                    ): (
+                                        <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
+                                            DAV FILLED DATE
                                         </th>
                                     )}
                                 </tr>
@@ -1116,10 +1136,20 @@ const CandidateExcelTrackerStatus = () => {
                                     <React.Fragment key={data.id}>
                                         <tr className="text-center">
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.organization_name|| 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.mobile_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.email || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                {data.created_at
+                                                        ? new Intl.DateTimeFormat('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: '2-digit',
+                                                        }).format(new Date(data.created_at))
+                                                        : 'N/A'}
+                                                </td>
                                             <td className="border px-4 py-2">
                                                 <button
                                                     className={`uppercase border px-4 py-2 rounded ${data.service_data
@@ -1134,20 +1164,20 @@ const CandidateExcelTrackerStatus = () => {
 
                                             </td>
 
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
-                                            {data.cef_id && (
+                                            {data.cef_id ? (
                                                 <td className="border px-4 py-2">
                                                     <button
                                                         className="bg-blue-500 uppercase border border-white hover:border-blue-500 text-white px-4 py-2 rounded hover:bg-white hover:text-blue-500"
-                                                        onClick={() => handleBGVClick(data.cef_id
-                                                            , data.branch_id, data.main_id
-                                                        )} // Pass the cef_id of this row
+                                                        onClick={() => handleBGVClick(data.cef_id, data.branch_id, data.main_id)}
                                                     >
                                                         BGV
                                                     </button>
                                                 </td>
+                                            ) : (
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
-                                            {currentItems.some(item => item.cef_filled_date) && (
+
+                                            {currentItems.some(item => item.cef_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     {data.cef_filled_date
                                                         ? new Intl.DateTimeFormat('en-US', {
@@ -1155,23 +1185,36 @@ const CandidateExcelTrackerStatus = () => {
                                                             month: 'short',
                                                             day: '2-digit',
                                                         }).format(new Date(data.cef_filled_date))
-                                                        : 'N/A'
-                                                    }
+                                                        : 'N/A'}
                                                 </td>
+                                            ) : (
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
-                                            {data.dav_id && (
+
+                                            {data.dav_id ? (
                                                 <td className="border px-4 py-2">
                                                     <button
                                                         className="bg-purple-500 uppercase border border-white hover:border-purple-500 text-white px-4 py-2 rounded hover:bg-white hover:text-purple-500"
-                                                    >
+                                                        onClick={() => handleDAVClick(data.def_id, data.branch_id, data.main_id)}
+                                                   >
                                                         DAV
                                                     </button>
                                                 </td>
+                                            ): (
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
-                                            {currentItems.some(item => item.dav_filled_date) && (
+                                            {currentItems.some(item => item.dav_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    {data.dav_filled_date}
+                                                    {data.dav_filled_date
+                                                        ? new Intl.DateTimeFormat('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: '2-digit',
+                                                        }).format(new Date(data.dav_filled_date))
+                                                        : 'N/A'}
                                                 </td>
+                                            ): (
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
 
                                         </tr>

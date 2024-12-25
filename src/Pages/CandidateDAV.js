@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-const DigitalAddressVerification = () => {
+const CandidiateDav = () => {
     const [formData, setFormData] = useState({
         personal_information: {
             candidateName: 'gfgf',
@@ -388,4 +388,4 @@ const DigitalAddressVerification = () => {
     );
 };
 
-export default DigitalAddressVerification;
+export default CandidiateDav;

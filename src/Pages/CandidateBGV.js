@@ -5,15 +5,15 @@ import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import LogoBgv from '../Images/LogoBgv.jpg'
 import { FaGraduationCap, FaBriefcase, FaIdCard } from 'react-icons/fa';
-const BackgroundForm = () => {
+const CandidateBGV = () => {
     const admin = JSON.parse(localStorage.getItem("admin"))?.name;
     const [error, setError] = useState(null);
-
+    const [customBgv, setCustomBgv] = useState('');
     const [serviceData, setServiceData] = useState([]);
     const [cefData, setCefData] = useState([]);
-    const [companyName,setCompanyName] = useState('');
+    const [companyName, setCompanyName] = useState('');
 
-    
+    console.log('customBgv', customBgv)
     const [formData, setFormData] = useState({
         personal_information: {
             full_name: '',
@@ -124,7 +124,8 @@ const BackgroundForm = () => {
             })
             .then(data => {
                 setCompanyName(data.application.customer_name);
-                setCefData(data.CEFData.cefData);  // Save the fetched data to the state
+                setCefData(data.CEFData.cefData);
+                setCustomBgv(data.customerInfo?.is_custom_bgv || '');
             })
             .catch(err => {
                 setError(err.message);  // Set the error message in case of failure
@@ -141,33 +142,33 @@ const BackgroundForm = () => {
     };
     const FileViewer = ({ fileUrl }) => {
         if (!fileUrl) {
-          return <p>No file provided</p>; // Handle undefined fileUrl
+            return <p>No file provided</p>; // Handle undefined fileUrl
         }
-      
+
         const getFileExtension = (url) => url.split('.').pop().toLowerCase();
-      
+
         const renderIframe = (url) => (
-          <iframe 
-            src={`https://docs.google.com/gview?url=${url}&embedded=true`} 
-            width="100%" 
-            height="100%" 
-            title="File Viewer" 
-          />
+            <iframe
+                src={`https://docs.google.com/gview?url=${url}&embedded=true`}
+                width="100%"
+                height="100%"
+                title="File Viewer"
+            />
         );
-      
+
         const fileExtension = getFileExtension(fileUrl);
-      
+
         // Determine the type of file and render accordingly
         if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(fileExtension)) {
-          return <img src={fileUrl} alt="Image File" style={{ }} />;
+            return <img src={fileUrl} alt="Image File" style={{}} />;
         }
-      
+
         if (['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
-          return renderIframe(fileUrl);
+            return renderIframe(fileUrl);
         }
-      
+
         return <p>Unsupported file type</p>;
-      };
+    };
     return (
         <>
             {
@@ -192,61 +193,62 @@ const BackgroundForm = () => {
                                 </label>
                                 <div className="mt-2 w-1/3">
 
-                                     <FileViewer fileUrl={cefData.resume_file}  className="w-full max-w-xs "/>
-                                   
+                                    <FileViewer fileUrl={cefData.resume_file} className="w-full max-w-xs " />
+
 
                                 </div>
                             </div>
 
+                            {customBgv === 1 && (
+                                <>
 
-                            <>
-                                <div className='border p-4 my-4 rounded-md gap-4 grid grid-cols-2'>
-                                    <div className='form-group'>
-                                        <label>Name as per Aadhar card</label>
-                                        <input
-                                            type="text"
-                                            name="aadhar_card_name"
-                                            value={cefData.aadhar_card_name}
-                                            readOnly
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group '>
-                                        <label>Aadhar Card Image</label>
-                                       <div className='max-w-20'>
-                                       <FileViewer fileUrl={cefData.aadhar_card_image}  className="w-full max-w-20 "/>
-                                       </div>
-                                        
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Name as per Pan Card</label>
-                                        <input
-                                            type="text"
-                                            name="pan_card_name"
-                                            value={cefData.pan_card_name}
-                                            readOnly
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Pan Card Image</label>
-                                      
-                                         <div className='max-w-20'>
-                                       <FileViewer fileUrl={cefData.pan_card_image}  className="w-full max-w-20 "/>
-                                       </div>
-                                    </div>
-                                </div>
+                                    <div className='border p-4 my-4 rounded-md gap-4 grid grid-cols-2'>
+                                        <div className='form-group'>
+                                            <label>Name as per Aadhar card</label>
+                                            <input
+                                                type="text"
+                                                name="aadhar_card_name"
+                                                value={cefData.aadhar_card_name}
+                                                readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group '>
+                                            <label>Aadhar Card Image</label>
+                                            <div className='max-w-20'>
+                                                <FileViewer fileUrl={cefData.aadhar_card_image} className="w-full max-w-20 " />
+                                            </div>
 
-                                <div className="form-group col-span-2">
-                                    <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
-                                  
-                                      <div className='max-w-20'>
-                                       <FileViewer fileUrl={cefData.passport_photo}  className="w-full max-w-20 "/>
-                                       </div>
-                                </div>
-                            </>
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Name as per Pan Card</label>
+                                            <input
+                                                type="text"
+                                                name="pan_card_name"
+                                                value={cefData.pan_card_name}
+                                                readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Pan Card Image</label>
+
+                                            <div className='max-w-20'>
+                                                <FileViewer fileUrl={cefData.pan_card_image} className="w-full max-w-20 " />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group col-span-2">
+                                        <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
+
+                                        <div className='max-w-20'>
+                                            <FileViewer fileUrl={cefData.passport_photo} className="w-full max-w-20 " />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
-
                         <h4 className="text-center text-xl my-6 font-bold ">Personal Information</h4>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 border  p-4 rounded-md">
@@ -453,289 +455,289 @@ const BackgroundForm = () => {
 
                             <div className="form-group">
                                 <label htmlFor="marital_status">Marital Status: <span className="text-red-500">*</span></label>
-                                <select
-
-                                    className="form-control border rounded w-full p-2 mt-2"
-                                    name="marital_status"
-                                    id="marital_status"
-
-                                >
-                                    <option value={cefData.marital_status}
-                                        readOnly>{cefData.marital_status}</option>
-                                </select>
+                                <input
+                                        type="text"
+                                        name="blood_group"
+                                        value={cefData.marital_status}
+                                        readOnly
+                                        className="form-control border rounded w-full p-2 mt-2"
+                                    />
                             </div>
                         </div>
+                        {customBgv === 1 && (
+                            <>
 
-                        <>
-                            <label>Blood Group</label>
-                            <div className='form-group'>
-                                <input
-                                    type="text"
-                                    name="blood_group"
-                                    value={cefData.blood_group}
-                                    readOnly
-                                    className="form-control border rounded w-full p-2 mt-2"
-                                />
-                            </div>
-
-
-
-
-                            <div className='form-group'>
-                                <label>Declaration Date:</label>
-                                <input
-                                    type="date"
-                                    name="declaration_date"
-                                    value={cefData.declaration_date}
-                                    readOnly
-                                    className="form-control border rounded w-full p-2 mt-2"
-                                />
-                            </div>
-
-                            <div className='border rounded-md p-3 mt-3'>
-                                <h3 className='text-center text-xl font-bold pb-4'>Add Emergency Contact Details</h3>
-                                <div className='grid grid-cols-3 gap-3'>
-                                    <div className='form-group'>
-                                        <label>Name</label>
-                                        <input
-                                            type="text"
-                                            name="emergency_details_name"
-                                            value={cefData.emergency_details_name}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Relation</label>
-                                        <input
-                                            type="text"
-                                            name="emergency_details_relation"
-                                            value={cefData.emergency_details_relation}
-                                            readOnly
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Contact Number</label>
-                                        <input
-                                            type="text"
-                                            name="emergency_details_contact_number"
-                                            value={cefData.emergency_details_contact_number}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='border rounded-md p-3 mt-3'>
-                                <h3 className='text-center text-xl font-bold pb-4'>Add PF Details</h3>
-                                <div className='grid grid-cols-3 gap-3'>
-                                    <div className='form-group'>
-                                        <label>PF Number</label>
-                                        <input
-                                            type="text"
-                                            name="pf_details_pf_number"
-                                            value={cefData.pf_details_pf_number}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>PF Type</label>
-                                        <input
-                                            type="text"
-                                            name="pf_details_pf_type"
-                                            value={cefData.pf_details_pf_type}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>PF Nominee</label>
-                                        <input
-                                            type="text"
-                                            name="pf_details_pg_nominee"
-                                            value={cefData.pf_details_pg_nominee}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='border rounded-md p-3 mt-3'>
-                                <h3 className='text-center text-xl font-bold pb-4'>Do you have an NPS Account? If yes</h3>
-                                <div className='grid grid-cols-3 gap-3'>
-                                    <div className='form-group '>
-                                        <label>PRAN (Permanent Retirement Account Number). </label>
-                                        <input
-                                            type="text"
-                                            name="nps_details_details_pran_number"
-                                            value={cefData.nps_details_details_pran_number}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Enter Nominee Details of NPS. </label>
-                                        <input
-                                            type="text"
-                                            name="nps_details_details_nominee_details"
-                                            value={cefData.nps_details_details_nominee_details}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Enter your contribution details of NPS</label>
-                                        <input
-                                            type="text"
-                                            name="nps_details_details_nps_contribution"
-                                            value={cefData.nps_details_details_nps_contribution}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <label className='mt-5 block'>Do you have an ICICI Bank A/c</label>
-
-                            <div className='flex gap-6 mb-4'>
-                                <div className='form-group pt-2 flex  gap-2'>
-
-                                    <input
-                                        type="text"
-                                        name="icc_bank_acc"
-                                        value={cefData.icc_bank_acc}
-                                        readOnly
-                                        className="form-control border rounded p-2 "
-                                    />
-                                </div>
-
-                            </div>
-                            <div className='border rounded-md p-3 mt-3'>
-                                <h3 className='text-center text-xl font-bold pb-2'>Banking Details: </h3>
-                                <span className='text-sm text-center block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
-                                <div className='form-group mt-4'>
-                                    <label>Bank Account Number</label>
-                                    <input
-                                        type="text"
-                                        name="bank_details_account_number"
-                                        value={cefData.icc_bank_acc}
-                                        readOnly
-
-                                        className="form-control border rounded w-full p-2 mt-2"
-                                    />
-                                </div>
+                                <label>Blood Group</label>
                                 <div className='form-group'>
-                                    <label>Bank Name</label>
                                     <input
                                         type="text"
-                                        name="bank_details_bank_name"
-                                        value={cefData.icc_bank_acc}
+                                        name="blood_group"
+                                        value={cefData.blood_group}
                                         readOnly
-
                                         className="form-control border rounded w-full p-2 mt-2"
                                     />
                                 </div>
+
+
+
+
                                 <div className='form-group'>
-                                    <label>Bank Branch Name</label>
+                                    <label>Declaration Date:</label>
                                     <input
-                                        type="text"
-                                        name="bank_details_branch_name"
-                                        value={cefData.bank_details_branch_name}
+                                        type="date"
+                                        name="declaration_date"
+                                        value={cefData.declaration_date}
                                         readOnly
-
                                         className="form-control border rounded w-full p-2 mt-2"
                                     />
                                 </div>
-                                <div className='form-group'>
-                                    <label>IFSC Code</label>
-                                    <input
-                                        type="text"
-                                        name="bank_details_ifsc_code"
-                                        value={cefData.bank_details_ifsc_code}
-                                        readOnly
 
-                                        className="form-control border rounded w-full p-2 mt-2"
-                                    />
-                                </div>
-                            </div>
+                                <div className='border rounded-md p-3 mt-3'>
+                                    <h3 className='text-center text-xl font-bold pb-4'>Add Emergency Contact Details</h3>
+                                    <div className='grid grid-cols-3 gap-3'>
+                                        <div className='form-group'>
+                                            <label>Name</label>
+                                            <input
+                                                type="text"
+                                                name="emergency_details_name"
+                                                value={cefData.emergency_details_name}
+                                                readOnly
 
-                            <div className='border rounded-md p-3 mt-3'>
-                                <h3 className='text-center text-xl font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
-                                <div className='grid grid-cols-2 gap-3'>
-                                    <div className='form-group'>
-                                        <label>Name(s)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="insurance_details_name"
-                                            value={cefData.insurance_details_name}
-                                            readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Relation</label>
+                                            <input
+                                                type="text"
+                                                name="emergency_details_relation"
+                                                value={cefData.emergency_details_relation}
+                                                readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Contact Number</label>
+                                            <input
+                                                type="text"
+                                                name="emergency_details_contact_number"
+                                                value={cefData.emergency_details_contact_number}
+                                                readOnly
 
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Nominee Relationship
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="insurance_details_nominee_relation"
-                                            value={cefData.insurance_details_nominee_relation}
-                                            readOnly
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <lalbel>Nominee Date of Birth
-                                        </lalbel>
-                                        <input
-                                            type="date"
-                                            name="insurance_details_nominee_dob"
-                                            value={cefData.insurance_details_nominee_dob}
-                                            readOnly
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-                                    </div>
-                                    <div className='form-group'>
-                                        <label>Contact No.
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="insurance_details_contact_number"
-                                            value={cefData.insurance_details_contact_number}
-                                            readOnly
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <label className='mt-5 block'>Do you want to opt for a Food Coupon?</label>
+                                <div className='border rounded-md p-3 mt-3'>
+                                    <h3 className='text-center text-xl font-bold pb-4'>Add PF Details</h3>
+                                    <div className='grid grid-cols-3 gap-3'>
+                                        <div className='form-group'>
+                                            <label>PF Number</label>
+                                            <input
+                                                type="text"
+                                                name="pf_details_pf_number"
+                                                value={cefData.pf_details_pf_number}
+                                                readOnly
 
-                            <div className='flex gap-6 mb-4'>
-                                <div className='form-group pt-2 flex gap-2'>
-                                    <input
-                                        type="text"
-                                        name="food_coupon"
-                                        value={cefData.food_coupon}
-                                        readOnly
-                                        className="form-control border rounded p-2"
-                                    />
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>PF Type</label>
+                                            <input
+                                                type="text"
+                                                name="pf_details_pf_type"
+                                                value={cefData.pf_details_pf_type}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>PF Nominee</label>
+                                            <input
+                                                type="text"
+                                                name="pf_details_pg_nominee"
+                                                value={cefData.pf_details_pg_nominee}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                                <div className='border rounded-md p-3 mt-3'>
+                                    <h3 className='text-center text-xl font-bold pb-4'>Do you have an NPS Account? If yes</h3>
+                                    <div className='grid grid-cols-3 gap-3'>
+                                        <div className='form-group '>
+                                            <label>PRAN (Permanent Retirement Account Number). </label>
+                                            <input
+                                                type="text"
+                                                name="nps_details_details_pran_number"
+                                                value={cefData.nps_details_details_pran_number}
+                                                readOnly
 
-                            <p className='text-left '>Food coupons are vouchers or digital meal cards given to employees to purchase food and non-alcoholic beverages. Specific amount as per your requirement would get deducted from your Basic Pay. These are tax free, considered as a non-monetary benefit and are exempt from tax up to a specified limit.</p>
-                        </>
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Enter Nominee Details of NPS. </label>
+                                            <input
+                                                type="text"
+                                                name="nps_details_details_nominee_details"
+                                                value={cefData.nps_details_details_nominee_details}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Enter your contribution details of NPS</label>
+                                            <input
+                                                type="text"
+                                                name="nps_details_details_nps_contribution"
+                                                value={cefData.nps_details_details_nps_contribution}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <label className='mt-5 block'>Do you have an ICICI Bank A/c</label>
+
+                                <div className='flex gap-6 mb-4'>
+                                    <div className='form-group pt-2 flex  gap-2'>
+
+                                        <input
+                                            type="text"
+                                            name="icc_bank_acc"
+                                            value={cefData.icc_bank_acc}
+                                            readOnly
+                                            className="form-control border rounded p-2 "
+                                        />
+                                    </div>
+
+                                </div>
+                                <div className='border rounded-md p-3 mt-3'>
+                                    <h3 className='text-center text-xl font-bold pb-2'>Banking Details: </h3>
+                                    <span className='text-sm text-center block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
+                                    <div className='form-group mt-4'>
+                                        <label>Bank Account Number</label>
+                                        <input
+                                            type="text"
+                                            name="bank_details_account_number"
+                                            value={cefData.icc_bank_acc}
+                                            readOnly
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+                                    </div>
+                                    <div className='form-group'>
+                                        <label>Bank Name</label>
+                                        <input
+                                            type="text"
+                                            name="bank_details_bank_name"
+                                            value={cefData.icc_bank_acc}
+                                            readOnly
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+                                    </div>
+                                    <div className='form-group'>
+                                        <label>Bank Branch Name</label>
+                                        <input
+                                            type="text"
+                                            name="bank_details_branch_name"
+                                            value={cefData.bank_details_branch_name}
+                                            readOnly
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+                                    </div>
+                                    <div className='form-group'>
+                                        <label>IFSC Code</label>
+                                        <input
+                                            type="text"
+                                            name="bank_details_ifsc_code"
+                                            value={cefData.bank_details_ifsc_code}
+                                            readOnly
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className='border rounded-md p-3 mt-3'>
+                                    <h3 className='text-center text-xl font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
+                                    <div className='grid grid-cols-2 gap-3'>
+                                        <div className='form-group'>
+                                            <label>Name(s)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="insurance_details_name"
+                                                value={cefData.insurance_details_name}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Nominee Relationship
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="insurance_details_nominee_relation"
+                                                value={cefData.insurance_details_nominee_relation}
+                                                readOnly
+
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <lalbel>Nominee Date of Birth
+                                            </lalbel>
+                                            <input
+                                                type="date"
+                                                name="insurance_details_nominee_dob"
+                                                value={cefData.insurance_details_nominee_dob}
+                                                readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                        <div className='form-group'>
+                                            <label>Contact No.
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="insurance_details_contact_number"
+                                                value={cefData.insurance_details_contact_number}
+                                                readOnly
+                                                className="form-control border rounded w-full p-2 mt-2"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <label className='mt-5 block'>Do you want to opt for a Food Coupon?</label>
+
+                                <div className='flex gap-6 mb-4'>
+                                    <div className='form-group pt-2 flex gap-2'>
+                                        <input
+                                            type="text"
+                                            name="food_coupon"
+                                            value={cefData.food_coupon}
+                                            readOnly
+                                            className="form-control border rounded p-2"
+                                        />
+                                    </div>
+                                </div>
+
+                                <p className='text-left '>Food coupons are vouchers or digital meal cards given to employees to purchase food and non-alcoholic beverages. Specific amount as per your requirement would get deducted from your Basic Pay. These are tax free, considered as a non-monetary benefit and are exempt from tax up to a specified limit.</p>
+
+                            </>
+                        )}
                         <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>
                         <div className='mb-6  p-4 rounded-md border'>
                             <div className="mb-6">
@@ -749,7 +751,7 @@ const BackgroundForm = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
                                 <div className="form-group">
                                     <label>Attach Signature: <span className="text-red-500">*</span></label>
-                                    <FileViewer fileUrl={cefData.signature}  className="w-full max-w-20 "/>
+                                    <FileViewer fileUrl={cefData.signature} className="w-full max-w-20 " />
                                 </div>
 
                                 <div className="form-group">
@@ -897,7 +899,7 @@ const BackgroundForm = () => {
                             NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .
                         </p>
 
-                       
+
                     </div>
                 </form>
             }
@@ -906,4 +908,4 @@ const BackgroundForm = () => {
     );
 };
 
-export default BackgroundForm;
+export default CandidateBGV;

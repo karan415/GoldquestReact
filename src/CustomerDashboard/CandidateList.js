@@ -41,12 +41,6 @@ const CandidateList = () => {
         );
     });
 
-
-    // const filteredOptions = filteredItems.filter(item =>
-    //     item.status.toLowerCase().includes(selectedStatus.toLowerCase())
-    // );
-
-
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -118,7 +112,6 @@ const CandidateList = () => {
     };
 
     const handleSelectChange = (e) => {
-
         const selectedValue = e.target.value;
         setItemPerPage(selectedValue)
 
@@ -143,37 +136,38 @@ const CandidateList = () => {
                 const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
                 const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
                 const branch_token = localStorage.getItem("branch_token");
-
+    
                 if (!branchId || !branch_token) {
                     console.error("Branch ID or token is missing.");
                     navigate('/customer-login')
                     return;
                 }
-
+    
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 };
-
+    
                 fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
-                    .then(response => {
-                        const result = response.json();
+                    .then(async (response) => {
+                        const result = await response.json();
                         const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
+    
                         if (!response.ok) {
-                            return response.text().then(text => {
-                                const errorData = JSON.parse(text);
-                                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                                if (errorData.message && errorData.message.toLowerCase().includes('invalid') && errorData.message.toLowerCase().includes('token')) {
-                                    navigate(`/customer-login?email=${branchEmail}`)
-                                }
-                                throw new Error(text);
-                            });
+                            const errorMessage = result.message || "An error occurred";
+                            Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
+                            
+                            if (errorMessage.toLowerCase().includes('invalid') && errorMessage.toLowerCase().includes('token')) {
+                                navigate(`/customer-login?email=${branchEmail}`);
+                            }
+                            throw new Error(errorMessage);
                         }
+    
                         return result;
                     })
                     .then(result => {
@@ -190,6 +184,7 @@ const CandidateList = () => {
             }
         });
     };
+    
 
     return (
         <>

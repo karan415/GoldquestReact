@@ -680,56 +680,59 @@ const ClientManagementList = () => {
 
                           return (
                             <tr>
-                              <div className='flex justify-end'>
-                              <table key={branch.id} id="Branches" className="accordion bg-slate-100 p-2 rounded-md text-left mt-3">
-                                <thead>
-                                  <tr>
-                                    <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
-                                    <th className="px-4 py-2 text-left">Email</th>
-                                    <th className="px-4 py-2 text-left">Actions</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr>
-                                    <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
-                                    <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
-                                    <td className="border px-4 py-2">
-                                      <div className="flex gap-2 items-center">
-                                        <button
-                                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                                          onClick={() => openPopup(branch)}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                          onClick={() => handleDelete(branch.id, 'branch')}
-                                        >
-                                          Delete
-                                        </button>
-                                        {isActive && (
+                            <td colSpan="11"> {/* Ensures the div spans the entire row */}
+                              <div className="w-full flex justify-end">
+                                <table key={branch.id} id="Branches" className="accordion w-4/12 m-0 bg-slate-100 p-2 rounded-md text-left mt-3">
+                                  <thead>
+                                    <tr>
+                                      <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
+                                      <th className="px-4 py-2 text-left">Email</th>
+                                      <th className="px-4 py-2 text-left">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
+                                      <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
+                                      <td className="border px-4 py-2">
+                                        <div className="flex gap-2 items-center">
+                                          <button
+                                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                            onClick={() => openPopup(branch)}
+                                          >
+                                            Edit
+                                          </button>
                                           <button
                                             className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                            onClick={() => blockBranch(branch.id)}
+                                            onClick={() => handleDelete(branch.id, 'branch')}
                                           >
-                                            Block
+                                            Delete
                                           </button>
-                                        )}
-                                        {isBlocked && (
-                                          <button
-                                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
-                                            onClick={() => unblockBranch(branch.id)}
-                                          >
-                                            Unblock
-                                          </button>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
+                                          {isActive && (
+                                            <button
+                                              className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                              onClick={() => blockBranch(branch.id)}
+                                            >
+                                              Block
+                                            </button>
+                                          )}
+                                          {isBlocked && (
+                                            <button
+                                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                              onClick={() => unblockBranch(branch.id)}
+                                            >
+                                              Unblock
+                                            </button>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
                               </div>
-                            </tr>
+                            </td>
+                          </tr>
+                          
                           );
                         })
                       )
