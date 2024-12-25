@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSidebar } from '../Sidebar/SidebarContext'; // Import the custom hook for accessing sidebar context
-import Header from '../Dashboard/Header'; // Header component
 import DashBoard from '../Dashboard/Dashboard'; // Dashboard component
 import ClientManagement from '../Pages/ClientManagement'; // Client Management component
 import PackageManagement from '../Pages/PackageManagement'; // Package Management component
@@ -66,8 +65,7 @@ const MainContent = () => {
   const { activeTab } = useSidebar();
 
   return (
-    <div className="w-full md:w-4/5 flex flex-col items-stretch">
-      <Header />
+    <div className="w-full md:w-4/5 flex flex-col items-stretch bg-[#1a1a1a05]">
       {tabComponents[activeTab] || <DashBoard />}
     </div>
   );

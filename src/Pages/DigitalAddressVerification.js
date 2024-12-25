@@ -1,39 +1,42 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import axios from "axios";
 
 const DigitalAddressVerification = () => {
-    const [formData, setFormData] = useState({
-        personal_information: {
-            candidateName: 'gfgf',
-            mobNo: '657586787',
-            emailId: 'shikhawebstep@gmail.com',
-            candidateLocation: '45',
-            aadhaarNumber: '',
-            dob: '',
-            fatherName: '',
-            husbandName: '',
-            gender: '',
-            maritalStatus: '',
-            pincode: '',
-            state: '',
-            landmark: '',
-            policeStation: '',
-            yearsStaying: '',
-            fromDate: '',
-            toDate: '',
-            idType: '',
-            idProof:'' ,
-            homePhotos:'' ,
-            localityProof: '',
-        }
-    });
+    const [data, setData] = useState([]);
+
 
     const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
     const [isValidApplication, setIsValidApplication] = useState(true);
     const location = useLocation();
     const currentURL = location.pathname + location.search;
-
+    const [errors, setErrors] = useState({});
+    const [files, setFiles] = useState([]);
+    const [formData, setFormData] = useState({
+        personal_information: {
+            company_name: '',
+            name: '',
+            employee_id: '',
+            mobile_number: '',
+            email: '',
+            candidate_location: '',
+            aadhaar_number: '',
+            dob: '',
+            father_name: '',
+            husband_name: '',
+            gender: '',
+            marital_status: '',
+            pin_code: '',
+            state: '',
+            landmark: '',
+            police_station: '',
+            years_staying: '',
+            from_date: '',
+            to_date: '',
+            id_type: ''
+        },
+    });
     const getLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -85,18 +88,63 @@ const DigitalAddressVerification = () => {
 
         return decodeKeyValuePairs(result);
     };
+    const handleFileChange = (fileName, e) => {
+        const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
 
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // Allowed file types
+
+        let errors = [];
+
+        // Validate each file
+        selectedFiles.forEach((file) => {
+            // Check file size
+            if (file.size > maxSize) {
+                errors.push(`${file.name}: File size must be less than 2MB.`);
+            }
+
+            // Check file type (MIME type)
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+            }
+        });
+
+        // If there are errors, show them and don't update the state
+        if (errors.length > 0) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                [fileName]: errors, // Set errors for this file
+            }));
+            return; // Don't update state if there are errors
+        }
+
+        // If no errors, update the state with the selected files
+        setFiles((prevFiles) => ({
+            ...prevFiles,
+            [fileName]: selectedFiles,
+        }));
+
+        setErrors((prevErrors) => {
+            const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+            return restErrors;
+        });
+    };
     const decodedValues = getValuesFromUrl(currentURL);
 
     const handleChange = (e) => {
         e.preventDefault();
         const { name, value, type, files } = e.target;
+
         if (type === 'file') {
             setFormData(prev => ({
                 ...prev,
                 personal_information: {
                     ...prev.personal_information,
-                    [name]: files[0] 
+                    [name]: files[0] // Update file input
                 }
             }));
         } else {
@@ -122,9 +170,67 @@ const DigitalAddressVerification = () => {
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
+
                         const form = document.getElementById('bg-form');
-                        if (form) form.remove();
+                        if (form) {
+                            form.remove();
+                        }
+                        // If the form is not available, show the error message
+                        const errorMessageDiv = document.createElement('div');
+                        errorMessageDiv.classList.add(
+                            'bg-red-100', // Red background for visibility
+                            'text-red-800', // Dark red text for contrast
+                            'border', // Border for structure
+                            'border-red-400', // Border color matching the error theme
+                            'p-6', // Padding for spacing
+                            'rounded-lg', // Rounded corners for a modern look
+                            'max-w-lg', // Set max width for the div
+                            'mx-auto', // Center the div horizontally
+                            'shadow-lg', // Add shadow for better visibility
+                            'absolute', // Use absolute positioning for centering
+                            'top-1/2', // Position from top
+                            'left-1/2', // Position from left
+                            'transform', // Enable transform
+                            '-translate-x-1/2', // Translate to the left by half its width
+                            '-translate-y-1/2' // Translate to the top by half its height
+                        );
+
+                        // Set the error message text
+                        errorMessageDiv.innerHTML = `
+                                                        <h1 class="font-semibold text-2xl">Error</h1>
+                                                        <p class="text-lg">${result.message}</p>
+                                                    `;
+
+                        // Append the error message div to the body or any other container you like
+                        document.body.appendChild(errorMessageDiv);
                     }
+
+                    setData(result.data);
+                    setFormData({
+                        personal_information: {
+                            company_name: result.data?.company_name || '', // Fallback to empty string if not available
+                            name: result.data?.name || '',
+                            employee_id: result.data?.employee_id || '',
+                            mobile_number: result.data?.mobile_number || '',
+                            email: result.data?.email || '',
+                            candidate_location: '',
+                            aadhaar_number: '',
+                            dob: '',
+                            father_name: '',
+                            husband_name: '',
+                            gender: '',
+                            marital_status: '',
+                            pin_code: '',
+                            state: '',
+                            landmark: '',
+                            police_station: '',
+                            years_staying: '',
+                            from_date: '',
+                            to_date: '',
+                            id_type: '',
+                        }
+                    });
+
                 })
                 .catch(err => {
                     Swal.fire({
@@ -136,22 +242,46 @@ const DigitalAddressVerification = () => {
                 });
         }
     }, [isValidApplication, decodedValues]);
-    
+
+    const uploadCustomerLogo = async (candidate_application_id, branch_id, customer_id) => {
+        for (const [key, value] of Object.entries(files)) {
+            const customerLogoFormData = new FormData();
+            customerLogoFormData.append("branch_id", branch_id);
+            customerLogoFormData.append("customer_id", customer_id);
+            customerLogoFormData.append("application_id", candidate_application_id);
+            for (const file of value) {
+                customerLogoFormData.append("images", file);
+                customerLogoFormData.append("upload_category", key);
+            }
+
+            customerLogoFormData.append("send_mail", 1);
+
+            try {
+                const response = await axios.post(`https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/upload`, customerLogoFormData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
+            } catch (err) {
+                Swal.fire("Error!", `Error uploading files: ${err.message}`, "error");
+                throw err; // Stop process if upload fails
+            }
+        }
+    };
+
     useEffect(() => {
         isApplicationExists();
-      
-    }, []); 
-    
-    
+
+    }, []);
+
+
 
     const handleSubmitForm = async (e) => {
         e.preventDefault();
-
+        const fileCount = Object.keys(files).length;
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-   
-        const personal_information=formData.personal_information;
-     
+        const form = document.getElementById('bg-form');
+        const personal_information = formData.personal_information;
+
         const raw = JSON.stringify({
             branch_id: decodedValues.branch_id,
             customer_id: decodedValues.customer_id,
@@ -166,35 +296,47 @@ const DigitalAddressVerification = () => {
             redirect: "follow"
         };
 
-        fetch("https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/submit", requestOptions)
-            .then(response => response.json())
-            .then(result => {
-                if (result.status) {
+        try {
+            const response = await fetch("https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/submit", requestOptions);
+            const result = await response.json();
+
+            if (result.status) {
+                if (fileCount === 0) {
                     Swal.fire({
-                        title: 'Success',
-                        text: result.message,
-                        icon: 'success',
-                        confirmButtonText: 'OK'
+                        title: "Success",
+                        text: `Client Created Successfully.`,
+                        icon: "success",
+                        confirmButtonText: "Ok",
+
                     });
-                } else {
+                } else if (fileCount > 0) {
+                    await uploadCustomerLogo(decodedValues.app_id, decodedValues.branch_id, decodedValues.customer_id);
                     Swal.fire({
-                        title: 'Error',
-                        text: result.message,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
+                        title: "Success",
+                        text: `Client Created Successfully.`,
+                        icon: "success",
+                        confirmButtonText: "Ok",
                     });
                 }
-            })
-            .catch(error => {
+            } else {
                 Swal.fire({
                     title: 'Error',
-                    text: 'An error occurred during submission.',
+                    text: result.message,
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred during submission.',
+                icon: 'error',
+                confirmButtonText: 'OK'
             });
+        }
     };
 
+    console.log('data', data)
     return (
         <>
             <form action="" onSubmit={handleSubmitForm} className='p-4' id='bg-form'>
@@ -203,28 +345,28 @@ const DigitalAddressVerification = () => {
                     <div className="md:grid grid-cols-1 md:grid-cols-3 mb-2 gap-4">
                         <div className=" my-3 form-group">
                             <label htmlFor="company_name" className="block text-sm font-medium text-gray-700">Company Name:</label>
-                            <input type="text" value="indivisual" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="company_name" name="company_name" readOnly />
+                            <input type="text" value={data?.company_name} readOnly className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="company_name" name="company_name" />
                         </div>
 
                         <div className=" my-3 form-group">
                             <label htmlFor="candidate_name" className="block text-sm font-medium text-gray-700">Candidate Name:</label>
-                            <input type="text" value={formData.candidateName} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="candidate_name" name="candidateName" />
+                            <input type="text" value={data?.name} readOnly onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="candidate_name" name="candidateName" />
                         </div>
 
                         <div className=" my-3 form-group">
                             <label className="block text-sm font-medium text-gray-700">Employee ID:</label>
-                            <input type="text" onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="employee_id" />
+                            <input type="text" value={data?.employee_id} readOnly onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="employee_id" />
                         </div>
                     </div>
                     <div className="md:grid grid-cols-1 md:grid-cols-2 mb-2 gap-4">
                         <div className=" my-3 form-group">
                             <label htmlFor="mob_no" className="block text-sm font-medium text-gray-700">Mobile No:</label>
-                            <input type="text" value={formData.personal_information.mobNo} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="mob_no" name="mobNo" />
+                            <input type="text" value={data?.mobile_number} readOnly onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="mob_no" name="mobNo" />
                         </div>
 
                         <div className=" my-3 form-group">
                             <label htmlFor="email_id" className="block text-sm font-medium text-gray-700">Email ID:</label>
-                            <input type="email" value={formData.personal_information.emailId} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="email_id" name="emailId" />
+                            <input type="email" value={data?.email} readOnly onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="email_id" name="emailId" />
                         </div>
                     </div>
                     <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -235,7 +377,7 @@ const DigitalAddressVerification = () => {
 
                         <div className=" my-3 form-group">
                             <label htmlFor="candidate_location" className="block text-sm font-medium text-gray-700">Location:</label>
-                            <input type="text" value={formData.personal_information.candidateLocation} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="candidate_location" name="candidateLocation" />
+                            <input type="text" value={formData.personal_information.candidate_location} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="candidate_location" name="candidate_location" />
                         </div>
 
                     </div>
@@ -261,7 +403,7 @@ const DigitalAddressVerification = () => {
                     <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                         <div className=" my-3 form-group">
                             <label htmlFor="aadhaar_number" className="block text-sm font-medium text-gray-700">Aadhaar Number:</label>
-                            <input type="text" value={formData.personal_information.aadhaarNumber} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="aadhaarNumber" />
+                            <input type="text" value={formData.personal_information.aadhaar_number} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="aadhaar_number" />
                         </div>
 
                         <div className=" my-3 form-group">
@@ -271,11 +413,11 @@ const DigitalAddressVerification = () => {
                     </div>
                     <div className="form-group mb-2">
                         <label htmlFor="father_name" className="block text-sm font-medium text-gray-700">Father's Name:</label>
-                        <input type="text" value={formData.personal_information.fatherName} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="fatherName" />
+                        <input type="text" value={formData.personal_information.father_name} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="father_name" />
                     </div>
                     <div className="form-group mb-2">
                         <label htmlFor="husband_name" className="block text-sm font-medium text-gray-700">Husband's Name:</label>
-                        <input type="text" value={formData.personal_information.husbandName} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="husbandName" />
+                        <input type="text" value={formData.personal_information.husband_name} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="husband_name" />
                     </div>
                     <div className="md:grid grid-cols-1 md:grid-cols-2 mb-2 gap-4">
 
@@ -296,16 +438,16 @@ const DigitalAddressVerification = () => {
                             <p className="text-sm font-medium text-gray-700 mb-2">Marital Status:</p>
                             <div className="flex space-x-4 flex-wrap">
                                 <label className="flex items-center">
-                                    <input type="radio" className="form-radio me-2" name="maritalStatus" value="married" onChange={handleChange} /> Married
+                                    <input type="radio" className="form-radio me-2" name="marital_status" value="married" onChange={handleChange} /> Married
                                 </label>
                                 <label className="flex items-center">
-                                    <input type="radio" className="form-radio me-2" name="maritalStatus" value="unmarried" onChange={handleChange} /> Unmarried
+                                    <input type="radio" className="form-radio me-2" name="marital_status" value="unmarried" onChange={handleChange} /> Unmarried
                                 </label>
                                 <label className="flex items-center">
-                                    <input type="radio" className="form-radio me-2" name="maritalStatus" value="divorced" onChange={handleChange} /> Divorced
+                                    <input type="radio" className="form-radio me-2" name="marital_status" value="divorced" onChange={handleChange} /> Divorced
                                 </label>
                                 <label className="flex items-center">
-                                    <input type="radio" className="form-radio me-2" name="maritalStatus" value="widower" onChange={handleChange} /> Widower
+                                    <input type="radio" className="form-radio me-2" name="marital_status" value="widower" onChange={handleChange} /> Widower
                                 </label>
                             </div>
                         </div>
@@ -313,8 +455,8 @@ const DigitalAddressVerification = () => {
 
                     <div className="md:grid grid-cols-1 md:grid-cols-2 mb-2 gap-4">
                         <div className=" my-3 form-group">
-                            <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">Pincode:</label>
-                            <input type="text" value={formData.personal_information.pincode} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="pincode" />
+                            <label htmlFor="pin_code" className="block text-sm font-medium text-gray-700">Pin_code:</label>
+                            <input type="text" value={formData.personal_information.pin_code} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="pin_code" />
                         </div>
 
                         <div className=" my-3 form-group">
@@ -331,7 +473,7 @@ const DigitalAddressVerification = () => {
                     <div className="md:grid grid-cols-1 md:grid-cols-1 gap-4">
                         <div className=" my-3 form-group">
                             <label htmlFor="police_station" className="block text-sm font-medium text-gray-700">Nearest Police Station:</label>
-                            <input type="text" value={formData.personal_information.policeStation} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="policeStation" />
+                            <input type="text" value={formData.personal_information.police_station} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="police_station" />
                         </div>
 
                     </div>
@@ -341,39 +483,45 @@ const DigitalAddressVerification = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label>From Date:</label>
-                                <input type="text" className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="fromDate" onChange={handleChange} />
+                                <input type="text" className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="from_date" onChange={handleChange} />
                             </div>
                             <div>
                                 <label>To Date:</label>
-                                <input type="text" className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="toDate" onChange={handleChange} />
+                                <input type="text" className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="to_date" onChange={handleChange} />
                             </div>
                         </div>
                     </div>
 
                     <div className=" my-3 form-group">
                         <label htmlFor="id_type" className="block text-sm font-medium text-gray-700">Type of ID Attached:</label>
-                        <input type="text" value={formData.personal_information.idType} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="id_type" name="idType" />
+                        <input type="text" value={formData.personal_information.id_type} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="id_type" name="id_type" />
                     </div>
 
                     <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className=" my-3 form-group">
                             <label htmlFor="id_proof" className="block text-sm font-medium text-gray-700">Upload ID:</label>
-                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="id_proof" name="idProof" onChange={handleChange} multiple />
+                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="id_proof" name="id_proof"
+                                onChange={(e) => handleFileChange('identity_proof', e)}
+                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx"
+                                multiple
+                            />
                         </div>
 
                         <div className=" my-3 form-group">
                             <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Home Photos:</label>
-                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="homePhotos" onChange={handleChange} multiple />
+                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="home_photos" onChange={(e) => handleFileChange('home_photo', e)}
+                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" multiple />
                         </div>
                     </div>
                     <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className=" my-3 form-group">
                             <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Locality Photos:</label>
-                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="localityProof" onChange={handleChange} multiple />
+                            <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="locality_proof" onChange={(e) => handleFileChange('locality', e)}
+                                accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" multiple />
                         </div>
                         <div className="form-group my-3">
                             <label htmlFor="nof_yrs_staying" className="block text-sm font-medium text-gray-700">No of years staying in the address:</label>
-                            <input type="text" value={formData.personal_information.yearsStaying} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="yearsStaying" />
+                            <input type="text" value={formData.personal_information.years_staying} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" name="years_staying" />
                         </div>
                     </div>
                     <button type="submit" className='bg-green-500 p-3 w-full rounded-md text-white mt-4'>Submit</button>

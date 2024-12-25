@@ -72,10 +72,9 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-full md:w-1/5 flex flex-col bg-white ">
-      <div className="px-3">
-        <div className="flex flex-col px-3 md:py-8 p-2">
-          <h2 className="w-full text-green-600 md:text-4xl text-2xl text-left font-bold md:pb-6 pb-2 font-poppins">GoldQuest.</h2>
+    <div className="w-full md:w-1/5 flex flex-col bg-white border-e">
+      <div className="px-3" id='sider_content'>
+        <div className="flex flex-col px-1 md:py-8 p-2">
           <div className='md:hidden sm:block'>
             <div className='flex items-center justify-between border-b p-3'>
               <div>Menu</div>
@@ -95,7 +94,7 @@ const Sidebar = () => {
                     <React.Fragment key={tab}>
                       <li
                         className={classNames(
-                          'w-full flex items-center p-3 cursor-pointer rounded-md my-2',
+                          'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
                           { 'bg-green-200': activeTab === tab, 'hover:bg-green-200': activeTab !== tab }
                         )}
                         onClick={() => {

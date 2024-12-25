@@ -198,3 +198,7 @@ div#popup-2 {
   left: 50%; /* Horizontally center */
   transform: translate(-50%, -50%); /* Offset the position to perfectly center */
 }
+#sider_content button {
+  color: #192330 !important;
+  margin-left: 12px !important;
+}

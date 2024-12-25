@@ -95,7 +95,7 @@ export const ClientEditForm = () => {
                         (<form onSubmit={handleClientSubmit} >
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="name">Company Name: *</label>
+                                    <label className="text-gray-500" htmlFor="name">Company Name: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="name"
@@ -110,7 +110,7 @@ export const ClientEditForm = () => {
                                 </div>
 
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="client_unique_id">Client Code: *</label>
+                                    <label className="text-gray-500" htmlFor="client_unique_id">Client Code: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="client_unique_id"
@@ -127,7 +127,7 @@ export const ClientEditForm = () => {
                             </div>
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="address">address: *</label>
+                                    <label className="text-gray-500" htmlFor="address">address: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="address"
@@ -141,7 +141,7 @@ export const ClientEditForm = () => {
                                     {errors.address && <p className="text-red-500">{errors.address}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="mobile">Mobile: *</label>
+                                    <label className="text-gray-500" htmlFor="mobile">Mobile: <span className="text-red-600">*</span></label>
                                     <input
                                         type="number"
                                         name="mobile"
@@ -160,7 +160,7 @@ export const ClientEditForm = () => {
                             <div className="md:flex gap-5">
 
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="contact_person_name">Contact Person: *</label>
+                                    <label htmlFor="contact_person_name">Contact Person: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="contact_person_name"
@@ -174,7 +174,7 @@ export const ClientEditForm = () => {
                                     {errors.contact_person_name && <p className="text-red-500">{errors.contact_person_name}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="state">State: *</label>
+                                    <label className="text-gray-500" htmlFor="state">State: <span className="text-red-600">*</span></label>
                                     <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)}
                                         value={clientData.state} onChange={handleClientChange}>
                                         {options.map(option => (
@@ -190,7 +190,7 @@ export const ClientEditForm = () => {
 
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="state_code">State Code: *</label>
+                                    <label className="text-gray-500" htmlFor="state_code">State Code: <span className="text-red-600">*</span></label>
                                     <input
                                         type="number"
                                         name="state_code"
@@ -204,7 +204,7 @@ export const ClientEditForm = () => {
                                     {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="escalation_point_contact">Name of the Escalation Point of Contact:*</label>
+                                    <label className="text-gray-500" htmlFor="escalation_point_contact">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="escalation_point_contact"
@@ -266,7 +266,7 @@ export const ClientEditForm = () => {
 
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="single_point_of_contact">Name of The Client SPOC:*</label>
+                                    <label className="text-gray-500" htmlFor="single_point_of_contact">Name of The Client SPOC:<span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="single_point_of_contact"
@@ -284,7 +284,7 @@ export const ClientEditForm = () => {
                                 </div>
 
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="gst_number">gst_number: *</label>
+                                    <label className="text-gray-500" htmlFor="gst_number">gst_number: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="gst_number"
@@ -301,7 +301,7 @@ export const ClientEditForm = () => {
 
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="tat_days">TAT: *</label>
+                                    <label className="text-gray-500" htmlFor="tat_days">TAT: <span className="text-red-600">*</span></label>
                                     <input
                                         type="text"
                                         name="tat_days"
@@ -316,7 +316,7 @@ export const ClientEditForm = () => {
                                 </div>
 
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="agreement_date">Date of Service Agreement:*</label>
+                                    <label className="text-gray-500" htmlFor="agreement_date">Date of Service Agreement:<span className="text-red-600">*</span></label>
                                     <input
                                         type="date"
                                         name="agreement_date"
@@ -343,7 +343,7 @@ export const ClientEditForm = () => {
                                         onChange={handleClientChange}></textarea>
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="agreement_duration">Agreement Period: *</label>
+                                    <label className="text-gray-500" htmlFor="agreement_duration">Agreement Period: <span className="text-red-600">*</span></label>
 
                                     <select name="agreement_duration"
                                         className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_duration" onChange={handleClientChange} value={clientData.agreement_duration}>
@@ -356,7 +356,7 @@ export const ClientEditForm = () => {
                             </div>
 
                             <div className="mb-4">
-                                <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
+                                <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:<span className="text-red-500">*</span></label>
 
                                 <input
                                     ref={(el) => (refs.current["agr_upload"] = el)}
@@ -379,7 +379,7 @@ export const ClientEditForm = () => {
                             </div>
 
                             <div className="mb-4">
-                                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification*</label>
+                                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification<span className="text-red-600">*</span></label>
                                 <input
                                     type="text"
                                     name="industry_classification"
@@ -396,7 +396,7 @@ export const ClientEditForm = () => {
 
 
                             <div className="mb-4">
-                                <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
+                                <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:<span className="text-red-600">*</span></label>
                                 <select
                                     name="custom_template"
                                     ref={(el) => (refs.current["custom_template"] = el)}
@@ -414,7 +414,7 @@ export const ClientEditForm = () => {
                                 {clientData.custom_template === 'yes' && (
                                     <>
                                         <div className="mb-4 mt-3">
-                                            <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :*</label>
+                                            <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :<span className="text-red-600">*</span></label>
                                             <input
                                                 ref={(el) => (refs.current["custom_logo"] = el)}
                                                 type="file"

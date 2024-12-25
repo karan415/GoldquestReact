@@ -494,7 +494,7 @@ const ClientManagement = () => {
             (<form onSubmit={handleFormSubmit} >
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="company_name">Company Name: *</label>
+                  <label className="text-gray-500" htmlFor="company_name">Company Name: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="company_name"
@@ -509,7 +509,7 @@ const ClientManagement = () => {
                 </div>
 
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="client_code">Client Code: *</label>
+                  <label className="text-gray-500" htmlFor="client_code">Client Code: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="client_code"
@@ -525,7 +525,7 @@ const ClientManagement = () => {
               </div>
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="address">Address: *</label>
+                  <label className="text-gray-500" htmlFor="address">Address: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="address"
@@ -539,7 +539,7 @@ const ClientManagement = () => {
                   {errors.address && <p className="text-red-500">{errors.address}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="mobile_number">Mobile: *</label>
+                  <label className="text-gray-500" htmlFor="mobile_number">Mobile: <span className="text-red-600">*</span></label>
                   <input
                     type="number"
                     name="mobile_number"
@@ -558,7 +558,7 @@ const ClientManagement = () => {
               <div className="md:flex gap-5">
 
                 <div className="mb-4 md:w-6/12">
-                  <label htmlFor="contact_person">Contact Person: *</label>
+                  <label htmlFor="contact_person">Contact Person: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="contact_person"
@@ -572,7 +572,7 @@ const ClientManagement = () => {
                   {errors.contact_person && <p className="text-red-500">{errors.contact_person}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="state">State: *</label>
+                  <label className="text-gray-500" htmlFor="state">State: <span className="text-red-600">*</span></label>
                   <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)} // Attach ref here
                     value={input.state} onChange={handleChange}>
                     {options.map(option => (
@@ -588,7 +588,7 @@ const ClientManagement = () => {
 
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="state_code">State Code: *</label>
+                  <label className="text-gray-500" htmlFor="state_code">State Code: <span className="text-red-600">*</span></label>
                   <input
                     type="number"
                     name="state_code"
@@ -602,7 +602,7 @@ const ClientManagement = () => {
                   {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="name_of_escalation">Name of the Escalation Point of Contact:*</label>
+                  <label className="text-gray-500" htmlFor="name_of_escalation">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="name_of_escalation"
@@ -620,7 +620,7 @@ const ClientManagement = () => {
               <div className="my-8 grid gap-5 grid-cols-2 items-center flex-wrap">
                 {emails.map((email, index) => (
                   <div key={index} className="mb-4 md:flex items-center gap-3 ">
-                    <label className="text-gray-500 whitespace-nowrap">Email {index + 1}: *</label>
+                    <label className="text-gray-500 whitespace-nowrap">Email {index + 1}: <span className="text-red-600">*</span></label>
                     <input
                       type="email"
                       name={`email${index}`}
@@ -650,7 +650,7 @@ const ClientManagement = () => {
 
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="client_spoc">Name of The Client SPOC:*</label>
+                  <label className="text-gray-500" htmlFor="client_spoc">Name of The Client SPOC:<span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="client_spoc"
@@ -665,7 +665,7 @@ const ClientManagement = () => {
                 </div>
 
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="gstin">GSTIN: *</label>
+                  <label className="text-gray-500" htmlFor="gstin">GSTIN: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="gstin"
@@ -682,7 +682,7 @@ const ClientManagement = () => {
 
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="tat">TAT: *</label>
+                  <label className="text-gray-500" htmlFor="tat">TAT: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     name="tat"
@@ -697,7 +697,7 @@ const ClientManagement = () => {
                 </div>
 
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="date_agreement">Date of Service Agreement:*</label>
+                  <label className="text-gray-500" htmlFor="date_agreement">Date of Service Agreement:<span className="text-red-600">*</span></label>
                   <input
                     type="date"
                     name="date_agreement"
@@ -724,7 +724,7 @@ const ClientManagement = () => {
                     onChange={handleChange}></textarea>
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="agreement_period">Agreement Period: *</label>
+                  <label className="text-gray-500" htmlFor="agreement_period">Agreement Period: <span className="text-red-600">*</span></label>
 
                   <select name="agreement_period" // Attach ref here
                     className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
@@ -737,7 +737,7 @@ const ClientManagement = () => {
               </div>
 
               <div className="mb-4">
-                <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:</label>
+                <label className="text-gray-500" htmlFor="agr_upload">Agreement Upload:<span className="text-red-500">*</span></label>
 
                 <input
                   ref={(el) => (refs.current["agr_upload"] = el)} // Attach ref here
@@ -748,17 +748,15 @@ const ClientManagement = () => {
                   onChange={(e) => handleFileChange('agr_upload', e)}
                   accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                 />
-                {/* Error message for file type or size */}
                 {errors.agr_upload && <p className="text-red-500">{errors.agr_upload}</p>}
 
-                {/* Informational message about file requirements */}
                 <p className="text-gray-500 text-sm mt-2">
                   Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                 </p>
               </div>
 
               <div className="mb-4">
-                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification*</label>
+                <label className="text-gray-500" htmlFor="industry_classification">Industry Classification<span className="text-red-600">*</span></label>
                 <input
                   type="text"
                   name="industry_classification"
@@ -774,7 +772,7 @@ const ClientManagement = () => {
 
 
               <div className="mb-4">
-                <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:*</label>
+                <label className="text-gray-500" htmlFor="custom_template">Required Custom Template:<span className="text-red-600">*</span></label>
                 <select
                   name="custom_template"
                   ref={(el) => (refs.current["custom_template"] = el)} // Attach ref here
@@ -789,11 +787,10 @@ const ClientManagement = () => {
                 </select>
                 {errors.custom_template && <p className="text-red-500">{errors.custom_template}</p>}
 
-                {/* Only show the fields and their errors when custom_template is 'yes' */}
                 {input.custom_template === 'yes' && (
                   <>
                     <div className="mb-4">
-                      <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :*</label>
+                      <label htmlFor="custom_logo" className="text-gray-500">Upload Custom Logo :<span className="text-red-600">*</span></label>
                       <input
                         ref={(el) => (refs.current["custom_logo"] = el)} // Attach ref here
                         type="file"
@@ -803,10 +800,8 @@ const ClientManagement = () => {
                         onChange={(e) => handleFileChange('custom_logo', e)}
                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                       />
-                      {/* Error message for file type or size */}
                       {errors.custom_logo && <p className="text-red-500">{errors.custom_logo}</p>}
 
-                      {/* Informational message about file requirements */}
                       <p className="text-gray-500 text-sm mt-2">
                         Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                       </p>
@@ -873,7 +868,7 @@ const ClientManagement = () => {
                   <div key={index} className="flex content-between items-center gap-4 mb-3">
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_name_${index}`}>
-                        Branch Name: *
+                        Branch Name: <span className="text-red-600">*</span>
                       </label>
                       <input
                         type="text"
@@ -891,7 +886,7 @@ const ClientManagement = () => {
                     </div>
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_email_${index}`}>
-                        Branch Email: *
+                        Branch Email: <span className="text-red-600">*</span>
                       </label>
                       <input
                         type="email"

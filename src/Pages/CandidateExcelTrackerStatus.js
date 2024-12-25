@@ -1030,7 +1030,7 @@ const CandidateExcelTrackerStatus = () => {
         // Navigate to the Candidate BGV page with the cef_id
         navigate(`/candidate-dav?def_id=${def_id}&branch_id=${branch_id}&applicationId=${applicationId}`);
     };
-    
+
     console.log('currentItems', currentItems);
 
     return (
@@ -1097,34 +1097,34 @@ const CandidateExcelTrackerStatus = () => {
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             BGV
                                         </th>
-                                    ): (
+                                    ) : (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             BGV
                                         </th>
                                     )}
                                     {currentItems.some(item => item.cef_filled_date) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
-                                            CEF FILLED DATE
+                                            BGV FILLED DATE
                                         </th>
-                                    ): (
+                                    ) : (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
-                                        CEF FILLED DATE
-                                    </th>
+                                            BGV FILLED DATE
+                                        </th>
                                     )}
                                     {currentItems.some(item => item.dav_id) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             DAV
                                         </th>
-                                    ): (
+                                    ) : (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
-                                        DAV
-                                    </th>
+                                            DAV
+                                        </th>
                                     )}
                                     {currentItems.some(item => item.dav_filled_date) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             DAV FILLED DATE
                                         </th>
-                                    ): (
+                                    ) : (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             DAV FILLED DATE
                                         </th>
@@ -1136,20 +1136,20 @@ const CandidateExcelTrackerStatus = () => {
                                     <React.Fragment key={data.id}>
                                         <tr className="text-center">
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.organization_name|| 'NIL'}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.organization_name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.mobile_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.email || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                 {data.created_at
-                                                        ? new Intl.DateTimeFormat('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: '2-digit',
-                                                        }).format(new Date(data.created_at))
-                                                        : 'N/A'}
-                                                </td>
+                                                    ? new Intl.DateTimeFormat('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: '2-digit',
+                                                    }).format(new Date(data.created_at))
+                                                    : 'N/A'}
+                                            </td>
                                             <td className="border px-4 py-2">
                                                 <button
                                                     className={`uppercase border px-4 py-2 rounded ${data.service_data
@@ -1196,11 +1196,11 @@ const CandidateExcelTrackerStatus = () => {
                                                     <button
                                                         className="bg-purple-500 uppercase border border-white hover:border-purple-500 text-white px-4 py-2 rounded hover:bg-white hover:text-purple-500"
                                                         onClick={() => handleDAVClick(data.def_id, data.branch_id, data.main_id)}
-                                                   >
+                                                    >
                                                         DAV
                                                     </button>
                                                 </td>
-                                            ): (
+                                            ) : (
                                                 <td className="border px-4 py-2">N/A</td>
                                             )}
                                             {currentItems.some(item => item.dav_filled_date) ? (
@@ -1213,7 +1213,7 @@ const CandidateExcelTrackerStatus = () => {
                                                         }).format(new Date(data.dav_filled_date))
                                                         : 'N/A'}
                                                 </td>
-                                            ): (
+                                            ) : (
                                                 <td className="border px-4 py-2">N/A</td>
                                             )}
 
@@ -1229,72 +1229,154 @@ const CandidateExcelTrackerStatus = () => {
                                         ) : (expandedRow === data.id && (
                                             <div className="p-4 bg-gray-100 gap-20 min-h-20">
                                                 {Object.entries(data.service_data).map(([mainHeading, subData]) => {
-                                                    const hasInnerData = Object.values(subData || {}).some(
-                                                        (items) => Array.isArray(items) && items.length > 0
-                                                    );
 
-                                                    return (
-                                                        hasInnerData && (
-                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                <div
-                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                    onClick={() => toggleSection(mainHeading)}
-                                                                >
-                                                                    {mainHeading.toUpperCase()}
-                                                                </div>
-                                                                {openSection === mainHeading && (
-                                                                    <div className="p-4">
-                                                                        {Object.entries(subData).map(([subHeading, items]) => (
-                                                                            items && items.length > 0 && (
-                                                                                <div key={subHeading} className="mb-4">
-                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                    <table className="w-full border-collapse border border-gray-300">
-                                                                                        <thead>
-                                                                                            <tr>
-                                                                                                <th className="border border-gray-300 p-2">Label</th>
-                                                                                                <th className="border border-gray-300 p-2">Action</th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody>
-                                                                                            {items.map((item, index) =>
-                                                                                                Object.entries(item).map(([label, urls]) =>
-                                                                                                    urls &&
-                                                                                                    urls.split(",").map((url, urlIndex) => (
-                                                                                                        <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
-                                                                                                            {/* Label is displayed once for each entry */}
-                                                                                                            {urlIndex === 0 && (
-                                                                                                                <td
-                                                                                                                    className="border border-gray-300 p-2"
-                                                                                                                    rowSpan={urls.split(",").length}
-                                                                                                                >
-                                                                                                                    {label}
-                                                                                                                </td>
-                                                                                                            )}
-                                                                                                            <td className="border border-gray-300 p-2">
-                                                                                                                <a
-                                                                                                                    href={url.trim()}
-                                                                                                                    target="_blank"
-                                                                                                                    rel="noopener noreferrer"
-                                                                                                                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                                                                                                                >
-                                                                                                                    Docs {urlIndex + 1}
-                                                                                                                </a>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                                    ))
-                                                                                                )
-                                                                                            )}
+                                                    if (mainHeading === 'cef') {
+                                                        console.log(`mainHeading - `, mainHeading);
+                                                        console.log(`subData - `, subData);
+                                                        const hasInnerData = Object.values(subData || {}).some(
+                                                            (items) => Array.isArray(items) && items.length > 0
+                                                        );
 
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </div>
-                                                                            )
-                                                                        ))}
+                                                        console.log(`hasInnerData - `, hasInnerData);
+
+                                                        return (
+                                                            hasInnerData && (
+                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                    <div
+                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                        onClick={() => toggleSection(mainHeading)}
+                                                                    >
+                                                                        {mainHeading.toUpperCase()}
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    );
+                                                                    {openSection === mainHeading && (
+                                                                        <div className="p-4">
+                                                                            {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                items && items.length > 0 && (
+                                                                                    <div key={subHeading} className="mb-4">
+                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                        <table className="w-full border-collapse border border-gray-300">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th className="border border-gray-300 p-2">Label</th>
+                                                                                                    <th className="border border-gray-300 p-2">Action</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {items.map((item, index) =>
+                                                                                                    Object.entries(item).map(([label, urls]) =>
+                                                                                                        urls &&
+                                                                                                        urls.split(",").map((url, urlIndex) => (
+                                                                                                            <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
+                                                                                                                {/* Label is displayed once for each entry */}
+                                                                                                                {urlIndex === 0 && (
+                                                                                                                    <td
+                                                                                                                        className="border border-gray-300 p-2"
+                                                                                                                        rowSpan={urls.split(",").length}
+                                                                                                                    >
+                                                                                                                        {label}
+                                                                                                                    </td>
+                                                                                                                )}
+                                                                                                                <td className="border border-gray-300 p-2">
+                                                                                                                    <a
+                                                                                                                        href={url.trim()}
+                                                                                                                        target="_blank"
+                                                                                                                        rel="noopener noreferrer"
+                                                                                                                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                                                                                                    >
+                                                                                                                        Docs {urlIndex + 1}
+                                                                                                                    </a>
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        ))
+                                                                                                    )
+                                                                                                )}
+
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                )
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        );
+                                                    } else if (mainHeading === 'dav') {
+                                                        console.log(`mainHeading - `, mainHeading);
+                                                        console.log(`subData - `, subData);
+
+                                                        // Check if subData contains valid data
+                                                        const hasInnerData = Object.values(subData || {}).some((items) => {
+                                                            // If items is a string, split it into an array
+                                                            if (typeof items === 'string') {
+                                                                items = items.split(',').map(item => item.trim());
+                                                            }
+                                                            // Check if it's an array and has at least one non-empty item
+                                                            return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
+                                                        });
+
+                                                        console.log(`hasInnerData - `, hasInnerData);
+
+                                                        return (
+                                                            hasInnerData && (
+                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                    <div
+                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                        onClick={() => toggleSection(mainHeading)}
+                                                                    >
+                                                                        {mainHeading.toUpperCase()}
+                                                                    </div>
+                                                                    {openSection === mainHeading && (
+                                                                        <div className="p-4">
+                                                                            {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                // Ensure items is an array and has data
+                                                                                items && (typeof items === 'string' ? items.split(',') : items).length > 0 && (
+                                                                                    <div key={subHeading} className="mb-4">
+                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                        <table className="w-full border-collapse border border-gray-300">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th className="border border-gray-300 p-2">Label</th>
+                                                                                                    <th className="border border-gray-300 p-2">Action</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {(typeof items === 'string' ? items.split(',') : items).map((url, urlIndex) => (
+                                                                                                    <tr key={`${subHeading}-${urlIndex}`}>
+                                                                                                        {/* Display label once for each entry */}
+                                                                                                        {urlIndex === 0 && (
+                                                                                                            <td
+                                                                                                                className="border border-gray-300 p-2"
+                                                                                                                rowSpan={items.split(',').length}
+                                                                                                            >
+                                                                                                                {subHeading}
+                                                                                                            </td>
+                                                                                                        )}
+                                                                                                        <td className="border border-gray-300 p-2">
+                                                                                                            <a
+                                                                                                                href={url.trim()}
+                                                                                                                target="_blank"
+                                                                                                                rel="noopener noreferrer"
+                                                                                                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                                                                                            >
+                                                                                                                Docs {urlIndex + 1}
+                                                                                                            </a>
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                ))}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                )
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        );
+                                                    }
+
+
                                                 })}
                                             </div>
 

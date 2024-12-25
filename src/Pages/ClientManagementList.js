@@ -93,7 +93,7 @@ const ClientManagementList = () => {
     if (tdElement) {
       tdElement.focus();
     }
-  
+
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
@@ -143,7 +143,7 @@ const ClientManagementList = () => {
 
 
   const [showAllServicesState, setShowAllServicesState] = useState({});
- 
+
   const handleSelectChange = (e) => {
     const checkedStatus = e.target.value;
     setItemPerPage(checkedStatus);
@@ -481,23 +481,23 @@ const ClientManagementList = () => {
 
   return (
     <>
-      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4 px-4">
+
+
+
+      <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 px-4">
         <div className="col">
-          <form action="">
-            <div className="flex gap-5 justify-between">
-              <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                <option value="10">10 Rows</option>
-                <option value="20">20 Rows</option>
-                <option value="50">50 Rows</option>
-                <option value="100">100 Rows</option>
-                <option value="200">200 Rows</option>
-                <option value="300">300 Rows</option>
-                <option value="400">400 Rows</option>
-                <option value="500">500 Rows</option>
-              </select>
-              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
-            </div>
-          </form>
+          <div className="flex gap-5 justify-between">
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-2 text-left rounded-md w-6/12'>
+              <option value="10">10 Rows</option>
+              <option value="20">20 Rows</option>
+              <option value="50">50 Rows</option>
+              <option value="100">100 Rows</option>
+              <option value="200">200 Rows</option>
+              <option value="300">300 Rows</option>
+              <option value="400">400 Rows</option>
+              <option value="500">500 Rows</option>
+            </select>
+          </div>
         </div>
         <div className="col md:flex justify-end">
           <form action="">
@@ -505,17 +505,17 @@ const ClientManagementList = () => {
               <input
                 type="search"
                 className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                placeholder='Search by Client Code...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
             </div>
           </form>
         </div>
       </div>
-      <div className="overflow-x-auto py-6 px-4 border m-3">
-        <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
+      <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
+
+      <div className="overflow-x-auto py-6 px-4 border m-3 bg-white shadow-md rounded-md">
 
         {loading ? (
           <div className='flex justify-center items-center py-6 '>
@@ -658,17 +658,17 @@ const ClientManagementList = () => {
                     </tr>
                     {openAccordionId === item.main_id && (
                       branchLoading ? (
+                        <tr><td colSpan="11">
 
-
-                        <div className="flex justify-center items-center py-3">
-                          <PulseLoader
-                            color="#36D7B7"
-                            loading={branchLoading}
-                            size={13}
-                            aria-label="Loading Spinner"
-                          />
-                        </div>
-
+                          <div className="flex justify-center items-center py-3">
+                            <PulseLoader
+                              color="#36D7B7"
+                              loading={branchLoading}
+                              size={13}
+                              aria-label="Loading Spinner"
+                            />
+                          </div>
+                        </td></tr>
                       ) : (
                         branches.map((branch) => {
                           // Use parseInt to ensure the value is treated as a number
@@ -680,59 +680,59 @@ const ClientManagementList = () => {
 
                           return (
                             <tr>
-                            <td colSpan="11"> {/* Ensures the div spans the entire row */}
-                              <div className="w-full flex justify-end">
-                                <table key={branch.id} id="Branches" className="accordion w-4/12 m-0 bg-slate-100 p-2 rounded-md text-left mt-3">
-                                  <thead>
-                                    <tr>
-                                      <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
-                                      <th className="px-4 py-2 text-left">Email</th>
-                                      <th className="px-4 py-2 text-left">Actions</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr>
-                                      <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
-                                      <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
-                                      <td className="border px-4 py-2">
-                                        <div className="flex gap-2 items-center">
-                                          <button
-                                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                                            onClick={() => openPopup(branch)}
-                                          >
-                                            Edit
-                                          </button>
-                                          <button
-                                            className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                            onClick={() => handleDelete(branch.id, 'branch')}
-                                          >
-                                            Delete
-                                          </button>
-                                          {isActive && (
+                              <td colSpan="11"> {/* Ensures the div spans the entire row */}
+                                <div className="w-full flex justify-end">
+                                  <table key={branch.id} id="Branches" className="accordion w-4/12 m-0 bg-slate-100 p-2 rounded-md text-left mt-3">
+                                    <thead>
+                                      <tr>
+                                        <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
+                                        <th className="px-4 py-2 text-left">Email</th>
+                                        <th className="px-4 py-2 text-left">Actions</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr>
+                                        <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
+                                        <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
+                                        <td className="border px-4 py-2">
+                                          <div className="flex gap-2 items-center">
+                                            <button
+                                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                              onClick={() => openPopup(branch)}
+                                            >
+                                              Edit
+                                            </button>
                                             <button
                                               className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
-                                              onClick={() => blockBranch(branch.id)}
+                                              onClick={() => handleDelete(branch.id, 'branch')}
                                             >
-                                              Block
+                                              Delete
                                             </button>
-                                          )}
-                                          {isBlocked && (
-                                            <button
-                                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
-                                              onClick={() => unblockBranch(branch.id)}
-                                            >
-                                              Unblock
-                                            </button>
-                                          )}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                            </td>
-                          </tr>
-                          
+                                            {isActive && (
+                                              <button
+                                                className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                                onClick={() => blockBranch(branch.id)}
+                                              >
+                                                Block
+                                              </button>
+                                            )}
+                                            {isBlocked && (
+                                              <button
+                                                className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                                onClick={() => unblockBranch(branch.id)}
+                                              >
+                                                Unblock
+                                              </button>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+
                           );
                         })
                       )
@@ -750,7 +750,7 @@ const ClientManagementList = () => {
 
 
       </div>
-      <div className="flex items-center justify-end rounded-md bg-white px-4 py-2">
+      <div className="flex items-center justify-end  px-4 py-2">
         <button
           onClick={showPrev}
           disabled={currentPage === 1}

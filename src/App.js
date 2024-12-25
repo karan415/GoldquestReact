@@ -74,10 +74,8 @@ const App = () => {
                                       <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
                                       <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
                                       <Route path='/candidate-bgv' element={<Admin><CandidateBGV /></Admin>} />
-                                      
                                       <Route path='/candidate_genrate_Report' element={<Admin><CandidateGenerateReport /></Admin>} />
                                       <Route path='/candidate-dav' element={<Admin><CandidiateDav /></Admin>} />
-
                                       <Route path='/background-form' element={<BackgroundForm />} />
                                       <Route path='/digital-form' element={<DigitalAddressVerification />} />
                                       <Route path='/loginpage' element={<LoginPage />} />

@@ -11,6 +11,8 @@ const InactiveClients = () => {
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [services, setServices] = useState([]);
 
   // Calculate total pages based on current filtered data
   const filteredData = data.filter(item =>
@@ -25,7 +27,7 @@ const InactiveClients = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     // Set current items based on the filtered filteredData
     setCurrentItems(filteredData.slice(indexOfFirstItem, indexOfLastItem));
-  }, [filteredData, currentPage, itemsPerPage]);
+  }, []);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -85,10 +87,10 @@ const InactiveClients = () => {
   };
 
   const fetchClients = useCallback(async () => {
-    setLoading(true);
 
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
+    setLoading(true);
 
     try {
       const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
@@ -103,6 +105,11 @@ const InactiveClients = () => {
         return;
       }
       setData(result.customers || []);
+      if (data.length > 0) {
+        const rawServices = data[0].services; // Get the `services` key
+        const parsedServices = JSON.parse(rawServices); // Parse the JSON string
+        setServices(parsedServices); // Set state
+      }
     } catch (error) {
       console.error('Fetch error:', error);
     } finally {
@@ -157,36 +164,34 @@ const InactiveClients = () => {
     }
   };
 
-  const handleViewMore = () => {
-    setShowAll(prev => !prev);
-  };
+
 
   const handleSelectChange = (e) => {
     const selectedValue = parseInt(e.target.value, 10);
     setItemsPerPage(selectedValue);
   };
+  console.log('data', data);
+  const hasMultipleServices = services.length > 1;
+
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
       <h2 className='text-center text-2xl font-bold my-5'>InActive Clients</h2>
 
-      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+      <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 px-4">
         <div className="col">
-          <form action="">
-            <div className="flex gap-5 justify-between">
-              <select name="options" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                <option value="10">10 Rows</option>
-                <option value="20">20 Rows</option>
-                <option value="50">50 Rows</option>
-                <option value="100">100 Rows</option>
-                <option value="200">200 Rows</option>
-                <option value="300">300 Rows</option>
-                <option value="400">400 Rows</option>
-                <option value="500">500 Rows</option>
-              </select>
-              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>Excel</button>
-            </div>
-          </form>
+          <div className="flex gap-5 justify-between">
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-2 text-left rounded-md w-6/12'>
+              <option value="10">10 Rows</option>
+              <option value="20">20 Rows</option>
+              <option value="50">50 Rows</option>
+              <option value="100">100 Rows</option>
+              <option value="200">200 Rows</option>
+              <option value="300">300 Rows</option>
+              <option value="400">400 Rows</option>
+              <option value="500">500 Rows</option>
+            </select>
+          </div>
         </div>
         <div className="col md:flex justify-end">
           <form action="">
@@ -194,11 +199,10 @@ const InactiveClients = () => {
               <input
                 type="search"
                 className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                placeholder='Search by Client Code...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-green-500 p-3 rounded-md text-white hover:bg-green-200'>Search</button>
             </div>
           </form>
         </div>
@@ -234,32 +238,72 @@ const InactiveClients = () => {
                     <input type="checkbox" className='me-2' />
                     {index + 1 + (currentPage - 1) * itemsPerPage}
                   </td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.item_unique_id}</td>
+                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.agreement_date}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.item_standard}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                    {item.services ? (
-                      <div className='text-start'>
-                        {JSON.parse(item.services).slice(0, showAll ? undefined : 1).map((service, index) => (
-                          <div key={service.serviceId} className='py-2 pb-1 text-start flex'>
-                            <div className='text-start pb-0'> {service.serviceTitle}</div>
-                            <div className='text-start pb-0'>{service.price}</div>
-                            <div className='text-start pb-0'> {service.packages ? Object.values(service.packages).join(', ') : 'No packages available'}</div>
-                            {index < JSON.parse(item.services).length - 1 && <hr />}
+                    {services.length > 0 ? (
+                      <>
+                        {/* Display first service or more based on condition */}
+                        {services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
+                          <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                            <div className="text-start pb-0">{service.serviceTitle}</div>
                           </div>
                         ))}
-                        <button className='' onClick={handleViewMore}>
-                          {showAll ? 'View Less' : 'View More'}
-                        </button>
-                      </div>
+
+                        {/* Conditionally render the "View More" button */}
+                        {hasMultipleServices && (
+                          <button
+                            className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+                            onClick={() => setShowPopup(true)}
+                          >
+                            View More
+                          </button>
+                        )}
+
+                        {/* Popup rendering */}
+
+                      </>
                     ) : (
-                      'No services available'
+                      "No services available"
                     )}
                   </td>
+                  {showPopup && (
+                    <div
+                      className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                      onClick={() => setShowPopup(false)}
+                    >
+                      <div
+                        className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
+                          onClick={() => setShowPopup(false)}
+                        >
+                          ✕
+                        </button>
+                        <h3 className="text-xl  text-center font-bold mb-4">All Services</h3>
+                        <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
+                          {services.map((service) => (
+                            <div
+                              key={service.serviceId}
+                              className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
+                            >
+                              <div>{service.serviceTitle}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+
+
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                     <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(item.name, item.main_id)}>Unblock</button>
                   </td>

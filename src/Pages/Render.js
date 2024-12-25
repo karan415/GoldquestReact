@@ -3,10 +3,12 @@ import Sidebar from '../Sidebar/Sidebar';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '../Sidebar/SidebarContext';
 import MainContent from './MainContent';
+import Header from '../Dashboard/Header'; // Header component
 
 const Render = () => {
   return (
     <SidebarProvider>
+         <Header />
       <div className="flex flex-col md:flex-row">
         <Sidebar />
         <MainContent />
