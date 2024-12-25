@@ -26,3 +26,5 @@ Schema2021!
     #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(3) {
     background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-3-1.png)!important
     }
+
+hjghjgh
