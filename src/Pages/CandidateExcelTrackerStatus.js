@@ -1086,7 +1086,6 @@ const CandidateExcelTrackerStatus = () => {
                             <thead className='rounded-lg'>
                                 <tr className="bg-green-500 text-white">
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">SL NO</th>
-                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Name of the organisation</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Full name of the applicant </th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Employee ID</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Mobile Number</th>
@@ -1136,7 +1135,6 @@ const CandidateExcelTrackerStatus = () => {
                                     <React.Fragment key={data.id}>
                                         <tr className="text-center">
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.organization_name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.mobile_number || 'NIL'}</td>
