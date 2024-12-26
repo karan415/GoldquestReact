@@ -111,35 +111,39 @@ const CustomerUpdatePassword = () => {
     };
 
     return (
-        <form className='mt-4 w-6/12 m-auto' onSubmit={handleSubmit}>
-            <div className="mb-6 text-left">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newpass">New Password</label>
-                <input
-                    type="password"
-                    name="newpass"
-                    className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                    id="newpassword"
-                    placeholder='********'
-                    onChange={handleChange}
-                    value={newPass.newpass}
-                />
-                {passError.newpass && <p className='text-red-500'>{passError.newpass}</p>}
-            </div>
-            <div className="mb-6 text-left">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="c_newpass">Confirm New Password</label>
-                <input
-                    type="password"
-                    name="c_newpass"
-                    className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                    id="confirmnewpassword"
-                    placeholder='********'
-                    onChange={handleChange}
-                    value={newPass.c_newpass}
-                />
-                {passError.c_newpass && <p className='text-red-500'>{passError.c_newpass}</p>}
-            </div>
-            <button type="submit" className='bg-green-400 text-white p-3 rounded-md w-full mb-4 hover:bg-green-200'>Update Password</button>
-        </form>
+        <div className='h-screen flex items-center flex-wrap justify-center'>
+            <form className='mt-4 w-6/12 m-0 bg-white shadow-md p-3 rounded-md' onSubmit={handleSubmit}>
+                <h2 className='text-xl py-5 font-bold text-center'>Update Password</h2>
+
+                <div className="mb-6 text-left">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newpass">New Password</label>
+                    <input
+                        type="password"
+                        name="newpass"
+                        className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                        id="newpassword"
+                        placeholder='********'
+                        onChange={handleChange}
+                        value={newPass.newpass}
+                    />
+                    {passError.newpass && <p className='text-red-500'>{passError.newpass}</p>}
+                </div>
+                <div className="mb-6 text-left">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="c_newpass">Confirm New Password</label>
+                    <input
+                        type="password"
+                        name="c_newpass"
+                        className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                        id="confirmnewpassword"
+                        placeholder='********'
+                        onChange={handleChange}
+                        value={newPass.c_newpass}
+                    />
+                    {passError.c_newpass && <p className='text-red-500'>{passError.c_newpass}</p>}
+                </div>
+                <button type="submit" className='bg-green-400 text-white p-3 rounded-md w-full mb-4 hover:bg-green-200'>Update Password</button>
+            </form>
+        </div>
     );
 };
 

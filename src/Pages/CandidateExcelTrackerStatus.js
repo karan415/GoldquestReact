@@ -18,12 +18,10 @@ const CandidateExcelTrackerStatus = () => {
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [adminTAT, setAdminTAT] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [servicesLoading, setServicesLoading] = useState(false);
-    const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
     const API_URL = useApi();
     const { branch_id } = useContext(BranchContextExel);
     const queryParams = new URLSearchParams(location.search);

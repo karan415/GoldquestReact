@@ -529,7 +529,7 @@ const ClientForm = () => {
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={formLoading}>
                         {(isEditClient ? "Edit" : "Send")}
                     </button>
-                    <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button>
+                    {/* <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button> */}
                 </form>
             )}
 

@@ -358,8 +358,8 @@ const CandidateForm = () => {
                         </div>
                     </div>
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto'>{isEditClient ? "Edit" : "Send"}</button>
-                    <span className='flex justify-center py-4 font-bold text-lg'>OR</span>
-                    <button type="button" className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'>Bulk Mailer</button>
+                    {/* <span className='flex justify-center py-4 font-bold text-lg'>OR</span>
+                    <button type="button" className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'>Bulk Mailer</button> */}
                 </form>
             )}
 

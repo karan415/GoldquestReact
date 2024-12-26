@@ -63,34 +63,25 @@ const DropBoxList = () => {
     const renderPagination = () => {
         const pageNumbers = [];
 
-        // Handle pagination with ellipsis
         if (totalPages <= 5) {
-            // If there are 5 or fewer pages, show all page numbers
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
         } else {
-            // Always show the first page
             pageNumbers.push(1);
 
-            // Show ellipsis if current page is greater than 3
             if (currentPage > 3) {
                 pageNumbers.push('...');
             }
-
-            // Show two pages around the current page
             for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
                 if (!pageNumbers.includes(i)) {
                     pageNumbers.push(i);
                 }
             }
-
-            // Show ellipsis if current page is less than total pages - 2
             if (currentPage < totalPages - 2) {
                 pageNumbers.push('...');
             }
 
-            // Always show the last page
             if (!pageNumbers.includes(totalPages)) {
                 pageNumbers.push(totalPages);
             }
@@ -203,11 +194,11 @@ const DropBoxList = () => {
 
                 </div>
                 <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-10 m-3">
-                    <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                    <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
                                 <div className="flex gap-5 justify-between">
-                                    <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                    <select name="" id="" onChange={handleSelectChange} className='outline-none border p-3 text-left rounded-md w-6/12'>
                                         <option value="10">10 Rows</option>
                                         <option value="20">20 Rows</option>
                                         <option value="50">50 Rows</option>
@@ -217,7 +208,6 @@ const DropBoxList = () => {
                                         <option value="400">400 Rows</option>
                                         <option value="500">500 Rows</option>
                                     </select>
-                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                                 </div>
                             </form>
                         </div>
@@ -226,8 +216,8 @@ const DropBoxList = () => {
                                 <div className="flex md:items-stretch items-center  gap-3">
                                     <input
                                         type="search"
-                                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                        placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                        className='outline-none border-2 p-2 text-sm rounded-md w-full my-4 md:my-0'
+                                        placeholder='Search by Client Code...'
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />

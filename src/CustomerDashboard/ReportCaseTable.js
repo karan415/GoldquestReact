@@ -305,58 +305,58 @@ const ReportCaseTable = () => {
         </div>
     );
     return (
+        
         <div className="bg-[#c1dff2]">
             <div className="space-y-4 py-[30px] px-[51px] bg-white">
 
-              
-                <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
-                    <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
-                        <div className="col">
-                            <form action="">
-                                <div className="flex gap-5 justify-between">
-                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none border  p-2 text-left rounded-md w-6/12'>
-                                        <option value="10">10 Rows</option>
-                                        <option value="20">20 Rows</option>
-                                        <option value="50">50 Rows</option>
-                                        <option value="100">100 Rows</option>
-                                        <option value="200">200 Rows</option>
-                                        <option value="300">300 Rows</option>
-                                        <option value="400">400 Rows</option>
-                                        <option value="500">500 Rows</option>
-                                    </select>
+                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border p-4">
+                    <div className="col">
+                        <form action="">
+                            <div className="flex gap-5 justify-between">
+                                <select name="options" id="" onChange={handleSelectChange} className='outline-none border  p-2 text-left rounded-md w-6/12'>
+                                    <option value="10">10 Rows</option>
+                                    <option value="20">20 Rows</option>
+                                    <option value="50">50 Rows</option>
+                                    <option value="100">100 Rows</option>
+                                    <option value="200">200 Rows</option>
+                                    <option value="300">300 Rows</option>
+                                    <option value="400">400 Rows</option>
+                                    <option value="500">500 Rows</option>
+                                </select>
 
-                                </div>
-                            </form>
-                        </div>
-                        <div className="col md:flex gap-3 placeholder:justify-end ">
+                            </div>
+                        </form>
+                    </div>
+                    <div className="col md:flex gap-3 justify-end ">
                         <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
-                        {options.map((item, index) => {
-                            return item.status !== 'closed' ? (
-                                <option key={index} value={item.status}>
-                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
-                                </option>
-                            ) : null;
-                        })}
+                            <option value="">Search By Option</option>
+                            {options.map((item, index) => {
+                                return item.status !== 'closed' ? (
+                                    <option key={index} value={item.status}>
+                                        {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                    </option>
+                                ) : null;
+                            })}
 
 
-                    </select>
-                            <form action="">
-                                <div className="flex md:items-stretch items-center  gap-3">
-                                    <input
-                                        type="search"
-                                        className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                        placeholder='Search by Client Code, Company Name, or Client Spoc'
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                            </form>
-                        </div>
-
+                        </select>
+                        <form action="">
+                            <div className="flex md:items-stretch items-center  gap-3">
+                                <input
+                                    type="search"
+                                    className='outline-none border-2 p-2 rounded-md w-full my-4 text-sm md:my-0'
+                                    placeholder='Search by Client Code...'
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </form>
                     </div>
 
                 </div>
-                <div className="overflow-x-auto py-6 px-4">
+                <div className="overflow-x-auto  bg-white shadow-md rounded-md">
+
+
                     {loading ? (
                         <div className='flex justify-center items-center py-6 h-full'>
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />

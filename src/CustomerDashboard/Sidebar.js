@@ -62,21 +62,23 @@ const Sidebar = () => {
       <CustomerHeader />
       <div className="flex flex-col md:flex-row h-full">
         <div className="w-full md:w-1/5 flex flex-col bg-white border-e">
-          <div className="px-3">
-            <div className="flex flex-col px-3 py-8">
-              <ul>
-                {Object.keys(tabNames).map((tab) => (
-                  <li
-                    key={tab}
-                    className={activeTab === tab ? 'active bg-green-200 rounded-md p-3 flex mb-3' : 'togglelist w-full flex items-center p-3 cursor-pointer hover:bg-green-200 rounded-md my-2'}
-                    onClick={() => onTabChange(tab)}
-                  >
-                    {tabNames[tab]}
-                  </li>
-                ))}
-                <Logout />
-              </ul>
+          <div className='h-screen'>
+            <div className="px-3">
+              <div className="flex flex-col px-3 py-8">
+                <ul>
+                  {Object.keys(tabNames).map((tab) => (
+                    <li
+                      key={tab}
+                      className={activeTab === tab ? 'active bg-green-200 rounded-md p-3 flex mb-3' : 'togglelist w-full flex items-center p-3 cursor-pointer hover:bg-green-200 rounded-md my-2'}
+                      onClick={() => onTabChange(tab)}
+                    >
+                      {tabNames[tab]}
+                    </li>
+                  ))}
+                  <Logout />
+                </ul>
 
+              </div>
             </div>
           </div>
         </div>
