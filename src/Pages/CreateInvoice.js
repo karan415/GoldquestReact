@@ -72,12 +72,12 @@ const CreateInvoice = () => {
           throw new Error("No data returned from API.");
         }
 
-      
+
         let applications = [];
         if (data && Array.isArray(data.applications)) {
-          applications = data.applications; 
+          applications = data.applications;
         } else {
-          applications = []; 
+          applications = [];
         }
 
         const serviceNames = data?.serviceNames || [];
@@ -115,8 +115,8 @@ const CreateInvoice = () => {
             icon: 'warning',
             confirmButtonText: 'OK'
           });
-          
-         }
+
+        }
 
       })
       .catch((error) => {
@@ -290,7 +290,7 @@ const CreateInvoice = () => {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("BILL TO:", billToXPosition, billToYPosition); // Left-aligned in the first column
+    doc.text("BILL TO:", billToXPosition, billToYPosition + 5); // Left-aligned in the first column
     doc.setFont("helvetica", "normal");
     doc.text(`Attention: ${customer.name}`, billToXPosition, billToYPosition + 10);
     doc.text(`Location: ${customer.address}`, billToXPosition, billToYPosition + 15);
@@ -374,11 +374,14 @@ const CreateInvoice = () => {
     doc.setLineWidth(0.5);
 
     // Draw a border around the title text
+    invoiceYPosition = 20;
+    doc.addPage();
     const titleX = 29.5;
     const titleY = invoiceYPosition - 10; // Adjust slightly above to center the title
     const titleWidth = 119; // Add some padding to width
     const titleHeight = 10; // Height of the border around the title
     doc.rect(titleX, titleY - 1, titleWidth, titleHeight); // Draw a border around the title
+    doc.setFontSize(9)
 
     // Add the title text inside the border
     doc.text("GoldQuest Global Bank Account Details", titleX + 2, titleY + 5); // Adjusted for proper vertical centering
@@ -420,6 +423,7 @@ const CreateInvoice = () => {
     }
 
     // Tax Details Calculation
+    doc.setFontSize(8)
     let newOverallServiceAmount = parseInt(overallServiceAmount) + parseInt(overallServiceAdditionalFeeAmount);
     const cgstTax = calculatePercentage(newOverallServiceAmount, parseInt(cgst.percentage));
     const sgstTax = calculatePercentage(newOverallServiceAmount, parseInt(sgst.percentage));
@@ -446,7 +450,7 @@ const CreateInvoice = () => {
 
       const taxLabelX = taxDetailsRightX + 10; // Ensure tax details are placed after the bank details (adjusted)
       const taxAmountX = taxLabelX + taxLabelColumnWidth - 2; // Position for tax amount column
-
+      doc.setFontSize(10)
       // Make specific labels bold
       if (label === "Total Amount Before Tax" || label === "Total Tax Amount (Round off)") {
         doc.setFont("helvetica", "bold");
@@ -472,7 +476,7 @@ const CreateInvoice = () => {
     // Total Amount in Words
     // Set font for the label
     doc.setFont("helvetica", "bold");
-
+    doc.setFontSize(12)
     // Calculate the width of the label text to position it correctly
     const labelWidth = doc.getTextWidth("Invoice Amount in Words:");
 
@@ -487,7 +491,7 @@ const CreateInvoice = () => {
     doc.rect(leftX, invoiceYPosition - 3, contentWidth, 12); // Draw border (width: 80% of page, height: fixed)
 
     // Add label with padding (4 units) to avoid overlap with the border
-    doc.text("Invoice Amount in Words:", leftX + 4, invoiceYPosition + 5); // 4 units padding from the left
+    doc.text("Invoice Amount in Words:", leftX + 2, invoiceYPosition + 5); // 4 units padding from the left
 
     // Amount in words
     doc.setFont("helvetica", "normal");
