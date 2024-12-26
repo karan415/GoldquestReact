@@ -308,8 +308,28 @@ const ReportCaseTable = () => {
         <div className="bg-[#c1dff2]">
             <div className="space-y-4 py-[30px] px-[51px] bg-white">
 
-                <div className='flex gap-4 justify-end p-4'>
-                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+              
+                <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
+                    <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
+                        <div className="col">
+                            <form action="">
+                                <div className="flex gap-5 justify-between">
+                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none border  p-2 text-left rounded-md w-6/12'>
+                                        <option value="10">10 Rows</option>
+                                        <option value="20">20 Rows</option>
+                                        <option value="50">50 Rows</option>
+                                        <option value="100">100 Rows</option>
+                                        <option value="200">200 Rows</option>
+                                        <option value="300">300 Rows</option>
+                                        <option value="400">400 Rows</option>
+                                        <option value="500">500 Rows</option>
+                                    </select>
+
+                                </div>
+                            </form>
+                        </div>
+                        <div className="col md:flex gap-3 placeholder:justify-end ">
+                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
                         {options.map((item, index) => {
                             return item.status !== 'closed' ? (
                                 <option key={index} value={item.status}>
@@ -320,28 +340,6 @@ const ReportCaseTable = () => {
 
 
                     </select>
-                </div>
-                <div className="overflow-x-auto  mx-4 bg-white shadow-md rounded-md">
-                    <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
-                        <div className="col">
-                            <form action="">
-                                <div className="flex gap-5 justify-between">
-                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
-                                        <option value="10">10 Rows</option>
-                                        <option value="20">20 Rows</option>
-                                        <option value="50">50 Rows</option>
-                                        <option value="100">100 Rows</option>
-                                        <option value="200">200 Rows</option>
-                                        <option value="300">300 Rows</option>
-                                        <option value="400">400 Rows</option>
-                                        <option value="500">500 Rows</option>
-                                    </select>
-                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
-
-                                </div>
-                            </form>
-                        </div>
-                        <div className="col md:flex justify-end ">
                             <form action="">
                                 <div className="flex md:items-stretch items-center  gap-3">
                                     <input

@@ -1,7 +1,7 @@
 import { React, useCallback, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
-
+import Swal from 'sweetalert2';
 const ScopeOfServices = () => {
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
     const branch_token = localStorage.getItem("branch_token");
@@ -39,16 +39,17 @@ const ScopeOfServices = () => {
             const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
-
             }
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                // Show error message from API response
+                const errorMessage = data?.message || 'Network response was not ok';
+                throw new Error(errorMessage);
             }
 
             if (data.customers) {
                 const customers = data.customers;
-                setCustomer(customers)
+                setCustomer(customers);
 
                 const servicesData = data.customers.services;
 
@@ -64,6 +65,13 @@ const ScopeOfServices = () => {
             }
         } catch (err) {
             console.error('Fetch error:', err);
+            // Show the API error message in the Swal alert
+            Swal.fire({
+                title: 'Error!',
+                text: err.message || 'Failed to fetch services.',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
             setError('Failed to fetch services.');
         } finally {
             setLoading(false);
@@ -79,46 +87,49 @@ const ScopeOfServices = () => {
         <>
 
             <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Client Master Data</h2>
-            <table className="min-w-full border bg-white shadow-md rounded-md p-3 ">
+            <div className='md:mx-16 md:my-8'>  <table className="min-w-full border bg-white shadow-md rounded-md p-3 ">
 
+                <tr className='bg-green-500 text-white'>
+                    <th className="py-2 px-4 border-b border-r-2 whitespace-nowrap text-center ">PARTICULARS	</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap uppercase">INFORMATION</td>
+                </tr>
                 <tr>
                     <th className="py-2 px-4 border-b border-r-2 whitespace-nowrap text-left">Company Name</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.name || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.name || 'NA'}</td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Email</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.email || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">
+                        {customer.emails ? JSON.parse(customer.emails).join(', ') || 'NA' : 'NA'}
+                    </td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Mobile</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.mobile || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.mobile || 'NA'}</td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Address</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.address || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.address || 'NA'}</td>
                 </tr>
-                <tr>
-                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Role</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.role || 'NA'}</td>
-                </tr>
+                
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">GST</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.gst_number || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.gst_number || 'NA'}</td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Contact Person</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.contact_person || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.contact_person_name || 'NA'}</td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Status</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.status || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.status || 'NA'}</td>
                 </tr>
                 <tr>
                     <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">TAT</th>
-                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.tat || 'NA'}</td>
+                    <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.tat || 'NA'}</td>
                 </tr>
 
-            </table>
+            </table></div>
             <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Scope Of Services</h2>
 
             <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3 h-full">
@@ -134,7 +145,7 @@ const ScopeOfServices = () => {
                         />
                     </div>
                 )}
-                {error && <p className="text-center text-red-500">{error}</p>}
+                {error && <p className="text-center text-red-500 p-6">{error}</p>}
                 {!loading && !error && (
                     <table className="min-w-full">
                         <thead>
