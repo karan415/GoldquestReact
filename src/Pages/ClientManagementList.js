@@ -8,6 +8,7 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Modal from 'react-modal';
+import Popup from 'reactjs-popup';
 
 Modal.setAppElement('#root');
 const ClientManagementList = () => {
@@ -482,10 +483,10 @@ const ClientManagementList = () => {
 
 
 
-      <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 px-4">
+      <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 p-3">
         <div className="col">
           <div className="flex gap-5 justify-between">
-            <select name="options" onChange={handleSelectChange} className='outline-none  p-2 text-left rounded-md w-6/12'>
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-6/12'>
               <option value="10">10 Rows</option>
               <option value="20">20 Rows</option>
               <option value="50">50 Rows</option>
@@ -502,7 +503,7 @@ const ClientManagementList = () => {
             <div className="flex md:items-stretch items-center gap-3">
               <input
                 type="search"
-                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                className='outline-none border-2 p-3 rounded-md w-full my-4 md:my-0'
                 placeholder='Search by Client Code...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -513,7 +514,7 @@ const ClientManagementList = () => {
       </div>
       <h2 className='text-center text-2xl font-bold my-5'>Active Clients</h2>
 
-      <div className="overflow-x-auto py-6 px-4 border m-3 bg-white shadow-md rounded-md">
+      <div className="overflow-x-auto py-6 p-3 border m-3 bg-white shadow-md rounded-md">
 
         {loading ? (
           <div className='flex justify-center items-center py-6 '>
@@ -524,17 +525,17 @@ const ClientManagementList = () => {
           <table className="min-w-full mb-4" >
             <thead>
               <tr className='bg-green-500'>
-                <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Name of Client Spoc</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Date of Service Agreement</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Contact Person</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Mobile</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Standard Procedure</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Services</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Address</th>
-                <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+                <th className=" p-3 border-b border-r border-l text-white text-left uppercase whitespace-nowrap text-sm">SL</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Client Code</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Company Name</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Name of Client Spoc</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Date of Service Agreement</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Contact Person</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Mobile</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Client Standard Procedure</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Services</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Address</th>
+                <th className=" p-3 border-b border-r text-white text-left uppercase whitespace-nowrap text-sm">Action</th>
               </tr>
             </thead>
             <tbody id='clientListTableTBody'>
@@ -543,21 +544,24 @@ const ClientManagementList = () => {
                 return (
                   <>
                     <tr key={item.main_id}>
-                      <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap capitalize">
-                        <input type="checkbox" className="me-2" />
+                      <td className=" p-3 border-b border-l border-r text-left whitespace-nowrap text-sm capitalize">
                         {index + 1 + (currentPage - 1) * itemsPerPage}
                       </td>
-                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.client_unique_id || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{item.name || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap capitalize">{item.single_point_of_contact || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">
-                        {new Date(item.agreement_date).toLocaleDateString()}
+                      <td className=" p-3 border-b border-r text-center whitespace-nowrap text-sm capitalize">{item.client_unique_id || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r whitespace-nowrap text-sm capitalize">{item.name || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-center whitespace-nowrap text-sm capitalize">{item.single_point_of_contact || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-sm text-center cursor-pointer">
+                        {new Date(item.agreement_date).getDate()}-
+                        {new Date(item.agreement_date).getMonth() + 1}-
+                        {new Date(item.agreement_date).getFullYear()}
                       </td>
-                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.client_standard || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                        {services.length > 0 ? (
+
+
+                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.contact_person_name || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.mobile || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.client_standard || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r whitespace-nowrap text-sm text-center">
+                        <div className='flex gap-3'>{services.length > 0 ? (
                           <>
                             {/* Find the services for this particular client */}
                             {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
@@ -568,22 +572,23 @@ const ClientManagementList = () => {
 
                             {hasMultipleServices && (
                               <button
-                                className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-                                onClick={() => setShowPopup(true)}
+                                className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                                onClick={() => setShowPopup(item.main_id)}
                               >
                                 View More
                               </button>
+
                             )}
                           </>
                         ) : (
                           "No services available"
-                        )}
+                        )}</div>
                       </td>
 
-                      {showPopup && (
+                      {showPopup === item.main_id && (
                         <div
-                          className="popup-overlay fixed inset-0 bg-black  flex items-center justify-center z-50"
-                          onClick={() => setShowPopup(false)}
+                          className="popup-overlay fixed inset-0 bg-black flex items-center justify-center z-50"
+                          onClick={() => setShowPopup(null)} // Close the popup when clicking outside
                         >
                           <div
                             className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
@@ -591,17 +596,17 @@ const ClientManagementList = () => {
                           >
                             <button
                               className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
-                              onClick={() => setShowPopup(false)}
+                              onClick={() => setShowPopup(null)} // Close the popup when clicking close button
                             >
                               ✕
                             </button>
                             <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
                             <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
-                              {/* Display all services for the current customer */}
+                              {/* Display all services for the current client */}
                               {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
                                 <div
                                   key={service.serviceId}
-                                  className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
+                                  className="p-3 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
                                 >
                                   <div>{service.serviceTitle}</div>
                                 </div>
@@ -611,19 +616,20 @@ const ClientManagementList = () => {
                         </div>
                       )}
 
-                      <td className="py-3 px-4 border-b border-r whitespace-wrap capitalize">{item.address || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
-                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+
+                      <td className=" p-3 border-b border-r whitespace-wrap capitalize  text-sm">{item.address || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-left whitespace-nowrap text-sm fullwidth">
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
                         <button
-                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                          className="bg-green-600 hover:bg-green-200  text-sm rounded-md p-3 px-5 text-white"
                           onClick={() => handleEditForm(item)}
                         >
                           Edit
                         </button>
-                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        <button className="bg-red-600 hover:bg-red-200  text-sm rounded-md p-3 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
                         {item.branch_count > 1 && (
                           <button
-                            className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                            className="bg-green-600 hover:bg-green-200   text-sm rounded-md p-3 px-5 text-white"
                             onClick={() => toggleAccordion(item.main_id)}
                           >
                             View Branches
@@ -636,7 +642,7 @@ const ClientManagementList = () => {
                       branchLoading ? (
                         <tr><td colSpan="11">
 
-                          <div className="flex justify-center items-center py-3">
+                          <div className="flex justify-center items-center ">
                             <PulseLoader
                               color="#36D7B7"
                               loading={branchLoading}
@@ -658,35 +664,35 @@ const ClientManagementList = () => {
                             <tr>
                               <td colSpan="11"> {/* Ensures the div spans the entire row */}
                                 <div className="w-full flex justify-end">
-                                  <table key={branch.id} id="Branches" className="accordion w-4/12 m-0 bg-slate-100 p-2 rounded-md text-left mt-3">
+                                  <table key={branch.id} id="Branches" className="accordion w-4/12 m-0 bg-slate-100 p-3 rounded-md text-left mt-3">
                                     <thead>
                                       <tr>
-                                        <th className="px-4 py-2 text-left whitespace-nowrap">Name</th>
-                                        <th className="px-4 py-2 text-left">Email</th>
-                                        <th className="px-4 py-2 text-left">Actions</th>
+                                        <th className="p-3 py-2 text-left whitespace-nowrap text-sm">Name</th>
+                                        <th className="p-3 py-2 text-left">Email</th>
+                                        <th className="p-3 py-2 text-left">Actions</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       <tr>
-                                        <td className="border px-4 py-2 whitespace-nowrap">{branch.name}</td>
-                                        <td className="border px-4 py-2 whitespace-nowrap">{branch.email}</td>
-                                        <td className="border px-4 py-2">
-                                          <div className="flex gap-2 items-center">
+                                        <td className="border p-3 py-2 whitespace-nowrap text-sm">{branch.name}</td>
+                                        <td className="border p-3 py-2 whitespace-nowrap text-sm">{branch.email}</td>
+                                        <td className="border p-3 py-2">
+                                          <div className="flex gap-3 items-center">
                                             <button
-                                              className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+                                              className="bg-green-600 hover:bg-green-200 rounded-md p-3 px-5 text-white"
                                               onClick={() => openPopup(branch)}
                                             >
                                               Edit
                                             </button>
                                             <button
-                                              className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                              className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2"
                                               onClick={() => handleDelete(branch.id, 'branch')}
                                             >
                                               Delete
                                             </button>
                                             {isActive && (
                                               <button
-                                                className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                                                className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2"
                                                 onClick={() => blockBranch(branch.id)}
                                               >
                                                 Block
@@ -694,7 +700,7 @@ const ClientManagementList = () => {
                                             )}
                                             {isBlocked && (
                                               <button
-                                                className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white mx-2"
+                                                className="bg-green-600 hover:bg-green-200 rounded-md p-3 text-white mx-2"
                                                 onClick={() => unblockBranch(branch.id)}
                                               >
                                                 Unblock
@@ -726,11 +732,11 @@ const ClientManagementList = () => {
 
 
       </div>
-      <div className="flex items-center justify-end  px-4 py-2">
+      <div className="flex items-center justify-end  p-3 py-2">
         <button
           onClick={showPrev}
           disabled={currentPage === 1}
-          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white p-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Previous page"
         >
           <MdArrowBackIosNew />
@@ -741,7 +747,7 @@ const ClientManagementList = () => {
         <button
           onClick={showNext}
           disabled={currentPage === totalPages}
-          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white p-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           aria-label="Next page"
         >
           <MdArrowForwardIos />

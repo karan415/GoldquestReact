@@ -133,7 +133,7 @@ const HolidayManagementForm = () => {
     return (
         <form onSubmit={handleSubmit} className='border rounded-md p-5'>
             <div className="mb-4">
-                <label htmlFor="holidaytitle" className="block"> Name</label>
+                <label htmlFor="holidaytitle" className="block"> Name<span className='text-red-500'>*</span></label>
                 <input
                     type="text"
                     name="name"
@@ -144,7 +144,7 @@ const HolidayManagementForm = () => {
                 {error.name && <p className='text-red-500'>{error.name}</p>}
             </div>
             <div className="mb-4">
-                <label htmlFor="HoliDayDate" className="block">Date</label>
+                <label htmlFor="HoliDayDate" className="block">Date<span className='text-red-500'>*</span></label>
                 <input
                     type="date"
                     name="date"

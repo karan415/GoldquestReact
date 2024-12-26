@@ -491,7 +491,7 @@ const ClientManagement = () => {
 
             </div>
           ) :
-            (<form onSubmit={handleFormSubmit} >
+            (<form onSubmit={handleFormSubmit} disabled={dataLoading} >
               <div className="md:flex gap-5">
                 <div className="mb-4 md:w-6/12">
                   <label className="text-gray-500" htmlFor="company_name">Company Name: <span className="text-red-600">*</span></label>
@@ -499,7 +499,7 @@ const ClientManagement = () => {
                     type="text"
                     name="company_name"
                     id="company_name"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.company_name}
                     onChange={handleChange}
                     ref={(el) => (refs.current["company_name"] = el)} // Attach ref here
@@ -514,7 +514,7 @@ const ClientManagement = () => {
                     type="text"
                     name="client_code"
                     id="client_code"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.client_code}
                     onChange={handleChange}
                     ref={(el) => (refs.current["client_code"] = el)} // Attach ref here
@@ -530,7 +530,7 @@ const ClientManagement = () => {
                     type="text"
                     name="address"
                     id="address"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.address}
                     onChange={handleChange}
                     ref={(el) => (refs.current["address"] = el)} // Attach ref here
@@ -544,7 +544,7 @@ const ClientManagement = () => {
                     type="number"
                     name="mobile_number"
                     id="mobile_number"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.mobile_number}
                     onChange={handleChange}
                     ref={(el) => (refs.current["mobile_number"] = el)} // Attach ref here
@@ -563,7 +563,7 @@ const ClientManagement = () => {
                     type="text"
                     name="contact_person"
                     id="contact_person"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.contact_person}
                     onChange={handleChange}
                     ref={(el) => (refs.current["contact_person"] = el)} // Attach ref here
@@ -593,7 +593,7 @@ const ClientManagement = () => {
                     type="number"
                     name="state_code"
                     id="state_code"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.state_code}
                     onChange={handleChange}
                     ref={(el) => (refs.current["state_code"] = el)} // Attach ref here
@@ -607,7 +607,7 @@ const ClientManagement = () => {
                     type="text"
                     name="name_of_escalation"
                     id="name_of_escalation"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.name_of_escalation}
                     onChange={handleChange}
                     ref={(el) => (refs.current["name_of_escalation"] = el)} // Attach ref here
@@ -627,7 +627,7 @@ const ClientManagement = () => {
                       value={email}
                       onChange={(e) => handleChange(e, index)}
                       ref={(el) => (refs.current[`email${index}`] = el)} // Corrected ref key
-                      className="border w-full rounded-md p-2 mt-2 outline-none emailCheck"
+                      className="border w-full rounded-md p-2 mt-2 outline-none text-sm emailCheck"
                     />
 
                     {errors[`email${index}`] && <p className="text-red-500 text-sm whitespace-nowrap">{errors[`email${index}`]}</p>}
@@ -655,7 +655,7 @@ const ClientManagement = () => {
                     type="text"
                     name="client_spoc"
                     id="client_spoc"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.client_spoc}
                     onChange={handleChange}
                     ref={(el) => (refs.current["client_spoc"] = el)} // Attach ref here
@@ -670,7 +670,7 @@ const ClientManagement = () => {
                     type="text"
                     name="gstin"
                     id="gstin"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.gstin}
                     ref={(el) => (refs.current["gstin"] = el)} // Attach ref here
 
@@ -687,7 +687,7 @@ const ClientManagement = () => {
                     type="text"
                     name="tat"
                     id="tat"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.tat}
                     onChange={handleChange}
                     ref={(el) => (refs.current["tat"] = el)} // Attach ref here
@@ -702,7 +702,7 @@ const ClientManagement = () => {
                     type="date"
                     name="date_agreement"
                     id="date_agreement"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.date_agreement}
                     onChange={handleChange}
                     ref={(el) => (refs.current["date_agreement"] = el)} // Attach ref here
@@ -717,7 +717,7 @@ const ClientManagement = () => {
                   <label className="text-gray-500" htmlFor="client_standard">Client Standard Procedure:</label>
                   <textarea name="client_standard"
                     id="client_standard"
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.client_standard}
                     rows={1}
 
@@ -727,7 +727,7 @@ const ClientManagement = () => {
                   <label className="text-gray-500" htmlFor="agreement_period">Agreement Period: <span className="text-red-600">*</span></label>
 
                   <select name="agreement_period" // Attach ref here
-                    className="border w-full rounded-md p-2 mt-2 outline-none" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
                     <option value="Unless terminated" selected>Unless terminated</option>
                     <option value="1 year">1 year</option>
                     <option value="2 year">2 year</option>
@@ -744,7 +744,7 @@ const ClientManagement = () => {
                   type="file"
                   name="agr_upload"
                   id="agr_upload"
-                  className="border w-full rounded-md p-2 mt-2 outline-none"
+                  className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                   onChange={(e) => handleFileChange('agr_upload', e)}
                   accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                 />
@@ -761,7 +761,7 @@ const ClientManagement = () => {
                   type="text"
                   name="industry_classification"
                   id="industry_classification"
-                  className="border w-full rounded-md p-2 mt-2 outline-none"
+                  className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                   onChange={handleChange}
                   ref={(el) => (refs.current["industry_classifications"] = el)} // Attach ref here
 
@@ -778,7 +778,7 @@ const ClientManagement = () => {
                   ref={(el) => (refs.current["custom_template"] = el)} // Attach ref here
                   id="custom_template"
                   value={input.custom_template || ''} // Ensure a default empty value if undefined
-                  className="border w-full rounded-md p-2 mt-2 outline-none"
+                  className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                   onChange={handleChange}
                 >
                   <option value="">Select Option</option>
@@ -796,7 +796,7 @@ const ClientManagement = () => {
                         type="file"
                         name="custom_logo"
                         id="custom_logo"
-                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                         onChange={(e) => handleFileChange('custom_logo', e)}
                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                       />
@@ -814,7 +814,7 @@ const ClientManagement = () => {
                         id="custom_address"
                         onChange={handleChange}
                         value={input.custom_address}
-                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                       ></textarea>
 
                     </div>
@@ -855,7 +855,7 @@ const ClientManagement = () => {
                     id="username"
                     placeholder="username2"
                     value={input.username}
-                    className="border w-full rounded-md p-2 mt-2 outline-none"
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     onChange={handleChange}
                   />
                 )}
@@ -874,7 +874,7 @@ const ClientManagement = () => {
                         type="text"
                         name="branch_name"
                         id={`branch_name_${index}`}
-                        className="border w-full rounded-md p-2 mt-2 outline-none"
+                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                         value={branch.branch_name}
                         ref={(el) => (refs.current[`branch_name_${index}`] = el)} // Corrected ref key
                         onChange={(e) => handleChange(e, index)}
@@ -892,7 +892,7 @@ const ClientManagement = () => {
                         type="email"
                         name="branch_email"
                         id={`branch_email_${index}`}
-                        className="border w-full rounded-md p-2 mt-2 outline-none emailCheck"
+                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm emailCheck"
                         value={branch.branch_email}
                         onChange={(e) => handleChange(e, index)}
                         ref={(el) => (refs.current[`branch_email_${index}`] = el)} // Corrected ref key
@@ -927,7 +927,7 @@ const ClientManagement = () => {
                   type="checkbox"
                   name="custom_bgv"
                   id="custom_bgv"
-                  className="border rounded-md p-2 mt-0 outline-none"
+                  className="border rounded-md p-2 mt-0 outline-none text-sm"
                   onChange={handleCheckBoxChange}
                   value={custom_bgv}
                   ref={(el) => (refs.current['custom_bgv'] = el)} // Corrected ref key

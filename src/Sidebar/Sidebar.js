@@ -34,7 +34,7 @@ const tabNames = {
   report: {
     icon: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
     subItems: [
-      { id: 'report_summary', name: 'Report Summary', icon: <IoMdPersonAdd className="h-5 w-5 mr-2 text-gray-500" /> },
+      { id: 'report_summary', name: 'Report Tracker', icon: <IoMdPersonAdd className="h-5 w-5 mr-2 text-gray-500" /> },
       { id: 'generate_report', name: 'Generate Report', icon: <FaEye className="h-5 w-5 mr-2 text-gray-500" /> },
     ]
   },

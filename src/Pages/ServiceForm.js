@@ -71,6 +71,7 @@ const ServiceForm = () => {
         const validateError = validate();
       
         if (Object.keys(validateError).length === 0) {
+          setError({})
           setLoading(true); // Start loading
           const requestOptions = {
             method: isEdit ? "PUT" : "POST",
@@ -132,7 +133,6 @@ const ServiceForm = () => {
                   prevList.map((service) => (service.id === result.id ? result : service))
                 );
               } else {
-                // Append the new service to the list
                 updateServiceList((prevList) => [...prevList, result]);
               }
       
@@ -147,16 +147,15 @@ const ServiceForm = () => {
               setLoading(false); // Stop loading
             });
         } else {
-          // Set validation errors
           setError(validateError);
         }
       };
       
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} disabled={loading}>
             <div className="mb-4">
-                <label htmlFor="ServiceName" className="block">Service Name</label>
+                <label htmlFor="ServiceName" className="block">Service Name<span className='text-red-500'>*</span></label>
                 <input
                     type="text"
                     name="name"
@@ -167,7 +166,7 @@ const ServiceForm = () => {
                 {error.name && <p className='text-red-500'>{error.name}</p>}
             </div>
             <div className="mb-4">
-                <label htmlFor="ServiceDisplayName" className="block">Service Description</label>
+                <label htmlFor="ServiceDisplayName" className="block">Service Description<span className='text-red-500'>*</span></label>
                 <input
                     type="text"
                     name="d_name"
@@ -178,7 +177,7 @@ const ServiceForm = () => {
                 {error.d_name && <p className='text-red-500'>{error.d_name}</p>}
             </div>
             <div className="mb-4">
-                <label htmlFor="ServiceDisplayName" className="block">SAC</label>
+                <label htmlFor="ServiceDisplayName" className="block">SAC<span className='text-red-500'>*</span></label>
                 <input
                     type="text"
                     name="sac_code"
@@ -189,7 +188,7 @@ const ServiceForm = () => {
                 {error.sac_code && <p className='text-red-500'>{error.sac_code}</p>}
             </div>
             <div className="mb-4">
-                <label htmlFor="ServiceDisplayName" className="block">Short Code</label>
+                <label htmlFor="ServiceDisplayName" className="block">Short Code<span className='text-red-500'>*</span></label>
                 <input
                     type="text"
                     name="short_code"

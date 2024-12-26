@@ -233,15 +233,15 @@ const ClientManagementData = () => {
                             <table className="min-w-full">
                                 <thead>
                                     <tr className='bg-green-500'>
-                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
-                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
-                                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
+                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
+                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
+                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {currentItems.map((item) => (
                                         <tr key={item.serviceId}>
-                                            <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
+                                            <td className="py-2 text-sm px-4 border-l border-r border-b whitespace-nowrap">
                                                 <input
                                                     type="checkbox"
                                                     className='me-2'
@@ -249,7 +249,7 @@ const ClientManagementData = () => {
                                                     onChange={() => handleCheckboxChange(item.serviceId)}
                                                 /> {item.serviceTitle}
                                             </td>
-                                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
+                                            <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap">
                                                 <input
                                                     type="number"
                                                     name="price"
@@ -257,9 +257,9 @@ const ClientManagementData = () => {
                                                     onChange={(e) => handleChange(e, item.serviceId)}
                                                     className='outline-none'
                                                 />
-                                                {validationsErrors[item.serviceId]?.price && <span className="text-red-500">{validationsErrors[item.serviceId].price}</span>}
+                                                {validationsErrors[item.serviceId]?.price && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].price}</span>}
                                             </td>
-                                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap uppercase text-left">
+                                            <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap uppercase text-left">
                                                 <Multiselect
                                                     options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
                                                     selectedValues={packageList.filter(pkg => (selectedPackages[item.serviceId] || []).includes(pkg.id)).map(pkg => ({ name: pkg.title, id: pkg.id }))}
@@ -268,7 +268,7 @@ const ClientManagementData = () => {
                                                     displayValue="name"
                                                     className='text-left'
                                                 />
-                                                {validationsErrors[item.serviceId]?.packages && <span className="text-red-500">{validationsErrors[item.serviceId].packages}</span>}
+                                                {validationsErrors[item.serviceId]?.packages && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].packages}</span>}
                                             </td>
                                         </tr>
                                     ))}

@@ -7,7 +7,6 @@ const InactiveClients = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState([]);
-  const [currentItems, setCurrentItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
@@ -18,15 +17,14 @@ const InactiveClients = () => {
     item.item_unique_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  console.log('services', services)
+
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
-  useEffect(() => {
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    // Set current items based on the filtered filteredData
-    setCurrentItems(filteredData.slice(indexOfFirstItem, indexOfLastItem));
-  }, []);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -86,7 +84,6 @@ const InactiveClients = () => {
   };
 
   const fetchClients = useCallback(async () => {
-
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
     setLoading(true);
@@ -95,26 +92,42 @@ const InactiveClients = () => {
       const response = await fetch(`https://octopus-app-www87.ondigitalocean.app/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
       const result = await response.json();
       const newToken = result._token || result.token;
+
+      // Update token if necessary
       if (newToken) {
         localStorage.setItem("_token", newToken);
       }
+
+      // Handle response errors
       if (!response.ok) {
         const errorData = await response.json();
         Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
         return;
       }
-      setData(result.customers || []);
-      if (data.length > 0) {
-        const rawServices = data[0].services; // Get the `services` key
-        const parsedServices = JSON.parse(rawServices); // Parse the JSON string
-        setServices(parsedServices); // Set state
-      }
+
+      const customers = result?.customers || [];
+      setData(customers); // Update the customers data
+
+      // Process services for each customer
+      const customerServices = customers.map((customer) => {
+        let services = [];
+        try {
+          services = JSON.parse(customer.services || '[]');
+        } catch (error) {
+          console.error('Failed to parse services JSON for customer:', customer.id, error);
+        }
+        return { customerId: customer.main_id, services };
+      });
+
+      setServices(customerServices); // Update services state
+
     } catch (error) {
       console.error('Fetch error:', error);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading
     }
   }, []);
+
 
 
   useEffect(() => {
@@ -209,14 +222,13 @@ const InactiveClients = () => {
 
       <div className="overflow-x-auto py-6 px-4">
         {loading ? (
-          <div className='flex justify-center items-center py-6 h-full'>
+          <div className="flex justify-center items-center py-6 h-full">
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
-
           </div>
-        ) : currentItems.length > 0 ? (
+        ) : currentItems && currentItems.length > 0 ? (
           <table className="min-w-full mb-4">
             <thead>
-              <tr className='bg-green-500'>
+              <tr className="bg-green-500">
                 <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
                 <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
                 <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
@@ -230,11 +242,10 @@ const InactiveClients = () => {
               </tr>
             </thead>
             <tbody>
-
               {currentItems.map((item, index) => (
                 <tr key={index} className="border">
                   <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
-                    <input type="checkbox" className='me-2' />
+                    <input type="checkbox" className="me-2" />
                     {index + 1 + (currentPage - 1) * itemsPerPage}
                   </td>
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
@@ -247,45 +258,48 @@ const InactiveClients = () => {
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
                     {services.length > 0 ? (
                       <>
-                        {services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
+                        {/* Find the services for this particular client */}
+                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, 1).map((service) => (
                           <div key={service.serviceId} className="py-2 pb-1 text-start flex">
                             <div className="text-start pb-0">{service.serviceTitle}</div>
                           </div>
                         ))}
 
-                        {hasMultipleServices && (
+                        {/* Check if there are multiple services */}
+                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.length > 1 && (
                           <button
-                            className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-                            onClick={() => setShowPopup(true)}
+                            className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                            onClick={() => setShowPopup(item.main_id)} // Open the popup
                           >
                             View More
                           </button>
                         )}
-
-
                       </>
                     ) : (
                       "No services available"
                     )}
                   </td>
-                  {showPopup && (
+
+                  {/* Popup */}
+                  {showPopup === item.main_id && (
                     <div
                       className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                      onClick={() => setShowPopup(false)}
+                      onClick={() => setShowPopup(null)} // Close the popup when clicking outside
                     >
                       <div
                         className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()} // Prevent popup close when clicking inside
                       >
                         <button
                           className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
-                          onClick={() => setShowPopup(false)}
+                          onClick={() => setShowPopup(null)} // Close the popup when clicking close button
                         >
                           ✕
                         </button>
-                        <h3 className="text-xl  text-center font-bold mb-4">All Services</h3>
+                        <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
                         <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
-                          {services.map((service) => (
+                          {/* Display all services for the current client */}
+                          {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
                             <div
                               key={service.serviceId}
                               className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
@@ -299,14 +313,16 @@ const InactiveClients = () => {
                   )}
 
 
-
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                    <button className='bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2' onClick={() => inActive(item.name, item.main_id)}>Unblock</button>
+                    <button
+                      className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2"
+                      onClick={() => inActive(item.name, item.main_id)}
+                    >
+                      Unblock
+                    </button>
                   </td>
                 </tr>
-              ))
-              }
-
+              ))}
             </tbody>
           </table>
         ) : (
@@ -314,9 +330,8 @@ const InactiveClients = () => {
             <p>No Data Found</p>
           </div>
         )}
-
-
       </div>
+
 
       <div className="flex items-center justify-end rounded-md bg-white px-4 py-2">
         <button

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext,useRef, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useRef, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext'
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
@@ -20,13 +20,13 @@ const CandidateMasterTrackerList = () => {
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [branchLoading, setBranchLoading] = useState(false);
 
- const fetchClient = useCallback((selected) => {
+    const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
         setError(null);
         let queryParams;
-    
+
         if (selected) {
             queryParams = new URLSearchParams({
                 admin_id: admin_id || '',
@@ -39,7 +39,7 @@ const CandidateMasterTrackerList = () => {
                 _token: storedToken || ''
             }).toString();
         }
-    
+
         fetch(`${API_URL}/candidate-master-tracker/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -73,7 +73,7 @@ const CandidateMasterTrackerList = () => {
             })
             .finally(() => setLoading(false));
     }, [setData, API_URL]);
-    
+
 
 
     const handleBranches = useCallback((id) => {
@@ -90,24 +90,24 @@ const CandidateMasterTrackerList = () => {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            return response.json().then(result => {
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                if (!response.ok) {
-                    // Show SweetAlert if response is not OK
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message || 'Failed to load data',
-                    });
-                    throw new Error(result.message || 'Failed to load data');
-                }
-                return result;
-            });
-        })
+            .then(response => {
+                return response.json().then(result => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    if (!response.ok) {
+                        // Show SweetAlert if response is not OK
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+                    return result;
+                });
+            })
             .then((data) => {
                 const newToken = data._token || data.token;
                 if (newToken) {
@@ -122,22 +122,22 @@ const CandidateMasterTrackerList = () => {
             .finally(() => setBranchLoading(false));
     }, []);
 
-     const tableRef = useRef(null); // Ref for the table container
-    
-      // Function to reset expanded rows
-      const handleOutsideClick = (event) => {
+    const tableRef = useRef(null); // Ref for the table container
+
+    // Function to reset expanded rows
+    const handleOutsideClick = (event) => {
         if (tableRef.current && !tableRef.current.contains(event.target)) {
             setExpandedClient({}); // Reset to empty object instead of null
         }
-      };
-      
-    
-      useEffect(() => {
+    };
+
+
+    useEffect(() => {
         document.addEventListener("mousedown", handleOutsideClick);
         return () => {
-          document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("mousedown", handleOutsideClick);
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         fetchClient();
@@ -247,12 +247,16 @@ const CandidateMasterTrackerList = () => {
 
     return (
         <>
-            <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+            <h2 className='text-center text-3xl md:mt-12 font-bold py-4'>Candidate Master Tracker</h2>
+
+            <div className="bg-white m-4 md:m-6 shadow-md rounded-md p-3">
+
+
+                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-3 text-left rounded-md w-6/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -262,7 +266,6 @@ const CandidateMasterTrackerList = () => {
                                     <option value="400">400 Rows</option>
                                     <option value="500">500 Rows</option>
                                 </select>
-                                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                             </div>
                         </form>
                     </div>
@@ -271,8 +274,8 @@ const CandidateMasterTrackerList = () => {
                             <div className="flex md:items-stretch items-center  gap-3">
                                 <input
                                     type="search"
-                                    className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                    placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                    className='outline-none border-2 p-3 text-sm rounded-md w-full my-4 md:my-0'
+                                    placeholder='Search by Client Code...'
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />

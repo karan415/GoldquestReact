@@ -1,4 +1,4 @@
-import React, { useCallback, useContext,useRef, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useRef, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext'
 import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
@@ -21,13 +21,13 @@ const ClientMasterTrackerList = () => {
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [branchLoading, setBranchLoading] = useState(false);
 
- const fetchClient = useCallback((selected) => {
+    const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
         setError(null);
         let queryParams;
-    
+
         if (selected) {
             queryParams = new URLSearchParams({
                 admin_id: admin_id || '',
@@ -40,7 +40,7 @@ const ClientMasterTrackerList = () => {
                 _token: storedToken || ''
             }).toString();
         }
-    
+
         fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -75,7 +75,7 @@ const ClientMasterTrackerList = () => {
             })
             .finally(() => setLoading(false));
     }, [setData, API_URL]);
-    
+
 
 
     const handleBranches = useCallback((id) => {
@@ -92,24 +92,24 @@ const ClientMasterTrackerList = () => {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            return response.json().then(result => {
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                if (!response.ok) {
-                    // Show SweetAlert if response is not OK
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: result.message || 'Failed to load data',
-                    });
-                    throw new Error(result.message || 'Failed to load data');
-                }
-                return result;
-            });
-        })
+            .then(response => {
+                return response.json().then(result => {
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    if (!response.ok) {
+                        // Show SweetAlert if response is not OK
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+                    return result;
+                });
+            })
             .then((data) => {
                 const newToken = data._token || data.token;
                 if (newToken) {
@@ -124,22 +124,22 @@ const ClientMasterTrackerList = () => {
             .finally(() => setBranchLoading(false));
     }, []);
 
-     const tableRef = useRef(null); // Ref for the table container
-    
-      // Function to reset expanded rows
-      const handleOutsideClick = (event) => {
+    const tableRef = useRef(null); // Ref for the table container
+
+    // Function to reset expanded rows
+    const handleOutsideClick = (event) => {
         if (tableRef.current && !tableRef.current.contains(event.target)) {
             setExpandedClient({}); // Reset to empty object instead of null
         }
-      };
-      
-    
-      useEffect(() => {
+    };
+
+
+    useEffect(() => {
         document.addEventListener("mousedown", handleOutsideClick);
         return () => {
-          document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("mousedown", handleOutsideClick);
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         fetchClient();
@@ -249,26 +249,17 @@ const ClientMasterTrackerList = () => {
 
     return (
         <>
-            <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
+            <h2 className='text-center text-3xl md:mt-12 font-bold py-4'>Client Master Tracker</h2>
 
-                <div className='flex gap-4 justify-end p-4'>
-                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
-                        <option value="">Select Any Status</option>
-                        {options.map((item, index) => {
-                            return item.status !== 'closed' ? (
-                                <option key={index} value={item.status}>
-                                    {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
-                                </option>
-                            ) : null;
-                        })}
+            <div className="bg-white m-4 md:m-6 shadow-md rounded-md p-3">
 
-                    </select>
-                </div>
-                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+
+
+                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-2 text-left rounded-md w-6/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -278,17 +269,27 @@ const ClientMasterTrackerList = () => {
                                     <option value="400">400 Rows</option>
                                     <option value="500">500 Rows</option>
                                 </select>
-                                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                             </div>
                         </form>
                     </div>
-                    <div className="col md:flex justify-end ">
+                    <div className="col md:flex justify-end gap-3">
+                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-8/12 my-4 md:my-0' >
+                            <option value="">Select Any Status</option>
+                            {options.map((item, index) => {
+                                return item.status !== 'closed' ? (
+                                    <option key={index} value={item.status}>
+                                        {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
+                                    </option>
+                                ) : null;
+                            })}
+
+                        </select>
                         <form action="">
                             <div className="flex md:items-stretch items-center  gap-3">
                                 <input
                                     type="search"
-                                    className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                    placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                    className='outline-none border-2 p-3 text-sm rounded-md w-full my-4 md:my-0'
+                                    placeholder='Search by Client Code..'
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />

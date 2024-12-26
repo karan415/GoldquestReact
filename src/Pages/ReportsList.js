@@ -302,7 +302,7 @@ const ReportsList = () => {
 
           </div>
         ) : currentItems.length > 0 ? (
-          <div className="overflow-x-auto "  >
+          <div className="overflow-x-auto bg-white shadow-md rounded-md p-3"  >
             <table className="min-w-full" ref={tableRef}>
               <thead>
                 <tr className="bg-green-500">
@@ -376,7 +376,7 @@ const ReportsList = () => {
             <p>No Data Found</p>
           </div>
         )}
-        <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+        <div className="flex items-center justify-end  rounded-md px-4 py-3 sm:px-6 md:m-4 mt-2">
           <button
             onClick={showPrev}
             disabled={currentPage === 1}

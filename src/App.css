@@ -9,8 +9,10 @@
 }
 
 
-.select-search-container input.select-search-input {border-radius: 6px;background: #f7f6fb;}
-.react-datepicker-wrapper {
+.select-search-container input.select-search-input {
+  border-radius: 6px;
+  border: 1px solid #ccc !important;
+}.react-datepicker-wrapper {
     width: 100%;
 }
 .rsw-editor {
@@ -20,6 +22,9 @@ div#root {
     max-width: 2000px;
     margin: auto;
 
+}
+.shadow-md{
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px !important;
 }
 .table-row {
   transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;

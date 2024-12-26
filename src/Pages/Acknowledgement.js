@@ -169,11 +169,11 @@ const Acknowledgement = () => {
       <div className="text-center">
         <h2 className='md:text-4xl text-2xl font-bold pb-8 md:pb-4'>Acknowledgement Emails</h2>
       </div>
-      <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+      <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
-              <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+              <select name="options" onChange={handleSelectChange} id="" className='outline-none p-3  text-left rounded-md w-6/12'>
                 <option value="10">10 Rows</option>
                 <option value="20">20 Rows</option>
                 <option value="50">50 Rows</option>
@@ -182,7 +182,6 @@ const Acknowledgement = () => {
                 <option value="400">400 Rows</option>
                 <option value="500">500 Rows</option>
               </select>
-              <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
             </div>
           </form>
         </div>
@@ -191,8 +190,8 @@ const Acknowledgement = () => {
             <div className="flex md:items-stretch items-center  gap-3">
               <input
                 type="search"
-                className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                placeholder='Search by Client Code, Company Name, or Client Spoc'
+                className='outline-none border-2 p-2 text-sm rounded-md w-full my-4 md:my-0'
+                placeholder='Search by Client Code'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -201,7 +200,7 @@ const Acknowledgement = () => {
         </div>
 
       </div>
-      <div className="overflow-x-auto py-6 px-4">
+      <div className="overflow-x-auto py-6 px-4 bg-white rounded-md shadow-md">
         {loading ? (
           <div className='flex justify-center items-center py-6 h-full'>
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -248,7 +247,7 @@ const Acknowledgement = () => {
 
 
       </div>
-      <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+      <div className="flex items-center justify-end  rounded-md px-4 py-3 sm:px-6 md:m-4 mt-2">
         <button
           onClick={showPrev}
           disabled={currentPage === 1}

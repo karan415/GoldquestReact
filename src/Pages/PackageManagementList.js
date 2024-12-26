@@ -161,11 +161,11 @@ const PackageManagementList = () => {
         <>
             <div className="py-4 px-4">
               
-                <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
+                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="options" onChange={handleSelectChange} id="" className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-10/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -174,7 +174,6 @@ const PackageManagementList = () => {
                                     <option value="400">400 Rows</option>
                                     <option value="500">500 Rows</option>
                                 </select>
-                                <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                             </div>
                         </form>
                     </div>
@@ -183,12 +182,11 @@ const PackageManagementList = () => {
                             <div className="flex md:items-stretch items-center  gap-3">
                                 <input
                                     type="search"
-                                    className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                    placeholder='Search by Client Code, Company Name, or Client Spoc'
+                                    className='outline-none border p-2 text-sm rounded-md w-full my-4 md:my-0'
+                                    placeholder='Search by Client Code'
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <button className='bg-green-500 p-3 rounded-md text-whitevhover:bg-green-200 text-white'>Serach</button>
                             </div>
                         </form>
                     </div>
@@ -204,26 +202,26 @@ const PackageManagementList = () => {
                         <table className="min-w-full mb-4">
                             <thead>
                                 <tr className='bg-green-500'>
-                                    <th className="py-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Sl</th>
-                                    <th className="py-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Package Name</th>
-                                    <th className="py-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Description</th>
-                                    <th className="py-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Sl</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Package Name</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Description</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
 
                                 {currentItems.map((item, index) => (
                                     <tr key={item.id}>
-                                        <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
+                                        <td className="py-2 px-4 border-b capitalize border-r text-sm border-l whitespace-nowrap">
                                             {index + 1}
                                         </td>
-                                        <td className="py-2 px-4 border-b capitalize border-r border-l whitespace-nowrap">
+                                        <td className="py-2 px-4 border-b capitalize border-r text-sm border-l whitespace-nowrap">
                                             {item.title}
                                         </td>
-                                        <td className="py-2 px-4 border-b capitalize border-r whitespace-nowrap">
+                                        <td className="py-2 px-4 border-b capitalize border-r text-sm whitespace-nowrap">
                                             {item.description}
                                         </td>
-                                        <td className="py-2 px-4 border-b capitalize border-r whitespace-nowrap">
+                                        <td className="py-2 px-4 border-b capitalize border-r text-sm whitespace-nowrap">
                                             <button
                                                 className='bg-green-500 hover:bg-green-200 rounded-md p-2 me-2 text-white'
                                                 onClick={() => handleEdit(item)}

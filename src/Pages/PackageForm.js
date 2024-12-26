@@ -62,18 +62,19 @@ const PackageForm = ({ onSuccess }) => {
     const handlePackageFormSubmit = (e) => {
         e.preventDefault();
         setIsLoading(true); // Start loading
-    
+
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
-    
+
         if (adminData) setAdminId(adminData.id);
         if (token) setStoredToken(token);
-    
+
         const validationErrors = validateInputs();
         if (Object.keys(validationErrors).length === 0) {
+            setError({})
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-    
+
             const raw = JSON.stringify({
                 id: selectedPackage?.id || "",
                 title: packageInput.name,
@@ -81,27 +82,27 @@ const PackageForm = ({ onSuccess }) => {
                 admin_id: adminId,
                 _token: token,
             });
-    
+
             const requestOptions = {
                 method: isEditMode ? "PUT" : "POST",
                 headers: myHeaders,
                 body: raw,
             };
-    
+
             const url = isEditMode
                 ? `${API_URL}/package/update`
                 : `${API_URL}/package/create`;
-    
+
             fetch(url, requestOptions)
                 .then(async (response) => {
                     const result = await response.json();
-    
+
                     // Save new token if available
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
-    
+
                     // Handle API error response
                     if (!response.ok) {
                         const errorMessage = result.message || "An error occurred";
@@ -113,7 +114,7 @@ const PackageForm = ({ onSuccess }) => {
                         });
                         throw new Error(errorMessage);
                     }
-    
+
                     // Return result if successful
                     return result;
                 })
@@ -127,7 +128,7 @@ const PackageForm = ({ onSuccess }) => {
                         icon: "success",
                         confirmButtonText: "Ok",
                     });
-    
+
                     // Update the package list
                     setError({});
                     if (isEditMode) {
@@ -138,7 +139,7 @@ const PackageForm = ({ onSuccess }) => {
                     } else {
                         updatePackageList([...packageList, result]);
                     }
-    
+
                     // Reset form fields
                     setPackageInput({
                         name: "",
@@ -146,7 +147,7 @@ const PackageForm = ({ onSuccess }) => {
                     });
                     fetchData();
                     setIsEditMode(false);
-    
+
                     // Additional callbacks
                     if (typeof clearSelectedPackage === "function") {
                         clearSelectedPackage();
@@ -173,47 +174,49 @@ const PackageForm = ({ onSuccess }) => {
             setIsLoading(false); // Stop loading if there are validation errors
         }
     };
-    
+
 
     return (
         <>
-        <form onSubmit={handlePackageFormSubmit}>
-            <div className="mb-4">
-                <label htmlFor="packagename">Package Name:</label>
-                <input
-                    type="text"
-                    name="name"
-                    id="packagename"
-                    className="border w-full rounded-md p-2 mt-2 capitalize"
-                    onChange={handleChange}
-                    value={packageInput.name}
-                />
-                {error.name && <p className="text-red-500">{error.name}</p>}
-            </div>
+            <form onSubmit={handlePackageFormSubmit}  disabled={isLoading}>
+                <div className="mb-4">
+                    <label htmlFor="packagename" className='text-sm'>Package Name<span className='text-red-500'>*</span></label>
+                    <input
+                        type="text"
+                        name="name"
+                        id="packagename"
+                        className="border w-full rounded-md p-2 mt-2 capitalize text-sm"
+                        onChange={handleChange}
+                        value={packageInput.name}
+                        disabled={isLoading}
+                    />
+                    {error.name && <p className="text-red-500">{error.name}</p>}
+                </div>
 
-            <div className="mb-4">
-                <label htmlFor="message">Package Description:</label>
-                <textarea
-                    name="message"
-                    id="message"
-                    className="w-full border p-3 outline-none rounded-md mt-2 capitalize"
-                    rows={5}
-                    cols={4}
-                    onChange={handleChange}
-                    value={packageInput.message}
-                ></textarea>
-                {error.message && <p className="text-red-500">{error.message}</p>}
-            </div>
-            <button
-                type="submit"
-                className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'
-                disabled={isLoading} // Disable button while loading
-            >
-                {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Send'}
-            </button>
+                <div className="mb-4">
+                    <label htmlFor="message" className='text-sm'>Package Description<span className='text-red-500'>*</span></label>
+                    <textarea
+                        disabled={isLoading}
+                        name="message"
+                        id="message"
+                        className="w-full border p-3 outline-none rounded-md mt-2 capitalize text-sm"
+                        rows={5}
+                        cols={4}
+                        onChange={handleChange}
+                        value={packageInput.message}
+                    ></textarea>
+                    {error.message && <p className="text-red-500">{error.message}</p>}
+                </div>
+                <button
+                    type="submit"
+                    className='bg-green-400 text-white p-3 rounded-md w-full'
+                    disabled={isLoading} // Disable button while loading
+                >
+                    {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Send'}
+                </button>
 
-            {formMessage && <p className="mt-4 text-center text-green-600">{formMessage}</p>}
-        </form>
+                {formMessage && <p className="mt-4 text-center text-green-600">{formMessage}</p>}
+            </form>
         </>
     );
 };

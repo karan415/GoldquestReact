@@ -671,7 +671,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
   }
 
   return (
-    <div className="bg-[#F7F6FB] p-12">
+    <div className=" p-12">
       <div className="bg-white p-12 rounded-md w-full mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Generate Invoice</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -693,7 +693,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
               name="invoice_number"
               id="invoice_number"
               required
-              className="w-full p-3 bg-[#F7F6FB] mb-[20px] border border-gray-300 rounded-md"
+              className="w-full p-3  mb-[20px] border border-gray-300 rounded-md"
               value={formData.invoice_number}
               onChange={handleChange}
             />
@@ -705,7 +705,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
               name="invoice_date"
               id="invoice_date"
               required
-              className="w-full p-3 bg-[#F7F6FB] mb-[20px] border border-gray-300 rounded-md"
+              className="w-full p-3  mb-[20px] border border-gray-300 rounded-md"
               value={formData.invoice_date}
               onChange={handleChange}
             />
@@ -716,7 +716,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
               id="month"
               name="month"
               required
-              className="w-full p-3 bg-[#F7F6FB] mb-[20px] border border-gray-300 rounded-md"
+              className="w-full p-3  mb-[20px] border border-gray-300 rounded-md"
               value={formData.month}
               onChange={handleChange}
             >
@@ -731,7 +731,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
               id="year"
               name="year"
               required
-              className="w-full p-3 bg-[#F7F6FB] mb-[20px] border border-gray-300 rounded-md"
+              className="w-full p-3  mb-[20px] border border-gray-300 rounded-md"
               value={formData.year}
               onChange={handleChange}
             >
