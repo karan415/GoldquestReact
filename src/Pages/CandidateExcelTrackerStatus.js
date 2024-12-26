@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useRef, useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from "jspdf";
@@ -10,7 +9,7 @@ import { BranchContextExel } from './BranchContextExel';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const CandidateExcelTrackerStatus = () => {
-
+    const [loadingRow, setLoadingRow] = useState(null);
     const { handleTabChange } = useSidebar();
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
@@ -18,10 +17,12 @@ const CandidateExcelTrackerStatus = () => {
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [adminTAT, setAdminTAT] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [servicesLoading, setServicesLoading] = useState(false);
+    const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
     const API_URL = useApi();
     const { branch_id } = useContext(BranchContextExel);
     const queryParams = new URLSearchParams(location.search);
@@ -210,12 +211,10 @@ const CandidateExcelTrackerStatus = () => {
 
 
 
-    const handleSendLink = (applicationID, branch_id, customer_id) => {
-        // Retrieve admin ID and token from localStorage
+    const handleSendLink = (applicationID, branch_id, customer_id, rowId) => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
 
-        // Check if adminId or token is missing
         if (!adminId || !token) {
             Swal.fire({
                 icon: 'error',
@@ -225,53 +224,43 @@ const CandidateExcelTrackerStatus = () => {
             return;
         }
 
-        // Construct the URL dynamically with query parameters
+        setLoadingRow(rowId); // Set the loading row ID
+
         const url = `${API_URL}/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
 
         const requestOptions = {
             method: "GET",
-            redirect: "follow", // No body required for GET requests
+            redirect: "follow",
         };
 
         fetch(url, requestOptions)
-            .then((response) => response.json()) // Assuming the response is JSON
+            .then((response) => response.json())
             .then((result) => {
                 if (result.status) {
-                    // Show success alert with message
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
                         text: result.message,
                         footer: `DAV Mail Sent: ${result.details.davMailSent} | BGV Mail Sent: ${result.details.cefMailSent}`,
                     });
-
-                    // Optionally log the detailed mail sent status
-                    console.log("Mail Sent Details:", result.details);
                 } else {
-                    // Show error alert with message
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: result.message,
                         footer: result.details ? `DAV Errors: ${result.details.davErrors} | CEF Errors: ${result.details.cefErrors}` : '',
                     });
-
-                    // Optionally log error details if available
-                    if (result.details) {
-                        console.log("DAV Errors:", result.details.davErrors);
-                        console.log("BGV Errors:", result.details.cefErrors);
-                    }
                 }
             })
             .catch((error) => {
-                // Handle errors that occur during the fetch
                 console.error(error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: 'Something went wrong. Please try again later.',
                 });
-            });
+            })
+            .finally(() => setLoadingRow(null)); // Reset loading state
     };
 
 
@@ -389,22 +378,21 @@ const CandidateExcelTrackerStatus = () => {
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.mobile_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.email || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                {data.created_at
-                                                    ? new Intl.DateTimeFormat('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: '2-digit',
-                                                    }).format(new Date(data.created_at))
-                                                    : 'N/A'}
+                                                {data.created_at && !isNaN(new Date(data.created_at))
+                                                    ? `${String(new Date(data.created_at).getDate()).padStart(2, '0')}- 
+                                                        ${String(new Date(data.created_at).getMonth() + 1).padStart(2, '0')}- 
+                                                        ${new Date(data.created_at).getFullYear()}`
+                                                      : "NIL"}
                                             </td>
+
                                             <td className="border px-4 py-2">
                                                 <button
                                                     className={`uppercase border px-4 py-2 rounded ${data.service_data &&
-                                                            Object.values(data.service_data).some(
-                                                                (subData) => Array.isArray(subData) ? subData.length > 0 : subData && Object.keys(subData).length > 0
-                                                            )
-                                                            ? 'bg-orange-500 text-white hover:border-orange-500 hover:bg-white hover:text-orange-500'
-                                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                        Object.values(data.service_data).some(
+                                                            (subData) => Array.isArray(subData) ? subData.length > 0 : subData && Object.keys(subData).length > 0
+                                                        )
+                                                        ? 'bg-orange-500 text-white hover:border-orange-500 hover:bg-white hover:text-orange-500'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                                         }`}
                                                     onClick={() =>
                                                         data.service_data &&
@@ -437,21 +425,20 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
 
                                             {currentItems.some(item => item.cef_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    {data.cef_filled_date
-                                                        ? new Intl.DateTimeFormat('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: '2-digit',
-                                                        }).format(new Date(data.cef_filled_date))
-                                                        : 'N/A'}
+                                                    {data.cef_filled_date && !isNaN(new Date(data.cef_filled_date))
+                                                        ? `${String(new Date(data.cef_filled_date).getDate()).padStart(2, '0')}- 
+                                                      ${String(new Date(data.cef_filled_date).getMonth() + 1).padStart(2, '0')}- 
+                                                      ${new Date(data.cef_filled_date).getFullYear()}`
+                                                        : "NIL"}
                                                 </td>
+
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
 
                                             {data.dav_id ? (
@@ -464,28 +451,29 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
                                             {currentItems.some(item => item.dav_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     {data.dav_filled_date
-                                                        ? new Intl.DateTimeFormat('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: '2-digit',
-                                                        }).format(new Date(data.dav_filled_date))
-                                                        : 'N/A'}
+                                                        ? `${String(new Date(data.dav_filled_date).getDate()).padStart(2, '0')}- 
+                                                     ${String(new Date(data.dav_filled_date).getMonth() + 1).padStart(2, '0')}- 
+                                                     ${new Date(data.dav_filled_date).getFullYear()}`
+                                                        : "NIL"}
                                                 </td>
+
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
                                             {data.cef_submitted === 0 || (data.dav_exist === 1 && data.dav_submitted === 0) ? (
                                                 <td className="border px-4 py-2">
                                                     <button
-                                                        className="bg-green-600 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500"
-                                                        onClick={() => handleSendLink(data.main_id, data.branch_id, data.customer_id)}
+                                                        className={`bg-green-600 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white ${loadingRow === data.id ? "opacity-50 cursor-not-allowed hover:text-green-500 " : "hover:text-green-500"
+                                                            }`}
+                                                        onClick={() => handleSendLink(data.main_id, data.branch_id, data.customer_id, data.id)}
+                                                        disabled={loadingRow} // Disable only the clicked button
                                                     >
-                                                        SEND LINK
+                                                        {loadingRow === data.id ? "Sending..." : "SEND LINK"}
                                                     </button>
                                                 </td>
                                             ) : null}

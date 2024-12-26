@@ -88,6 +88,7 @@ const AdminChekin = () => {
             redirect: "follow"
         };
 
+
         fetch(`${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
                 return response.json().then(result => {
@@ -148,12 +149,12 @@ const AdminChekin = () => {
     };
 
 
-    useEffect(() => {
-        document.addEventListener("mousedown", handleOutsideClick);
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, []);
+    // useEffect(() => {
+    //     document.addEventListener("mousedown", handleOutsideClick);
+    //     return () => {
+    //         document.removeEventListener("mousedown", handleOutsideClick);
+    //     };
+    // }, []);
 
 
 
@@ -398,39 +399,39 @@ const AdminChekin = () => {
         const firstTableData = [
             [
                 { content: 'Name of the Candidate', styles: { cellWidth: 'auto', fontStyle: 'bold' } },
-                { content: applicationInfo?.name || 'N/A' },
+                { content: applicationInfo?.name || 'NIL' },
                 { content: 'Client Name', styles: { cellWidth: 'auto', fontStyle: 'bold' } },
-                { content: applicationInfo[0]?.client_name || 'N/A' },
+                { content: applicationInfo[0]?.client_name || 'NIL' },
             ],
             [
                 { content: 'Application ID', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.application_id || 'N/A' },
+                { content: applicationInfo?.application_id || 'NIL' },
                 { content: 'Report Status', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.report_status || 'N/A' },
+                { content: applicationInfo?.report_status || 'NIL' },
             ],
             [
                 { content: 'Date of Birth', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.dob ? new Date(applicationInfo.dob).toLocaleDateString() : 'N/A' },
+                { content: applicationInfo?.dob ? new Date(applicationInfo.dob).toLocaleDateString() : 'NIL' },
                 { content: 'Application Received', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.updated_at ? new Date(applicationInfo.updated_at).toLocaleDateString() : 'N/A' },
+                { content: applicationInfo?.updated_at ? new Date(applicationInfo.updated_at).toLocaleDateString() : 'NIL' },
             ],
             [
                 { content: 'Candidate Employee ID', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.employee_id || 'N/A' },
+                { content: applicationInfo?.employee_id || 'NIL' },
                 { content: 'Insuff Cleared/Reopened', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.application_id || 'N/A' },
+                { content: applicationInfo?.application_id || 'NIL' },
             ],
             [
                 { content: 'Report Type', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.report_type || 'N/A' },
+                { content: applicationInfo?.report_type || 'NIL' },
                 { content: 'Final Report Date', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.report_date ? new Date(applicationInfo.report_date).toLocaleDateString() : 'N/A' },
+                { content: applicationInfo?.report_date ? new Date(applicationInfo.report_date).toLocaleDateString() : 'NIL' },
             ],
             [
                 { content: 'Verification Purpose', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.overall_status || 'N/A' },
+                { content: applicationInfo?.overall_status || 'NIL' },
                 { content: 'Overall Report Status', styles: { fontStyle: 'bold' } },
-                { content: applicationInfo?.status || 'N/A' },
+                { content: applicationInfo?.status || 'NIL' },
             ],
         ];
 
@@ -1015,13 +1016,13 @@ const AdminChekin = () => {
 
             servicesData.forEach((service) => {
                 const heading = JSON.parse(service.reportFormJson.json).heading;
-                let status = service.annexureData?.status || "N/A";
+                let status = service.annexureData?.status || "NIL";
                 if (status.length < 4) {
-                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'N/A';
+                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
                 } else {
                     status = status.replace(/[^a-zA-Z0-9\s]/g, " ")
                         .toLowerCase()
-                        .replace(/\b\w/g, (char) => char.toUpperCase()) || 'N/A';
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL';
                 }
 
                 headingsAndStatuses.push({ heading, status });
@@ -1100,7 +1101,7 @@ const AdminChekin = () => {
                                         <option value="400">400 Rows</option>
                                         <option value="500">500 Rows</option>
                                     </select>
-                                <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
+                                    <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
 
                                 </div>
                             </form>
@@ -1156,11 +1157,45 @@ const AdminChekin = () => {
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                <img src={`${data.photo}`} alt={data.name} className="w-10 h-10 rounded-full" />
+                                                {data.photo ? (
+                                                    data.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                        <img
+                                                            src={`${data.photo}`}
+                                                            alt="Image"
+                                                            className="h-20 w-20 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <a
+                                                            href={`${data.photo}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                View Document
+                                                            </button>
+                                                        </a>
+                                                    )
+                                                ) : (
+                                                    "No Image Found"
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.created_at).toLocaleDateString()}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{new Date(data.updated_at).toLocaleDateString()}</td>
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                {data.created_at && !isNaN(new Date(data.created_at))
+                                                    ? `${String(new Date(data.created_at).getDate()).padStart(2, '0')}- 
+                                                ${String(new Date(data.created_at).getMonth() + 1).padStart(2, '0')}- 
+                                                ${new Date(data.created_at).getFullYear()}`
+                                                    : "NIL"}
+                                            </td>
+
+                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                {data.updated_at && !isNaN(new Date(data.updated_at))
+                                                    ? `${String(new Date(data.updated_at).getDate()).padStart(2, '0')}- 
+                                                            ${String(new Date(data.updated_at).getMonth() + 1).padStart(2, '0')}- 
+                                                            ${new Date(data.updated_at).getFullYear()}`
+                                                    : "NIL"}
+                                            </td>
+
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                 <button
                                                     className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
@@ -1222,9 +1257,77 @@ const AdminChekin = () => {
                                         ) : (expandedRow && expandedRow.index === index && (
                                             <tr id={`expanded-row-${index}`} className="expanded-row">
                                                 <td colSpan="100%" className="text-center p-4 bg-gray-100">
-                                                    <div className="relative w-full max-w-full overflow-hidden">
+
+                                                    {/* Table structure to display headings in the first column and statuses in the second column */}
+                                                    <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
                                                         <table className="w-full table-auto">
-                                                            <tbody className="h-[160px] overflow-y-auto block">
+                                                            <tbody className='min-h-[260px] overflow-y-auto block'>
+                                                                <tr>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
+                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.report_date && !isNaN(new Date(data.report_date))
+                                                                            ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
+                                                                    <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
+                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
+                                                                            ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
+                                                                            ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
+                                                                            ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
+                                                                            ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                        {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
+                                                                            ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
+                                                                            : 'NIL'}
+                                                                    </td>
+
+                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
+                                                                </tr>
+
+
                                                                 {expandedRow.headingsAndStatuses &&
                                                                     expandedRow.headingsAndStatuses.map((item, idx) => (
                                                                         <tr key={`row-${idx}`}>
@@ -1232,53 +1335,12 @@ const AdminChekin = () => {
                                                                                 {sanitizeText(item.heading)}
                                                                             </td>
                                                                             <td className="text-left p-2 border border-black capitalize">
-                                                                                {sanitizeText(item.status)}
+                                                                                {sanitizeText(item.status || 'NIL')}
                                                                             </td>
                                                                         </tr>
                                                                     ))
                                                                 }
-                                                                <tr>
-                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200 font-normal">Report Type</th>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_type || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200 font-normal">Report Date</th>
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.report_date ? new Date(data.report_date).toLocaleDateString('en-US', {
-                                                                            year: 'numeric',
-                                                                            month: 'long',
-                                                                            day: 'numeric'
-                                                                        }) : 'N/A'}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200 font-normal">Report Generated By</th>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th className="text-left p-2 border border-black uppercase bg-gray-200 font-normal">QC Done By</th>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Date</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_date) || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Reopen Date</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insuff_reopened_date) || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'N/A'}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff Date</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.second_insuff_date ? sanitizeText(new Date(data.second_insuff_date).toLocaleDateString()) : 'N/A'}</td>
-                                                                </tr>
+
                                                             </tbody>
                                                         </table>
                                                     </div>

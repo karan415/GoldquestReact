@@ -224,11 +224,11 @@ export const ClientEditForm = () => {
                                 <div className="grid grid-cols-3 gap-3 flex-wrap">
                                     {newEmails.length > 0 ? (
                                         newEmails.map((email, index) => (
-                                            <div key={index} className="flex items-center gap-2">
+                                            <div key={index} className="flex gap-2">
                                                 <input
                                                     type="email"
                                                     value={email}
-                                                    className="border rounded-md p-2 mt-2 outline-none"
+                                                    className="border rounded-md p-2  outline-none w-full"
                                                     onChange={(e) => handleEmailChange(index, e.target.value)} // Handle email change
                                                 />
                                                 {/* Delete button will show only for emails except the first */}
@@ -374,7 +374,32 @@ export const ClientEditForm = () => {
                                     Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                 </p>
 
-                                <div className="border p-3 mt-3 rounded-md"><img src={clientData.agreement} className="w-40- h-40" /></div>
+                                <div className="border p-3 mt-3 rounded-md">
+                                    {clientData.agreement ? (
+                                        // Check if the file is an image
+                                        clientData.agreement.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                            <img
+                                                src={`${clientData.agreement}`}
+                                                alt="Image"
+                                                className="w-40- h-40"
+                                            />
+                                        ) : (
+                                            // If it's a document (pdf, doc, etc.), show a button
+                                            <a
+                                                href={`${clientData.agreement}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                    View Document
+                                                </button>
+                                            </a>
+                                        )
+                                    ) : (
+                                        '----'
+                                    )}
+
+                                </div>
 
                             </div>
 
@@ -429,7 +454,27 @@ export const ClientEditForm = () => {
                                             <p className="text-gray-500 text-sm mt-2">
                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                             </p>
-                                            <div className="border p-3 rounded-md mt-3"><img src={clientData.logo} className="w-40 h-15" /></div>
+                                            <div className="border p-3 rounded-md mt-3"> {clientData.logo ? (
+                                                clientData.logo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                    <img
+                                                        src={`${clientData.logo}`}
+                                                        alt="Image"
+                                                        className="w-40- h-40"
+                                                    />
+                                                ) : (
+                                                    <a
+                                                        href={`${clientData.logo}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                            View Document
+                                                        </button>
+                                                    </a>
+                                                )
+                                            ) : (
+                                                '----'
+                                            )}</div>
 
                                         </div>
 
@@ -486,25 +531,25 @@ export const ClientEditForm = () => {
                             </div>
 
                             <div className="mb-4 flex gap-2 justify-start items-center">
-    {/* Log the current value of is_custom_bgv */}
-    {console.log(`clientData.is_custom_bgv - `, clientData.is_custom_bgv)}
-    
-    <input
-        type="checkbox"
-        name="is_custom_bgv"
-        id="is_custom_bgv"
-        className="border rounded-md p-2 mt-0"
-        onChange={(e) => 
-            setClientData((prev) => ({
-                ...prev,
-                is_custom_bgv: e.target.checked ? '1' : '0',
-            }))
-        }
-        checked={parseInt(clientData.is_custom_bgv, 10) === 1}
-        ref={(el) => (refs.current['is_custom_bgv'] = el)}
-    />
-    <label className="text-gray-500" htmlFor="is_custom_bgv">Custom BGV</label>
-</div>
+                                {/* Log the current value of is_custom_bgv */}
+                                {console.log(`clientData.is_custom_bgv - `, clientData.is_custom_bgv)}
+
+                                <input
+                                    type="checkbox"
+                                    name="is_custom_bgv"
+                                    id="is_custom_bgv"
+                                    className="border rounded-md p-2 mt-0"
+                                    onChange={(e) =>
+                                        setClientData((prev) => ({
+                                            ...prev,
+                                            is_custom_bgv: e.target.checked ? '1' : '0',
+                                        }))
+                                    }
+                                    checked={parseInt(clientData.is_custom_bgv, 10) === 1}
+                                    ref={(el) => (refs.current['is_custom_bgv'] = el)}
+                                />
+                                <label className="text-gray-500" htmlFor="is_custom_bgv">Custom BGV</label>
+                            </div>
 
 
                             <ServicesEditForm />

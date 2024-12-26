@@ -359,15 +359,30 @@ const ClientMasterTrackerList = () => {
                                                 </tr>
                                             ) : (
                                                 branches[item.main_id]?.length > 0 ? (
-                                                    branches[item.main_id]?.map((branch, branchIndex) => (
-                                                        <tr key={branchIndex} className=" border bg-gray-100">
-                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.branch_name}</td>
-                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.application_count}</td>
-                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center">
-                                                                <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white" onClick={() => handleClick(branch.branch_id)}>Check In</button>
-                                                            </td>
-                                                        </tr>
-                                                    ))
+                                                    <tr>
+                                                        <td colSpan="6" className="py-3 px-4">
+                                                            <table className='w-full'>
+                                                                <thead>
+                                                                    <tr className='bg-green-500 text-white'>
+                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Name</th>
+                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Application Count</th>
+                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center">Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {branches[item.main_id]?.map((branch, branchIndex) => (
+                                                                        <tr key={branchIndex} className="border bg-gray-100">
+                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.branch_name}</td>
+                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.application_count}</td>
+                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center">
+                                                                                <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white" onClick={() => handleClick(branch.branch_id)}>Check In</button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
                                                 ) : (
                                                     <tr>
                                                         <td colSpan="6" className="py-3 px-4 text-center text-gray-500">

@@ -10,21 +10,84 @@ export const DropBoxProvider = ({ children }) => {
     const [uniquePackages, setUniquePackages] = useState([]);
     const [listData, setListData] = useState([]);
     const [candidateListData, setCandidateListData] = useState([]);
-    const [selectedDropBox, setSelectedDropBox] = useState(null);
-    const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [branchId, setBranchId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [servicesLoading, setServicesLoading] = useState(false);
     const [candidateLoading, setCandidateLoading] = useState(false);
     const [token, setToken] = useState(null);
+    const [isEditClient, setIsEditClient] = useState(false);
+    const [isEditCandidate, setIsEditCandidate] = useState(false);
+
+    const [clientInput, setClientInput] = useState({
+        name: '',
+        employee_id: '',
+        spoc: '',
+        location: '',
+        batch_number: '',
+        sub_client: '',
+        services: [],
+        package: [],
+        client_application_id: '',
+    });
+    const [input, setInput] = useState({
+        name: "",
+        employee_id: "",
+        mobile_number: "",
+        email: "",
+        services: [],
+        package: [],
+        candidate_application_id: ''
+    });
 
 
+    const handleEditDrop = (selectedDropBox) => {
+        const parsedServices = Array.isArray(selectedDropBox.services)
+            ? selectedDropBox.services
+            : selectedDropBox.services ? selectedDropBox.services.split(',') : [];
 
-    const handleEditDrop = (pkg) => {
-        setSelectedDropBox(pkg);
-    };
-    const handleEditCandidate = (pkg) => {
-        setSelectedCandidate(pkg);
+        setClientInput({
+            name: selectedDropBox.name || "",
+            employee_id: selectedDropBox.employee_id || "",
+            spoc: selectedDropBox.single_point_of_contact || "",
+            location: selectedDropBox.location || "",
+            batch_number: selectedDropBox.batch_number || "",
+            sub_client: selectedDropBox.sub_client || "",
+            services: parsedServices, // Make sure services is always an array
+            package: selectedDropBox.package || [],
+            client_application_id: selectedDropBox.id || "",
+        });
+        setIsEditClient(true);
+
+    }
+    const handleEditCandidate = (selectedCandidate) => {
+
+        if (selectedCandidate) {
+            const parsedServices = Array.isArray(selectedCandidate.services)
+                ? selectedCandidate.services
+                : selectedCandidate.services ? selectedCandidate.services.split(',') : [];
+
+            setInput({
+                name: selectedCandidate.name,
+                employee_id: selectedCandidate.employee_id,
+                mobile_number: selectedCandidate.mobile_number,
+                email: selectedCandidate.email,
+                services: parsedServices,
+                package: selectedCandidate.packages || [],
+                candidate_application_id: selectedCandidate.id || ''
+            });
+            setIsEditClient(true);
+        } else {
+            setInput({
+                name: "",
+                employee_id: "",
+                mobile_number: "",
+                email: "",
+                services: [],
+                package: [],
+                candidate_application_id: ""
+            });
+            setIsEditClient(false);
+        }
     };
 
     const fetchServices = useCallback(async () => {
@@ -94,26 +157,26 @@ export const DropBoxProvider = ({ children }) => {
         const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
         const customerId = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const token = localStorage.getItem("branch_token");
-    
+
         if (!branchId || !token) {
             setCandidateLoading(false);
             return;
         }
-    
+
         try {
             const response = await fetch(`${API_URL}/branch/candidate-application/list?customer_id=${customerId}&branch_id=${branchId}&_token=${token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             const result = await response.json();
-    
+
             const newToken = result?._token || result?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
-    
+
             if (!response.ok) {
                 const errorMessage = result?.message || 'Something went wrong. Please try again later.';
                 Swal.fire({
@@ -130,7 +193,7 @@ export const DropBoxProvider = ({ children }) => {
                     localStorage.setItem('customer_code', customerCode);
                     const services = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
                     setServices(services);
-    
+
                     const uniquePackages = [];
                     const packageSet = new Set();
                     services.forEach(service => {
@@ -153,8 +216,8 @@ export const DropBoxProvider = ({ children }) => {
             setCandidateLoading(false);
         }
     }, [API_URL, setCandidateLoading, setToken, setCandidateListData, setServices, setUniquePackages]);
-    
-    
+
+
 
 
     const fetchClientDrop = useCallback(async () => {
@@ -166,21 +229,21 @@ export const DropBoxProvider = ({ children }) => {
             setLoading(false);
             return;
         }
-    
+
         try {
             const response = await fetch(`${API_URL}/branch/client-application/list?customer_id=${customer_id}&branch_id=${branch_id}&_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             const result = await response.json();
-    
+
             const newToken = result?._token || result?.branch_token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
-    
+
             if (!response.ok) {
                 const errorMessage = result?.message || 'Something went wrong. Please try again.';
                 Swal.fire({
@@ -192,10 +255,10 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return;
             }
-    
+
             // Set client application data if available
             setListData(result.data.clientApplications || []);
-    
+
             if (result.data.customerInfo) {
                 const customer = result.data.customerInfo;
                 const customer_code = customer.client_unique_id;
@@ -216,7 +279,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 setUniquePackages(uniquePackagesList);
             }
-    
+
         } catch (error) {
             console.error('Fetch error:', error);
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
@@ -224,12 +287,12 @@ export const DropBoxProvider = ({ children }) => {
             setLoading(false);
         }
     }, [API_URL]);
-    
+
 
     return (
         <DropBoxContext.Provider value={{
             services,
-            setSelectedCandidate,
+            setClientInput,
             fetchClient,
             fetchClientDrop,
             uniquePackages,
@@ -238,16 +301,14 @@ export const DropBoxProvider = ({ children }) => {
             setServices,
             listData,
             setListData,
-            selectedDropBox,
-            setSelectedDropBox,
             setUniquePackages,
             fetchServices,
-            selectedCandidate,
-            setSelectedCandidate,
             candidateLoading,
             loading,
+            clientInput,
             servicesLoading,
-            candidateListData
+            candidateListData,
+            isEditClient,setIsEditClient, input, setInput, isEditCandidate, setIsEditCandidate
         }}>
             {children}
         </DropBoxContext.Provider>

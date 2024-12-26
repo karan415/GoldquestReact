@@ -37,7 +37,7 @@ const DropBoxList = () => {
         );
     });
 
- 
+
     const handleEdit = (client) => {
         handleEditDrop(client);
     };
@@ -110,7 +110,7 @@ const DropBoxList = () => {
 
     }
 
-  
+
 
     const handleDelete = (id) => {
         Swal.fire({
@@ -258,36 +258,73 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center border-l whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.photo ? (
-                                                    <img
-                                                        src={`${report.photo}`}
-                                                        alt={report.photo}
-                                                        className='h-20 w-20 rounded-full'
-                                                    />
-                                                ) : '----'}
+                                                    // Check if the file is an image
+                                                    report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                        <img
+                                                            src={`${report.photo}`}
+                                                            alt="Image"
+                                                            className="h-20 w-20 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        // If it's a document (pdf, doc, etc.), show a button
+                                                        <a
+                                                            href={`${report.photo}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                View Document
+                                                            </button>
+                                                        </a>
+                                                    )
+                                                ) : (
+                                                    '----'
+                                                )}
                                             </td>
+
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{report.application_id || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.name || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">
-                                                {new Date(report.created_at).toLocaleDateString()}
+                                                {new Date(report.created_at).getDate()}-
+                                                {new Date(report.created_at).getMonth() + 1}-
+                                                {new Date(report.created_at).getFullYear()}
                                             </td>
+
 
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client || 'NIL'}</td>
+                                           
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.attach_documents ? (
-                                                    <img
-                                                        src={`${report.attach_documents}`}
-                                                        alt={report.attach_documents}
-                                                        className='h-20 w-20 rounded-full'
-                                                    />
-                                                ) : '----'}
+                                                    // Check if the file is an image
+                                                    report.attach_documents.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                        <img
+                                                            src={`${report.attach_documents}`}
+                                                            alt="Image"
+                                                            className="h-20 w-20 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        // If it's a document (pdf, doc, etc.), show a button
+                                                        <a
+                                                            href={`${report.attach_documents}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                View Document
+                                                            </button>
+                                                        </a>
+                                                    )
+                                                ) : (
+                                                    '----'
+                                                )}
                                             </td>
                                             <td className="border  px-4 py-2 text-left">
                                                 <div className='flex whitespace-nowrap'>
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
                                                         report.serviceNames.length === 1 ? (
-                                                            <span className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm">
+                                                            <span className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                 {typeof report.serviceNames[0] === "string"
                                                                     ? report.serviceNames[0]
                                                                     : report.serviceNames[0].join(", ")}
@@ -295,16 +332,16 @@ const DropBoxList = () => {
                                                         ) : (
                                                             <>
                                                                 {typeof report.serviceNames[0] === "string" ? (
-                                                                    <span className="px-4 py-2 bg-blue-100 border   border-blue-500 rounded-lg text-sm">
+                                                                    <span className="px-4 py-2 bg-green-100 border   border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0]}
                                                                     </span>
                                                                 ) : (
-                                                                    <span className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm">
+                                                                    <span className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0].join(", ")}
                                                                     </span>
                                                                 )}
                                                                 <button
-                                                                    className="text-blue-500 ml-2"
+                                                                    className="text-green-500 ml-2"
                                                                     onClick={() => handleViewMore(report.serviceNames)}
                                                                 >
                                                                     View More
@@ -312,7 +349,7 @@ const DropBoxList = () => {
                                                             </>
                                                         )
                                                     ) : (
-                                                        <span className="px-4 py-2 bg-red-100 border  border-black border-red-500 rounded-lg">
+                                                        <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
                                                             You have no services
                                                         </span>
                                                     )}
@@ -335,7 +372,7 @@ const DropBoxList = () => {
                                                                 modalServices.map((service, idx) => (
                                                                     <span
                                                                         key={idx}
-                                                                        className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm"
+                                                                        className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm"
                                                                     >
                                                                         {service}
                                                                     </span>

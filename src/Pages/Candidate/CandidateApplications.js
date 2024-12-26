@@ -600,19 +600,33 @@ const GenerateReport = () => {
                             onChange={(e) => handleFileChange(index, dbTable, input.name, e)} // Update this function if needed
                         />
                         <div className="relative w-full    mt-4 max-w-full">
-                            {annexureImagesSplitArr.length > 0 && (
-                                <div className=" grid  grid-cols-6 gap-5">
+                            {annexureImagesSplitArr.length > 0 ? (
+                                <div className="grid grid-cols-6 gap-5">
                                     {annexureImagesSplitArr.map((image, index) => (
-                                        <img
-                                            key={index}
-                                            src={`${image.trim()}`}
-                                            alt={`${index + 1}`}
-                                            className="cursor-pointer h-[200px] mt-0 object-contain"
-
-                                        />
+                                        image.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                            <img
+                                                src={image.trim()}
+                                                alt={`Image ${index + 1}`}
+                                                className="h-20 w-20 rounded-full"
+                                            />
+                                        ) : (
+                                            <a
+                                                href={image.trim()} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                key={index} // Make sure to add a key for each element in the map
+                                            >
+                                                <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                    View Document
+                                                </button>
+                                            </a>
+                                        )
                                     ))}
                                 </div>
+                            ) : (
+                                <p>No Image Found</p> // Message if there are no images
                             )}
+
                         </div>
 
 

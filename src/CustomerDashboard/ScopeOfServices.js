@@ -126,7 +126,7 @@ const ScopeOfServices = () => {
                         </tr>
                         <tr>
                             <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">TAT</th>
-                            <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.tat || 'NA'}</td>
+                            <td className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">{customer.tat_days || 'NA'}</td>
                         </tr>
 
                     </table></div>

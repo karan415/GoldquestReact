@@ -63,7 +63,7 @@ const Sidebar = () => {
       <div className="flex flex-col md:flex-row h-full">
         <div className="w-full md:w-1/5 flex flex-col bg-white border-e">
           <div className='h-screen'>
-            <div className="px-3">
+            <div className="px-3" id="sider_content">
               <div className="flex flex-col px-3 py-8">
                 <ul>
                   {Object.keys(tabNames).map((tab) => (

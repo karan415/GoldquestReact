@@ -218,19 +218,7 @@ const ClientManagement = () => {
       }
     });
 
-    // Validate branch emails
-    branchForms.forEach((form, index) => {
-      if (!form.branch_name) {
-        newErrors[`branch_name_${index}`] = "This field is required*";
-      }
-      if (!form.branch_email) {
-        newErrors[`branch_email_${index}`] = "This field is required*";
-      } else if (emailSet.has(form.branch_email)) {
-        newErrors[`branch_email_${index}`] = "This email is already used*";
-      } else {
-        emailSet.add(form.branch_email);
-      }
-    });
+  
 
     return newErrors;
   };
@@ -724,7 +712,7 @@ const ClientManagement = () => {
                     onChange={handleChange}></textarea>
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="agreement_period">Agreement Period: <span className="text-red-600">*</span></label>
+                  <label className="text-gray-500" htmlFor="agreement_period">Agreement Period</label>
 
                   <select name="agreement_period" // Attach ref here
                     className="border w-full rounded-md p-2 mt-2 outline-none text-sm" id="agreement_period" onChange={handleChange} value={input.agreement_period}>
@@ -868,7 +856,7 @@ const ClientManagement = () => {
                   <div key={index} className="flex content-between items-center gap-4 mb-3">
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_name_${index}`}>
-                        Branch Name: <span className="text-red-600">*</span>
+                        Branch Name
                       </label>
                       <input
                         type="text"
@@ -880,13 +868,11 @@ const ClientManagement = () => {
                         onChange={(e) => handleChange(e, index)}
                       />
 
-                      {errors[`branch_name_${index}`] && (
-                        <p className="text-red-500">{errors[`branch_name_${index}`]}</p>
-                      )}
+                     
                     </div>
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_email_${index}`}>
-                        Branch Email: <span className="text-red-600">*</span>
+                        Branch Email
                       </label>
                       <input
                         type="email"
@@ -898,9 +884,7 @@ const ClientManagement = () => {
                         ref={(el) => (refs.current[`branch_email_${index}`] = el)} // Corrected ref key
 
                       />
-                      {errors[`branch_email_${index}`] && (
-                        <p className="text-red-500">{errors[`branch_email_${index}`]}</p>
-                      )}
+                     
                     </div>
                     {index > 0 && (
                       <button

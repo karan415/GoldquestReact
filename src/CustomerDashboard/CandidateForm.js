@@ -6,23 +6,14 @@ import PulseLoader from 'react-spinners/PulseLoader';
 import { useNavigate } from 'react-router-dom';
 
 const CandidateForm = () => {
-    const { services, uniquePackages, selectedCandidate, fetchClient, candidateLoading } = useContext(DropBoxContext);
-    const [isEditClient, setIsEditClient] = useState(false);
+    const { services, uniquePackages,input, setInput, fetchClient,isEditCandidate, setIsEditCandidate, candidateLoading } = useContext(DropBoxContext);
     const [formLoading, setFormLoading] = useState(false);
     const API_URL = useApi();
     const navigate = useNavigate();
 
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
-    const [input, setInput] = useState({
-        name: "",
-        employee_id: "",
-        mobile_number: "",
-        email: "",
-        services: [],
-        package: [],
-        candidate_application_id: ''
-    });
+
     const branch_name = JSON.parse(localStorage.getItem("branch"));
 
     const [error, setError] = useState({});
@@ -32,6 +23,7 @@ const CandidateForm = () => {
         const selectedValue = e.target.value; // The selected package ID
 
         if (selectedValue === "") {
+            // If no package selected, reset services and package
             setInput(prevState => ({
                 ...prevState,
                 package: "",
@@ -40,16 +32,28 @@ const CandidateForm = () => {
             return;
         }
 
-        const associatedServices = services
-            .filter(service => service.packages && Object.keys(service.packages).includes(selectedValue))
-            .map(service => String(service.serviceId)); // Ensure service IDs are strings
+        if (selectedValue === "select_all") {
+            // If "Select All" is selected, select all services
+            const allServiceIds = services.map(service => String(service.serviceId)); // Collect all service IDs
+            setInput(prevState => ({
+                ...prevState,
+                package: selectedValue, // Optionally store "Select All" in the package field
+                services: allServiceIds, // Select all services
+            }));
+        } else {
+            // Otherwise, select the services related to the specific package
+            const associatedServices = services
+                .filter(service => service.packages && Object.keys(service.packages).includes(selectedValue))
+                .map(service => String(service.serviceId)); // Ensure service IDs are strings
 
-        setInput(prevState => ({
-            ...prevState,
-            package: selectedValue, // Set the selected package
-            services: associatedServices, // Automatically select all associated services
-        }));
+            setInput(prevState => ({
+                ...prevState,
+                package: selectedValue, // Set the selected package
+                services: associatedServices, // Automatically select all associated services
+            }));
+        }
     };
+
     console.log('services', input.services)
 
     const handleChange = (event) => {
@@ -76,82 +80,28 @@ const CandidateForm = () => {
 
 
 
-
-    useEffect(() => {
-        // This effect will run when the selectedCandidate changes
-        setIsEditClient(false); // Optionally reset edit state
-
-        if (selectedCandidate) {
-            const parsedServices = Array.isArray(selectedCandidate.services)
-                ? selectedCandidate.services
-                : selectedCandidate.services ? selectedCandidate.services.split(',') : [];
-
-            setInput({
-                name: selectedCandidate.name,
-                employee_id: selectedCandidate.employee_id,
-                mobile_number: selectedCandidate.mobile_number,
-                email: selectedCandidate.email,
-                services: parsedServices,
-                package: selectedCandidate.packages || [],
-                candidate_application_id: selectedCandidate.id || ''
-            });
-            setIsEditClient(true);
-        } else {
-            setInput({
-                name: "",
-                employee_id: "",
-                mobile_number: "",
-                email: "",
-                services: [],
-                package: [],
-                candidate_application_id: ""
-            });
-            setIsEditClient(false);
-        }
-
-        // Cleanup function to reset the form when the component unmounts or user navigates away
-        return () => {
-            setInput({
-                name: "",
-                employee_id: "",
-                mobile_number: "",
-                email: "",
-                services: [],
-                package: [],
-                candidate_application_id: ""
-            });
-        };
-
-    }, [selectedCandidate]);
-
-
     const validate = () => {
         const NewErr = {};
 
-        // Ensure all inputs are treated as strings and trim spaces
         const name = String(input.name || '').trim();
         const employee_id = String(input.employee_id || '').trim();
         const mobile_number = String(input.mobile_number || '').trim();
         const email = String(input.email || '').trim();
 
-        // Validate Name (non-empty check)
         if (!name) {
             NewErr.name = 'Name is required';
         }
 
-        // Validate Employee ID (non-empty check)
         if (!employee_id) {
             NewErr.employee_id = 'Employee ID is required';
         }
 
-        // Validate Mobile Number
         if (!mobile_number) {
             NewErr.mobile_number = 'Mobile number is required';
         } else if (!/^\d{10}$/.test(mobile_number)) {
             NewErr.mobile_number = "Please enter a valid phone number, containing 10 digits.";
         }
 
-        // Validate Email
         if (!email) {
             NewErr.email = 'Email is required';
         } else {
@@ -159,7 +109,6 @@ const CandidateForm = () => {
             if (!emailRegex.test(email)) {
                 NewErr.email = 'Invalid email format';
             } else {
-                // Ensure email is in lowercase
                 input.email = email.toLowerCase();
             }
         }
@@ -173,7 +122,6 @@ const CandidateForm = () => {
         e.preventDefault();
         setFormLoading(true);
 
-        // Step 1: Validate form fields first
         const errors = validate();
         if (Object.keys(errors).length === 0) {
             setError({});
@@ -200,13 +148,13 @@ const CandidateForm = () => {
             });
 
             const requestOptions = {
-                method: isEditClient ? 'PUT' : "POST",
+                method: isEditCandidate ? 'PUT' : "POST",
                 headers: myHeaders,
                 body: Raw,
                 redirect: "follow"
             };
 
-            const url = isEditClient
+            const url = isEditCandidate
                 ? `${API_URL}/branch/candidate-application/update`
                 : `${API_URL}/branch/candidate-application/create`;
 
@@ -248,25 +196,23 @@ const CandidateForm = () => {
 
                     Swal.fire({
                         title: "Success",
-                        text: isEditClient ? 'Candidate Application edited successfully' : 'Candidate Application added successfully',
+                        text: isEditCandidate ? 'Candidate Application edited successfully' : 'Candidate Application added successfully',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
 
-                    setIsEditClient(false); // Reset edit mode
+                    setIsEditCandidate(false); 
                 })
                 .catch(error => {
-                    // Log any errors that occur during fetch
                     console.error("There was an error!", error);
                 })
                 .finally(() => {
-                    setFormLoading(false); // Stop loading state
+                    setFormLoading(false); 
                 });
 
         } else {
-            // Step 5: Handle validation errors
             setError(errors);
-            setFormLoading(false); // Stop loading state
+            setFormLoading(false); 
         }
     };
 
@@ -281,26 +227,26 @@ const CandidateForm = () => {
                     <div className="grid gap-4 grid-cols-2 mb-4">
                         <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                             <div className="mb-4">
-                                <label htmlFor="applicant_name" className='text-sm'>Name of the organisation:</label>
+                                <label htmlFor="applicant_name" className='text-sm'>Name of the organisation<span className='text-red-500'>*</span></label>
                                 <input type="text" name="applicant_name" className="border w-full rounded-md p-2 mt-2" disabled value={branch_name?.name} />
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="name" className='text-sm'>Full name of the applicant *</label>
+                                <label htmlFor="name" className='text-sm'>Full name of the applicant <span className='text-red-500'>*</span></label>
                                 <input type="text" name="name" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.name} />
                                 {error.name && <p className='text-red-500'>{error.name}</p>}
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="employee_id" className='text-sm'>Employee ID:</label>
+                                <label htmlFor="employee_id" className='text-sm'>Employee ID<span className='text-red-500'>*</span></label>
                                 <input type="text" name="employee_id" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.employee_id} />
                                 {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="mobile_number" className='text-sm'>Mobile Number:</label>
+                                <label htmlFor="mobile_number" className='text-sm'>Mobile Number<span className='text-red-500'>*</span></label>
                                 <input type="tel" name="mobile_number" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.mobile_number} />
                                 {error.mobile_number && <p className='text-red-500'>{error.mobile_number}</p>}
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="email" className='text-sm'>Email ID*:</label>
+                                <label htmlFor="email" className='text-sm'>Email ID<span className='text-red-500'>*</span></label>
                                 <input type="email" name="email" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.email} />
                                 {error.email && <p className='text-red-500'>{error.email}</p>}
                             </div>
@@ -309,33 +255,35 @@ const CandidateForm = () => {
                             <div className="flex flex-wrap flex-col-reverse">
                                 <div className='mt-4'>
                                     <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
+
                                     {candidateLoading ? (
                                         <PulseLoader color="#36A2EB" loading={candidateLoading} size={15} />
                                     ) : services.length > 0 ? (
-                                        <ul>
-                                            {services.map((item) => (
-                                                <li
-                                                    key={item.serviceId}
-                                                    className={`border p-2 my-1 flex gap-3 items-center ${input.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        name="services"
-                                                        value={String(item.serviceId)} // Ensure `value` matches the service ID type
-                                                        onChange={handleChange}
-                                                        checked={input.services.includes(String(item.serviceId))} // Match ID type
-                                                    />
+                                        <div>
 
-                                                    <div className='font-bold'>{item.serviceTitle}</div>
-                                                </li>
-                                            ))}
-                                        </ul>
-
-
+                                            <ul>
+                                                {services.map((item) => (
+                                                    <li
+                                                        key={item.serviceId}
+                                                        className={`border p-2 my-1 flex gap-3 items-center ${input.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            name="services"
+                                                            value={String(item.serviceId)} // Ensure `value` matches the service ID type
+                                                            onChange={handleChange}
+                                                            checked={input.services.includes(String(item.serviceId))} // Match ID type
+                                                        />
+                                                        <div className='font-bold'>{item.serviceTitle}</div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     ) : (
                                         <p>No services available</p>
                                     )}
                                 </div>
+
                                 <div className="mt-5">
                                     <strong className="mb-2 block">Packages:</strong>
                                     {!candidateLoading && (
@@ -345,19 +293,21 @@ const CandidateForm = () => {
                                             className="text-left w-full border p-2 rounded-md"
                                         >
                                             <option value="">Select a package</option>
+                                            <option value="select_all">Select All</option> {/* Added Select All option */}
                                             {uniquePackages.map(pkg => (
                                                 <option key={pkg.id} value={pkg.id}>
                                                     {pkg.name || "No Name"}
                                                 </option>
                                             ))}
                                         </select>
+
                                     )}
                                 </div>
 
                             </div>
                         </div>
                     </div>
-                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto'>{isEditClient ? "Edit" : "Send"}</button>
+                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
                     {/* <span className='flex justify-center py-4 font-bold text-lg'>OR</span>
                     <button type="button" className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'>Bulk Mailer</button> */}
                 </form>

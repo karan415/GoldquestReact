@@ -251,7 +251,11 @@ const InactiveClients = () => {
                   <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.agreement_date}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
+                    {new Date(item.agreement_date).getDate()}-
+                    {new Date(item.agreement_date).getMonth() + 1}-
+                    {new Date(item.agreement_date).getFullYear()}
+                    </td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard}</td>

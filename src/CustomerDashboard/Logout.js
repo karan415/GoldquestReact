@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 
 const Logout = () => {
- 
-    const API_URL= useApi();
+
+    const API_URL = useApi();
     const navigate = useNavigate();
     const handleLogout = async () => {
         const storedBranchData = localStorage.getItem("branch");
@@ -23,7 +23,7 @@ const Logout = () => {
             localStorage.removeItem("branch");
             localStorage.removeItem("branch_token");
 
-  
+
             navigate('/customer-login');
         } catch (error) {
             console.error('Error during logout:', error);
@@ -31,8 +31,8 @@ const Logout = () => {
     };
 
     return (
-        <button onClick={handleLogout} className='flex gap-2 items-center ms-2'>
-            <RiLoginCircleFill className="h-6 w-6 mr-3 text-gray-600" />
+        <button onClick={handleLogout} className='flex gap-2 text-white items-center ms-2'>
+            <RiLoginCircleFill className="h-6 w-6 mr-1 " />
             Logout
         </button>
     );

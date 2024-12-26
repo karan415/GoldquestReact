@@ -244,7 +244,6 @@ const CandidateList = () => {
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Email Id</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Docs</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
                                         <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
                                     </tr>
@@ -261,7 +260,7 @@ const CandidateList = () => {
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
                                                         report.serviceNames.length === 1 ? (
 
-                                                            <span className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm">
+                                                            <span className="px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                 {typeof report.serviceNames[0] === "string"
                                                                     ? report.serviceNames[0]
                                                                     : report.serviceNames[0].join(", ")}
@@ -270,16 +269,16 @@ const CandidateList = () => {
 
                                                             <>
                                                                 {typeof report.serviceNames[0] === "string" ? (
-                                                                    <span className="px-4 py-2 bg-blue-100 border   border-blue-500 rounded-lg text-sm">
+                                                                    <span className="px-4 py-2 bg-green-100 border   border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0]}
                                                                     </span>
                                                                 ) : (
-                                                                    <span className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm">
+                                                                    <span className="px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0].join(", ")}
                                                                     </span>
                                                                 )}
                                                                 <button
-                                                                    className="text-blue-500 ml-2"
+                                                                    className="text-green-500 ml-2"
                                                                     onClick={() => handleViewMore(report.serviceNames)}
                                                                 >
                                                                     View More
@@ -288,7 +287,7 @@ const CandidateList = () => {
                                                         )
                                                     ) : (
                                                         // No services or serviceNames is not an array
-                                                        <span className="px-4 py-2 bg-red-100 border  border-black border-red-500 rounded-lg">
+                                                        <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
                                                             You have no services
                                                         </span>
                                                     )}
@@ -306,12 +305,12 @@ const CandidateList = () => {
                                                                 &times;
                                                             </button>
                                                         </div>
-                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto overflow-scroll">
+                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
                                                             {modalServices.length > 0 ? (
                                                                 modalServices.map((service, idx) => (
                                                                     <span
                                                                         key={idx}
-                                                                        className="px-4 py-2 bg-blue-100 border  border-blue-500 rounded-lg text-sm"
+                                                                        className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm"
                                                                     >
                                                                         {service}
                                                                     </span>
@@ -323,9 +322,7 @@ const CandidateList = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
-                                                <button className="bg-green-600 text-white p-2 rounded-md hover:bg-green-200">{report.doc}</button>
-                                            </td>
+                                           
 
 
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize"> {new Date(report.created_at).toLocaleDateString()}</td>

@@ -176,7 +176,7 @@ const ExternalLoginData = () => {
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-              <h2 className='text-center text-3xl font-bold py-4'>External Login Credentials</h2>
+      <h2 className='text-center text-3xl font-bold py-4'>External Login Credentials</h2>
 
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
@@ -252,7 +252,7 @@ const ExternalLoginData = () => {
                   {openAccordionId === item.main_id && (
                     branchLoading ? (
                       <tr>
-                        <td colSpan="5" className="py-3 px-4">
+                        <td colSpan="4" className="py-3 px-4">
                           <div className="flex justify-center items-center">
                             <PulseLoader
                               color="#36D7B7"
@@ -263,25 +263,34 @@ const ExternalLoginData = () => {
                           </div>
                         </td>
                       </tr>
-
                     ) : (
-                      branches.map((branch) => (
-                        <tr key={branch.id} className="border bg-gray-100">
-                          <td className="py-2 px-4 border-b border-l text-center whitespace-nowrap">{branch.name}</td>
-                          <td className="py-2 px-4 border-b border-l whitespace-nowrap">{branch.email}</td>
-                          <td className="py-2 px-4 border-b border-l text-center uppercase text-blue-500 font-bold">
-                            <button onClick={() => getEmail(branch.email)}>
-                              Go
-                            </button>
-                          </td>
-                          <td className="py-2 px-4 border-b border-l text-center">
-                            <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">Delete</button>
-                          </td>
-                          <td></td>
+                      <>
+                        <tr className="bg-green-500 text-white">
+                          <th className="py-3 px-4 border-b border-l text-center">Branch Name</th>
+                          <th className="py-3 px-4 border-b border-l text-center">Email</th>
+                          <th className="py-3 px-4 border-b border-l text-center">Action</th>
+                          <th className="py-3 px-4 border-b border-l text-center">Delete</th>
                         </tr>
-                      ))
+                        {branches.map((branch) => (
+                          <tr key={branch.id} className="border bg-gray-100">
+                            <td className="py-2 px-4 border-b border-l text-center whitespace-nowrap">{branch.name}</td>
+                            <td className="py-2 px-4 border-b border-l whitespace-nowrap">{branch.email}</td>
+                            <td className="py-2 px-4 border-b border-l text-center uppercase text-blue-500 font-bold">
+                              <button onClick={() => getEmail(branch.email)}>
+                                Go
+                              </button>
+                            </td>
+                            <td className="py-2 px-4 border-b border-l text-center">
+                              <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </>
                     )
                   )}
+
                 </React.Fragment>
               ))}
             </tbody>

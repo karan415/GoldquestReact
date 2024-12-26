@@ -14,115 +14,13 @@ const ClientForm = () => {
     const customer_id = storedBranchData?.customer_id;
     const customer_code = localStorage.getItem("customer_code");
     const [files, setFiles] = useState({});
-    const [clientInput, setClientInput] = useState({
-        name: '',
-        employee_id: '',
-        spoc: '',
-        location: '',
-        batch_number: '',
-        sub_client: '',
-        services: [],
-        package: [],
-        client_application_id: '',
-    });
+  
     const navigate = useNavigate();
     const GotoBulk = () => {
         navigate('/ClientBulkUpload')
     }
-    const { selectedDropBox, fetchClientDrop, services, uniquePackages, loading } = useContext(DropBoxContext);
-    const [isEditClient, setIsEditClient] = useState(false);
+    const { isEditClient,setIsEditClient, fetchClientDrop,setClientInput, services, uniquePackages, clientInput,loading } = useContext(DropBoxContext);
     const [inputError, setInputError] = useState({});
-
-
-
-    useEffect(() => {
-        if (selectedDropBox) {
-            // Ensure services are always in an array format
-            const parsedServices = Array.isArray(selectedDropBox.services)
-                ? selectedDropBox.services
-                : selectedDropBox.services ? selectedDropBox.services.split(',') : [];
-
-            setClientInput({
-                name: selectedDropBox.name || "",
-                employee_id: selectedDropBox.employee_id || "",
-                spoc: selectedDropBox.single_point_of_contact || "",
-                location: selectedDropBox.location || "",
-                batch_number: selectedDropBox.batch_number || "",
-                sub_client: selectedDropBox.sub_client || "",
-                services: parsedServices, // Make sure services is always an array
-                package: selectedDropBox.package || [],
-                client_application_id: selectedDropBox.id || "",
-            });
-            setIsEditClient(true);
-        } else {
-            setClientInput({
-                name: "",
-                employee_id: "",
-                spoc: "",
-                location: "",
-                batch_number: "",
-                sub_client: "",
-                services: [],
-                package: "",
-                client_application_id: "",
-            });
-            setIsEditClient(false);
-        }
-    }, [selectedDropBox]);
-
-
-
-
-    useEffect(() => {
-        fetchClientDrop();
-    }, [fetchClientDrop])
-
-
-    const handleFileChange = (fileName, e) => {
-        const selectedFiles = Array.from(e.target.files);
-
-
-
-        const maxSize = 2 * 1024 * 1024; // 2MB size limit
-    const allowedTypes = [
-      'image/jpeg', 'image/png', 'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ]; // Allowed file types
-
-    let errors = [];
-
-    // Validate each file
-    selectedFiles.forEach((file) => {
-      // Check file size
-      if (file.size > maxSize) {
-        errors.push(`${file.name}: File size must be less than 2MB.`);
-      }
-
-      // Check file type (MIME type)
-      if (!allowedTypes.includes(file.type)) {
-        errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
-      }
-    });
-
-    // If there are errors, show them and don't update the state
-    if (errors.length > 0) {
-      setInputError((prevErrors) => ({
-        ...prevErrors,
-        [fileName]: errors, // Set errors for this file
-      }));
-      return; // Don't update state if there are errors
-    }
-
-    setFiles(prevFiles => ({ ...prevFiles, [fileName]: selectedFiles }));
-
-
-    setInputError((prevErrors) => {
-      const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
-      return restErrors;
-    });
-    };
-
     const validate = () => {
         const newErrors = {};
         const maxSize = 2 * 1024 * 1024; // 2MB size limit
@@ -152,8 +50,10 @@ const ClientForm = () => {
                         }
                     });
                 } else {
-                    // Add "required" error if no files are uploaded
-                    fileErrors.push(`${fileName} is required.`);
+                    // Only add "required" error if it's not an edit case
+                    if (!isEditClient) {
+                        fileErrors.push(`${fileName} is required.`);
+                    }
                 }
     
                 return fileErrors;
@@ -178,6 +78,65 @@ const ClientForm = () => {
         return newErrors;
     };
     
+
+
+    useEffect(() => {
+       
+    }, []);
+
+
+
+
+    useEffect(() => {
+        fetchClientDrop();
+    }, [fetchClientDrop])
+
+
+    const handleFileChange = (fileName, e) => {
+        const selectedFiles = Array.from(e.target.files);
+
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // Allowed file types
+
+        let errors = [];
+
+        // Validate each file
+        selectedFiles.forEach((file) => {
+            // Check file size
+            if (file.size > maxSize) {
+                errors.push(`${file.name}: File size must be less than 2MB.`);
+            }
+
+            // Check file type (MIME type)
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+            }
+        });
+
+        // If there are errors, show them and don't update the state
+        if (errors.length > 0) {
+            setInputError((prevErrors) => ({
+                ...prevErrors,
+                [fileName]: errors, // Set errors for this file
+            }));
+            return; // Don't update state if there are errors
+        }
+
+        setFiles(prevFiles => ({ ...prevFiles, [fileName]: selectedFiles }));
+
+
+        setInputError((prevErrors) => {
+            const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+            return restErrors;
+        });
+    };
+
+  
+
     const uploadCustomerLogo = async (insertedId, new_application_id) => {
         const fileCount = Object.keys(files).length;
         const serviceData = JSON.stringify(services);
@@ -303,14 +262,13 @@ const ClientForm = () => {
 
                 setFiles({}); // Clear files
                 setInputError({}); // Reset input errors
-
                 console.log("Files reset: ", files); // Verify the state change
 
                 // Show success message
                 if (fileCount === 0) {
                     Swal.fire({
                         title: "Success",
-                        text: `Client Application Created Successfully.`,
+                        text: `${isEditClient ? 'Application Updated Successfully' : 'Application Created Successfully'}`,
                         icon: "success",
                         confirmButtonText: "Ok",
                     });
@@ -329,7 +287,7 @@ const ClientForm = () => {
                 }
 
                 console.log('insertedId', insertedId, 'new_application_id', new_application_id);
-
+                setIsEditClient(false);
                 fetchClientDrop(); // Refresh the client data
 
             } catch (error) {
@@ -355,7 +313,7 @@ const ClientForm = () => {
         const selectedValue = e.target.value; // The selected package ID
 
         if (selectedValue === "") {
-            // No package selected
+            // If no package selected, reset services and package
             setClientInput(prevState => ({
                 ...prevState,
                 package: "",
@@ -364,16 +322,26 @@ const ClientForm = () => {
             return;
         }
 
-        // Find all services associated with the selected package
-        const associatedServices = services
-            .filter(service => service.packages && Object.keys(service.packages).includes(selectedValue))
-            .map(service => String(service.serviceId)); // Ensure service IDs are strings
+        if (selectedValue === "select_all") {
+            // If "Select All" is selected, select all services
+            const allServiceIds = services.map(service => String(service.serviceId)); // Collect all service IDs
+            setClientInput(prevState => ({
+                ...prevState,
+                package: selectedValue, // Optionally store "Select All" in the package field
+                services: allServiceIds, // Select all services
+            }));
+        } else {
+            // Otherwise, select the services related to the specific package
+            const associatedServices = services
+                .filter(service => service.packages && Object.keys(service.packages).includes(selectedValue))
+                .map(service => String(service.serviceId)); // Ensure service IDs are strings
 
-        setClientInput(prevState => ({
-            ...prevState,
-            package: selectedValue, // Set the selected package
-            services: associatedServices, // Automatically select all associated services
-        }));
+                setClientInput(prevState => ({
+                ...prevState,
+                package: selectedValue, // Set the selected package
+                services: associatedServices, // Automatically select all associated services
+            }));
+        }
     };
     console.log('services', clientInput.services)
 
@@ -414,18 +382,18 @@ const ClientForm = () => {
                         <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="organisation_name" className='text-sm'>Name of the organisation:</label>
+                                    <label htmlFor="organisation_name" className='text-sm'>Name of the organisation<span className="text-red-500">*</span></label>
                                     <input type="text" name="organisation_name" id="Organisation_Name" className="border w-full capitalize rounded-md p-2 mt-2" disabled value={branch_name?.name} />
                                     {inputError.organisation_name && <p className='text-red-500'>{inputError.organisation_name}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="name" className='text-sm'>Full name of the applicant *</label>
+                                    <label htmlFor="name" className='text-sm'>Full name of the applicant <span className="text-red-500">*</span></label>
                                     <input type="text" name="name" id="Applicant-Name" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.name} />
                                     {inputError.name && <p className='text-red-500'>{inputError.name}</p>}
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="attach_documents" className='text-sm'>Attach documents: *</label>
+                                <label htmlFor="attach_documents" className='text-sm'>Attach documents<span className="text-red-500">*</span></label>
                                 <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2"
                                     accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                                     onChange={(e) => handleFileChange('attach_documents', e)} />
@@ -436,35 +404,35 @@ const ClientForm = () => {
                             </div>
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="employee_id" className='text-sm'>Employee ID:</label>
+                                    <label htmlFor="employee_id" className='text-sm'>Employee ID<span className="text-red-500">*</span></label>
                                     <input type="text" name="employee_id" id="EmployeeId" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.employee_id} />
                                     {inputError.employee_id && <p className='text-red-500'>{inputError.employee_id}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="spoc" className='text-sm'>Name of the SPOC:</label>
+                                    <label htmlFor="spoc" className='text-sm'>Name of the SPOC<span className="text-red-500">*</span></label>
                                     <input type="text" name="spoc" id="spoc" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.spoc} />
                                     {inputError.spoc && <p className='text-red-500'>{inputError.spoc}</p>}
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="location" className='text-sm'>Location:</label>
+                                <label htmlFor="location" className='text-sm'>Location<span className="text-red-500">*</span></label>
                                 <input type="text" name="location" id="Locations" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.location} />
                                 {inputError.location && <p className='text-red-500'>{inputError.location}</p>}
                             </div>
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="batch_number" className='text-sm'>Batch number:</label>
+                                    <label htmlFor="batch_number" className='text-sm'>Batch number<span className="text-red-500">*</span></label>
                                     <input type="text" name="batch_number" id="Batch-Number" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.batch_number} />
                                     {inputError.batch_number && <p className='text-red-500'>{inputError.batch_number}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label htmlFor="sub_client" className='text-sm'>Sub client:</label>
+                                    <label htmlFor="sub_client" className='text-sm'>Sub client<span className="text-red-500">*</span></label>
                                     <input type="text" name="sub_client" id="SubClient" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.sub_client} />
                                     {inputError.sub_client && <p className='text-red-500'>{inputError.sub_client}</p>}
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="photo">Upload photo:</label>
+                                <label htmlFor="photo">Upload photo<span className="text-red-500">*</span></label>
                                 <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                                     onChange={(e) => handleFileChange('photo', e)} />
                                 {inputError.photo && <p className='text-red-500'>{inputError.photo}</p>}
@@ -513,12 +481,14 @@ const ClientForm = () => {
                                             className="text-left w-full border p-2 rounded-md"
                                         >
                                             <option value="">Select a package</option>
+                                            <option value="select_all">Select All</option> {/* Added Select All option */}
                                             {uniquePackages.map(pkg => (
                                                 <option key={pkg.id} value={pkg.id}>
                                                     {pkg.name || "No Name"}
                                                 </option>
                                             ))}
                                         </select>
+
                                     )}
                                 </div>
 
@@ -526,8 +496,8 @@ const ClientForm = () => {
                         </div>
 
                     </div>
-                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-auto' disabled={formLoading}>
-                        {(isEditClient ? "Edit" : "Send")}
+                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md md:w-2/12' disabled={formLoading}>
+                    Send
                     </button>
                     {/* <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button> */}
                 </form>
