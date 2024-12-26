@@ -9,11 +9,14 @@ const CandidateBGV = () => {
     const admin = JSON.parse(localStorage.getItem("admin"))?.name;
     const [error, setError] = useState(null);
     const [customBgv, setCustomBgv] = useState('');
-    const [serviceData, setServiceData] = useState([]);
     const [cefData, setCefData] = useState([]);
     const [companyName, setCompanyName] = useState('');
+    const [serviceData, setServiceData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    console.log('customBgv', customBgv)
+    const [serviceValueData, setServiceValueData] = useState([]);
+
+
     const [formData, setFormData] = useState({
         personal_information: {
             full_name: '',
@@ -63,7 +66,6 @@ const CandidateBGV = () => {
     const location = useLocation();
     const currentURL = location.pathname + location.search;
 
-    const [loading, setLoading] = useState(false);
     const queryParams = new URLSearchParams(location.search);
 
     // Extract the branch_id and applicationId
@@ -103,15 +105,17 @@ const CandidateBGV = () => {
     const decodedValues = getValuesFromUrl(currentURL);
 
     const fetchData = useCallback(() => {
+        setLoading(true);  // Set loading to true before making the fetch request.
+        
         const MyToken = localStorage.getItem('_token');
         const adminData = JSON.parse(localStorage.getItem('admin'));
         const admin_id = adminData?.id;
-
+    
         const requestOptions = {
             method: "GET",
             redirect: "follow",
         };
-
+    
         fetch(
             `https://octopus-app-www87.ondigitalocean.app/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
@@ -124,13 +128,22 @@ const CandidateBGV = () => {
             })
             .then(data => {
                 setCompanyName(data.application.customer_name);
-                setCefData(data.CEFData.cefData);
+                setCefData(data.CEFData);
+                const serviceDataa = data.serviceData;
+                const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData);
+                const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data);
+                setServiceData(jsonDataArray);
+                setServiceValueData(serviceValueDataArray);
                 setCustomBgv(data.customerInfo?.is_custom_bgv || '');
             })
             .catch(err => {
                 setError(err.message);  // Set the error message in case of failure
+            })
+            .finally(() => {
+                setLoading(false);  // Set loading to false after the fetch completes (whether successful or not)
             });
-    }, []);  // Include any dependencies if required
+    }, []);
+    
 
     useEffect(() => {
 
@@ -169,13 +182,13 @@ const CandidateBGV = () => {
 
         return <p>Unsupported file type</p>;
     };
+    console.log('cefData', cefData)
     return (
         <>
             {
                 loading ? (
                     <div className='flex justify-center items-center py-6 ' >
                         <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
-
                     </div >
                 ) : <form action="" className='py-6' id='bg-form'>
 
@@ -193,7 +206,7 @@ const CandidateBGV = () => {
                                 </label>
                                 <div className="mt-2 w-1/3">
 
-                                    <FileViewer fileUrl={cefData.resume_file} className="w-full max-w-xs " />
+                                    <FileViewer fileUrl={cefData?.resume_file} className="w-full max-w-xs" />
 
 
                                 </div>
@@ -208,7 +221,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="aadhar_card_name"
-                                                value={cefData.aadhar_card_name}
+                                                value={cefData?.aadhar_card_name}
                                                 readOnly
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
@@ -216,7 +229,7 @@ const CandidateBGV = () => {
                                         <div className='form-group '>
                                             <label>Aadhar Card Image</label>
                                             <div className='max-w-20'>
-                                                <FileViewer fileUrl={cefData.aadhar_card_image} className="w-full max-w-20 " />
+                                                <FileViewer fileUrl={cefData?.aadhar_card_image} className="w-full max-w-20 " />
                                             </div>
 
                                         </div>
@@ -225,7 +238,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="pan_card_name"
-                                                value={cefData.pan_card_name}
+                                                value={cefData?.pan_card_name}
                                                 readOnly
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
@@ -234,7 +247,7 @@ const CandidateBGV = () => {
                                             <label>Pan Card Image</label>
 
                                             <div className='max-w-20'>
-                                                <FileViewer fileUrl={cefData.pan_card_image} className="w-full max-w-20 " />
+                                                <FileViewer fileUrl={cefData?.pan_card_image} className="w-full max-w-20 " />
                                             </div>
                                         </div>
                                     </div>
@@ -243,7 +256,7 @@ const CandidateBGV = () => {
                                         <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
 
                                         <div className='max-w-20'>
-                                            <FileViewer fileUrl={cefData.passport_photo} className="w-full max-w-20 " />
+                                            <FileViewer fileUrl={cefData?.passport_photo} className="w-full max-w-20 " />
                                         </div>
                                     </div>
                                 </>
@@ -255,7 +268,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.full_name}
+                                    value={cefData?.full_name}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -267,7 +280,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Full Address<span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.full_address}
+                                    value={cefData?.full_address}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -279,7 +292,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Current Address <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.current_address}
+                                    value={cefData?.current_address}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -291,7 +304,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Pin Code <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.pin_code}
+                                    value={cefData?.pin_code}
                                     readOnly
                                     className="form-control border rounded w-full p-2 mt-2"
                                     id="pin_code"
@@ -302,7 +315,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Current Landline Number <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.curren_address_landline_number}
+                                    value={cefData?.curren_address_landline_number}
                                     readOnly
                                     type="number"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -314,7 +327,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Current State <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.current_address_state}
+                                    value={cefData?.current_address_state}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -326,7 +339,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Current Landmark<span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.current_prominent_landmark}
+                                    value={cefData?.current_prominent_landmark}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -338,7 +351,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Current Address Stay No.<span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.current_address_stay_to}
+                                    value={cefData?.current_address_stay_to}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -350,7 +363,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="full_name">Nearest Police Station.<span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.nearest_police_station}
+                                    value={cefData?.nearest_police_station}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -363,7 +376,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="former_name">Former Name/ Maiden Name (if applicable):</label>
                                 <input
-                                    value={cefData.former_name}
+                                    value={cefData?.former_name}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -375,7 +388,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="mob_no">Mobile Number: <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.mb_no}
+                                    value={cefData?.mb_no}
                                     readOnly
                                     type="tel"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -390,7 +403,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="father_name">Father's Name: <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.father_name}
+                                    value={cefData?.father_name}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -403,7 +416,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="husband_name">Spouse's Name:</label>
                                 <input
-                                    value={cefData.husband_name}
+                                    value={cefData?.husband_name}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -415,7 +428,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="dob">DOB: <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.dob}
+                                    value={cefData?.dob}
                                     readOnly
                                     type="date"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -428,7 +441,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="gender">Gender: <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.gender}
+                                    value={cefData?.gender}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -443,7 +456,7 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="nationality">Nationality: <span className="text-red-500">*</span></label>
                                 <input
-                                    value={cefData.nationality}
+                                    value={cefData?.nationality}
                                     readOnly
                                     type="text"
                                     className="form-control border rounded w-full p-2 mt-2"
@@ -456,12 +469,12 @@ const CandidateBGV = () => {
                             <div className="form-group">
                                 <label htmlFor="marital_status">Marital Status: <span className="text-red-500">*</span></label>
                                 <input
-                                        type="text"
-                                        name="blood_group"
-                                        value={cefData.marital_status}
-                                        readOnly
-                                        className="form-control border rounded w-full p-2 mt-2"
-                                    />
+                                    type="text"
+                                    name="blood_group"
+                                    value={cefData?.marital_status}
+                                    readOnly
+                                    className="form-control border rounded w-full p-2 mt-2"
+                                />
                             </div>
                         </div>
                         {customBgv === 1 && (
@@ -472,7 +485,7 @@ const CandidateBGV = () => {
                                     <input
                                         type="text"
                                         name="blood_group"
-                                        value={cefData.blood_group}
+                                        value={cefData?.blood_group}
                                         readOnly
                                         className="form-control border rounded w-full p-2 mt-2"
                                     />
@@ -486,7 +499,7 @@ const CandidateBGV = () => {
                                     <input
                                         type="date"
                                         name="declaration_date"
-                                        value={cefData.declaration_date}
+                                        value={cefData?.declaration_date}
                                         readOnly
                                         className="form-control border rounded w-full p-2 mt-2"
                                     />
@@ -500,7 +513,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="emergency_details_name"
-                                                value={cefData.emergency_details_name}
+                                                value={cefData?.emergency_details_name}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -511,7 +524,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="emergency_details_relation"
-                                                value={cefData.emergency_details_relation}
+                                                value={cefData?.emergency_details_relation}
                                                 readOnly
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
@@ -521,7 +534,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="emergency_details_contact_number"
-                                                value={cefData.emergency_details_contact_number}
+                                                value={cefData?.emergency_details_contact_number}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -537,7 +550,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="pf_details_pf_number"
-                                                value={cefData.pf_details_pf_number}
+                                                value={cefData?.pf_details_pf_number}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -548,7 +561,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="pf_details_pf_type"
-                                                value={cefData.pf_details_pf_type}
+                                                value={cefData?.pf_details_pf_type}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -559,7 +572,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="pf_details_pg_nominee"
-                                                value={cefData.pf_details_pg_nominee}
+                                                value={cefData?.pf_details_pg_nominee}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -575,7 +588,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="nps_details_details_pran_number"
-                                                value={cefData.nps_details_details_pran_number}
+                                                value={cefData?.nps_details_details_pran_number}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -586,7 +599,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="nps_details_details_nominee_details"
-                                                value={cefData.nps_details_details_nominee_details}
+                                                value={cefData?.nps_details_details_nominee_details}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -597,7 +610,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="nps_details_details_nps_contribution"
-                                                value={cefData.nps_details_details_nps_contribution}
+                                                value={cefData?.nps_details_details_nps_contribution}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -613,7 +626,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="icc_bank_acc"
-                                            value={cefData.icc_bank_acc}
+                                            value={cefData?.icc_bank_acc}
                                             readOnly
                                             className="form-control border rounded p-2 "
                                         />
@@ -628,7 +641,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="bank_details_account_number"
-                                            value={cefData.icc_bank_acc}
+                                            value={cefData?.icc_bank_acc}
                                             readOnly
 
                                             className="form-control border rounded w-full p-2 mt-2"
@@ -639,7 +652,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="bank_details_bank_name"
-                                            value={cefData.icc_bank_acc}
+                                            value={cefData?.icc_bank_acc}
                                             readOnly
 
                                             className="form-control border rounded w-full p-2 mt-2"
@@ -650,7 +663,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="bank_details_branch_name"
-                                            value={cefData.bank_details_branch_name}
+                                            value={cefData?.bank_details_branch_name}
                                             readOnly
 
                                             className="form-control border rounded w-full p-2 mt-2"
@@ -661,7 +674,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="bank_details_ifsc_code"
-                                            value={cefData.bank_details_ifsc_code}
+                                            value={cefData?.bank_details_ifsc_code}
                                             readOnly
 
                                             className="form-control border rounded w-full p-2 mt-2"
@@ -678,7 +691,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="insurance_details_name"
-                                                value={cefData.insurance_details_name}
+                                                value={cefData?.insurance_details_name}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -690,7 +703,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="insurance_details_nominee_relation"
-                                                value={cefData.insurance_details_nominee_relation}
+                                                value={cefData?.insurance_details_nominee_relation}
                                                 readOnly
 
                                                 className="form-control border rounded w-full p-2 mt-2"
@@ -702,7 +715,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="date"
                                                 name="insurance_details_nominee_dob"
-                                                value={cefData.insurance_details_nominee_dob}
+                                                value={cefData?.insurance_details_nominee_dob}
                                                 readOnly
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
@@ -713,7 +726,7 @@ const CandidateBGV = () => {
                                             <input
                                                 type="text"
                                                 name="insurance_details_contact_number"
-                                                value={cefData.insurance_details_contact_number}
+                                                value={cefData?.insurance_details_contact_number}
                                                 readOnly
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
@@ -727,7 +740,7 @@ const CandidateBGV = () => {
                                         <input
                                             type="text"
                                             name="food_coupon"
-                                            value={cefData.food_coupon}
+                                            value={cefData?.food_coupon}
                                             readOnly
                                             className="form-control border rounded p-2"
                                         />
@@ -738,6 +751,128 @@ const CandidateBGV = () => {
 
                             </>
                         )}
+                        {
+                            serviceData?.length > 0 ? (
+                                serviceData.map((service, serviceIndex) => (
+                                    <div key={serviceIndex} className="border border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300">
+                                        <h2 className="text-center py-4 text-2xl font-bold mb-6 text-green-600">{service.heading}</h2>
+                                        <div className="space-y-6">
+                                            {service.rows.map((row, rowIndex) => (
+                                                <div key={rowIndex}>
+                                                    {row.row_heading && (
+                                                        <h3 className="text-lg font-semibold mb-4">{row.row_heading}</h3>
+                                                    )}
+
+                                                    {row.inputs && row.inputs.length > 0 ? (
+                                                        <div className="space-y-4">
+                                                            <div className={`grid grid-cols-${row.inputs.length === 1 ? '1' : row.inputs.length === 2 ? '2' : '3'} gap-3`}>
+                                                                {row.inputs.map((input, inputIndex) => {
+                                                                    // Check if the input name exists in serviceValueData and prefill accordingly
+                                                                    const prefilledValue = serviceValueData?.find(item => item[input.name]);
+
+                                                                    return (
+                                                                        <div
+                                                                            key={inputIndex}
+                                                                            className={`flex flex-col space-y-2 ${row.inputs.length === 1 ? 'col-span-1' : row.inputs.length === 2 ? 'col-span-1' : ''}`}
+                                                                        >
+                                                                            <label className="block text-sm font-medium mb-2 text-gray-700 capitalize">
+                                                                                {input.label.replace(/[\/\\]/g, '')}
+                                                                            </label>
+
+                                                                            {input.type === 'input' && (
+                                                                                <input
+                                                                                    readOnly
+                                                                                    type="text"
+                                                                                    name={input.name}
+                                                                                    value={prefilledValue[input.name]}
+                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            )}
+                                                                            {input.type === 'textarea' && (
+                                                                                <textarea
+                                                                                    readOnly
+                                                                                    name={input.name}
+                                                                                    rows={1}
+                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            )}
+                                                                            {input.type === 'datepicker' && (
+                                                                                <input
+                                                                                    readOnly
+                                                                                    type="date"
+                                                                                    name={input.name}
+                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            )}
+                                                                            {input.type === 'number' && (
+                                                                                <input
+                                                                                    readOnly
+                                                                                    type="number"
+                                                                                    name={input.name}
+                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            )}
+                                                                            {input.type === 'email' && (
+                                                                                <input
+                                                                                    readOnly
+                                                                                    type="email"
+                                                                                    name={input.name}
+                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
+                                                                            )}
+                                                                            {input.type === 'select' && (
+                                                                                <input
+                                                                                readOnly
+                                                                                type="text"
+                                                                                name={input.name}
+                                                                                defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            />
+                                                                            )}
+                                                                            {input.type === 'file' && (
+                                                                                <>
+                                                                                    <FileViewer fileUrl={input.name} className="w-full max-w-xs" />
+
+                                                                                </>
+                                                                            )}
+
+                                                                            {/* Handling Checkbox Inputs */}
+                                                                            {input.type === 'checkbox' && (
+                                                                                <div className="flex items-center space-x-3">
+                                                                                    <input
+                                                                                      disabled  
+                                                                                        type="checkbox"
+                                                                                        name={input.name}
+                                                                                        defaultChecked={prefilledValue ? prefilledValue[input.name] === 'on' : false}
+                                                                                        className="h-5 w-5 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                                                                    />
+                                                                                    <span className="text-sm text-gray-700">{input.label}</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <p>No inputs available for this row.</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-xl text-gray-500">No services available.</p>
+                            )
+                        }
+
+
                         <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>
                         <div className='mb-6  p-4 rounded-md border'>
                             <div className="mb-6">
@@ -751,14 +886,14 @@ const CandidateBGV = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
                                 <div className="form-group">
                                     <label>Attach Signature: <span className="text-red-500">*</span></label>
-                                    <FileViewer fileUrl={cefData.signature} className="w-full max-w-20 " />
+                                    <FileViewer fileUrl={cefData?.signature} className="w-full max-w-20 " />
                                 </div>
 
                                 <div className="form-group">
                                     <label>Name:</label>
                                     <input
 
-                                        value={cefData.name_declaration}
+                                        value={cefData?.name_declaration}
                                         readOnly
                                         type="text"
                                         className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
@@ -771,7 +906,7 @@ const CandidateBGV = () => {
                                     <label>Date:</label>
                                     <input
 
-                                        value={cefData.declaration_date}
+                                        value={cefData?.declaration_date}
                                         readOnly
                                         type="date"
                                         className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
@@ -782,7 +917,7 @@ const CandidateBGV = () => {
                             </div>
                         </div>
 
-                        <h5 className="text-center text-lg my-6 font-bold">Documents  (Mandatory)</h5>
+                        <h5 className="text-center text-lg my-6 font-bold">Documents(Mandatory)</h5>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4  md:p-4 p-1 rounded-md border">
                             <div className="p-4">
@@ -809,91 +944,6 @@ const CandidateBGV = () => {
                                 <p>Aadhaar Card / Bank Passbook / Passport Copy / Driving License / Voter ID.</p>
                             </div>
                         </div>
-                        {serviceData.length > 0 ? (
-                            serviceData.map((service, serviceIndex) => (
-                                <div key={serviceIndex} className="border md:p-8 p-2 rounded-md mt-5 ">
-                                    <h2 className="text-center py-4 text-xl font-bold mb-3">{service.heading}</h2>
-                                    <div className="grid gap-4 grid-cols-2">
-                                        {service.inputs.map((input, inputIndex) => (
-                                            <div key={inputIndex} className="mb-2">
-                                                <label className="block mb-1">
-                                                    {input.label}
-                                                </label>
-                                                {input.type === "input" && (
-                                                    <input
-                                                        type="text"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    />
-                                                )}
-                                                {input.type === "textarea" && (
-                                                    <textarea
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        cols={1}
-                                                        rows={1}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    />
-                                                )}
-                                                {input.type === "datepicker" && (
-                                                    <input
-                                                        type="date"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    />
-                                                )}
-                                                {input.type === "number" && (
-                                                    <input
-                                                        type="number"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    />
-                                                )}
-                                                {input.type === "email" && (
-                                                    <input
-                                                        type="email"
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    />
-                                                )}
-                                                {input.type === "select" && (
-                                                    <select
-                                                        name={input.name}
-                                                        required={input.required}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-
-                                                    >
-                                                        {input.options.map((option, optionIndex) => (
-                                                            <option key={optionIndex} value={option}>
-                                                                {option}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                )}
-                                                {input.type === "file" && (
-                                                    <input
-                                                        type="file"
-                                                        name={input.name}
-                                                        className="mt-1 block p-2 border w-full border-slate-300 rounded-md focus:outline-none"
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No services available.</p>
-                        )}
 
                         <p className='text-center text-sm mt-4'>
                             NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .

@@ -34,7 +34,7 @@ const tabComponents = {
 
 const tabNames = {
   dashboard: (<><HomeIcon className="h-6 w-6 mr-3 text-gray-600" />DashBoard</>),
-  employee_management: (<><UserIcon className="h-6 w-6 mr-3 text-gray-600" />Employee Management</>),
+  employee_management: (<><UserIcon className="h-6 w-6 mr-3 text-gray-600" />Client Master Data</>),
   // add_user: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Add User</>),
   report_case: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Report & Case Status</>),
   dropbox: (<><FaDropbox className="h-6 w-6 mr-3 text-gray-600" />Client DropBox</>),
@@ -59,24 +59,11 @@ const Sidebar = () => {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row">
-        <div className="w-full md:w-1/5 flex flex-col bg-white">
+      <CustomerHeader />
+      <div className="flex flex-col md:flex-row h-full">
+        <div className="w-full md:w-1/5 flex flex-col bg-white border-e">
           <div className="px-3">
             <div className="flex flex-col px-3 py-8">
-              <h2 className="w-full text-green-600 text-2xl text-left font-bold pb-6 font-poppins">
-                Customer DashBoard
-              </h2>
-              <div className=' sm:block'>
-                <div className='flex items-center justify-between border-b p-3'>
-                  <div>Menu</div>
-                  <div className=' sm:block' onClick={handleToggle} aria-label="Toggle Sidebar">
-                    <span className='border-b-8 border-black w-8 block text-black mb-1'></span>
-                    <span className='border-b-8 border-black w-8 block text-black mb-1'></span>
-                    <span className='border-b-8 border-black w-8 block text-black mb-1'></span>
-                  </div>
-                </div>
-              </div>
-
               <ul>
                 {Object.keys(tabNames).map((tab) => (
                   <li
@@ -93,8 +80,8 @@ const Sidebar = () => {
             </div>
           </div>
         </div>
-        <div className="w-full md:w-4/5 flex flex-col">
-          <CustomerHeader />
+        <div className="w-full md:w-4/5 h-full flex flex-col bg-[#1a1a1a05]">
+
           {tabComponents[activeTab]}
         </div>
       </div>

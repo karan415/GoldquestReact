@@ -9,6 +9,7 @@ const ScopeOfServices = () => {
     const branch = storedBranchData;
     const customer_id = storedBranchData?.customer_id;
     const [services, setServices] = useState([]);
+    const [customer, setCustomer] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const color = "#36A2EB"; // Define loader color
@@ -46,6 +47,9 @@ const ScopeOfServices = () => {
             }
 
             if (data.customers) {
+                const customers = data.customers;
+                setCustomer(customers)
+
                 const servicesData = data.customers.services;
 
                 try {
@@ -73,9 +77,51 @@ const ScopeOfServices = () => {
 
     return (
         <>
+
+            <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Client Master Data</h2>
+            <table className="min-w-full border bg-white shadow-md rounded-md p-3 ">
+
+                <tr>
+                    <th className="py-2 px-4 border-b border-r-2 whitespace-nowrap text-left">Company Name</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.name || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Email</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.email || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Mobile</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.mobile || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Company Address</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.address || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Role</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.role || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">GST</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.gst_number || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Contact Person</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.contact_person || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">Status</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.status || 'NA'}</td>
+                </tr>
+                <tr>
+                    <th className="py-2 px-4 border-b text-left border-r-2 whitespace-nowrap">TAT</th>
+                    <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{customer.tat || 'NA'}</td>
+                </tr>
+
+            </table>
             <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Scope Of Services</h2>
 
-            <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3">
+            <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3 h-full">
                 {loading && (
                     <div className="flex justify-center items-center py-5">
                         <PulseLoader
@@ -102,7 +148,7 @@ const ScopeOfServices = () => {
                         {services.length > 0 ? (
                             <tbody>
                                 {services.map((item, index) => (
-                                    <tr key={index}>
+                                    <tr>
                                         <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{index + 1}</td>
                                         <td className="py-2 px-4 border-b border-r-2 whitespace-nowrap">{item.serviceTitle}</td>
                                         <td className="py-2 px-4 border-b border-r-2 text-center whitespace-nowrap">{item.price} RS</td>

@@ -6,6 +6,7 @@ import { useApi } from '../ApiContext';
 import axios from 'axios';
 
 const CustomerLoginForm = () => {
+    const [loading, setLoading] = useState(false);
 
     const API_URL = useApi();
     const [showPassword, setShowPassword] = useState(false);
@@ -69,31 +70,35 @@ const CustomerLoginForm = () => {
 
     const handleSubmitForm = async (e) => {
         e.preventDefault();
+        
         const validateError = validations();
         const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
         const storedToken = localStorage.getItem('_token');
-        const adminNewToken = localStorage.getItem('adminNewToken'); // Check for adminNewToken
+        const adminNewToken = localStorage.getItem('adminNewToken');
         
         if (Object.keys(validateError).length === 0) {
+            // Set loading to true when the request is about to be made
+            setLoading(true);
+    
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-        
+    
             const payload = {
                 "username": input.email,
                 "password": input.password,
             };
-        
+    
             if (admin_id) {
                 payload.admin_id = admin_id;
             }
-        
+    
             if (adminNewToken) {
                 payload.admin_token = adminNewToken;
             } else if (storedToken) {
                 payload.admin_token = storedToken;
             }
             const raw = JSON.stringify(payload);
-        
+    
             try {
                 const response = await fetch(`${API_URL}/branch/login`, {
                     method: "POST",
@@ -101,7 +106,10 @@ const CustomerLoginForm = () => {
                     body: raw,
                 });
                 const result = await response.json();
-
+    
+                // Set loading to false when the response is received
+                setLoading(false);
+    
                 if (!result.status) {
                     Swal.fire({
                         title: 'Error!',
@@ -109,29 +117,32 @@ const CustomerLoginForm = () => {
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
-
                 } else {
                     const branchData = result.branchData;
                     const branch_token = result.token;
-
+    
                     localStorage.setItem('branch', JSON.stringify(branchData));
                     localStorage.setItem('branch_token', branch_token);
-
+    
                     Swal.fire({
                         title: "Success",
-                        text: 'OTP SEND SUCCESFULY',
+                        text: 'OTP SEND SUCCESSFULLY',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
+    
                     if (result.message === "OTP sent successfully.") {
                         setShowOtpModal(true); // Show OTP modal
-                      } else {
+                    } else {
                         handleLoginSuccess(result);
-                      }
-
+                    }
+    
                     setError({});
                 }
             } catch (error) {
+                // Set loading to false in case of an error
+                setLoading(false);
+    
                 Swal.fire({
                     title: 'Error!',
                     text: `Error: ${error.message}`,
@@ -144,6 +155,7 @@ const CustomerLoginForm = () => {
             setError(validateError);
         }
     };
+    
 
     const handleLoginSuccess = (result) => {
        const branchData = result.branchData;
@@ -241,7 +253,7 @@ const CustomerLoginForm = () => {
                     </a>
                 </div>
                 <div className="flex items-center justify-between">
-                    <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
+                    <button disabled={loading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
                         Sign In
                     </button>
                 </div>
@@ -288,25 +300,7 @@ const CustomerLoginForm = () => {
            </div>
            
             )}
-            <div className="text-center my-4">
-                <p className="text-sm">Don't have an account? <a href="#" className="text-red-500 hover:text-blue-800">Sign up</a></p>
-            </div>
-            <div className="flex items-center justify-between my-4">
-                <div className="w-1/4 border-t border-gray-300"></div>
-                <div className="w-1/2 text-center text-gray-500">or login with</div>
-                <div className="w-1/4 border-t border-gray-300"></div>
-            </div>
-            <div className="flex justify-center gap-4">
-                <button className="bg-white border border-blue-500 rounded-sm p-3 w-12 text-center">
-                    <FaGoogle className="h-6 w-6 text-blue-700 m-auto" />
-                </button>
-                <button className="bg-white border border-blue-500 rounded-sm p-3 w-12 text-center">
-                    <FaFacebook className="h-6 w-6 text-gray-700 m-auto" />
-                </button>
-                <button className="bg-white border border-blue-500 rounded-sm p-3 w-12 text-center">
-                    <FaApple className="h-6 w-6 text-black-700 m-auto" />
-                </button>
-            </div>
+           
         </div>
 
     );
