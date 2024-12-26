@@ -83,9 +83,7 @@ export const ClientEditProvider = ({ children }) => {
             "custom_template",
             "state",
             "state_code",
-            "is_custom_bgv",
             "client_standard",
-            "agreement",
             "industry_classification",
         ];
 

@@ -8,7 +8,6 @@ const InactiveClients = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState([]);
   const [currentItems, setCurrentItems] = useState([]);
-  const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
@@ -248,14 +247,12 @@ const InactiveClients = () => {
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
                     {services.length > 0 ? (
                       <>
-                        {/* Display first service or more based on condition */}
                         {services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
                           <div key={service.serviceId} className="py-2 pb-1 text-start flex">
                             <div className="text-start pb-0">{service.serviceTitle}</div>
                           </div>
                         ))}
 
-                        {/* Conditionally render the "View More" button */}
                         {hasMultipleServices && (
                           <button
                             className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
@@ -265,7 +262,6 @@ const InactiveClients = () => {
                           </button>
                         )}
 
-                        {/* Popup rendering */}
 
                       </>
                     ) : (

@@ -11,10 +11,11 @@ import Modal from 'react-modal';
 
 Modal.setAppElement('#root');
 const ClientManagementList = () => {
+  const [showPopup, setShowPopup] = useState(false);
 
   const { handleTabChange } = useSidebar();
   const [searchTerm, setSearchTerm] = useState('');
-  const { loading, listData, fetchData, isOpen, setIsOpen } = useData();
+  const { loading, listData, fetchData, isOpen, setIsOpen, services } = useData();
 
   const API_URL = useApi();
   const { setClientData } = useEditClient();
@@ -28,6 +29,9 @@ const ClientManagementList = () => {
     setEditData({ id: branch.id, name: branch.name, email: branch.email });
     setIsPopupOpen(true); // Only open the popup
   };
+  const hasMultipleServices = services.length > 1;
+  console.log('services', services)
+
 
   const handleEditBranch = async (e) => {
     e.preventDefault();
@@ -142,7 +146,6 @@ const ClientManagementList = () => {
 
 
 
-  const [showAllServicesState, setShowAllServicesState] = useState({});
 
   const handleSelectChange = (e) => {
     const checkedStatus = e.target.value;
@@ -235,12 +238,7 @@ const ClientManagementList = () => {
     fetchData();
   }, [fetchData]);
 
-  const toggleShowAllServices = (id) => {
-    setShowAllServicesState((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id]
-    }));
-  };
+
 
   const handleDelete = (id, type) => {
     Swal.fire({
@@ -541,9 +539,6 @@ const ClientManagementList = () => {
             </thead>
             <tbody id='clientListTableTBody'>
               {currentItems.map((item, index) => {
-                const services = JSON.parse(item.services || '[]');
-                const showAllServices = showAllServicesState[item.main_id] || false;
-                const displayedServices = showAllServices ? services : services.slice(0, 1);
 
                 return (
                   <>
@@ -561,33 +556,61 @@ const ClientManagementList = () => {
                       <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.contact_person_name || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.mobile || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r text-center cursor-pointer">{item.client_standard || 'NIL'}</td>
-                      <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap">
+                      <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
                         {services.length > 0 ? (
-                          <div>
-                            {displayedServices.map((service, idx) => (
-                              <div key={idx} className='flex gap-3'>
-                                <p className='whitespace-nowrap capitalize text-left'>Service: {service.serviceTitle || 'NIL'}</p>
-                                <p className='whitespace-nowrap capitalize text-left'>Price: {service.price || 'NIL'}</p>
-                                <p className='whitespace-nowrap capitalize text-left'>
-                                  Packages: {Object.values(service.packages).filter(Boolean).join(', ')}
-                                </p>
+                          <>
+                            {/* Find the services for this particular client */}
+                            {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
+                              <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                                <div className="text-start pb-0">{service.serviceTitle}</div>
                               </div>
                             ))}
-                            {services.length > 1 && !showAllServices && (
-                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline text-left">
-                                Show more
+
+                            {hasMultipleServices && (
+                              <button
+                                className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+                                onClick={() => setShowPopup(true)}
+                              >
+                                View More
                               </button>
                             )}
-                            {showAllServices && (
-                              <button onClick={() => toggleShowAllServices(item.main_id)} className="text-green-500 underline">
-                                Show less
-                              </button>
-                            )}
-                          </div>
+                          </>
                         ) : (
-                          <p className='whitespace-nowrap capitalize'>No services available.</p>
+                          "No services available"
                         )}
                       </td>
+
+                      {showPopup && (
+                        <div
+                          className="popup-overlay fixed inset-0 bg-black  flex items-center justify-center z-50"
+                          onClick={() => setShowPopup(false)}
+                        >
+                          <div
+                            className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
+                              onClick={() => setShowPopup(false)}
+                            >
+                              ✕
+                            </button>
+                            <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
+                            <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
+                              {/* Display all services for the current customer */}
+                              {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
+                                <div
+                                  key={service.serviceId}
+                                  className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
+                                >
+                                  <div>{service.serviceTitle}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <td className="py-3 px-4 border-b border-r whitespace-wrap capitalize">{item.address || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r text-left whitespace-nowrap fullwidth">
                         <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
@@ -606,56 +629,9 @@ const ClientManagementList = () => {
                             View Branches
                           </button>
                         )}
-
-
-                        <Modal
-                          isOpen={isPopupOpen}
-                          onRequestClose={closePopup}
-                          contentLabel="Edit Branch"
-                          className="modal"
-                          overlayClassName="overlay"
-                        >
-                          <h2 className="text-lg font-bold mb-4">Edit Branch</h2>
-                          <form>
-                            <div className="mb-4">
-                              <label className="block text-gray-700">Name:</label>
-                              <input
-                                type="text"
-                                value={editData.name}
-                                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                                className="border rounded-md w-full p-2"
-                              />
-                            </div>
-                            <div className="mb-4">
-                              <label className="block text-gray-700">Email:</label>
-                              <input
-                                type="email"
-                                value={editData.email}
-                                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                                className="border rounded-md w-full p-2"
-                              />
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <button
-                                type="button"
-                                className="bg-gray-300 rounded-md px-4 py-2"
-                                onClick={closePopup}
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                className="bg-green-600 text-white rounded-md px-4 py-2"
-                                onClick={handleEditBranch}
-                              >
-                                Save
-                              </button>
-                            </div>
-                          </form>
-                        </Modal>
-
                       </td>
                     </tr>
+
                     {openAccordionId === item.main_id && (
                       branchLoading ? (
                         <tr><td colSpan="11">

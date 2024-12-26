@@ -13,6 +13,7 @@ export const DataProvider = ({ children }) => {
     const [listData, setListData] = useState([]);
     const [totalResults, setTotalResults] = useState(0);
     const [branches, setBranches] = useState([]);
+    const [services, setServices] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
 
     const fetchData = useCallback(() => {
@@ -32,89 +33,57 @@ export const DataProvider = ({ children }) => {
                 'Content-Type': 'application/json'
             }
         })
-            .then((response) => {
-                // Check if response is not OK (i.e., status is not in the 2xx range)
-                if (!response.ok) {
-                    return response.json().then((result) => {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: result.message || `An error occurred: ${response.statusText}`,
-                            icon: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                        throw new Error(result.message || response.statusText);  // Throw error to skip next processing
-                    });
-                }
-                return response.json(); // Continue processing if response is OK
-            })
-            .then((result) => {
-                // Token handling (if any)
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-    
-                // Only update state if successful (result.success or any other condition you need)
-                setListData(result?.customers || []);
-                setTotalResults(result?.totalResults || 0);
-            })
-            .catch((error) => {
-                console.error('Fetch error:', error);
-                setError('Failed to load data');
-            })
-            .finally(() => setLoading(false));
-    }, []);
-    
-
-
-    const fetchInactiveList = useCallback(() => {
-        setLoading(true);
-        setError(null);
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-
-        const queryParams = new URLSearchParams({
-            admin_id: admin_id || '',
-            _token: storedToken || ''
-        }).toString();
-
-        fetch(`${API_URL}/customer/list?${queryParams}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-            .then((response) => {
-                const result = response.json();
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                if (!response.ok) {
+        .then((response) => {
+            if (!response.ok) {
+                return response.json().then((result) => {
                     Swal.fire({
                         title: 'Error!',
-                        text: `An error occurred: ${response.statusText}`,
+                        text: result.message || `An error occurred: ${response.statusText}`,
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
+                    throw new Error(result.message || response.statusText);
+                });
+            }
+            return response.json();
+        })
+        .then((result) => {
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken);
+            }
+    
+            // Extract customers
+            const customers = result?.customers || [];
+            setListData(customers);
+    
+            // Create a mapping of customer ID to their services
+            const customerServices = customers.map((customer) => {
+                let services = [];
+                try {
+                    services = JSON.parse(customer.services || '[]');
+                } catch (error) {
+                    console.error('Failed to parse services JSON for customer:', customer.id, error);
                 }
-                return result;
-            })
-            .then((data) => {
-                setListData(data.customers || []);
-                setTotalResults(data.totalResults || 0);
-            })
-            .catch((error) => {
-                console.error('Fetch error:', error);
-                setError('Failed to load data');
-            })
-            .finally(() => setLoading(false));
+                return { customerId: customer.main_id, services };
+            });
+    
+            setServices(customerServices); // Update services state
+            setTotalResults(result?.totalResults || 0);
+        })
+        .catch((error) => {
+            console.error('Fetch error:', error);
+            setError('Failed to load data');
+        })
+        .finally(() => setLoading(false));
     }, []);
+    
+    
+    
 
-  
 
     return (
-        <DataContext.Provider value={{ loading, error,setError, listData, setBranches,totalResults, setLoading, setError, isOpen, setIsOpen, fetchData, branches }}>
+        <DataContext.Provider value={{ loading, error,setError, listData,services, setBranches,totalResults, setLoading, setError, isOpen, setIsOpen, fetchData, branches }}>
             {children}
         </DataContext.Provider>
     );
