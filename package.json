@@ -1,7 +1,7 @@
 {
   "name": "myapp6",
   "version": "0.1.0",
-  "homepage": "https://goldquestglobal.com/beta",
+  "homepage": "/",
   "private": true,
   "dependencies": {
     "@canvasjs/react-charts": "^1.0.2",
