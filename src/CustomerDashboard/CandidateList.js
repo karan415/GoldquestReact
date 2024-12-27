@@ -8,7 +8,7 @@ import PulseLoader from 'react-spinners/PulseLoader';
 import { useNavigate } from 'react-router-dom';
 
 const CandidateList = () => {
-    const navigate=useNavigate();
+    const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
 
@@ -136,20 +136,20 @@ const CandidateList = () => {
                 const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
                 const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
                 const branch_token = localStorage.getItem("branch_token");
-    
+
                 if (!branchId || !branch_token) {
                     console.error("Branch ID or token is missing.");
                     navigate('/customer-login')
                     return;
                 }
-    
+
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 };
-    
+
                 fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
                     .then(async (response) => {
                         const result = await response.json();
@@ -157,17 +157,17 @@ const CandidateList = () => {
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
-    
+
                         if (!response.ok) {
                             const errorMessage = result.message || "An error occurred";
                             Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
-                            
+
                             if (errorMessage.toLowerCase().includes('invalid') && errorMessage.toLowerCase().includes('token')) {
                                 navigate(`/customer-login?email=${branchEmail}`);
                             }
                             throw new Error(errorMessage);
                         }
-    
+
                         return result;
                     })
                     .then(result => {
@@ -184,7 +184,7 @@ const CandidateList = () => {
             }
         });
     };
-    
+
 
     return (
         <>
@@ -322,10 +322,20 @@ const CandidateList = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                           
 
 
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize"> {new Date(report.created_at).toLocaleDateString()}</td>
+
+                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
+                                                {report.created_at ? (
+                                                    (() => {
+                                                        const date = new Date(report.created_at);
+                                                        const day = String(date.getDate()).padStart(2, '0');
+                                                        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                                                        const year = date.getFullYear();
+                                                        return `${day}-${month}-${year}`;
+                                                    })()
+                                                ) : 'NIL'}
+                                            </td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
                                                 <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
                                                 <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>

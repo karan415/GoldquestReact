@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const CandidateExcelTrackerStatus = () => {
     const [loadingRow, setLoadingRow] = useState(null);
+
     const { handleTabChange } = useSidebar();
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
@@ -211,10 +212,12 @@ const CandidateExcelTrackerStatus = () => {
 
 
 
-    const handleSendLink = (applicationID, branch_id, customer_id, rowId) => {
+    const handleSendLink = (applicationID, branch_id, customer_id,rowId) => {
+        // Retrieve admin ID and token from localStorage
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
-
+    
+        // Check if adminId or token is missing
         if (!adminId || !token) {
             Swal.fire({
                 icon: 'error',
@@ -223,36 +226,47 @@ const CandidateExcelTrackerStatus = () => {
             });
             return;
         }
-
         setLoadingRow(rowId); // Set the loading row ID
-
+        // Construct the URL dynamically with query parameters
         const url = `${API_URL}/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
-
+    
         const requestOptions = {
             method: "GET",
-            redirect: "follow",
+            redirect: "follow", // No body required for GET requests
         };
-
+    
         fetch(url, requestOptions)
-            .then((response) => response.json())
+            .then((response) => response.json()) // Assuming the response is JSON
             .then((result) => {
                 if (result.status) {
+                    // Show success alert with message
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
                         text: result.message,
                         footer: `DAV Mail Sent: ${result.details.davMailSent} | BGV Mail Sent: ${result.details.cefMailSent}`,
                     });
+    
+                    // Optionally log the detailed mail sent status
+                    console.log("Mail Sent Details:", result.details);
                 } else {
+                    // Show error alert with message
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: result.message,
                         footer: result.details ? `DAV Errors: ${result.details.davErrors} | CEF Errors: ${result.details.cefErrors}` : '',
                     });
+    
+                    // Optionally log error details if available
+                    if (result.details) {
+                        console.log("DAV Errors:", result.details.davErrors);
+                        console.log("BGV Errors:", result.details.cefErrors);
+                    }
                 }
             })
             .catch((error) => {
+                // Handle errors that occur during the fetch
                 console.error(error);
                 Swal.fire({
                     icon: 'error',
@@ -260,9 +274,9 @@ const CandidateExcelTrackerStatus = () => {
                     text: 'Something went wrong. Please try again later.',
                 });
             })
-            .finally(() => setLoadingRow(null)); // Reset loading state
+            .finally(() => setLoadingRow(null));
     };
-
+    
 
 
 
@@ -274,6 +288,8 @@ const CandidateExcelTrackerStatus = () => {
     return (
         <div className="bg-[#c1dff2]">
             <div className="space-y-4 py-[30px] px-[51px] bg-white">
+
+
                 <div className=" mx-4 bg-white">
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
@@ -289,6 +305,7 @@ const CandidateExcelTrackerStatus = () => {
                                         <option value="400">400 Rows</option>
                                         <option value="500">500 Rows</option>
                                     </select>
+                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                                     <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
 
                                 </div>
@@ -378,40 +395,25 @@ const CandidateExcelTrackerStatus = () => {
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.mobile_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.email || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                {data.created_at && !isNaN(new Date(data.created_at))
-                                                    ? `${String(new Date(data.created_at).getDate()).padStart(2, '0')}- 
-                                                        ${String(new Date(data.created_at).getMonth() + 1).padStart(2, '0')}- 
-                                                        ${new Date(data.created_at).getFullYear()}`
-                                                      : "NIL"}
+                                                {data.created_at
+                                                    ? new Intl.DateTimeFormat('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: '2-digit',
+                                                    }).format(new Date(data.created_at))
+                                                    : 'N/A'}
                                             </td>
-
                                             <td className="border px-4 py-2">
                                                 <button
-                                                    className={`uppercase border px-4 py-2 rounded ${data.service_data &&
-                                                        Object.values(data.service_data).some(
-                                                            (subData) => Array.isArray(subData) ? subData.length > 0 : subData && Object.keys(subData).length > 0
-                                                        )
+                                                    className={`uppercase border px-4 py-2 rounded ${data.service_data
                                                         ? 'bg-orange-500 text-white hover:border-orange-500 hover:bg-white hover:text-orange-500'
                                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                                         }`}
-                                                    onClick={() =>
-                                                        data.service_data &&
-                                                        Object.values(data.service_data).some(
-                                                            (subData) => Array.isArray(subData) ? subData.length > 0 : subData && Object.keys(subData).length > 0
-                                                        ) &&
-                                                        handleViewMore(data.id)
-                                                    }
-                                                    disabled={
-                                                        !data.service_data ||
-                                                        !Object.values(data.service_data).some(
-                                                            (subData) => Array.isArray(subData) ? subData.length > 0 : subData && Object.keys(subData).length > 0
-                                                        )
-                                                    }
+                                                    onClick={() => data.service_data && handleViewMore(data.id)}
+                                                    disabled={!data.service_data}
                                                 >
                                                     {expandedRow > 0 ? 'LESS' : 'VIEW'}
                                                 </button>
-
-
 
                                             </td>
 
@@ -425,20 +427,21 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">NIL</td>
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
 
                                             {currentItems.some(item => item.cef_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                    {data.cef_filled_date && !isNaN(new Date(data.cef_filled_date))
-                                                        ? `${String(new Date(data.cef_filled_date).getDate()).padStart(2, '0')}- 
-                                                      ${String(new Date(data.cef_filled_date).getMonth() + 1).padStart(2, '0')}- 
-                                                      ${new Date(data.cef_filled_date).getFullYear()}`
-                                                        : "NIL"}
+                                                    {data.cef_filled_date
+                                                        ? new Intl.DateTimeFormat('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: '2-digit',
+                                                        }).format(new Date(data.cef_filled_date))
+                                                        : 'N/A'}
                                                 </td>
-
                                             ) : (
-                                                <td className="border px-4 py-2">NIL</td>
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
 
                                             {data.dav_id ? (
@@ -451,19 +454,20 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">NIL</td>
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
                                             {currentItems.some(item => item.dav_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     {data.dav_filled_date
-                                                        ? `${String(new Date(data.dav_filled_date).getDate()).padStart(2, '0')}- 
-                                                     ${String(new Date(data.dav_filled_date).getMonth() + 1).padStart(2, '0')}- 
-                                                     ${new Date(data.dav_filled_date).getFullYear()}`
-                                                        : "NIL"}
+                                                        ? new Intl.DateTimeFormat('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: '2-digit',
+                                                        }).format(new Date(data.dav_filled_date))
+                                                        : 'N/A'}
                                                 </td>
-
                                             ) : (
-                                                <td className="border px-4 py-2">NIL</td>
+                                                <td className="border px-4 py-2">N/A</td>
                                             )}
                                             {data.cef_submitted === 0 || (data.dav_exist === 1 && data.dav_submitted === 0) ? (
                                                 <td className="border px-4 py-2">
@@ -489,62 +493,126 @@ const CandidateExcelTrackerStatus = () => {
                                             </tr>
                                         ) : (expandedRow === data.id && (
                                             <div className="p-4 bg-gray-100 gap-20 min-h-20">
-                                                {/* Check if any mainHeading has valid data */}
-                                                {Object.entries(data.service_data).every(([mainHeading, subData]) => {
-                                                    const hasInnerData = Object.values(subData || {}).some((items) => {
-                                                        // Check if items are arrays with data or strings with non-empty values
-                                                        if (typeof items === 'string') {
-                                                            items = items.split(',').map((item) => item.trim());
-                                                        }
-                                                        return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
-                                                    });
-                                                    return !hasInnerData; // Return true if no data for this mainHeading
-                                                }) ? (
-                                                    <div className="text-center text-gray-500">No data available</div>
-                                                ) : (
-                                                    Object.entries(data.service_data).map(([mainHeading, subData]) => {
+                                                {Object.entries(data.service_data).map(([mainHeading, subData]) => {
+
+                                                    if (mainHeading === 'cef') {
+                                                        console.log(`mainHeading - `, mainHeading);
+                                                        console.log(`subData - `, subData);
+                                                        const hasInnerData = Object.values(subData || {}).some(
+                                                            (items) => Array.isArray(items) && items.length > 0
+                                                        );
+
+                                                        console.log(`hasInnerData - `, hasInnerData);
+
+                                                        return (
+                                                            hasInnerData && (
+                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                    <div
+                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                        onClick={() => toggleSection(mainHeading)}
+                                                                    >
+                                                                        {mainHeading.toUpperCase()}
+                                                                    </div>
+                                                                    {openSection === mainHeading && (
+                                                                        <div className="p-4">
+                                                                            {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                items && items.length > 0 && (
+                                                                                    <div key={subHeading} className="mb-4">
+                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                        <table className="w-full border-collapse border border-gray-300">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th className="border border-gray-300 p-2">Label</th>
+                                                                                                    <th className="border border-gray-300 p-2">Action</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {items.map((item, index) =>
+                                                                                                    Object.entries(item).map(([label, urls]) =>
+                                                                                                        urls &&
+                                                                                                        urls.split(",").map((url, urlIndex) => (
+                                                                                                            <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
+                                                                                                                {/* Label is displayed once for each entry */}
+                                                                                                                {urlIndex === 0 && (
+                                                                                                                    <td
+                                                                                                                        className="border border-gray-300 p-2"
+                                                                                                                        rowSpan={urls.split(",").length}
+                                                                                                                    >
+                                                                                                                        {label}
+                                                                                                                    </td>
+                                                                                                                )}
+                                                                                                                <td className="border border-gray-300 p-2">
+                                                                                                                    <a
+                                                                                                                        href={url.trim()}
+                                                                                                                        target="_blank"
+                                                                                                                        rel="noopener noreferrer"
+                                                                                                                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                                                                                                    >
+                                                                                                                        Docs {urlIndex + 1}
+                                                                                                                    </a>
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        ))
+                                                                                                    )
+                                                                                                )}
+
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                )
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        );
+                                                    } else if (mainHeading === 'dav') {
+                                                        console.log(`mainHeading - `, mainHeading);
+                                                        console.log(`subData - `, subData);
+
+                                                        // Check if subData contains valid data
                                                         const hasInnerData = Object.values(subData || {}).some((items) => {
+                                                            // If items is a string, split it into an array
                                                             if (typeof items === 'string') {
-                                                                items = items.split(',').map((item) => item.trim());
+                                                                items = items.split(',').map(item => item.trim());
                                                             }
+                                                            // Check if it's an array and has at least one non-empty item
                                                             return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
                                                         });
 
-                                                        if (!hasInnerData) return null; // Skip rendering if no data
+                                                        console.log(`hasInnerData - `, hasInnerData);
 
                                                         return (
-                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                <div
-                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                    onClick={() => toggleSection(mainHeading)}
-                                                                >
-                                                                    {mainHeading.toUpperCase()}
-                                                                </div>
-                                                                {openSection === mainHeading && (
-                                                                    <div className="p-4">
-                                                                        {Object.entries(subData).map(([subHeading, items]) =>
-                                                                            items && (typeof items === 'string' ? items.split(',') : items).length > 0 ? (
-                                                                                <div key={subHeading} className="mb-4">
-                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                    <table className="w-full border-collapse border border-gray-300">
-                                                                                        <thead>
-                                                                                            <tr>
-                                                                                                <th className="border border-gray-300 p-2">Label</th>
-                                                                                                <th className="border border-gray-300 p-2">Action</th>
-                                                                                            </tr>
-                                                                                        </thead>
-                                                                                        <tbody>
-                                                                                            {(typeof items === 'string' ? items.split(',') : items).map(
-                                                                                                (url, urlIndex) => (
+                                                            hasInnerData && (
+                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                    <div
+                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                        onClick={() => toggleSection(mainHeading)}
+                                                                    >
+                                                                        {mainHeading.toUpperCase()}
+                                                                    </div>
+                                                                    {openSection === mainHeading && (
+                                                                        <div className="p-4">
+                                                                            {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                // Ensure items is an array and has data
+                                                                                items && (typeof items === 'string' ? items.split(',') : items).length > 0 && (
+                                                                                    <div key={subHeading} className="mb-4">
+                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                        <table className="w-full border-collapse border border-gray-300">
+                                                                                            <thead>
+                                                                                                <tr>
+                                                                                                    <th className="border border-gray-300 p-2">Label</th>
+                                                                                                    <th className="border border-gray-300 p-2">Action</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {(typeof items === 'string' ? items.split(',') : items).map((url, urlIndex) => (
                                                                                                     <tr key={`${subHeading}-${urlIndex}`}>
+                                                                                                        {/* Display label once for each entry */}
                                                                                                         {urlIndex === 0 && (
                                                                                                             <td
                                                                                                                 className="border border-gray-300 p-2"
-                                                                                                                rowSpan={
-                                                                                                                    typeof items === 'string'
-                                                                                                                        ? items.split(',').length
-                                                                                                                        : items.length
-                                                                                                                }
+                                                                                                                rowSpan={items.split(',').length}
                                                                                                             >
                                                                                                                 {subHeading}
                                                                                                             </td>
@@ -560,22 +628,26 @@ const CandidateExcelTrackerStatus = () => {
                                                                                                             </a>
                                                                                                         </td>
                                                                                                     </tr>
-                                                                                                )
-                                                                                            )}
-                                                                                        </tbody>
-                                                                                    </table>
-                                                                                </div>
-                                                                            ) : null
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                                                                ))}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                )
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
                                                         );
-                                                    })
-                                                )}
+                                                    }
+
+
+                                                })}
                                             </div>
-                                        ))
-                                        }
+
+
+                                        )
+                                        )}
                                     </React.Fragment>
                                 ))}
                             </tbody>

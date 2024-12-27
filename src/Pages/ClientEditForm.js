@@ -390,7 +390,7 @@ export const ClientEditForm = () => {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
                                                     View Document
                                                 </button>
                                             </a>
@@ -467,7 +467,7 @@ export const ClientEditForm = () => {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        <button className="px-4 py-2 bg-green-500 text-white rounded">
+                                                        <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
                                                             View Document
                                                         </button>
                                                     </a>

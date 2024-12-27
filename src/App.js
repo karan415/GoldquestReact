@@ -58,7 +58,7 @@ const App = () => {
                             <CustomFunctionsProvider>
                               <HolidayManagementProvider>
                                 <DashboardProvider>
-                                  <Router basename='/'>
+                                  <Router basename='/beta'>
                                     <Routes>
                                       <Route path='/' element={<Admin><Render /></Admin>} />
                                       <Route path='/customer-login' element={<CustomerLogin />} />

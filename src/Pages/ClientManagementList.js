@@ -560,61 +560,63 @@ const ClientManagementList = () => {
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.contact_person_name || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.mobile || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.client_standard || 'NIL'}</td>
-                      <td className=" p-3 border-b border-r whitespace-nowrap text-sm text-center">
-                        <div className='flex gap-3'>{services.length > 0 ? (
-                          <>
-                            {/* Find the services for this particular client */}
-                            {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, hasMultipleServices ? 1 : undefined).map((service) => (
-                              <div key={service.serviceId} className="py-2 pb-1 text-start flex">
-                                <div className="text-start pb-0">{service.serviceTitle}</div>
-                              </div>
-                            ))}
-
-                            {hasMultipleServices && (
-                              <button
-                                className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                                onClick={() => setShowPopup(item.main_id)}
-                              >
-                                View More
-                              </button>
-
-                            )}
-                          </>
-                        ) : (
-                          "No services available"
-                        )}</div>
-                      </td>
-
-                      {showPopup === item.main_id && (
-                        <div
-                          className="popup-overlay fixed inset-0 bg-black flex items-center justify-center z-50"
-                          onClick={() => setShowPopup(null)} // Close the popup when clicking outside
-                        >
-                          <div
-                            className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
-                              onClick={() => setShowPopup(null)} // Close the popup when clicking close button
-                            >
-                              ✕
-                            </button>
-                            <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
-                            <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
-                              {/* Display all services for the current client */}
-                              {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
-                                <div
-                                  key={service.serviceId}
-                                  className="p-3 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
-                                >
-                                  <div>{service.serviceTitle}</div>
-                                </div>
-                              ))}
-                            </div>
+                      <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
+                    {services.length > 0 ? (
+                      <>
+                        {/* Find the services for this particular client */}
+                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, 1).map((service) => (
+                          <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                            <div className="text-start pb-0">{service.serviceTitle}</div>
                           </div>
+                        ))}
+
+                        {/* Check if there are multiple services */}
+                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.length > 1 && (
+                          <button
+                            className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                            onClick={() => setShowPopup(item.main_id)} // Open the popup
+                          >
+                            View More
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      "No services available"
+                    )}
+                  </td>
+
+                  {/* Popup */}
+                  {showPopup === item.main_id && (
+                    <div
+                      className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                      onClick={() => setShowPopup(null)} // Close the popup when clicking outside
+                    >
+                      <div
+                        className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
+                        onClick={(e) => e.stopPropagation()} // Prevent popup close when clicking inside
+                      >
+                        <button
+                          className="close-btn text-gray-500 hover:text-gray-700 absolute top-3 right-3"
+                          onClick={() => setShowPopup(null)} // Close the popup when clicking close button
+                        >
+                          ✕
+                        </button>
+                        <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
+                        <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
+                          {/* Display all services for the current client */}
+                          {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
+                            <div
+                              key={service.serviceId}
+                              className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
+                            >
+                              <div>{service.serviceTitle}</div>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    </div>
+                  )}
+
 
 
                       <td className=" p-3 border-b border-r whitespace-wrap capitalize  text-sm">{item.address || 'NIL'}</td>
