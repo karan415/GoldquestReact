@@ -53,6 +53,17 @@ const ClientMasterTrackerList = () => {
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                  title: "Session Expired",
+                                  text: "Your session has expired. Please log in again.",
+                                  icon: "warning",
+                                  confirmButtonText: "Ok",
+                                }).then(() => {
+                                  // Redirect to admin login page
+                                  window.location.href = "/admin-login"; // Replace with your login route
+                                });
+                              }
                     if (!response.ok) {
                         // Show SweetAlert if response is not OK
                         Swal.fire({
@@ -98,6 +109,17 @@ const ClientMasterTrackerList = () => {
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                  title: "Session Expired",
+                                  text: "Your session has expired. Please log in again.",
+                                  icon: "warning",
+                                  confirmButtonText: "Ok",
+                                }).then(() => {
+                                  // Redirect to admin login page
+                                  window.location.href = "/admin-login"; // Replace with your login route
+                                });
+                              }
                     if (!response.ok) {
                         // Show SweetAlert if response is not OK
                         Swal.fire({

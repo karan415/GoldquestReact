@@ -105,17 +105,23 @@ const CandidateBGV = () => {
     const decodedValues = getValuesFromUrl(currentURL);
 
     const fetchData = useCallback(() => {
-        setLoading(true);  // Set loading to true before making the fetch request.
-        
+        setLoading(true); // Start loading
+
         const MyToken = localStorage.getItem('_token');
-        const adminData = JSON.parse(localStorage.getItem('admin'));
+        const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
         const admin_id = adminData?.id;
-    
+
+        if (!MyToken || !admin_id || !applicationId || !branchId) {
+            setError('Missing required parameters or authentication token.');
+            setLoading(false);
+            return;
+        }
+
         const requestOptions = {
             method: "GET",
             redirect: "follow",
         };
-    
+
         fetch(
             `https://octopus-app-www87.ondigitalocean.app/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
@@ -127,23 +133,28 @@ const CandidateBGV = () => {
                 return res.json();
             })
             .then(data => {
-                setCompanyName(data.application.customer_name);
-                setCefData(data.CEFData);
-                const serviceDataa = data.serviceData;
-                const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData);
-                const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data);
+                setCompanyName(data.application?.customer_name || 'N/A');
+                setCefData(data.CEFData || {});
+
+                // Handle service data safely
+                const serviceDataa = data.serviceData || {};
+                const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData) || [];
+                const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data) || [];
+
                 setServiceData(jsonDataArray);
                 setServiceValueData(serviceValueDataArray);
+
                 setCustomBgv(data.customerInfo?.is_custom_bgv || '');
             })
             .catch(err => {
-                setError(err.message);  // Set the error message in case of failure
+                setError(err.message || 'An unexpected error occurred.');
             })
             .finally(() => {
-                setLoading(false);  // Set loading to false after the fetch completes (whether successful or not)
+                setLoading(false); // End loading
             });
-    }, []);
-    
+    }, [applicationId, branchId]);
+
+
 
     useEffect(() => {
 
@@ -182,7 +193,7 @@ const CandidateBGV = () => {
 
         return <p>Unsupported file type</p>;
     };
-    console.log('cefData', cefData)
+    console.log('serviceData', serviceData)
     return (
         <>
             {
@@ -754,8 +765,13 @@ const CandidateBGV = () => {
                         {
                             serviceData?.length > 0 ? (
                                 serviceData.map((service, serviceIndex) => (
-                                    <div key={serviceIndex} className="border border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300">
-                                        <h2 className="text-center py-4 text-2xl font-bold mb-6 text-green-600">{service.heading}</h2>
+                                    <div
+                                        key={serviceIndex}
+                                        className="border border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300"
+                                    >
+                                        <h2 className="text-center py-4 text-2xl font-bold mb-6 text-green-600">
+                                            {service.heading}
+                                        </h2>
                                         <div className="space-y-6">
                                             {service.rows.map((row, rowIndex) => (
                                                 <div key={rowIndex}>
@@ -765,15 +781,33 @@ const CandidateBGV = () => {
 
                                                     {row.inputs && row.inputs.length > 0 ? (
                                                         <div className="space-y-4">
-                                                            <div className={`grid grid-cols-${row.inputs.length === 1 ? '1' : row.inputs.length === 2 ? '2' : '3'} gap-3`}>
+                                                            <div
+                                                                className={`grid grid-cols-${row.inputs.length === 1
+                                                                        ? '1'
+                                                                        : row.inputs.length === 2
+                                                                            ? '2'
+                                                                            : '3'
+                                                                    } gap-3`}
+                                                            >
                                                                 {row.inputs.map((input, inputIndex) => {
-                                                                    // Check if the input name exists in serviceValueData and prefill accordingly
-                                                                    const prefilledValue = serviceValueData?.find(item => item[input.name]);
+                                                                    // Safely find the prefilled value from serviceValueData
+                                                                    const prefilledValue =
+                                                                        Array.isArray(serviceValueData) &&
+                                                                        serviceValueData.find(
+                                                                            (item) => item && item[input.name]
+                                                                        ) || {};
+
+                                                                    const inputValue = prefilledValue[input.name] || '';
 
                                                                     return (
                                                                         <div
                                                                             key={inputIndex}
-                                                                            className={`flex flex-col space-y-2 ${row.inputs.length === 1 ? 'col-span-1' : row.inputs.length === 2 ? 'col-span-1' : ''}`}
+                                                                            className={`flex flex-col space-y-2 ${row.inputs.length === 1
+                                                                                    ? 'col-span-1'
+                                                                                    : row.inputs.length === 2
+                                                                                        ? 'col-span-1'
+                                                                                        : ''
+                                                                                }`}
                                                                         >
                                                                             <label className="block text-sm font-medium mb-2 text-gray-700 capitalize">
                                                                                 {input.label.replace(/[\/\\]/g, '')}
@@ -784,8 +818,7 @@ const CandidateBGV = () => {
                                                                                     readOnly
                                                                                     type="text"
                                                                                     name={input.name}
-                                                                                    value={prefilledValue[input.name]}
-                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    value={inputValue}
                                                                                     className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                 />
                                                                             )}
@@ -794,7 +827,7 @@ const CandidateBGV = () => {
                                                                                     readOnly
                                                                                     name={input.name}
                                                                                     rows={1}
-                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    value={inputValue}
                                                                                     className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                 />
                                                                             )}
@@ -803,7 +836,7 @@ const CandidateBGV = () => {
                                                                                     readOnly
                                                                                     type="date"
                                                                                     name={input.name}
-                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    value={inputValue}
                                                                                     className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                 />
                                                                             )}
@@ -812,7 +845,7 @@ const CandidateBGV = () => {
                                                                                     readOnly
                                                                                     type="number"
                                                                                     name={input.name}
-                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    value={inputValue}
                                                                                     className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                 />
                                                                             )}
@@ -821,37 +854,40 @@ const CandidateBGV = () => {
                                                                                     readOnly
                                                                                     type="email"
                                                                                     name={input.name}
-                                                                                    defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
+                                                                                    value={inputValue}
                                                                                     className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                 />
                                                                             )}
                                                                             {input.type === 'select' && (
                                                                                 <input
-                                                                                readOnly
-                                                                                type="text"
-                                                                                name={input.name}
-                                                                                defaultValue={prefilledValue ? prefilledValue[input.name] : ''}
-                                                                                className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                            />
+                                                                                    readOnly
+                                                                                    type="text"
+                                                                                    name={input.name}
+                                                                                    value={inputValue}
+                                                                                    className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                />
                                                                             )}
-                                                                            {input.type === 'file' && (
-                                                                                <>
-                                                                                    <FileViewer fileUrl={input.name} className="w-full max-w-xs" />
-
-                                                                                </>
+                                                                            {input.type === 'file' && inputValue && (
+                                                                                <FileViewer
+                                                                                    fileUrl={inputValue}
+                                                                                    className="w-full max-w-xs"
+                                                                                />
                                                                             )}
 
-                                                                            {/* Handling Checkbox Inputs */}
                                                                             {input.type === 'checkbox' && (
                                                                                 <div className="flex items-center space-x-3">
                                                                                     <input
-                                                                                      disabled  
+                                                                                        disabled
                                                                                         type="checkbox"
                                                                                         name={input.name}
-                                                                                        defaultChecked={prefilledValue ? prefilledValue[input.name] === 'on' : false}
+                                                                                        defaultChecked={
+                                                                                            inputValue === 'on'
+                                                                                        }
                                                                                         className="h-5 w-5 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                                                                                     />
-                                                                                    <span className="text-sm text-gray-700">{input.label}</span>
+                                                                                    <span className="text-sm text-gray-700">
+                                                                                        {input.label}
+                                                                                    </span>
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -871,6 +907,7 @@ const CandidateBGV = () => {
                                 <p className="text-center text-xl text-gray-500">No services available.</p>
                             )
                         }
+
 
 
                         <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>

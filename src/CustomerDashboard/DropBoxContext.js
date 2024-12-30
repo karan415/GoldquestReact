@@ -5,6 +5,7 @@ import { useApi } from '../ApiContext';
 const DropBoxContext = createContext();
 
 export const DropBoxProvider = ({ children }) => {
+    
     const API_URL = useApi();
     const [services, setServices] = useState([]);
     const [uniquePackages, setUniquePackages] = useState([]);
@@ -17,6 +18,7 @@ export const DropBoxProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
     const [isEditCandidate, setIsEditCandidate] = useState(false);
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
     const [clientInput, setClientInput] = useState({
         name: '',
@@ -115,10 +117,33 @@ export const DropBoxProvider = ({ children }) => {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
+            if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                });
+            }
 
             if (!response.ok) {
                 Swal.fire('Error!', `An error occurred: ${data.message}`, 'error');
+                if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    });
+                }
                 return;
+
             }
 
             if (data.customers) {
@@ -176,8 +201,30 @@ export const DropBoxProvider = ({ children }) => {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                });
+            }
 
             if (!response.ok) {
+                if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    });
+                }
                 const errorMessage = result?.message || 'Something went wrong. Please try again later.';
                 Swal.fire({
                     title: 'Error!',
@@ -242,6 +289,28 @@ export const DropBoxProvider = ({ children }) => {
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
+            }
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+
+                    if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                        });
+                    }                         // Redirect to admin login page
+                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                });
             }
 
             if (!response.ok) {
@@ -308,7 +377,7 @@ export const DropBoxProvider = ({ children }) => {
             clientInput,
             servicesLoading,
             candidateListData,
-            isEditClient,setIsEditClient, input, setInput, isEditCandidate, setIsEditCandidate
+            isEditClient, setIsEditClient, input, setInput, isEditCandidate, setIsEditCandidate
         }}>
             {children}
         </DropBoxContext.Provider>

@@ -40,6 +40,7 @@ import DashboardProvider from './CustomerDashboard/DashboardContext';
 import LoginPage from './Dashboard/LoginPage';
 import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 import CandidiateDav from './Pages/CandidateDAV';
+import { LoginProvider } from './Pages/InternalLoginContext';
 
 const App = () => {
   return (
@@ -58,29 +59,31 @@ const App = () => {
                             <CustomFunctionsProvider>
                               <HolidayManagementProvider>
                                 <DashboardProvider>
-                                  <Router basename='/'>
-                                    <Routes>
-                                      <Route path='/' element={<Admin><Render /></Admin>} />
-                                      <Route path='/customer-login' element={<CustomerLogin />} />
-                                      <Route path='/admin-login' element={<Login />} />
-                                      <Route path='/forgotpassword' element={<ForgotPassword />} />
-                                      <Route path='/customer-forgotpassword' element={<CustomerForgotPassword />} />
-                                      <Route path='/reset-password' element={<SetNewPassword />} />
-                                      <Route path='/customer-reset-password' element={<CustomerResetPassword />} />
-                                      <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
-                                      <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
-                                      <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
-                                      <Route path='/ClientBulkUpload' element={<ClientBulkUpload />} />
-                                      <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
-                                      <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
-                                      <Route path='/candidate-bgv' element={<Admin><CandidateBGV /></Admin>} />
-                                      <Route path='/candidate_genrate_Report' element={<Admin><CandidateGenerateReport /></Admin>} />
-                                      <Route path='/candidate-dav' element={<Admin><CandidiateDav /></Admin>} />
-                                      <Route path='/background-form' element={<BackgroundForm />} />
-                                      <Route path='/digital-form' element={<DigitalAddressVerification />} />
-                                      <Route path='/loginpage' element={<LoginPage />} />
-                                    </Routes>
-                                  </Router>
+                                  <LoginProvider>
+                                    <Router basename='/'>
+                                      <Routes>
+                                        <Route path='/' element={<Admin><Render /></Admin>} />
+                                        <Route path='/customer-login' element={<CustomerLogin />} />
+                                        <Route path='/admin-login' element={<Login />} />
+                                        <Route path='/forgotpassword' element={<ForgotPassword />} />
+                                        <Route path='/customer-forgotpassword' element={<CustomerForgotPassword />} />
+                                        <Route path='/reset-password' element={<SetNewPassword />} />
+                                        <Route path='/customer-reset-password' element={<CustomerResetPassword />} />
+                                        <Route path='/customer-dashboard' element={<Customer><CustomerDashboard /></Customer>} />
+                                        <Route path='/update-password' element={<Admin><UpdatePassword /></Admin>} />
+                                        <Route path='/customer-update-password' element={<CustomerLogin><UpdatePassword /></CustomerLogin>} />
+                                        <Route path='/ClientBulkUpload' element={<ClientBulkUpload />} />
+                                        <Route path='/trackerstatus' element={<Admin><ExelTrackerData /></Admin>} />
+                                        <Route path='/candidate' element={<Admin><CandidateMain /></Admin>} />
+                                        <Route path='/candidate-bgv' element={<Admin><CandidateBGV /></Admin>} />
+                                        <Route path='/candidate_genrate_Report' element={<Admin><CandidateGenerateReport /></Admin>} />
+                                        <Route path='/candidate-dav' element={<Admin><CandidiateDav /></Admin>} />
+                                        <Route path='/background-form' element={<BackgroundForm />} />
+                                        <Route path='/digital-form' element={<DigitalAddressVerification />} />
+                                        <Route path='/loginpage' element={<LoginPage />} />
+                                      </Routes>
+                                    </Router>
+                                  </LoginProvider>
                                 </DashboardProvider>
                               </HolidayManagementProvider>
                             </CustomFunctionsProvider>

@@ -173,6 +173,18 @@ const GenerateReport = () => {
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+              if (result.message && result.message.startsWith("INVALID TOKEN")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                        return;
+                    }
 
             // Filter out null or invalid items
             const filteredResults = result.results?.filter((item) => item != null) || [];
@@ -247,11 +259,11 @@ const GenerateReport = () => {
                     updated_json: {
                         month_year: cmtData.month_year || applicationData.month_year || prevFormData.updated_json.month_year || '',
 
-                        organization_name: applicationData.name || prevFormData.updated_json.organization_name || '',
+                        organization_name: applicationData.customer_name || prevFormData.updated_json.organization_name || '',
                         verification_purpose: cmtData.verification_purpose || prevFormData.updated_json.verification_purpose || '',
                         employee_id: applicationData.employee_id || prevFormData.updated_json.employee_id || '',
-                        client_code: cmtData.client_code || prevFormData.updated_json.client_code || '',
-                        applicant_name: cmtData.applicant_name || prevFormData.updated_json.applicant_name || '',
+                        client_code: applicationData.application_id || prevFormData.updated_json.client_code || '',
+                        applicant_name: applicationData.name || prevFormData.updated_json.applicant_name || '',
                         contact_number: cmtData.contact_number || prevFormData.updated_json.contact_number || '',
                         contact_number2: cmtData.contact_number2 || prevFormData.updated_json.contact_number2 || '',
                         father_name: cmtData.father_name || prevFormData.updated_json.father_name || '',
@@ -611,7 +623,7 @@ const GenerateReport = () => {
                                             />
                                         ) : (
                                             <a
-                                                href={image.trim()} 
+                                                href={image.trim()}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 key={index} // Make sure to add a key for each element in the map
@@ -732,6 +744,13 @@ const GenerateReport = () => {
             });
 
             // Prepare request payload
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the application.',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
             const raw = JSON.stringify({
                 admin_id: adminData?.id || "",
                 _token: token || "",
@@ -884,6 +903,7 @@ const GenerateReport = () => {
                                             type="text"
                                             name="client_code"
                                             id="client_code"
+                                            disabled
                                             className="border w-full rounded-md p-2 mt-2 capitalize"
                                             value={formData.updated_json.client_code}
 
@@ -901,7 +921,7 @@ const GenerateReport = () => {
                                             id="applicant_name"
                                             className="border w-full rounded-md p-2 mt-2 capitalize"
                                             value={formData.updated_json.applicant_name}
-
+                                            disabled
                                             onChange={handleChange}
                                         />
                                     </div>

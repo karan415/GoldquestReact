@@ -162,8 +162,16 @@ const CandidateList = () => {
                             const errorMessage = result.message || "An error occurred";
                             Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
 
-                            if (errorMessage.toLowerCase().includes('invalid') && errorMessage.toLowerCase().includes('token')) {
-                                navigate(`/customer-login?email=${branchEmail}`);
+                            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                    title: "Session Expired",
+                                    text: "Your session has expired. Please log in again.",
+                                    icon: "warning",
+                                    confirmButtonText: "Ok",
+                                }).then(() => {
+                                    // Redirect to admin login page
+                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                                });
                             }
                             throw new Error(errorMessage);
                         }

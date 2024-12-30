@@ -9,6 +9,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ReportCaseTable = () => {
     const [options, setOptions] = useState([]);
     const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
@@ -67,6 +68,17 @@ const ReportCaseTable = () => {
                     localStorage.setItem("_token", newToken);
                 }
                 if (!response.ok) {
+                    if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                        });
+                    }
                     return response.text().then(text => {
                         const errorData = JSON.parse(text);
                         Swal.fire(
@@ -196,7 +208,17 @@ const ReportCaseTable = () => {
 
             if (response.ok) {
                 const result = await response.json();
-
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    });
+                }
                 // Update the token if a new one is provided
                 const newToken = result.token || result._token || "";
                 if (newToken) {

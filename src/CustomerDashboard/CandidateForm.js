@@ -6,7 +6,7 @@ import PulseLoader from 'react-spinners/PulseLoader';
 import { useNavigate } from 'react-router-dom';
 
 const CandidateForm = () => {
-    const { services, uniquePackages,input, setInput, fetchClient,isEditCandidate, setIsEditCandidate, candidateLoading } = useContext(DropBoxContext);
+    const { services, uniquePackages, input, setInput, fetchClient, isEditCandidate, setIsEditCandidate, candidateLoading } = useContext(DropBoxContext);
     const [formLoading, setFormLoading] = useState(false);
     const API_URL = useApi();
     const navigate = useNavigate();
@@ -153,6 +153,13 @@ const CandidateForm = () => {
                 body: Raw,
                 redirect: "follow"
             };
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the Application.',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             const url = isEditCandidate
                 ? `${API_URL}/branch/candidate-application/update`
@@ -166,8 +173,16 @@ const CandidateForm = () => {
                         return response.json().then(errorResult => {
                             const errorMessage = errorResult.message || 'An error occurred';
                             Swal.fire('Error!', errorMessage, 'error');
-                            if (errorMessage.message && errorMessage.message.toLowerCase().includes('invalid') && errorMessage.message.toLowerCase().includes('token')) {
-                                navigate(`/customer-login?email=${branchEmail}`)
+                            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                    title: "Session Expired",
+                                    text: "Your session has expired. Please log in again.",
+                                    icon: "warning",
+                                    confirmButtonText: "Ok",
+                                }).then(() => {
+                                    // Redirect to admin login page
+                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                                });
                             }
                             throw new Error(errorMessage);
                         });
@@ -201,18 +216,18 @@ const CandidateForm = () => {
                         confirmButtonText: "Ok"
                     });
 
-                    setIsEditCandidate(false); 
+                    setIsEditCandidate(false);
                 })
                 .catch(error => {
                     console.error("There was an error!", error);
                 })
                 .finally(() => {
-                    setFormLoading(false); 
+                    setFormLoading(false);
                 });
 
         } else {
             setError(errors);
-            setFormLoading(false); 
+            setFormLoading(false);
         }
     };
 

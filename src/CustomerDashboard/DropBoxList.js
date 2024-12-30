@@ -9,6 +9,7 @@ import PulseLoader from 'react-spinners/PulseLoader';
 const DropBoxList = () => {
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
@@ -145,6 +146,18 @@ const DropBoxList = () => {
                             localStorage.setItem("branch_token", newToken);
                         }
                         if (!response.ok) {
+
+                            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                    title: "Session Expired",
+                                    text: "Your session has expired. Please log in again.",
+                                    icon: "warning",
+                                    confirmButtonText: "Ok",
+                                }).then(() => {
+                                    // Redirect to admin login page
+                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                                });
+                            }
                             return response.text().then(text => {
                                 const errorData = JSON.parse(text);
                                 Swal.fire(
@@ -294,7 +307,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client || 'NIL'}</td>
-                                           
+
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.attach_documents ? (
                                                     // Check if the file is an image

@@ -55,6 +55,17 @@ const CandidateExcelTrackerStatus = () => {
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                    }
                     if (!response.ok) {
                         // Show SweetAlert if response is not OK
                         Swal.fire({
@@ -69,6 +80,17 @@ const CandidateExcelTrackerStatus = () => {
             }).then((result) => {
                 setLoading(false);
                 setData(result.data.applications || []);
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.location.href = "/admin-login"; // Replace with your login route
+                    });
+                }
 
             })
             .catch((error) => {
@@ -212,11 +234,11 @@ const CandidateExcelTrackerStatus = () => {
 
 
 
-    const handleSendLink = (applicationID, branch_id, customer_id,rowId) => {
+    const handleSendLink = (applicationID, branch_id, customer_id, rowId) => {
         // Retrieve admin ID and token from localStorage
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
-    
+
         // Check if adminId or token is missing
         if (!adminId || !token) {
             Swal.fire({
@@ -229,12 +251,12 @@ const CandidateExcelTrackerStatus = () => {
         setLoadingRow(rowId); // Set the loading row ID
         // Construct the URL dynamically with query parameters
         const url = `${API_URL}/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
-    
+
         const requestOptions = {
             method: "GET",
             redirect: "follow", // No body required for GET requests
         };
-    
+
         fetch(url, requestOptions)
             .then((response) => response.json()) // Assuming the response is JSON
             .then((result) => {
@@ -246,7 +268,7 @@ const CandidateExcelTrackerStatus = () => {
                         text: result.message,
                         footer: `DAV Mail Sent: ${result.details.davMailSent} | BGV Mail Sent: ${result.details.cefMailSent}`,
                     });
-    
+
                     // Optionally log the detailed mail sent status
                     console.log("Mail Sent Details:", result.details);
                 } else {
@@ -257,7 +279,18 @@ const CandidateExcelTrackerStatus = () => {
                         text: result.message,
                         footer: result.details ? `DAV Errors: ${result.details.davErrors} | CEF Errors: ${result.details.cefErrors}` : '',
                     });
-    
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                    }
+
                     // Optionally log error details if available
                     if (result.details) {
                         console.log("DAV Errors:", result.details.davErrors);
@@ -276,7 +309,7 @@ const CandidateExcelTrackerStatus = () => {
             })
             .finally(() => setLoadingRow(null));
     };
-    
+
 
 
 
@@ -401,9 +434,9 @@ const CandidateExcelTrackerStatus = () => {
                                                         month: 'short',
                                                         day: '2-digit',
                                                     }).format(new Date(data.created_at))
-                                                    : 'N/A'}
+                                                    : 'NIL'}
                                             </td>
-                                            <td className="border px-4 py-2">
+                                            <td class="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300">
                                                 <button
                                                     className={`uppercase border px-4 py-2 rounded ${data.service_data
                                                         ? 'bg-orange-500 text-white hover:border-orange-500 hover:bg-white hover:text-orange-500'
@@ -427,7 +460,7 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
 
                                             {currentItems.some(item => item.cef_filled_date) ? (
@@ -438,10 +471,10 @@ const CandidateExcelTrackerStatus = () => {
                                                             month: 'short',
                                                             day: '2-digit',
                                                         }).format(new Date(data.cef_filled_date))
-                                                        : 'N/A'}
+                                                        : 'NIL'}
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
 
                                             {data.dav_id ? (
@@ -454,7 +487,7 @@ const CandidateExcelTrackerStatus = () => {
                                                     </button>
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
                                             {currentItems.some(item => item.dav_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
@@ -464,10 +497,10 @@ const CandidateExcelTrackerStatus = () => {
                                                             month: 'short',
                                                             day: '2-digit',
                                                         }).format(new Date(data.dav_filled_date))
-                                                        : 'N/A'}
+                                                        : 'NIL'}
                                                 </td>
                                             ) : (
-                                                <td className="border px-4 py-2">N/A</td>
+                                                <td className="border px-4 py-2">NIL</td>
                                             )}
                                             {data.cef_submitted === 0 || (data.dav_exist === 1 && data.dav_submitted === 0) ? (
                                                 <td className="border px-4 py-2">
@@ -480,7 +513,7 @@ const CandidateExcelTrackerStatus = () => {
                                                         {loadingRow === data.id ? "Sending..." : "SEND LINK"}
                                                     </button>
                                                 </td>
-                                            ) : null}
+                                            ) : <td className="border px-4 py-2">NIL</td>}
 
                                         </tr>
                                         {servicesLoading[index] ? (
@@ -492,158 +525,164 @@ const CandidateExcelTrackerStatus = () => {
                                                 </td>
                                             </tr>
                                         ) : (expandedRow === data.id && (
-                                            <div className="p-4 bg-gray-100 gap-20 min-h-20">
-                                                {Object.entries(data.service_data).map(([mainHeading, subData]) => {
+                                            <tr>
+                                                <td colSpan={10}>
+                                                    <div className='flex justify-end'>
+                                                        <div className="p-4 bg-gray-100 gap-20 min-h-20">
+                                                            {Object.entries(data.service_data).map(([mainHeading, subData]) => {
 
-                                                    if (mainHeading === 'cef') {
-                                                        console.log(`mainHeading - `, mainHeading);
-                                                        console.log(`subData - `, subData);
-                                                        const hasInnerData = Object.values(subData || {}).some(
-                                                            (items) => Array.isArray(items) && items.length > 0
-                                                        );
+                                                                if (mainHeading === 'cef') {
+                                                                    console.log(`mainHeading - `, mainHeading);
+                                                                    console.log(`subData - `, subData);
+                                                                    const hasInnerData = Object.values(subData || {}).some(
+                                                                        (items) => Array.isArray(items) && items.length > 0
+                                                                    );
 
-                                                        console.log(`hasInnerData - `, hasInnerData);
+                                                                    console.log(`hasInnerData - `, hasInnerData);
 
-                                                        return (
-                                                            hasInnerData && (
-                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                    <div
-                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                        onClick={() => toggleSection(mainHeading)}
-                                                                    >
-                                                                        {mainHeading.toUpperCase()}
-                                                                    </div>
-                                                                    {openSection === mainHeading && (
-                                                                        <div className="p-4">
-                                                                            {Object.entries(subData).map(([subHeading, items]) => (
-                                                                                items && items.length > 0 && (
-                                                                                    <div key={subHeading} className="mb-4">
-                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                        <table className="w-full border-collapse border border-gray-300">
-                                                                                            <thead>
-                                                                                                <tr>
-                                                                                                    <th className="border border-gray-300 p-2">Label</th>
-                                                                                                    <th className="border border-gray-300 p-2">Action</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {items.map((item, index) =>
-                                                                                                    Object.entries(item).map(([label, urls]) =>
-                                                                                                        urls &&
-                                                                                                        urls.split(",").map((url, urlIndex) => (
-                                                                                                            <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
-                                                                                                                {/* Label is displayed once for each entry */}
-                                                                                                                {urlIndex === 0 && (
-                                                                                                                    <td
-                                                                                                                        className="border border-gray-300 p-2"
-                                                                                                                        rowSpan={urls.split(",").length}
-                                                                                                                    >
-                                                                                                                        {label}
-                                                                                                                    </td>
-                                                                                                                )}
-                                                                                                                <td className="border border-gray-300 p-2">
-                                                                                                                    <a
-                                                                                                                        href={url.trim()}
-                                                                                                                        target="_blank"
-                                                                                                                        rel="noopener noreferrer"
-                                                                                                                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                                                                                                                    >
-                                                                                                                        Docs {urlIndex + 1}
-                                                                                                                    </a>
-                                                                                                                </td>
+                                                                    return (
+                                                                        hasInnerData && (
+                                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                                <div
+                                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                                    onClick={() => toggleSection(mainHeading)}
+                                                                                >
+                                                                                    {mainHeading.toUpperCase()}
+                                                                                </div>
+                                                                                {openSection === mainHeading && (
+                                                                                    <div className="p-4">
+                                                                                        {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                            items && items.length > 0 && (
+                                                                                                <div key={subHeading} className="mb-4">
+                                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                                    <table className="w-full border-collapse border border-gray-300">
+                                                                                                        <thead>
+                                                                                                            <tr>
+                                                                                                                <th className="border border-gray-300 p-2">Label</th>
+                                                                                                                <th className="border border-gray-300 p-2">Action</th>
                                                                                                             </tr>
-                                                                                                        ))
-                                                                                                    )
-                                                                                                )}
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            {items.map((item, index) =>
+                                                                                                                Object.entries(item).map(([label, urls]) =>
+                                                                                                                    urls &&
+                                                                                                                    urls.split(",").map((url, urlIndex) => (
+                                                                                                                        <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
+                                                                                                                            {/* Label is displayed once for each entry */}
+                                                                                                                            {urlIndex === 0 && (
+                                                                                                                                <td
+                                                                                                                                    className="border border-gray-300 p-2"
+                                                                                                                                    rowSpan={urls.split(",").length}
+                                                                                                                                >
+                                                                                                                                    {label}
+                                                                                                                                </td>
+                                                                                                                            )}
+                                                                                                                            <td className="border border-gray-300 p-2">
+                                                                                                                                <a
+                                                                                                                                    href={url.trim()}
+                                                                                                                                    target="_blank"
+                                                                                                                                    rel="noopener noreferrer"
+                                                                                                                                    className="px-4 py-2 m-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                                                                                                                >
+                                                                                                                                    Docs {urlIndex + 1}
+                                                                                                                                </a>
+                                                                                                                            </td>
+                                                                                                                        </tr>
+                                                                                                                    ))
+                                                                                                                )
+                                                                                                            )}
 
-                                                                                            </tbody>
-                                                                                        </table>
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            )
+                                                                                        ))}
                                                                                     </div>
-                                                                                )
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                        );
-                                                    } else if (mainHeading === 'dav') {
-                                                        console.log(`mainHeading - `, mainHeading);
-                                                        console.log(`subData - `, subData);
+                                                                                )}
+                                                                            </div>
+                                                                        )
+                                                                    );
+                                                                } else if (mainHeading === 'dav') {
+                                                                    console.log(`mainHeading - `, mainHeading);
+                                                                    console.log(`subData - `, subData);
 
-                                                        // Check if subData contains valid data
-                                                        const hasInnerData = Object.values(subData || {}).some((items) => {
-                                                            // If items is a string, split it into an array
-                                                            if (typeof items === 'string') {
-                                                                items = items.split(',').map(item => item.trim());
-                                                            }
-                                                            // Check if it's an array and has at least one non-empty item
-                                                            return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
-                                                        });
+                                                                    // Check if subData contains valid data
+                                                                    const hasInnerData = Object.values(subData || {}).some((items) => {
+                                                                        // If items is a string, split it into an array
+                                                                        if (typeof items === 'string') {
+                                                                            items = items.split(',').map(item => item.trim());
+                                                                        }
+                                                                        // Check if it's an array and has at least one non-empty item
+                                                                        return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
+                                                                    });
 
-                                                        console.log(`hasInnerData - `, hasInnerData);
+                                                                    console.log(`hasInnerData - `, hasInnerData);
 
-                                                        return (
-                                                            hasInnerData && (
-                                                                <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                    <div
-                                                                        className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                        onClick={() => toggleSection(mainHeading)}
-                                                                    >
-                                                                        {mainHeading.toUpperCase()}
-                                                                    </div>
-                                                                    {openSection === mainHeading && (
-                                                                        <div className="p-4">
-                                                                            {Object.entries(subData).map(([subHeading, items]) => (
-                                                                                // Ensure items is an array and has data
-                                                                                items && (typeof items === 'string' ? items.split(',') : items).length > 0 && (
-                                                                                    <div key={subHeading} className="mb-4">
-                                                                                        <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                        <table className="w-full border-collapse border border-gray-300">
-                                                                                            <thead>
-                                                                                                <tr>
-                                                                                                    <th className="border border-gray-300 p-2">Label</th>
-                                                                                                    <th className="border border-gray-300 p-2">Action</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {(typeof items === 'string' ? items.split(',') : items).map((url, urlIndex) => (
-                                                                                                    <tr key={`${subHeading}-${urlIndex}`}>
-                                                                                                        {/* Display label once for each entry */}
-                                                                                                        {urlIndex === 0 && (
-                                                                                                            <td
-                                                                                                                className="border border-gray-300 p-2"
-                                                                                                                rowSpan={items.split(',').length}
-                                                                                                            >
-                                                                                                                {subHeading}
-                                                                                                            </td>
-                                                                                                        )}
-                                                                                                        <td className="border border-gray-300 p-2">
-                                                                                                            <a
-                                                                                                                href={url.trim()}
-                                                                                                                target="_blank"
-                                                                                                                rel="noopener noreferrer"
-                                                                                                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                                                                                                            >
-                                                                                                                Docs {urlIndex + 1}
-                                                                                                            </a>
-                                                                                                        </td>
-                                                                                                    </tr>
-                                                                                                ))}
-                                                                                            </tbody>
-                                                                                        </table>
+                                                                    return (
+                                                                        hasInnerData && (
+                                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
+                                                                                <div
+                                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
+                                                                                    onClick={() => toggleSection(mainHeading)}
+                                                                                >
+                                                                                    {mainHeading.toUpperCase()}
+                                                                                </div>
+                                                                                {openSection === mainHeading && (
+                                                                                    <div className="p-4">
+                                                                                        {Object.entries(subData).map(([subHeading, items]) => (
+                                                                                            // Ensure items is an array and has data
+                                                                                            items && (typeof items === 'string' ? items.split(',') : items).length > 0 && (
+                                                                                                <div key={subHeading} className="mb-4">
+                                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
+                                                                                                    <table className="w-full border-collapse border border-gray-300">
+                                                                                                        <thead>
+                                                                                                            <tr>
+                                                                                                                <th className="border border-gray-300 p-2">Label</th>
+                                                                                                                <th className="border border-gray-300 p-2">Action</th>
+                                                                                                            </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            {(typeof items === 'string' ? items.split(',') : items).map((url, urlIndex) => (
+                                                                                                                <tr key={`${subHeading}-${urlIndex}`}>
+                                                                                                                    {/* Display label once for each entry */}
+                                                                                                                    {urlIndex === 0 && (
+                                                                                                                        <td
+                                                                                                                            className="border border-gray-300 p-2"
+                                                                                                                            rowSpan={items.split(',').length}
+                                                                                                                        >
+                                                                                                                            {subHeading}
+                                                                                                                        </td>
+                                                                                                                    )}
+                                                                                                                    <td className="border border-gray-300 p-2">
+                                                                                                                        <a
+                                                                                                                            href={url.trim()}
+                                                                                                                            target="_blank"
+                                                                                                                            rel="noopener noreferrer"
+                                                                                                                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                                                                                                        >
+                                                                                                                            Docs {urlIndex + 1}
+                                                                                                                        </a>
+                                                                                                                    </td>
+                                                                                                                </tr>
+                                                                                                            ))}
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            )
+                                                                                        ))}
                                                                                     </div>
-                                                                                )
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                        );
-                                                    }
+                                                                                )}
+                                                                            </div>
+                                                                        )
+                                                                    );
+                                                                }
 
 
-                                                })}
-                                            </div>
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
 
 
                                         )

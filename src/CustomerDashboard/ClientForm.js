@@ -6,6 +6,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader';
 const ClientForm = () => {
+    
     const [formLoading, setFormLoading] = useState(false);
     const branch_name = JSON.parse(localStorage.getItem("branch"));
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
@@ -14,12 +15,12 @@ const ClientForm = () => {
     const customer_id = storedBranchData?.customer_id;
     const customer_code = localStorage.getItem("customer_code");
     const [files, setFiles] = useState({});
-  
+
     const navigate = useNavigate();
     const GotoBulk = () => {
         navigate('/ClientBulkUpload')
     }
-    const { isEditClient,setIsEditClient, fetchClientDrop,setClientInput, services, uniquePackages, clientInput,loading } = useContext(DropBoxContext);
+    const { isEditClient, setIsEditClient, fetchClientDrop, setClientInput, services, uniquePackages, clientInput, loading } = useContext(DropBoxContext);
     const [inputError, setInputError] = useState({});
     const validate = () => {
         const newErrors = {};
@@ -29,7 +30,7 @@ const ClientForm = () => {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ]; // Allowed file types
-    
+
         // Helper function to validate a file field
         const validateFile = (fileName) => {
             if (inputError[fileName] && inputError[fileName].length > 0) {
@@ -38,13 +39,13 @@ const ClientForm = () => {
             } else {
                 const selectedFiles = files[fileName]; // Get the files for this field
                 let fileErrors = [];
-    
+
                 if (selectedFiles && selectedFiles.length > 0) {
                     selectedFiles.forEach((file) => {
                         if (file.size > maxSize) {
                             fileErrors.push(`${file.name}: File size must be less than 2MB.`);
                         }
-    
+
                         if (!allowedTypes.includes(file.type)) {
                             fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
                         }
@@ -55,11 +56,11 @@ const ClientForm = () => {
                         fileErrors.push(`${fileName} is required.`);
                     }
                 }
-    
+
                 return fileErrors;
             }
         };
-    
+
         // Validate file fields: photo and attach_documents
         ['photo', 'attach_documents'].forEach((fileField) => {
             const fileErrors = validateFile(fileField);
@@ -67,21 +68,22 @@ const ClientForm = () => {
                 newErrors[fileField] = fileErrors;
             }
         });
-    
+
         // Validate required text fields
         ['name', 'employee_id', 'spoc', 'location', 'batch_number', 'sub_client'].forEach((field) => {
             if (!clientInput[field] || clientInput[field].trim() === "") {
                 newErrors[field] = "This Field is Required";
             }
         });
-    
+
         return newErrors;
     };
-    
+
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
 
     useEffect(() => {
-       
+
     }, []);
 
 
@@ -135,7 +137,7 @@ const ClientForm = () => {
         });
     };
 
-  
+
 
     const uploadCustomerLogo = async (insertedId, new_application_id) => {
         const fileCount = Object.keys(files).length;
@@ -204,6 +206,13 @@ const ClientForm = () => {
                 };
             }
 
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the Application.',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
             try {
                 const response = await fetch(
                     isEditClient
@@ -229,6 +238,17 @@ const ClientForm = () => {
                         `An error occurred: ${errorMessage}\n${apiError}`,
                         'error'
                     );
+                    if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                        });
+                    }
                     throw new Error(errorMessage);
                 }
 
@@ -336,7 +356,7 @@ const ClientForm = () => {
                 .filter(service => service.packages && Object.keys(service.packages).includes(selectedValue))
                 .map(service => String(service.serviceId)); // Ensure service IDs are strings
 
-                setClientInput(prevState => ({
+            setClientInput(prevState => ({
                 ...prevState,
                 package: selectedValue, // Set the selected package
                 services: associatedServices, // Automatically select all associated services
@@ -497,7 +517,7 @@ const ClientForm = () => {
 
                     </div>
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md md:w-2/12' disabled={formLoading}>
-                    Send
+                        Send
                     </button>
                     {/* <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button> */}
                 </form>

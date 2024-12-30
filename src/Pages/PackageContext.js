@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext,useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 const PackageContext = createContext();
@@ -7,7 +7,7 @@ export const usePackage = () => useContext(PackageContext);
 
 export const PackageProvider = ({ children }) => {
     const [data, setData] = useState([]);
-const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [packageList, setPackageList] = useState([]);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [error, setError] = useState(null);
@@ -26,7 +26,7 @@ const [loading, setLoading] = useState(true);
     };
     const fetchData = useCallback(() => {
         setLoading(true);
-        setError(null); 
+        setError(null);
 
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
@@ -47,6 +47,17 @@ const [loading, setLoading] = useState(true);
                 const newToken = result._token || result.token; // Use result.token if result._token is not available
                 if (newToken) {
                     localStorage.setItem("_token", newToken); // Replace the old token with the new one
+                }
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.location.href = "/admin-login"; // Replace with your login route
+                    });
                 }
                 if (!response.ok) {
                     Swal.fire({
@@ -78,7 +89,7 @@ const [loading, setLoading] = useState(true);
                 updatePackageList,
                 editPackage,
                 clearSelectedPackage,
-                data,setData,loading,setLoading,fetchData,setError,error
+                data, setData, loading, setLoading, fetchData, setError, error
             }}
         >
             {children}

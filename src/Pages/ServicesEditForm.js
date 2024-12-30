@@ -3,6 +3,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import { useEditClient } from './ClientEditContext';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import Swal from 'sweetalert2';
 const ServiceEditForm = () => {
     const [selectedServices, setSelectedServices] = useState({});
     const [serviceData, setServiceData] = useState([]);
@@ -10,7 +11,7 @@ const ServiceEditForm = () => {
     const [paginated, setPaginated] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedPackages, ] = useState({});
+    const [selectedPackages,] = useState({});
     const [priceData, setPriceData] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -43,6 +44,17 @@ const ServiceEditForm = () => {
             const storedToken = localStorage.getItem("_token") || '';
             const res = await fetch(`${API_URL}/service/list?admin_id=${admin_id}&_token=${storedToken}`);
             const result = await res.json();
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.location.href = "/admin-login"; // Replace with your login route
+                });
+            }
             if (result?.services) {
                 const processedServices = result.services.map(item => ({
                     service_id: item.id,
@@ -120,11 +132,11 @@ const ServiceEditForm = () => {
 
 
         setClientData(prev => ({ ...prev, services: prefilledData }));
-       
+
 
 
     }, [serviceData, clientData.services, priceData,]);
-   
+
 
     const handleCheckboxChange = (serviceId) => {
 
@@ -322,7 +334,7 @@ const ServiceEditForm = () => {
                     ))}
                 </div>
                 <button
-                   type="button"
+                    type="button"
                     onClick={showNext}
                     disabled={currentPage === totalPages}
                     className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"

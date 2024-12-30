@@ -39,20 +39,28 @@ const LoginForm = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
     const errors = validateError();
-
+  
     if (Object.keys(errors).length === 0) {
       setLoading(true); // Show loading indicator
-
+  
       const loginData = {
         username: input.username,
         password: input.password,
       };
-
+  
+      Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while we log you in.',
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+  
       axios
         .post(`${API_URL}/admin/login`, loginData)
         .then((response) => {
           const result = response.data;
-
+  
           // Handle the API message
           if (!result.status) {
             Swal.fire({
@@ -64,10 +72,36 @@ const LoginForm = () => {
           } else {
             // Handle success cases
             if (result.message === "OTP sent successfully.") {
-              setShowOtpModal(true); // Show OTP modal
+              Swal.fire({
+                title: "OTP Sent!",
+                text: "Please check your email for the OTP to proceed with the login.",
+                icon: "info",
+                confirmButtonText: "Ok",
+              }).then(() => {
+                setShowOtpModal(true); // Show OTP modal
+              });
             } else {
               handleLoginSuccess(result);
             }
+          }
+  
+          // Handle token storage
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+  
+          // Handle session expiration
+          if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+            Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+            }).then(() => {
+              // Redirect to admin login page
+              window.location.href = "/admin-login"; // Replace with your login route
+            });
           }
         })
         .catch((error) => {
@@ -88,6 +122,7 @@ const LoginForm = () => {
       setError(errors); // Display validation errors
     }
   };
+  
 
 
   const handleLoginSuccess = (result) => {
@@ -231,7 +266,7 @@ const LoginForm = () => {
                         onChange={(e) => setOtp(e.target.value)}
                       />
                       <button
-                      type='submit'
+                        type='submit'
                         className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={handleOtpSubmit}
                         disabled={isOtpLoading}

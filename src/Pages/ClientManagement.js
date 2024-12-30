@@ -218,7 +218,7 @@ const ClientManagement = () => {
       }
     });
 
-  
+
 
     return newErrors;
   };
@@ -269,7 +269,6 @@ const ClientManagement = () => {
 
 
   const handleFormSubmit = async (e) => {
-
     e.preventDefault();
     setIsLoading(true);
 
@@ -279,105 +278,127 @@ const ClientManagement = () => {
     const ServicesErrors = validationsErrors; // Validate nested fields
 
     // Merge flat and nested validation errors
-
     Object.keys(validationError).forEach((key) => {
-      if (validationError[key]) {
-        newErrors[key] = validationError[key];
-      }
+        if (validationError[key]) {
+            newErrors[key] = validationError[key];
+        }
     });
 
     Object.keys(ServicesErrors).forEach((key) => {
-      Object.keys(ServicesErrors[key]).forEach((field) => {
-        if (ServicesErrors[key][field]) {
-          newErrors[`${key}_${field}`] = ServicesErrors[key][field];
-        }
-      });
+        Object.keys(ServicesErrors[key]).forEach((field) => {
+            if (ServicesErrors[key][field]) {
+                newErrors[`${key}_${field}`] = ServicesErrors[key][field];
+            }
+        });
     });
 
     // Show errors only for the current submission
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+        setErrors(newErrors);
 
-      // Focus on the first field with an error
-      const errorField = Object.keys(newErrors)[0];
-      if (refs.current[errorField]) {
-        refs.current[errorField].focus();
-      }
+        // Focus on the first field with an error
+        const errorField = Object.keys(newErrors)[0];
+        if (refs.current[errorField]) {
+            refs.current[errorField].focus();
+        }
 
-      setIsLoading(false);
-      return;
+        setIsLoading(false);
+        return;
     } else {
-      setErrors({})
+        setErrors({});
     }
+
+    Swal.fire({
+        title: 'Processing...',
+        text: 'Please wait while we create the Client.',
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     try {
-      // Proceed with the submission if no errors
-      const adminData = JSON.parse(localStorage.getItem("admin"));
-      let token = localStorage.getItem("_token");
-      const fileCount = Object.keys(files).length;
+        // Proceed with the submission if no errors
+        const adminData = JSON.parse(localStorage.getItem("admin"));
+        let token = localStorage.getItem("_token");
+        const fileCount = Object.keys(files).length;
 
-      const requestData = {
-        admin_id: adminData.id,
-        ...input,
-        _token: token,
-        branches: branchForms,
-        emails: emails,
-        clientData: clientData,
-        custom_bgv: custom_bgv,
-        send_mail: fileCount === 0 ? 1 : 0,
-      };
+        const requestData = {
+            admin_id: adminData.id,
+            ...input,
+            _token: token,
+            branches: branchForms,
+            emails: emails,
+            clientData: clientData,
+            custom_bgv: custom_bgv,
+            send_mail: fileCount === 0 ? 1 : 0,
+        };
 
-      const response = await fetch(`${API_URL}/customer/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
-      });
-
-      const data = await response.json();
-      const newToken = data._token || data.token;
-
-      if (newToken) {
-        localStorage.setItem("_token", newToken);
-        token = newToken;
-      }
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create client");
-      }
-
-      const customerInsertId = data.data.customerId;
-      const password = data.password;
-      setInsertId(customerInsertId);
-
-      if (fileCount === 0) {
-        Swal.fire({
-          title: "Success",
-          text: `Client Created Successfully.`,
-          icon: "success",
-          confirmButtonText: "Ok",
+        const response = await fetch(`${API_URL}/customer/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
         });
+
+        const data = await response.json();
+        const newToken = data._token || data.token;
+
+        if (newToken) {
+            localStorage.setItem("_token", newToken);
+            token = newToken;
+        }
+
+        // Check if the response message starts with "INVALID TOKEN"
+        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+          Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+          }).then(() => {
+              // Redirect to admin login page
+              window.location.href = "/admin-login"; // Replace with your login route
+          });
+          return;
       }
 
-      if (fileCount > 0) {
-        await uploadCustomerLogo(adminData.id, token, customerInsertId, password);
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to create client");
+        }
 
-        Swal.fire({
-          title: "Success",
-          text: `Client Created Successfully.`,
-          icon: "success",
-          confirmButtonText: "Ok",
-        });
-      }
+        const customerInsertId = data.data.customerId;
+        const password = data.password;
+        setInsertId(customerInsertId);
 
-      handleTabChange("active_clients");
-      resetFormFields();
+        if (fileCount === 0) {
+            Swal.fire({
+                title: "Success",
+                text: `Client Created Successfully.`,
+                icon: "success",
+                confirmButtonText: "Ok",
+            });
+        }
+
+        if (fileCount > 0) {
+            await uploadCustomerLogo(adminData.id, token, customerInsertId, password);
+
+            Swal.fire({
+                title: "Success",
+                text: `Client Created Successfully.`,
+                icon: "success",
+                confirmButtonText: "Ok",
+            });
+        }
+
+        handleTabChange("active_clients");
+        resetFormFields();
     } catch (error) {
-      console.error("Error:", error);
-      Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
+        console.error("Error:", error);
+        Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
+
 
 
 
@@ -409,6 +430,18 @@ const ClientManagement = () => {
           localStorage.setItem("_token", newToken);
           token = newToken; // Update for subsequent uploads
         }
+        if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+          Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+          }).then(() => {
+              // Redirect to admin login page
+              window.location.href = "/admin-login"; // Replace with your login route
+          });
+          return;
+      }
       } catch (err) {
         Swal.fire("Error!", `Error uploading files: ${err.message}`, "error");
         throw err; // Stop process if upload fails
@@ -563,6 +596,9 @@ const ClientManagement = () => {
                   <label className="text-gray-500" htmlFor="state">State: <span className="text-red-600">*</span></label>
                   <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)} // Attach ref here
                     value={input.state} onChange={handleChange}>
+                    <option value="">
+                      Select State
+                    </option>
                     {options.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -868,7 +904,7 @@ const ClientManagement = () => {
                         onChange={(e) => handleChange(e, index)}
                       />
 
-                     
+
                     </div>
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_email_${index}`}>
@@ -884,7 +920,7 @@ const ClientManagement = () => {
                         ref={(el) => (refs.current[`branch_email_${index}`] = el)} // Corrected ref key
 
                       />
-                     
+
                     </div>
                     {index > 0 && (
                       <button

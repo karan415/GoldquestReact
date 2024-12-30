@@ -131,6 +131,17 @@ const PackageManagementList = () => {
                         if (newToken) {
                             localStorage.setItem("_token", newToken);
                         }
+                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to admin login page
+                                window.location.href = "/admin-login"; // Replace with your login route
+                            });
+                        }
                         if (!response.ok) {
                             return response.text().then((text) => {
                                 const errorData = JSON.parse(text);
@@ -160,7 +171,7 @@ const PackageManagementList = () => {
     return (
         <>
             <div className="py-4 px-4">
-              
+
                 <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
@@ -247,7 +258,7 @@ const PackageManagementList = () => {
                         </div>
                     )}
 
-                   
+
                 </div>
                 <div className="flex items-center justify-end  rounded-md bg-white py-3 md:my-2">
                     <button
@@ -270,7 +281,7 @@ const PackageManagementList = () => {
                         <MdArrowForwardIos />
                     </button>
                 </div>
-               
+
             </div>
 
         </>

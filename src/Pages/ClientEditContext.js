@@ -52,6 +52,17 @@ export const ClientEditProvider = ({ children }) => {
                     localStorage.setItem("_token", newToken);
                     storedToken = newToken; // Update the token for subsequent requests
                 }
+                if (response && response.toLowerCase().includes("invalid") && response.toLowerCase().includes("token")) {
+                            Swal.fire({
+                              title: "Session Expired",
+                              text: "Your session has expired. Please log in again.",
+                              icon: "warning",
+                              confirmButtonText: "Ok",
+                            }).then(() => {
+                              // Redirect to admin login page
+                              window.location.href = "/admin-login"; // Replace with your login route
+                            });
+                          }
             } catch (err) {
                 Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
             }

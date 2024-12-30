@@ -56,9 +56,18 @@ const CreateInvoice = () => {
       method: "GET",
       redirect: "follow",
     };
+    Swal.fire({
+      title: 'Processing...',
+      text: 'Please wait while we create the Client.',
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
+
+
         if (!response.ok) {
           return response.json().then((errorData) => {
             throw new Error(errorData.message || "Network response was not ok");
@@ -72,6 +81,21 @@ const CreateInvoice = () => {
           throw new Error("No data returned from API.");
         }
 
+        const newToken = data._token || data.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
+        }
+        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to admin login page
+            window.location.href = "/admin-login"; // Replace with your login route
+          });
+        }
 
         let applications = [];
         if (data && Array.isArray(data.applications)) {
@@ -260,7 +284,7 @@ const CreateInvoice = () => {
     // Align text to the right of the logo
     companyInfoArray.forEach((line, index) => {
       if (line.includes("Website:")) {
-        doc.setTextColor(9 ,138 ,196);
+        doc.setTextColor(9, 138, 196);
         doc.text(line, pageWidth - rightMargin, yPosition + (index * 5), { align: 'right' }); // Positioned to the right of the logo
         doc.setTextColor(0, 0, 0);  // RGB color for black
       } else {

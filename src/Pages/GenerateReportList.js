@@ -32,25 +32,36 @@ const GenerateReportList = () => {
       `https://octopus-app-www87.ondigitalocean.app/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
-    .then((response) => {
-      const result = response.json();
-      const newToken = result._token || result.token;
-      if (newToken) {
+      .then((response) => {
+        const result = response.json();
+        const newToken = result._token || result.token;
+        if (newToken) {
           localStorage.setItem("_token", newToken);
-      }
+        }
+        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to admin login page
+            window.location.href = "/admin-login"; // Replace with your login route
+          });
+        }
         if (!response.ok) {
-            return response.text().then(text => {
-                const errorData = JSON.parse(text);
-                Swal.fire(
-                    'Error!',
-                    `An error occurred: ${errorData.message}`,
-                    'error'
-                );
-                throw new Error(text);
-            });
+          return response.text().then(text => {
+            const errorData = JSON.parse(text);
+            Swal.fire(
+              'Error!',
+              `An error occurred: ${errorData.message}`,
+              'error'
+            );
+            throw new Error(text);
+          });
         }
         return result;
-    })
+      })
       .then((result) => {
         if (result.status) {
           // Flatten the data to match the table structure
@@ -93,7 +104,7 @@ const GenerateReportList = () => {
   const filteredItems = data.filter(item => {
     return (
       item.applicationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.applicantName?.toLowerCase()?.includes(searchTerm.toLowerCase()) 
+      item.applicantName?.toLowerCase()?.includes(searchTerm.toLowerCase())
     );
   });
 
@@ -172,10 +183,10 @@ const GenerateReportList = () => {
 
     const selectedValue = e.target.value;
     setItemPerPage(selectedValue)
-}
+  }
 
 
-const tableRef = useRef(null); // Ref for the table container
+  const tableRef = useRef(null); // Ref for the table container
 
   // Function to reset expanded rows
   const handleOutsideClick = (event) => {
@@ -183,7 +194,7 @@ const tableRef = useRef(null); // Ref for the table container
       setExpandedRows({}); // Reset to empty object instead of null
     }
   };
-  
+
 
   useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
@@ -236,66 +247,66 @@ const tableRef = useRef(null); // Ref for the table container
           </div>
         ) : currentItems.length > 0 ? (
           <div className='overflow-x-auto' ref={tableRef}>
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-green-500">
-                <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">SL</th>
-                <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Application ID</th>
-                <th className="py-2 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Name Of Applicant</th>
-                <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Overall Status</th>
-                <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((report, index) => (
-                <React.Fragment key={index}>
-                  <tr>
-                    <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{index + 1}</td>
-                    <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.applicationId}</td>
-                    <td className="py-2 px-4 text-left border-b border-r whitespace-nowrap">{report.applicantName}</td>
-                    <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.status}</td>
-
-                    <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">
-                      <button
-                        className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-blue-200"
-                        onClick={() => toggleRow(index)}
-                      >
-                        {expandedRows[index] ? "Hide Services" : "View More"}
-                      </button>
-                    </td>
-                  </tr>
-                  {expandedRows[index] && (
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-green-500">
+                  <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">SL</th>
+                  <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Application ID</th>
+                  <th className="py-2 text-left text-white border-r px-4 border-b whitespace-nowrap uppercase">Name Of Applicant</th>
+                  <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Overall Status</th>
+                  <th className="py-2 text-center text-white border-r px-4 border-b whitespace-nowrap uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((report, index) => (
+                  <React.Fragment key={index}>
                     <tr>
-                      <td colSpan={8} className="py-2 px-4 text-left border-b border-r whitespace-nowrap bg-gray-100">
-                        <table className="w-full">
-                          <thead>
-                            <tr >
-                              {Object.entries(report.services).map(([service, status], i) => (
+                      <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{index + 1}</td>
+                      <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.applicationId}</td>
+                      <td className="py-2 px-4 text-left border-b border-r whitespace-nowrap">{report.applicantName}</td>
+                      <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.status}</td>
 
-                                <th className="py-2 px-4">{service}</th>
-
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr >
-                              {Object.entries(report.services).map(([service, status], i) => (
-
-                                <td className="py-2 px-4">{status}</td>
-
-                              ))}
-                            </tr>
-                          </tbody>
-                        </table>
+                      <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">
+                        <button
+                          className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-blue-200"
+                          onClick={() => toggleRow(index)}
+                        >
+                          {expandedRows[index] ? "Hide Services" : "View More"}
+                        </button>
                       </td>
                     </tr>
-                  )}
+                    {expandedRows[index] && (
+                      <tr>
+                        <td colSpan={8} className="py-2 px-4 text-left border-b border-r whitespace-nowrap bg-gray-100">
+                          <table className="w-full">
+                            <thead>
+                              <tr >
+                                {Object.entries(report.services).map(([service, status], i) => (
+
+                                  <th className="py-2 px-4">{service}</th>
+
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr >
+                                {Object.entries(report.services).map(([service, status], i) => (
+
+                                  <td className="py-2 px-4">{status}</td>
+
+                                ))}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
 
 
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="text-center py-6">

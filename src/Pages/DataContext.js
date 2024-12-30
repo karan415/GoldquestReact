@@ -34,6 +34,17 @@ export const DataProvider = ({ children }) => {
             }
         })
         .then((response) => {
+              if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                      Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                      }).then(() => {
+                        // Redirect to admin login page
+                        window.location.href = "/admin-login"; // Replace with your login route
+                      });
+                    }
             if (!response.ok) {
                 return response.json().then((result) => {
                     Swal.fire({
@@ -52,6 +63,17 @@ export const DataProvider = ({ children }) => {
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+              if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                      Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                      }).then(() => {
+                        // Redirect to admin login page
+                        window.location.href = "/admin-login"; // Replace with your login route
+                      });
+                    }
     
             // Extract customers
             const customers = result?.customers || [];

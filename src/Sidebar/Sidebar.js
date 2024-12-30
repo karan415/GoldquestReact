@@ -30,7 +30,7 @@ const tabNames = {
 
   generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
 
-  // internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
+ internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
   report: {
     icon: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
     subItems: [

@@ -3,6 +3,8 @@ import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
 import Swal from 'sweetalert2';
 const ScopeOfServices = () => {
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
+
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
     const branch_token = localStorage.getItem("branch_token");
     const API_URL = useApi();
@@ -42,6 +44,17 @@ const ScopeOfServices = () => {
             }
 
             if (!response.ok) {
+                if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    });
+                }
                 // Show error message from API response
                 const errorMessage = data?.message || 'Network response was not ok';
                 throw new Error(errorMessage);
@@ -50,7 +63,10 @@ const ScopeOfServices = () => {
             if (data.customers) {
                 const customers = data.customers;
                 setCustomer(customers);
-
+                const newToken = data?._token || data?.token;
+                if (newToken) {
+                    localStorage.setItem("branch_token", newToken);
+                }
                 const servicesData = data.customers.services;
 
                 try {

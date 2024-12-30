@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext,useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 const HolidayManagementContext = createContext();
@@ -56,6 +56,17 @@ export const HolidayManagementProvider = ({ children }) => {
                 localStorage.setItem('_token', newToken);
             }
 
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.location.href = "/admin-login"; // Replace with your login route
+                });
+            }
             const processedData = (result.holidays || []).map((item, index) => ({
                 ...item,
                 index: index + 1,
@@ -74,7 +85,7 @@ export const HolidayManagementProvider = ({ children }) => {
     }, []);
 
     return (
-        <HolidayManagementContext.Provider value={{ selectedService, editService, ServiceList, updateServiceList ,fetchData,loading ,setData,data,error,setError}}>
+        <HolidayManagementContext.Provider value={{ selectedService, editService, ServiceList, updateServiceList, fetchData, loading, setData, data, error, setError }}>
             {children}
         </HolidayManagementContext.Provider>
     );

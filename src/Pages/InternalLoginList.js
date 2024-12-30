@@ -1,47 +1,290 @@
-import React, {useMemo } from 'react';
-
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import PulseLoader from "react-spinners/PulseLoader";
+import Swal from 'sweetalert2';
+import LoginContext from './InternalLoginContext';
 const InternalLoginList = () => {
-    const LoginData =useMemo(()=>
-        [
-            { SL: "01", employeeid: "NA_2423", e_name: "lShruti M ",e_number:'8050410136',email:"support@goldquestglobal.in",role:"	Super_user",status:"Active" },
-            { SL: "02", employeeid: "NA_2423", e_name: "lShruti M ",e_number:'8050410136',email:"support@goldquestglobal.in",role:"	Super_user",status:"Active" },
-        ],[]
-    ) ;
- 
-  return (
-    <>
-    <div className="overflow-x-auto py-4 px-4">
-    <table className="min-w-full">
-        <thead>
-            <tr className='bg-green-500'>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">SL</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee ID</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee Name</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee Mobile</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Email</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Role</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Status</th>
-                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            { LoginData.map((item, index) => (
-                <tr key={index}>
-                    <td className="py-2 px-4 border-b border-r border-l text-center whitespace-nowrap">{item.SL}</td>
-                    <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.employeeid}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.e_name}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.e_number}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.email}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.role}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.status}</td>
-                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap"><button className='bg-green-500 hover:bg-green-200 rounded-md p-2 text-white'>Edit</button> <button className='bg-red-600 rounded-md p-2 text-white'>Delete</button> </td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
-</div>
-    </>
-  )
+    const { data, loading, fetchData, handleEditAdmin } = useContext(LoginContext)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState('');
+    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+    const storedToken = localStorage.getItem("_token");
+    useEffect(() => {
+        fetchData(); // Call the function to fetch data
+    }, []); // Empty dependency array ensures this runs once when the component mounts
+
+
+
+    const filteredItems = data.filter(item => {
+        return (
+            item.emp_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
+
+
+    const handleSelectChange = (e) => {
+        const checkedStatus = e.target.value;
+        setItemPerPage(checkedStatus);
+    }
+
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const showPrev = () => {
+        if (currentPage > 1) handlePageChange(currentPage - 1);
+    };
+
+    const showNext = () => {
+        if (currentPage < totalPages) handlePageChange(currentPage + 1);
+    };
+
+
+    const renderPagination = () => {
+        const pageNumbers = [];
+
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.push(i);
+            }
+        } else {
+            pageNumbers.push(1);
+
+            if (currentPage > 3) {
+                pageNumbers.push('...');
+            }
+
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                if (!pageNumbers.includes(i)) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            if (currentPage < totalPages - 2) {
+                pageNumbers.push('...');
+            }
+
+
+            if (!pageNumbers.includes(totalPages)) {
+                pageNumbers.push(totalPages);
+            }
+        }
+
+
+
+        return pageNumbers.map((number, index) => (
+            number === '...' ? (
+                <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+            ) : (
+                <button
+                    type="button"
+                    key={`page-${number}`} // Unique key for page buttons
+                    onClick={() => handlePageChange(number)}
+                    className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
+                >
+                    {number}
+                </button>
+            )
+        ));
+    };
+
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    const deleteAdmin = (id) => {
+        // Show confirmation dialog before proceeding with deletion
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this action!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Start loading or show spinner if necessary
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait while we delete the admin.',
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Make the delete API request using axios
+                axios
+                    .delete(`https://octopus-app-www87.ondigitalocean.app/admin/delete`, {
+                        params: {
+                            id,
+                            admin_id,
+                            _token: storedToken,
+                        },
+                    })
+                    .then((response) => {
+                        const result = response.data;
+
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
+                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to admin login page
+                                window.location.href = "/admin-login"; // Replace with your login route
+                            });
+                        }
+
+
+                        // Check if the deletion was successful
+                        if (result.status) {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: 'Admin has been deleted successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: result.message || 'Failed to delete admin.',
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            });
+                        }
+                        fetchData();
+                    })
+
+                    .catch((error) => {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: `Error: ${error.response?.data?.message || error.message}`,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        });
+                    });
+            }
+        });
+    };
+    const editAdmin = (item) => {
+        handleEditAdmin(item)
+    }
+
+
+    return (
+        <>
+
+            <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 p-3">
+                <div className="col">
+                    <div className="flex gap-5 justify-between">
+                        <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-6/12'>
+                            <option value="10">10 Rows</option>
+                            <option value="20">20 Rows</option>
+                            <option value="50">50 Rows</option>
+                            <option value="100">100 Rows</option>
+                            <option value="200">200 Rows</option>
+                            <option value="300">300 Rows</option>
+                            <option value="400">400 Rows</option>
+                            <option value="500">500 Rows</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="col md:flex justify-end">
+                    <form action="">
+                        <div className="flex md:items-stretch items-center gap-3">
+                            <input
+                                type="search"
+                                className='outline-none border-2 p-3 rounded-md w-full text-sm my-4 md:my-0'
+                                placeholder='Search by Client Code...'
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <h2 className='text-center text-2xl font-bold my-5'>Admin List</h2>
+
+            <div className="overflow-x-auto">
+
+                {loading ? (
+                    <div className='flex justify-center items-center py-6 '>
+                        <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+                    </div>
+                ) : currentItems.length > 0 ? (
+                    <table className="min-w-full">
+                        <thead>
+                            <tr className='bg-green-500'>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">SL</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee ID</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee Name</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Employee Mobile</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Email</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Role</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Status</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.map((item, index) => (
+                                <tr key={index}>
+                                    <td className="py-2 px-4 border-b border-r border-l text-center whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}
+                                    </td>
+                                    <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.emp_id || 'NIL'}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.name || 'NIL'}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.mobile || 'NIL'}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.email}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.role || 'NIL'}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.status || 'NIL'}</td>
+                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">
+                                        <button className='bg-green-500 hover:bg-green-200 rounded-md me-3 p-2 text-white' onClick={() => editAdmin(item)}>Edit</button>
+                                        <button className='bg-red-600 rounded-md p-2 text-white' onClick={() => deleteAdmin(item.id)}>Delete</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div className="text-center py-6">
+                        <p>No Data Found</p>
+                    </div>
+                )}
+
+
+            </div>
+            <div className="flex items-center justify-end  p-3 py-2">
+                <button
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white p-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page"
+                >
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center">
+                    {renderPagination()}
+                </div>
+                <button
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white p-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page"
+                >
+                    <MdArrowForwardIos />
+                </button>
+            </div>
+        </>
+    )
 }
 
 export default InternalLoginList

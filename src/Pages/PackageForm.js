@@ -102,6 +102,17 @@ const PackageForm = ({ onSuccess }) => {
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                    }
 
                     // Handle API error response
                     if (!response.ok) {
@@ -178,7 +189,7 @@ const PackageForm = ({ onSuccess }) => {
 
     return (
         <>
-            <form onSubmit={handlePackageFormSubmit}  disabled={isLoading}>
+            <form onSubmit={handlePackageFormSubmit} disabled={isLoading}>
                 <div className="mb-4">
                     <label htmlFor="packagename" className='text-sm'>Package Name<span className='text-red-500'>*</span></label>
                     <input

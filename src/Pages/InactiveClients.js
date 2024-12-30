@@ -97,6 +97,17 @@ const InactiveClients = () => {
       if (newToken) {
         localStorage.setItem("_token", newToken);
       }
+      if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Your session has expired. Please log in again.",
+          icon: "warning",
+          confirmButtonText: "Ok",
+        }).then(() => {
+          // Redirect to admin login page
+          window.location.href = "/admin-login"; // Replace with your login route
+        });
+      }
 
       // Handle response errors
       if (!response.ok) {
@@ -158,8 +169,30 @@ const InactiveClients = () => {
 
         const result = await response.json();
         const newToken = result._token || result.token;
+        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to admin login page
+            window.location.href = "/admin-login"; // Replace with your login route
+          });
+        }
         if (newToken) {
           localStorage.setItem("_token", newToken);
+        }
+        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to admin login page
+            window.location.href = "/admin-login"; // Replace with your login route
+          });
         }
         if (!response.ok) {
           const errorData = await response.json();
@@ -255,7 +288,7 @@ const InactiveClients = () => {
                     {new Date(item.agreement_date).getDate()}-
                     {new Date(item.agreement_date).getMonth() + 1}-
                     {new Date(item.agreement_date).getFullYear()}
-                    </td>
+                  </td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard}</td>
