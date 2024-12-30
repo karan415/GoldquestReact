@@ -155,7 +155,7 @@ const DropBoxList = () => {
                                     confirmButtonText: "Ok",
                                 }).then(() => {
                                     // Redirect to admin login page
-                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                                 });
                             }
                             return response.text().then(text => {

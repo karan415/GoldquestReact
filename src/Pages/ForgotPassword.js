@@ -20,47 +20,53 @@ const ForgotPassword = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form submission
-
+  
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-
+  
     const raw = JSON.stringify({
       email: formData.email,
     });
-
+  
     const requestOptions = {
       method: "POST",
       headers: myHeaders,
       body: raw,
       redirect: "follow",
     };
-
+  
     fetch("https://octopus-app-www87.ondigitalocean.app/admin/forgot-password-request", requestOptions)
-    .then((response) => {
-      const result = response.json();
-      const newToken = result._token || result.token;
-      if (newToken) {
-          localStorage.setItem("_token", newToken);
-      }
-        if (!response.ok) {
-            return response.text().then(text => {
-                const errorData = JSON.parse(text);
-                Swal.fire(
-                    'Error!',
-                    `An error occurred: ${errorData.message}`,
-                    'error'
-                );
-                throw new Error(text);
-            });
-        }
-        return result;
-    })
+      .then((response) => response.json())  // Parse the response as JSON
       .then((result) => {
-        console.log(result);
-        navigate('/reset-password');
+        if (result.status) {  // Check if the status is true
+          // Show success message from the result
+          Swal.fire(
+            'Success!',
+            result.message || 'Password reset email has been sent.',
+            'success'
+          );
+          // Optionally, navigate to another page after success
+          // navigate('/reset-password');
+        } else {
+          // If the status is false, show an error message
+          Swal.fire(
+            'Error!',
+            result.message || 'An error occurred while processing your request.',
+            'error'
+          );
+        }
       })
-      .catch((error) => console.error('Error:', error));
+      .catch((error) => {
+        console.error('Error:', error);
+        Swal.fire(
+          'Error!',
+          'There was an issue with the request.',
+          'error'
+        );
+      });
   };
+  
+  
 
   return (
     <div className="bg-white md:w-5/12 m-auto shadow-md rounded-sm p-5 translate-y-2/4 border">

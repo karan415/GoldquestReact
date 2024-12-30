@@ -34,49 +34,70 @@ const CustomerLoginForm = () => {
     const getPassword = async (email) => {
         const adminData = localStorage.getItem('admin');
         const storedToken = localStorage.getItem('_token');
-
+    
         // Validate necessary data before proceeding
         if (!adminData || !storedToken) {
             console.error('Missing admin data or token');
             return;
         }
-
+    
         const admin_id = JSON.parse(adminData)?.id;
-
+    
         setLoadingPassword(true);
-
+    
         try {
             const response = await fetch(
                 `${API_URL}/customer/fetch-branch-password?branch_email=${encodeURIComponent(email)}&admin_id=${admin_id}&_token=${storedToken}`
             );
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch password: ${response.statusText}`);
-            }
-
+    
             const result = await response.json();
-
+    
+            if (!response.ok) {
+                // Extract and show dynamic error message from API response
+                const errorMessage = result?.message || "An unexpected error occurred.";
+                Swal.fire({
+                    title: "Error!",
+                    text: `Failed to fetch password: ${errorMessage}`,
+                    icon: "error",
+                    confirmButtonText: "OK",
+                });
+                throw new Error(errorMessage);
+            }
+    
             if (result?.password) {
                 setInput((prev) => ({
                     ...prev,
                     password: result.password,
                 }));
             } else {
-                console.warn('Password not found in response.');
+                Swal.fire({
+                    title: "Warning!",
+                    text: "Password not found in the response.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                });
             }
         } catch (error) {
             console.error('Error fetching password:', error);
+            // Show dynamic error message if present in the response
+            Swal.fire({
+                title: "Error!",
+                text: error.message || "An unexpected error occurred while fetching the password.",
+                icon: "error",
+                confirmButtonText: "OK",
+            });
         } finally {
             setLoadingPassword(false);
         }
     };
+    
 
 
     useEffect(() => {
         if (input.email) {
             getPassword(input.email);
         }
-    }, [input.email]);
+    }, []);
 
     const validations = () => {
         const newErrors = {};
@@ -199,45 +220,47 @@ const CustomerLoginForm = () => {
     };
 
     const handleOtpSubmit = () => {
-        Swal.fire({
-            title: 'OTP Sent!',
-            text: 'Please check your email for the OTP before proceeding.',
-            icon: 'info',
-            confirmButtonText: 'Ok',
-        }).then(() => {
-            setIsOtpLoading(true);
-    
-            axios
-                .post(`${API_URL}/branch/verify-two-factor`, {
-                    username: input.email,
-                    otp,
-                })
-                .then((response) => {
-                    const result = response.data;
-                    if (!result.status) {
+        if (!isOtpLoading) {  // Ensure OTP message is only shown once
+            Swal.fire({
+                title: 'OTP Sent!',
+                text: 'Please check your email for the OTP before proceeding.',
+                icon: 'info',
+                confirmButtonText: 'Ok',
+            }).then(() => {
+                setIsOtpLoading(true);
+        
+                axios
+                    .post(`${API_URL}/branch/verify-two-factor`, {
+                        username: input.email,
+                        otp,
+                    })
+                    .then((response) => {
+                        const result = response.data;
+                        if (!result.status) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: result.message,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            });
+                        } else {
+                            setShowOtpModal(false);
+                            handleLoginSuccess(result);
+                        }
+                    })
+                    .catch((error) => {
                         Swal.fire({
                             title: 'Error!',
-                            text: result.message,
+                            text: `Error: ${error.response?.data?.message || error.message}`,
                             icon: 'error',
                             confirmButtonText: 'Ok',
                         });
-                    } else {
-                        setShowOtpModal(false);
-                        handleLoginSuccess(result);
-                    }
-                })
-                .catch((error) => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: `Error: ${error.response?.data?.message || error.message}`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
+                    })
+                    .finally(() => {
+                        setIsOtpLoading(false);
                     });
-                })
-                .finally(() => {
-                    setIsOtpLoading(false);
-                });
-        });
+            });
+        }
     };
     
     return (
@@ -304,6 +327,7 @@ const CustomerLoginForm = () => {
                     <div className="bg-white rounded-lg p-6 w-96 relative">
 
                         <button
+                        type='button'
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
                             onClick={() => setShowOtpModal(false)} // Set showOtpModal to false
                         >

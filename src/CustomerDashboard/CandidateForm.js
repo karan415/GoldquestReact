@@ -54,8 +54,6 @@ const CandidateForm = () => {
         }
     };
 
-    console.log('services', input.services)
-
     const handleChange = (event) => {
         const { name, value, checked } = event.target;
 
@@ -125,14 +123,12 @@ const CandidateForm = () => {
         const errors = validate();
         if (Object.keys(errors).length === 0) {
             setError({});
-            const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
-            const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+            const branchData = JSON.parse(localStorage.getItem("branch"));
+            const customer_id = branchData?.customer_id;
+            const branch_id = branchData?.id;
             const branch_token = localStorage.getItem("branch_token");
-            const myHeaders = new Headers({
-                "Content-Type": "application/json"
-            });
 
-            const servicesString = Array.isArray(input.services) ? input.services.join(',') : '';
+            const servicesString = Array.isArray(input.services) ? input.services.join(",") : "";
 
             const Raw = JSON.stringify({
                 customer_id,
@@ -144,53 +140,61 @@ const CandidateForm = () => {
                 email: input.email,
                 package: input.package,
                 services: servicesString,
-                candidate_application_id: input.candidate_application_id
+                candidate_application_id: input.candidate_application_id,
             });
 
             const requestOptions = {
-                method: isEditCandidate ? 'PUT' : "POST",
-                headers: myHeaders,
+                method: isEditCandidate ? "PUT" : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: Raw,
-                redirect: "follow"
+                redirect: "follow",
             };
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while we create the Application.',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
 
             const url = isEditCandidate
                 ? `${API_URL}/branch/candidate-application/update`
                 : `${API_URL}/branch/candidate-application/create`;
 
-            // Step 3: Send the request
+            const swalInstance = Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the Client.',
+                didOpen: () => {
+                    Swal.showLoading(); // This starts the loading spinner
+                },
+                allowOutsideClick: false, // Prevent closing Swal while processing
+                showConfirmButton: false, // Hide the confirm button
+            });
+
             fetch(url, requestOptions)
-                .then(response => {
-                    // If response is not ok, throw an error
+                .then(async (response) => {
                     if (!response.ok) {
-                        return response.json().then(errorResult => {
-                            const errorMessage = errorResult.message || 'An error occurred';
-                            Swal.fire('Error!', errorMessage, 'error');
-                            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                                Swal.fire({
-                                    title: "Session Expired",
-                                    text: "Your session has expired. Please log in again.",
-                                    icon: "warning",
-                                    confirmButtonText: "Ok",
-                                }).then(() => {
-                                    // Redirect to admin login page
-                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
-                                });
-                            }
-                            throw new Error(errorMessage);
-                        });
+                        const errorResult = await response.json();
+                        const errorMessage = errorResult.message || "An error occurred";
+                        if (
+                            errorMessage.toLowerCase().includes("invalid") &&
+                            errorMessage.toLowerCase().includes("token")
+                        ) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to customer login page
+                                window.open(
+                                    `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
+                                   
+                                );
+                            });
+                        } else {
+                            Swal.fire("Error!", errorMessage, "error");
+                        }
+                        throw new Error(errorMessage);
                     }
                     return response.json();
                 })
-                .then(result => {
-                    // Step 4: Handle success response
+                .then((result) => {
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken);
@@ -202,34 +206,37 @@ const CandidateForm = () => {
                         mobile_number: "",
                         email: "",
                         services: [],
-                        package: '',
-                        candidate_application_id: ''
+                        package: "",
+                        candidate_application_id: "",
                     });
-                    setError({}); // Clear errors
 
+                    setError({}); // Clear errors
                     fetchClient(); // Refresh client list
 
                     Swal.fire({
                         title: "Success",
-                        text: isEditCandidate ? 'Candidate Application edited successfully' : 'Candidate Application added successfully',
+                        text: isEditCandidate
+                            ? "Candidate Application edited successfully"
+                            : "Candidate Application added successfully",
                         icon: "success",
-                        confirmButtonText: "Ok"
+                        confirmButtonText: "Ok",
                     });
 
                     setIsEditCandidate(false);
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error("There was an error!", error);
                 })
                 .finally(() => {
+                    swalInstance.close(); // Close the Swal loading spinner
                     setFormLoading(false);
                 });
-
         } else {
             setError(errors);
             setFormLoading(false);
         }
     };
+
 
 
 

@@ -5,7 +5,7 @@ import { useApi } from '../ApiContext';
 const DropBoxContext = createContext();
 
 export const DropBoxProvider = ({ children }) => {
-    
+
     const API_URL = useApi();
     const [services, setServices] = useState([]);
     const [uniquePackages, setUniquePackages] = useState([]);
@@ -94,88 +94,92 @@ export const DropBoxProvider = ({ children }) => {
 
     const fetchServices = useCallback(async () => {
         setServicesLoading(true);
-        const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
-        const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
+        const branchData = JSON.parse(localStorage.getItem("branch")) || {};
+        const branch_id = branchData?.id;
+        const customer_id = branchData?.customer_id;
+        const branchEmail = branchData?.email; // Ensure you extract email for session expiration redirection
         const _token = localStorage.getItem("branch_token");
+
         if (!branch_id || !_token) {
+            console.error("Branch ID or token is missing.");
             setServicesLoading(false);
             return;
-
         }
 
         try {
-            const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch_id}&branch_token=${_token}`, {
-                method: "GET",
-                redirect: "follow"
-            });
+            const response = await fetch(
+                `${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch_id}&branch_token=${_token}`,
+                {
+                    method: "GET",
+                    redirect: "follow",
+                }
+            );
 
             const data = await response.json();
 
-            // Store new token, even if response was not ok
+            // Store the new token if it exists
             const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
-            if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+
+            if (!response.ok || (data.message && data.message.toLowerCase().includes("invalid token"))) {
                 Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
                     icon: "warning",
                     confirmButtonText: "Ok",
                 }).then(() => {
-                    // Redirect to admin login page
-                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    // Redirect to customer login page
+                    if (branchEmail) {
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, "_blank");
+                    } else {
+                        window.open("/customer-login", "_blank");
+                    }
                 });
-            }
-
-            if (!response.ok) {
-                Swal.fire('Error!', `An error occurred: ${data.message}`, 'error');
-                if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                    Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                    }).then(() => {
-                        // Redirect to admin login page
-                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
-                    });
-                }
                 return;
-
             }
 
             if (data.customers) {
                 const customer = data.customers;
                 const customer_code = customer.client_unique_id;
-                localStorage.setItem('customer_code', customer_code);
-                const parsedServices = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
+                localStorage.setItem("customer_code", customer_code);
+
+                const parsedServices =
+                    customer.services && customer.services !== '""'
+                        ? JSON.parse(customer.services)
+                        : [];
                 setServices(parsedServices);
+
                 const uniquePackagesList = [];
                 const packageSet = new Set();
-                parsedServices.forEach(service => {
+
+                parsedServices.forEach((service) => {
                     if (service.packages) {
-                        Object.keys(service.packages).forEach(packageId => {
+                        Object.keys(service.packages).forEach((packageId) => {
                             if (!packageSet.has(packageId)) {
                                 packageSet.add(packageId);
-                                uniquePackagesList.push({ id: packageId, name: service.packages[packageId] });
+                                uniquePackagesList.push({
+                                    id: packageId,
+                                    name: service.packages[packageId],
+                                });
                             }
                         });
                     }
                 });
+
                 setUniquePackages(uniquePackagesList);
             } else {
-                Swal.fire('Error!', `An error occurred: ${data.message}`, 'error');
+                Swal.fire("Error!", `An error occurred: ${data.message}`, "error");
             }
-
         } catch (error) {
-            console.error('Fetch error:', error);
-            Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+            console.error("Fetch error:", error);
+            Swal.fire("Error!", "An unexpected error occurred.", "error");
         } finally {
             setServicesLoading(false);
         }
-    }, [API_URL, branchId, token]);
+    }, [API_URL]);
 
     const fetchClient = useCallback(async () => {
         setCandidateLoading(true);
@@ -209,7 +213,7 @@ export const DropBoxProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                 });
             }
 
@@ -222,7 +226,7 @@ export const DropBoxProvider = ({ children }) => {
                         confirmButtonText: "Ok",
                     }).then(() => {
                         // Redirect to admin login page
-                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                     });
                 }
                 const errorMessage = result?.message || 'Something went wrong. Please try again later.';
@@ -272,24 +276,27 @@ export const DropBoxProvider = ({ children }) => {
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
+        
         if (!branch_id || !_token) {
             setLoading(false);
             return;
         }
-
+    
         try {
             const response = await fetch(`${API_URL}/branch/client-application/list?customer_id=${customer_id}&branch_id=${branch_id}&_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-
+    
             const result = await response.json();
-
             const newToken = result?._token || result?.branch_token;
+            
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
+    
+            // Handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
                     title: "Session Expired",
@@ -297,22 +304,12 @@ export const DropBoxProvider = ({ children }) => {
                     icon: "warning",
                     confirmButtonText: "Ok",
                 }).then(() => {
-
-                    if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
-                        });
-                    }                         // Redirect to admin login page
-                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                    // Redirect to customer login page with email parameter if session expired
+                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                 });
+                return; // Stop further processing after session expiration
             }
-
+    
             if (!response.ok) {
                 const errorMessage = result?.message || 'Something went wrong. Please try again.';
                 Swal.fire({
@@ -324,16 +321,18 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return;
             }
-
-            // Set client application data if available
+    
+            // Process and set data if response is successful
             setListData(result.data.clientApplications || []);
-
+    
             if (result.data.customerInfo) {
                 const customer = result.data.customerInfo;
                 const customer_code = customer.client_unique_id;
                 localStorage.setItem('customer_code', customer_code);
+    
                 const parsedServices = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
                 setServices(parsedServices);
+    
                 const uniquePackagesList = [];
                 const packageSet = new Set();
                 parsedServices.forEach(service => {
@@ -348,15 +347,15 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 setUniquePackages(uniquePackagesList);
             }
-
+    
         } catch (error) {
             console.error('Fetch error:', error);
-            Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+            Swal.fire('Error!', 'An unexpected error occurred. Please try again later.', 'error');
         } finally {
             setLoading(false);
         }
     }, [API_URL]);
-
+    
 
     return (
         <DropBoxContext.Provider value={{

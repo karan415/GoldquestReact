@@ -125,73 +125,100 @@ const CandidateList = () => {
 
     const handleDelete = (id) => {
         Swal.fire({
-            title: 'Are you sure?',
+            title: "Are you sure?",
             text: "You won't be able to revert this!",
-            icon: 'warning',
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "No, cancel!",
         }).then((result) => {
             if (result.isConfirmed) {
-                const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
+                const branchData = JSON.parse(localStorage.getItem("branch"));
+                const branchId = branchData?.id;
                 const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
                 const branch_token = localStorage.getItem("branch_token");
 
                 if (!branchId || !branch_token) {
                     console.error("Branch ID or token is missing.");
-                    navigate('/customer-login')
+                    Swal.fire({
+                        title: "Error",
+                        text: "Session not found. Please log in again.",
+                        icon: "error",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        navigate(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
+                    });
                     return;
                 }
 
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
                     },
                 };
 
-                fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
+                fetch(
+                    `${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`,
+                    requestOptions
+                )
                     .then(async (response) => {
                         const result = await response.json();
                         const newToken = result._token || result.token;
+
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
 
                         if (!response.ok) {
                             const errorMessage = result.message || "An error occurred";
-                            Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
 
-                            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                            if (
+                                errorMessage.toLowerCase().includes("invalid") &&
+                                errorMessage.toLowerCase().includes("token")
+                            ) {
                                 Swal.fire({
                                     title: "Session Expired",
                                     text: "Your session has expired. Please log in again.",
                                     icon: "warning",
                                     confirmButtonText: "Ok",
                                 }).then(() => {
-                                    // Redirect to admin login page
-                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                                    // Redirect to customer login page
+                                    window.open(
+                                        `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
+                                       
+                                    );
                                 });
+                            } else {
+                                Swal.fire("Error!", `An error occurred: ${errorMessage}`, "error");
                             }
+
                             throw new Error(errorMessage);
                         }
 
                         return result;
                     })
-                    .then(result => {
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("branch_token", newToken);
-                        }
-                        fetchClient();
-                        Swal.fire('Deleted!', 'Your service has been deleted.', 'success');
+                    .then((result) => {
+                        fetchClient(); // Refresh the client list
+                        Swal.fire(
+                            "Deleted!",
+                            "The candidate application has been deleted successfully.",
+                            "success"
+                        );
                     })
-                    .catch(error => {
-                        console.error('Fetch error:', error);
+                    .catch((error) => {
+                        console.error("Fetch error:", error);
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error occurred while deleting the application. Please try again.",
+                            icon: "error",
+                            confirmButtonText: "Ok",
+                        });
                     });
             }
         });
     };
+
 
 
     return (
@@ -253,6 +280,7 @@ const CandidateList = () => {
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
                                         <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
+                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">View Docs</th>
                                         <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
                                     </tr>
                                 </thead>
@@ -330,7 +358,7 @@ const CandidateList = () => {
                                                     </div>
                                                 </div>
                                             )}
-
+                                            
 
 
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
@@ -343,6 +371,31 @@ const CandidateList = () => {
                                                         return `${day}-${month}-${year}`;
                                                     })()
                                                 ) : 'NIL'}
+                                            </td>
+                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
+                                                {report.photo ? (
+                                                    // Check if the file is an image
+                                                    report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                        <img
+                                                            src={`${report.photo}`}
+                                                            alt="Image"
+                                                            className="h-20 w-20 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        // If it's a document (pdf, doc, etc.), show a button
+                                                        <a
+                                                            href={`${report.photo}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                View Document
+                                                            </button>
+                                                        </a>
+                                                    )
+                                                ) : (
+                                                    'NIL'
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
                                                 <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>

@@ -20,7 +20,7 @@ const Admin = ({ children }) => {
   
       if (!storedAdminData || !storedToken) {
         localStorage.clear();
-        redirectToLogin();
+        redirectToLogin("No active session found. Please log in again.");
         return;
       }
   
@@ -28,14 +28,13 @@ const Admin = ({ children }) => {
       try {
         adminData = JSON.parse(storedAdminData);
       } catch (error) {
-        console.error('Error parsing JSON from localStorage:', error);
+        console.error("Error parsing JSON from localStorage:", error);
         Swal.fire({
-          title: 'Authentication Error',
-          text: 'Error parsing admin data from localStorage.',
-          icon: 'error',
-          confirmButtonText: 'Ok'
-        });
-        redirectToLogin();
+          title: "Authentication Error",
+          text: "Error parsing admin data from localStorage.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        }).then(() => redirectToLogin());
         return;
       }
   
@@ -45,35 +44,43 @@ const Admin = ({ children }) => {
           _token: storedToken,
         });
   
-        if (response.data.status) {
+        const responseData = response.data;
+  
+        if (responseData.status) {
           setLoading(false);
         } else {
-          console.error('Login verification failed:', response.data.message || 'Unknown error');
+
+          if (responseData.message && responseData.message.toLowerCase().includes("invalid") && responseData.message.toLowerCase().includes("token")) {
+            Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+            }).then(() => redirectToLogin("Session expired"));
+            return;
+          }
+          
           Swal.fire({
-            title: 'Login Verification Failed',
-            text: response.data.message || 'An unknown error occurred during verification.',
-            icon: 'error',
-            confirmButtonText: 'Ok'
-          });
-          localStorage.clear();
-          redirectToLogin(response.data.message);
+            title: "Login Verification Failed",
+            text: responseData.message || "An unknown error occurred during verification.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          }).then(() => redirectToLogin(responseData.message));
         }
       } catch (error) {
-        console.error('Error validating login:', error.response?.data?.message || error.message);
+        console.error("Error validating login:", error.response?.data?.message || error.message);
         Swal.fire({
-          title: 'Error',
-          text: error.response?.data?.message || 'Error validating login',
-          icon: 'error',
-          confirmButtonText: 'Ok'
-        });
-        localStorage.clear();
-        redirectToLogin(error.response?.data?.message || 'Error validating login');
+          title: "Error",
+          text: error.response?.data?.message || "Error validating login.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        }).then(() => redirectToLogin(error.response?.data?.message || "Error validating login."));
       }
     };
   
-    const redirectToLogin = (errorMessage) => {
+    const redirectToLogin = (errorMessage = "Please log in again.") => {
       localStorage.clear();
-      navigate('/admin-login', { state: { from: location, errorMessage }, replace: true });
+      navigate("/admin-login", { state: { from: location, errorMessage }, replace: true });
     };
   
     checkAuthentication();

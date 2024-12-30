@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApi } from '../ApiContext';
 
 const Logout = () => {
+    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
     const API_URL = useApi();
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Logout = () => {
             localStorage.removeItem("branch_token");
 
 
-            navigate('/customer-login');
+            navigate(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
         } catch (error) {
             console.error('Error during logout:', error);
         }

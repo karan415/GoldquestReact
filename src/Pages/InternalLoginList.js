@@ -12,8 +12,8 @@ const InternalLoginList = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
     useEffect(() => {
-        fetchData(); // Call the function to fetch data
-    }, []); // Empty dependency array ensures this runs once when the component mounts
+        fetchData(); 
+    }, []); 
 
 
 

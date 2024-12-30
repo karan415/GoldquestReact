@@ -173,18 +173,18 @@ const GenerateReport = () => {
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-              if (result.message && result.message.startsWith("INVALID TOKEN")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                        return;
-                    }
+            if (result.message && result.message.startsWith("INVALID TOKEN")) {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.location.href = "/admin-login"; // Replace with your login route
+                });
+                return;
+            }
 
             // Filter out null or invalid items
             const filteredResults = result.results?.filter((item) => item != null) || [];
@@ -666,7 +666,15 @@ const GenerateReport = () => {
         e.preventDefault();
         setLoading(true); // Start loading spinner
         const fileCount = Object.keys(files).length;
-
+        const swalInstance = Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we create the Client.',
+            didOpen: () => {
+                Swal.showLoading(); // This starts the loading spinner
+            },
+            allowOutsideClick: false, // Prevent closing Swal while processing
+            showConfirmButton: false, // Hide the confirm button
+        });
         try {
             const adminData = JSON.parse(localStorage.getItem("admin"));
             const token = localStorage.getItem("_token");
@@ -744,13 +752,7 @@ const GenerateReport = () => {
             });
 
             // Prepare request payload
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while we create the application.',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+           
             const raw = JSON.stringify({
                 admin_id: adminData?.id || "",
                 _token: token || "",
@@ -809,6 +811,7 @@ const GenerateReport = () => {
             console.error("Error during submission:", error);
             Swal.fire("Error", error.message || "Failed to submit the application. Please try again.", "error");
         } finally {
+            swalInstance.close();
             setLoading(false); // Ensure loading spinner stops
         }
     }, [servicesDataInfo, branchid, branchInfo, applicationId, formData, selectedStatuses, files]);

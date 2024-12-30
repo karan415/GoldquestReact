@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import axios from "axios";
 import PulseLoader from 'react-spinners/PulseLoader'; 
 const CandidiateDav = () => {
     const [davData, setDAVData] = useState([]);
@@ -11,42 +9,11 @@ const CandidiateDav = () => {
     const [loading, setLoading] = useState(true);
 
     // Step 2: Get values from localStorage
-    const admin = JSON.parse(localStorage.getItem('admin'));
-    const admin_id = admin ? admin.id : null; // Replace with the actual key for admin ID
-    const token = localStorage.getItem('_token');
 
 
 
-    const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
     const [isValidApplication, setIsValidApplication] = useState(true);
-    const location = useLocation();
-    const currentURL = location.pathname + location.search;
-    const [errors, setErrors] = useState({});
-    const [files, setFiles] = useState([]);
-    const [formData, setFormData] = useState({
-        personal_information: {
-            company_name: '',
-            name: '',
-            employee_id: '',
-            mobile_number: '',
-            email: '',
-            candidate_location: '',
-            aadhaar_number: '',
-            dob: '',
-            father_name: '',
-            husband_name: '',
-            gender: '',
-            marital_status: '',
-            pin_code: '',
-            state: '',
-            landmark: '',
-            police_station: '',
-            years_staying: '',
-            from_date: '',
-            to_date: '',
-            id_type: ''
-        },
-    });
+ 
     const FileViewer = ({ fileUrl }) => {
         if (!fileUrl) {
             return <p>No file provided</p>; // Handle undefined fileUrl

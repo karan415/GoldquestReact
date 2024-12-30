@@ -15,7 +15,7 @@ const Acknowledgement = () => {
     setLoading(true); // Start loading
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
     fetch(`https://octopus-app-www87.ondigitalocean.app/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
       .then(response => response.json())
       .then(data => {
@@ -23,26 +23,43 @@ const Acknowledgement = () => {
         if (newToken) {
           localStorage.setItem("_token", newToken);
         }
-        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
-          Swal.fire({
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again.",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          }).then(() => {
-            // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
-          });
-        }
-        if (data.status && data.customers && Array.isArray(data.customers.data)) {
+        else if (data.status && data.customers && Array.isArray(data.customers.data)) {
           setEmailsData(data.customers.data);
         } else {
+          // Handle unexpected response format
+          if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+            Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+            }).then(() => {
+              // Redirect to admin login page
+              window.location.href = "/admin-login"; // Replace with your login route
+            });
+          }
+          Swal.fire({
+            title: "Error",
+            text: data.message || "An unexpected error occurred while fetching emails.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
           console.error("Invalid response format:", data);
         }
       })
-      .catch(error => console.error(error))
+      .catch(error => {
+       
+        Swal.fire({
+          title: "Error",
+          text: error.message || "An error occurred while fetching emails. Please try again.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+        console.error(error);
+      })
       .finally(() => setLoading(false)); // Stop loading
   }, [setEmailsData]);
+  
 
   const sendApproval = (id) => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;

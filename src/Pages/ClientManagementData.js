@@ -18,13 +18,19 @@ const ClientManagementData = () => {
     const [selectedPackages, setSelectedPackages] = useState({});
     const [priceData, setPriceData] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const itemsPerPage = 10;
+    const filteredItems = paginated.filter(item => {
+        return (
+            item.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
 
-    const totalPages = Math.ceil(paginated.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = paginated.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -94,34 +100,34 @@ const ClientManagementData = () => {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
             const res = await fetch(`${API_URL}/customer/add-customer-listings?admin_id=${admin_id}&_token=${storedToken}`);
-    
+
             if (!res.ok) {
                 const errorResponse = await res.json();
                 const errorMessage = errorResponse.message || `Network response was not ok: ${res.status}`;
                 throw new Error(errorMessage);
             }
-    
+
             const result = await res.json();
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                        Swal.fire({
-                          title: "Session Expired",
-                          text: "Your session has expired. Please log in again.",
-                          icon: "warning",
-                          confirmButtonText: "Ok",
-                        }).then(() => {
-                          // Redirect to admin login page
-                          window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                      }
-    
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.location.href = "/admin-login"; // Replace with your login route
+                });
+            }
+
             if (!result || !result.data || !Array.isArray(result.data.services)) {
                 throw new Error('Invalid response format: Missing or invalid services data');
             }
-    
+
             const processedServices = result.data.services.map(item => ({
                 ...item,
                 service_id: item.id,
@@ -130,20 +136,20 @@ const ClientManagementData = () => {
                 selectedPackages: [] // Assuming this is still required
             }));
             setService(processedServices);
-    
+
             if (!Array.isArray(result.data.packages)) {
                 throw new Error('Invalid response format: Missing or invalid packages data');
             }
-    
+
             const processedPackages = result.data.packages.map(item => ({
                 ...item,
                 service_id: item.id
             }));
             setPackageList(processedPackages);
-    
+
         } catch (error) {
             console.error("Error fetching services:", error);
-    
+
             // Show the error message in a Swal alert
             Swal.fire({
                 title: 'Error!',
@@ -151,13 +157,13 @@ const ClientManagementData = () => {
                 icon: 'error',
                 confirmButtonText: 'Ok'
             });
-    
+
             setError(error.message); // Set the error state with the message
         } finally {
             setLoading(false);
         }
     }, [API_URL]);
-    
+
 
     useEffect(() => {
         fetchServicesAndPackages();
@@ -241,6 +247,19 @@ const ClientManagementData = () => {
                         <p className="text-center py-4">No data available</p>
                     ) : (
                         <>
+                            <div className="col md:flex mb-4">
+                                <form action="">
+                                    <div className="flex md:items-stretch items-center gap-3">
+                                        <input
+                                            type="search"
+                                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                                            placeholder='Search by Service Name'
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                </form>
+                            </div>
                             <table className="min-w-full">
                                 <thead>
                                     <tr className='bg-green-500'>

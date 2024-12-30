@@ -249,15 +249,26 @@ const ExternalLoginData = () => {
                     <td className="py-3 px-4 border-b border-l whitespace-nowrap capitalize">{item.name}</td>
                     <td className="py-3 px-4 border-b border-l text-left cursor-pointer">{item.mobile}</td>
                     <td className="py-3 px-4 border-b border-l text-center cursor-pointer">
-                      {item.branch_count > 1 && (
-                        <button
-                          className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-                          onClick={() => toggleAccordion(item.main_id)}
-                        >
-                          View Branches
-                        </button>
-                      )}
-                    </td>
+  {item.branch_count > 1 ? (
+    <button
+      className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
+      onClick={() => toggleAccordion(item.main_id)}
+    >
+      View Branches
+    </button>
+  ) : (
+    // Handle the case where there's 1 or no branch
+    (() => {
+      const parsedEmails = JSON.parse(item.emails); // Parse the string into an array
+      return (
+        <button onClick={() => getEmail(parsedEmails[0])} className="bg-green-600 hover:bg-green-200 text-sm rounded-md p-3 px-5 text-white">
+          Go
+        </button>
+      );
+    })()
+  )}
+</td>
+
                   </tr>
 
                   {openAccordionId === item.main_id && (

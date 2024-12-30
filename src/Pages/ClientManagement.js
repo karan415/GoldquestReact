@@ -308,12 +308,15 @@ const ClientManagement = () => {
         setErrors({});
     }
 
-    Swal.fire({
+    // Show the "Processing..." message and loading spinner
+    const swalInstance = Swal.fire({
         title: 'Processing...',
         text: 'Please wait while we create the Client.',
         didOpen: () => {
-            Swal.showLoading();
-        }
+            Swal.showLoading(); // This starts the loading spinner
+        },
+        allowOutsideClick: false, // Prevent closing Swal while processing
+        showConfirmButton: false, // Hide the confirm button
     });
 
     try {
@@ -326,12 +329,18 @@ const ClientManagement = () => {
             admin_id: adminData.id,
             ...input,
             _token: token,
-            branches: branchForms,
-            emails: emails,
             clientData: clientData,
             custom_bgv: custom_bgv,
             send_mail: fileCount === 0 ? 1 : 0,
         };
+
+        if (branchForms.some(branch => branch.branch_name.trim() !== "" && branch.branch_email.trim() !== "")) {
+            requestData.branches = branchForms;
+        }
+
+        if (emails && emails.length > 0) {
+            requestData.emails = emails;
+        }
 
         const response = await fetch(`${API_URL}/customer/create`, {
             method: "POST",
@@ -349,17 +358,17 @@ const ClientManagement = () => {
 
         // Check if the response message starts with "INVALID TOKEN"
         if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
-          Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-          }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
-          });
-          return;
-      }
+            Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+            }).then(() => {
+                // Redirect to admin login page
+                window.location.href = "/admin-login"; // Replace with your login route
+            });
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(data.message || "Failed to create client");
@@ -395,6 +404,7 @@ const ClientManagement = () => {
         console.error("Error:", error);
         Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
     } finally {
+        swalInstance.close(); // Close the Swal loading spinner
         setIsLoading(false);
     }
 };
@@ -536,7 +546,7 @@ const ClientManagement = () => {
                     name="client_code"
                     id="client_code"
                     className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
-                    value={input.client_code}
+                    value={`GQ-${input.client_code.replace(/^GQ-/, '')}`} // Ensure the value starts with 'GQ-'
                     onChange={handleChange}
                     ref={(el) => (refs.current["client_code"] = el)} // Attach ref here
 

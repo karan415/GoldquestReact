@@ -53,7 +53,6 @@ const InternalLoginForm = () => {
         if (!formData.employee_id) errors.employee_id = 'This field is required';
         if (!formData.name) errors.name = 'This field is required';
         if (!formData.mobile) errors.mobile = 'This field is required';
-        else if (formData.mobile.length !== 10) errors.mobile = 'mobile must be 10 characters';
         if (!formData.email) errors.email = 'This field is required';
         if (!formData.password) errors.password = 'This field is required';
         if (!formData.role) errors.role = 'This field is required';

@@ -6,7 +6,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader';
 const ClientForm = () => {
-    
+
     const [formLoading, setFormLoading] = useState(false);
     const branch_name = JSON.parse(localStorage.getItem("branch"));
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
@@ -86,12 +86,6 @@ const ClientForm = () => {
 
     }, []);
 
-
-
-
-    useEffect(() => {
-        fetchClientDrop();
-    }, [fetchClientDrop])
 
 
     const handleFileChange = (fileName, e) => {
@@ -181,20 +175,20 @@ const ClientForm = () => {
         e.preventDefault();
         let requestBody;
         const errors = validate();
-
+    
         if (Object.keys(errors).length === 0) {
             setFormLoading(true);
-
+    
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
-
+    
             if (fileCount === 0) {
                 requestBody = {
                     customer_id,
                     branch_id,
                     send_mail: 1,
                     _token: branch_token,
-                    ...clientInput
+                    ...clientInput,
                 };
             } else {
                 requestBody = {
@@ -202,61 +196,68 @@ const ClientForm = () => {
                     branch_id,
                     send_mail: 0,
                     _token: branch_token,
-                    ...clientInput
+                    ...clientInput,
                 };
             }
-
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while we create the Application.',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+    
+              const swalInstance = Swal.fire({
+                   title: 'Processing...',
+                   text: 'Please wait while we create the Client.',
+                   didOpen: () => {
+                       Swal.showLoading(); // This starts the loading spinner
+                   },
+                   allowOutsideClick: false, // Prevent closing Swal while processing
+                   showConfirmButton: false, // Hide the confirm button
+               });
+    
             try {
                 const response = await fetch(
                     isEditClient
                         ? `${API_URL}/branch/client-application/update`
                         : `${API_URL}/branch/client-application/create`,
                     {
-                        method: isEditClient ? 'PUT' : "POST",
+                        method: isEditClient ? "PUT" : "POST",
                         headers: {
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
                         },
-                        body: JSON.stringify(requestBody)
+                        body: JSON.stringify(requestBody),
                     }
                 );
-
+    
                 const result = await response.json();
-
+    
                 if (!response.ok) {
-                    // Handle error response from API
-                    const errorMessage = result.message || 'Unknown error occurred';
-                    const apiError = result.errors || 'An unexpected error occurred. Please try again later.';
-                    Swal.fire(
-                        'Error!',
-                        `An error occurred: ${errorMessage}\n${apiError}`,
-                        'error'
-                    );
-                    if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+                    const errorMessage = result.message || "Unknown error occurred";
+                    const apiError =
+                        result.errors || "An unexpected error occurred. Please try again later.";
+                    Swal.fire("Error!", `An error occurred: ${errorMessage}\n${apiError}`, "error");
+    
+                    // Handle session expiration if token is invalid
+                    if (
+                        errorMessage.toLowerCase().includes("invalid") &&
+                        errorMessage.toLowerCase().includes("token")
+                    ) {
                         Swal.fire({
                             title: "Session Expired",
                             text: "Your session has expired. Please log in again.",
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            // Redirect to admin login page
-                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`, '_blank');
+                            // Redirect to customer login page with the email address
+                            window.open(
+                                `/customer-login?email=${encodeURIComponent(branchEmail)}`
+                            );
                         });
                     }
+    
                     throw new Error(errorMessage);
                 }
-
+    
                 const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("branch_token", newToken);
                 }
-
+    
                 let insertedId;
                 let new_application_id;
                 if (isEditClient) {
@@ -266,65 +267,68 @@ const ClientForm = () => {
                     insertedId = result.result.results.insertId;
                     new_application_id = result.result.new_application_id;
                 }
-
+    
                 // Reset the form fields including files
                 setClientInput({
-                    name: '',
-                    employee_id: '',
-                    spoc: '',
-                    location: '',
-                    batch_number: '',
-                    sub_client: '',
+                    name: "",
+                    employee_id: "",
+                    spoc: "",
+                    location: "",
+                    batch_number: "",
+                    sub_client: "",
                     services: [],
-                    package: '',
-                    client_application_id: ''
+                    package: "",
+                    client_application_id: "",
                 });
-
+    
                 setFiles({}); // Clear files
                 setInputError({}); // Reset input errors
-                console.log("Files reset: ", files); // Verify the state change
+                fetchClientDrop()
+
 
                 // Show success message
                 if (fileCount === 0) {
                     Swal.fire({
                         title: "Success",
-                        text: `${isEditClient ? 'Application Updated Successfully' : 'Application Created Successfully'}`,
+                        text: `${isEditClient ? "Application Updated Successfully" : "Application Created Successfully"}`,
                         icon: "success",
                         confirmButtonText: "Ok",
-                    });
+                    })
                 }
-
+    
                 if (fileCount > 0) {
                     // Proceed to upload files if files exist
                     await uploadCustomerLogo(insertedId, new_application_id);
-
+                
                     Swal.fire({
                         title: "Success",
                         text: `Client Application Created Successfully.`,
                         icon: "success",
                         confirmButtonText: "Ok",
-                    });
+                    })
                 }
+                
 
-                console.log('insertedId', insertedId, 'new_application_id', new_application_id);
                 setIsEditClient(false);
-                fetchClientDrop(); // Refresh the client data
-
+    
             } catch (error) {
                 console.error("There was an error!", error);
-
+    
                 Swal.fire(
-                    'Error!',
-                    'There was an error with the request. Please try again later.',
-                    'error'
+                    "Error!",
+                    "There was an error with the request. Please try again later.",
+                    "error"
                 );
             } finally {
+                swalInstance.close(); // Close the Swal loading spinner
+
                 setFormLoading(false);
             }
         } else {
             setInputError(errors); // Set the input errors if validation fails
         }
     };
+    
 
 
 
