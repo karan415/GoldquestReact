@@ -8,8 +8,11 @@ import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import Modal from 'react-modal';
+
 const CandidateExcelTrackerStatus = () => {
     const [loadingRow, setLoadingRow] = useState(null);
+    const [selectedAttachments, setSelectedAttachments] = useState([]);
 
     const { handleTabChange } = useSidebar();
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
@@ -22,8 +25,8 @@ const CandidateExcelTrackerStatus = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [servicesLoading, setServicesLoading] = useState(false);
-    const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
+    const [isModalOpenDoc, setIsModalOpenDoc] = useState(false);
+
     const API_URL = useApi();
     const { branch_id } = useContext(BranchContextExel);
     const queryParams = new URLSearchParams(location.search);
@@ -63,7 +66,7 @@ const CandidateExcelTrackerStatus = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -88,7 +91,7 @@ const CandidateExcelTrackerStatus = () => {
                         confirmButtonText: "Ok",
                     }).then(() => {
                         // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
+                        window.location.href = "admin-login"; // Replace with your login route
                     });
                 }
 
@@ -106,10 +109,16 @@ const CandidateExcelTrackerStatus = () => {
         handleTabChange('candidate_master');
     }
 
-    const handleStatusChange = (event) => {
-        setSelectedStatus(event.target.value);
-    };
-
+ 
+     const handleViewDocuments = (attachments) => {
+         setSelectedAttachments(attachments);
+         setIsModalOpenDoc(true);
+     };
+ 
+     const handleCloseModalDoc = () => {
+         setIsModalOpenDoc(false);
+         setSelectedAttachments([]);
+     };
 
     const filteredItems = data.filter(item => {
         return (
@@ -287,7 +296,7 @@ const CandidateExcelTrackerStatus = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "admin-login"; // Replace with your login route
                         });
                     }
 
@@ -376,7 +385,7 @@ const CandidateExcelTrackerStatus = () => {
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Mobile Number</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Email</th>
                                     <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">Initiation Date</th>
-                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">View More</th>
+                                    <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">View Documents</th>
                                     {currentItems.some(item => item.cef_id) ? (
                                         <th className="py-3 px-4 border-b border-r-2 whitespace-nowrap uppercase">
                                             BGV
@@ -429,26 +438,27 @@ const CandidateExcelTrackerStatus = () => {
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap ">{data.email || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                 {data.created_at
-                                                    ? new Intl.DateTimeFormat('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: '2-digit',
-                                                    }).format(new Date(data.created_at))
+                                                    ? (new Date(data.created_at))
+                                                        .toLocaleDateString('en-GB')
+                                                        .split('/')
+                                                        .map((item, index) => index === 0 || index === 1 ? item.replace(/^0/, '') : item) // Remove leading zero from day and month
+                                                        .join('-')
                                                     : 'NIL'}
                                             </td>
-                                            <td class="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300">
-                                                <button
-                                                    className={`uppercase border px-4 py-2 rounded ${data.service_data
-                                                        ? 'bg-orange-500 text-white hover:border-orange-500 hover:bg-white hover:text-orange-500'
-                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                        }`}
-                                                    onClick={() => data.service_data && handleViewMore(data.id)}
-                                                    disabled={!data.service_data}
-                                                >
-                                                    {expandedRow > 0 ? 'LESS' : 'VIEW'}
-                                                </button>
-
+                                            <td className="py-3 px-4 border whitespace-nowrap">
+                                                {data.service_data?.cef ? (
+                                                    <button
+                                                        className="px-4 py-2 bg-green-500 text-white rounded"
+                                                        onClick={() => handleViewDocuments(data.service_data.cef)}
+                                                    >
+                                                        View Documents
+                                                    </button>
+                                                ) : (
+                                                    <span>No Attachments</span>
+                                                )}
                                             </td>
+
+                                          
 
                                             {data.cef_id ? (
                                                 <td className="border px-4 py-2">
@@ -466,13 +476,14 @@ const CandidateExcelTrackerStatus = () => {
                                             {currentItems.some(item => item.cef_filled_date) ? (
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     {data.cef_filled_date
-                                                        ? new Intl.DateTimeFormat('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: '2-digit',
-                                                        }).format(new Date(data.cef_filled_date))
+                                                        ? (new Date(data.cef_filled_date))
+                                                            .toLocaleDateString('en-GB') // Format as DD/MM/YYYY
+                                                            .split('/')
+                                                            .map((item, index) => index === 0 || index === 1 ? item.replace(/^0/, '') : item) // Remove leading zero from day and month
+                                                            .join('-')
                                                         : 'NIL'}
                                                 </td>
+
                                             ) : (
                                                 <td className="border px-4 py-2">NIL</td>
                                             )}
@@ -516,176 +527,54 @@ const CandidateExcelTrackerStatus = () => {
                                             ) : <td className="border px-4 py-2">NIL</td>}
 
                                         </tr>
-                                        {servicesLoading[index] ? (
-                                            <tr>
-                                                <td colSpan={12} className="py-4 text-center text-gray-500">
-                                                    <div className='flex justify-center'>
-                                                        <PulseLoader color="#36D7B7" loading={servicesLoading[index]} size={15} aria-label="Loading Spinner" />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : (expandedRow === data.id && (
-                                            <tr>
-                                                <td colSpan={10}>
-                                                    <div className='flex justify-end'>
-                                                        <div className="p-4 bg-gray-100 gap-20 min-h-20">
-                                                            {Object.entries(data.service_data).map(([mainHeading, subData]) => {
-
-                                                                if (mainHeading === 'cef') {
-                                                                    console.log(`mainHeading - `, mainHeading);
-                                                                    console.log(`subData - `, subData);
-                                                                    const hasInnerData = Object.values(subData || {}).some(
-                                                                        (items) => Array.isArray(items) && items.length > 0
-                                                                    );
-
-                                                                    console.log(`hasInnerData - `, hasInnerData);
-
-                                                                    return (
-                                                                        hasInnerData && (
-                                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                                <div
-                                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                                    onClick={() => toggleSection(mainHeading)}
-                                                                                >
-                                                                                    {mainHeading.toUpperCase()}
+                                        {isModalOpenDoc && (
+                                            <Modal
+                                                isOpen={isModalOpenDoc}
+                                                onRequestClose={handleCloseModalDoc}
+                                                className="custom-modal-content"
+                                                overlayClassName="custom-modal-overlay"
+                                            >
+                                                <div className="modal-container">
+                                                    <h2 className="modal-title text-center my-4 text-2xl font-bold">Attachments</h2>
+                                                    <ul className="modal-list h-[400px] overflow-scroll">
+                                                        {Object.entries(selectedAttachments).map(([category, attachments], idx) => (
+                                                            <li key={idx} className="modal-list-category">
+                                                                <h3 className="modal-category-title text-lg font-semibold my-2">{category}</h3>
+                                                                <ul>
+                                                                    {attachments.map((attachment, subIdx) => {
+                                                                        const label = Object.keys(attachment)[0];
+                                                                        const fileUrls = attachment[label]?.split(','); // Split URLs by comma
+                                                                        return (
+                                                                            <li key={subIdx} className="grid grid-cols-2 border-b py-2">
+                                                                                <span className="modal-list-text">{subIdx + 1}: {label}</span>
+                                                                                <div className="modal-url-list grid me-7 gap-2 justify-end">
+                                                                                    {fileUrls.map((url, urlIdx) => (
+                                                                                        <a
+                                                                                            key={urlIdx}
+                                                                                            href={url.trim()} // Trim to remove any extra spaces
+                                                                                            target="_blank"
+                                                                                            rel="noopener noreferrer"
+                                                                                            className="modal-view-button w-auto m-0 bg-green-500 text-white p-2 rounded-md px-4 block mt-2 text-center"
+                                                                                        >
+                                                                                            View {urlIdx + 1}
+                                                                                        </a>
+                                                                                    ))}
                                                                                 </div>
-                                                                                {openSection === mainHeading && (
-                                                                                    <div className="p-4">
-                                                                                        {Object.entries(subData).map(([subHeading, items]) => (
-                                                                                            items && items.length > 0 && (
-                                                                                                <div key={subHeading} className="mb-4">
-                                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                                    <table className="w-full border-collapse border border-gray-300">
-                                                                                                        <thead>
-                                                                                                            <tr>
-                                                                                                                <th className="border border-gray-300 p-2">Label</th>
-                                                                                                                <th className="border border-gray-300 p-2">Action</th>
-                                                                                                            </tr>
-                                                                                                        </thead>
-                                                                                                        <tbody>
-                                                                                                            {items.map((item, index) =>
-                                                                                                                Object.entries(item).map(([label, urls]) =>
-                                                                                                                    urls &&
-                                                                                                                    urls.split(",").map((url, urlIndex) => (
-                                                                                                                        <tr key={`${subHeading}-${index}-${label}-${urlIndex}`}>
-                                                                                                                            {/* Label is displayed once for each entry */}
-                                                                                                                            {urlIndex === 0 && (
-                                                                                                                                <td
-                                                                                                                                    className="border border-gray-300 p-2"
-                                                                                                                                    rowSpan={urls.split(",").length}
-                                                                                                                                >
-                                                                                                                                    {label}
-                                                                                                                                </td>
-                                                                                                                            )}
-                                                                                                                            <td className="border border-gray-300 p-2">
-                                                                                                                                <a
-                                                                                                                                    href={url.trim()}
-                                                                                                                                    target="_blank"
-                                                                                                                                    rel="noopener noreferrer"
-                                                                                                                                    className="px-4 py-2 m-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                                                                                                                                >
-                                                                                                                                    Docs {urlIndex + 1}
-                                                                                                                                </a>
-                                                                                                                            </td>
-                                                                                                                        </tr>
-                                                                                                                    ))
-                                                                                                                )
-                                                                                                            )}
+                                                                            </li>
+                                                                        );
+                                                                    })}
 
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                            )
-                                                                                        ))}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        )
-                                                                    );
-                                                                } else if (mainHeading === 'dav') {
-                                                                    console.log(`mainHeading - `, mainHeading);
-                                                                    console.log(`subData - `, subData);
-
-                                                                    // Check if subData contains valid data
-                                                                    const hasInnerData = Object.values(subData || {}).some((items) => {
-                                                                        // If items is a string, split it into an array
-                                                                        if (typeof items === 'string') {
-                                                                            items = items.split(',').map(item => item.trim());
-                                                                        }
-                                                                        // Check if it's an array and has at least one non-empty item
-                                                                        return Array.isArray(items) && items.length > 0 && items[0].trim() !== '';
-                                                                    });
-
-                                                                    console.log(`hasInnerData - `, hasInnerData);
-
-                                                                    return (
-                                                                        hasInnerData && (
-                                                                            <div key={mainHeading} className="mb-6 border rounded-md shadow-md bg-white">
-                                                                                <div
-                                                                                    className="cursor-pointer p-4 text-lg font-bold bg-gray-200 hover:bg-gray-300"
-                                                                                    onClick={() => toggleSection(mainHeading)}
-                                                                                >
-                                                                                    {mainHeading.toUpperCase()}
-                                                                                </div>
-                                                                                {openSection === mainHeading && (
-                                                                                    <div className="p-4">
-                                                                                        {Object.entries(subData).map(([subHeading, items]) => (
-                                                                                            // Ensure items is an array and has data
-                                                                                            items && (typeof items === 'string' ? items.split(',') : items).length > 0 && (
-                                                                                                <div key={subHeading} className="mb-4">
-                                                                                                    <h3 className="text-md font-semibold mb-2">{subHeading}</h3>
-                                                                                                    <table className="w-full border-collapse border border-gray-300">
-                                                                                                        <thead>
-                                                                                                            <tr>
-                                                                                                                <th className="border border-gray-300 p-2">Label</th>
-                                                                                                                <th className="border border-gray-300 p-2">Action</th>
-                                                                                                            </tr>
-                                                                                                        </thead>
-                                                                                                        <tbody>
-                                                                                                            {(typeof items === 'string' ? items.split(',') : items).map((url, urlIndex) => (
-                                                                                                                <tr key={`${subHeading}-${urlIndex}`}>
-                                                                                                                    {/* Display label once for each entry */}
-                                                                                                                    {urlIndex === 0 && (
-                                                                                                                        <td
-                                                                                                                            className="border border-gray-300 p-2"
-                                                                                                                            rowSpan={items.split(',').length}
-                                                                                                                        >
-                                                                                                                            {subHeading}
-                                                                                                                        </td>
-                                                                                                                    )}
-                                                                                                                    <td className="border border-gray-300 p-2">
-                                                                                                                        <a
-                                                                                                                            href={url.trim()}
-                                                                                                                            target="_blank"
-                                                                                                                            rel="noopener noreferrer"
-                                                                                                                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                                                                                                                        >
-                                                                                                                            Docs {urlIndex + 1}
-                                                                                                                        </a>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            ))}
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                            )
-                                                                                        ))}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        )
-                                                                    );
-                                                                }
-
-
-                                                            })}
-                                                        </div>
+                                                                </ul>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    <div className="modal-footer">
+                                                        <button className="modal-close-button" onClick={handleCloseModalDoc}>
+                                                            Close
+                                                        </button>
                                                     </div>
-                                                </td>
-                                            </tr>
-
-
-                                        )
+                                                </div>
+                                            </Modal>
                                         )}
                                     </React.Fragment>
                                 ))}

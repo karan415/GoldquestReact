@@ -5,7 +5,6 @@ import { useApi } from '../ApiContext';
 
 const PackageForm = ({ onSuccess }) => {
     const API_URL = useApi();
-
     const { fetchData } = usePackage();
     const { selectedPackage, clearSelectedPackage, packageList, updatePackageList } = usePackage();
     const [packageInput, setPackageInput] = useState({
@@ -18,6 +17,10 @@ const PackageForm = ({ onSuccess }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [formMessage, setFormMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+    const [initialPackageInput, setInitialPackageInput] = useState({
+        name: "",
+        message: "",
+    });
 
     useEffect(() => {
         const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -25,8 +28,13 @@ const PackageForm = ({ onSuccess }) => {
 
         if (adminData) setAdminId(adminData.id);
         if (token) setStoredToken(token);
+
         if (selectedPackage) {
             setPackageInput({
+                name: selectedPackage.title || "",
+                message: selectedPackage.description || "",
+            });
+            setInitialPackageInput({
                 name: selectedPackage.title || "",
                 message: selectedPackage.description || "",
             });
@@ -36,8 +44,31 @@ const PackageForm = ({ onSuccess }) => {
                 name: "",
                 message: "",
             });
+            setInitialPackageInput({
+                name: "",
+                message: "",
+            });
             setIsEditMode(false);
         }
+
+        // Handle tab visibility change event
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // Reset form when the tab is hidden (switched away)
+                setPackageInput({
+                    name: "",
+                    message: "",
+                });
+            }
+        };
+
+        // Add event listener for visibility change
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        // Cleanup the event listener when the component is unmounted
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [selectedPackage]);
 
     const validateInputs = () => {
@@ -71,7 +102,7 @@ const PackageForm = ({ onSuccess }) => {
 
         const validationErrors = validateInputs();
         if (Object.keys(validationErrors).length === 0) {
-            setError({})
+            setError({});
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
 
@@ -110,7 +141,7 @@ const PackageForm = ({ onSuccess }) => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "admin-login"; // Replace with your login route
                         });
                     }
 
@@ -186,6 +217,14 @@ const PackageForm = ({ onSuccess }) => {
         }
     };
 
+    const resetForm = () => {
+        setPackageInput({
+            name: "",
+            message: "",
+        });
+        setError({});
+        setIsEditMode(false);
+    };
 
     return (
         <>
@@ -224,6 +263,13 @@ const PackageForm = ({ onSuccess }) => {
                     disabled={isLoading} // Disable button while loading
                 >
                     {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Send'}
+                </button>
+                <button
+                    onClick={resetForm}
+                    type="button"
+                    className='bg-blue-400 mt-5 text-white p-3 rounded-md w-full'
+                >
+                    Reset Form
                 </button>
 
                 {formMessage && <p className="mt-4 text-center text-green-600">{formMessage}</p>}

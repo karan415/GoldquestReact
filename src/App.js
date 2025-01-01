@@ -66,7 +66,7 @@ const App = () => {
                                   <Router basename="/">
                                     <Routes>
                                       {/* Main Route */}
-                                      <Route path="/" element={<Admin><Render /></Admin>} />
+                                      <Route path="" element={<Admin><Render /></Admin>} />
 
                                       {/* Customer Routes */}
                                       <Route path="/customer-login" element={<CustomerLogin />} />

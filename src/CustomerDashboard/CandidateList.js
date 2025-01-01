@@ -6,12 +6,24 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import CandidateForm from './CandidateForm';
 import PulseLoader from 'react-spinners/PulseLoader';
 import { useNavigate } from 'react-router-dom';
+import Modal from 'react-modal';
 
 const CandidateList = () => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
+    const [selectedAttachments, setSelectedAttachments] = useState([]);
+    const [isModalOpenDoc, setIsModalOpenDoc] = useState(false);
 
+    const handleViewDocuments = (attachments) => {
+        setSelectedAttachments(attachments);
+        setIsModalOpenDoc(true);
+    };
+
+    const handleCloseModalDoc = () => {
+        setIsModalOpenDoc(false);
+        setSelectedAttachments([]);
+    };
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +48,9 @@ const CandidateList = () => {
         return (
             item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
+            item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.email?.toLowerCase().includes(searchTerm.toLowerCase()) 
+
 
         );
     });
@@ -186,7 +200,7 @@ const CandidateList = () => {
                                     // Redirect to customer login page
                                     window.open(
                                         `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
-                                       
+
                                     );
                                 });
                             } else {
@@ -358,7 +372,7 @@ const CandidateList = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
 
 
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
@@ -372,36 +386,77 @@ const CandidateList = () => {
                                                     })()
                                                 ) : 'NIL'}
                                             </td>
-                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                                {report.photo ? (
-                                                    // Check if the file is an image
-                                                    report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                                        <img
-                                                            src={`${report.photo}`}
-                                                            alt="Image"
-                                                            className="h-20 w-20 rounded-full"
-                                                        />
-                                                    ) : (
-                                                        // If it's a document (pdf, doc, etc.), show a button
-                                                        <a
-                                                            href={`${report.photo}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
-                                                                View Document
-                                                            </button>
-                                                        </a>
-                                                    )
+                                            <td className="py-3 px-4 border whitespace-nowrap">
+                                                {report.service_data?.cef ? (
+                                                    <button
+                                                        className="px-4 py-2 bg-green-500 text-white rounded"
+                                                        onClick={() => handleViewDocuments(report.service_data.cef)}
+                                                    >
+                                                        View Documents
+                                                    </button>
                                                 ) : (
-                                                    'NIL'
+                                                    <span>No Attachments</span>
                                                 )}
                                             </td>
+
+                                            {isModalOpenDoc && (
+                                                <Modal
+                                                    isOpen={isModalOpenDoc}
+                                                    onRequestClose={handleCloseModalDoc}
+                                                    className="custom-modal-content"
+                                                    overlayClassName="custom-modal-overlay"
+                                                >
+                                                    <div className="modal-container">
+                                                        <h2 className="modal-title text-center my-4 text-2xl font-bold">Attachments</h2>
+                                                        <ul className="modal-list h-[400px] overflow-scroll">
+                                                            {Object.entries(selectedAttachments).map(([category, attachments], idx) => (
+                                                                <li key={idx} className="modal-list-category">
+                                                                    <h3 className="modal-category-title text-lg font-semibold my-2">{category}</h3>
+                                                                    <ul>
+                                                                        {attachments.map((attachment, subIdx) => {
+                                                                            const label = Object.keys(attachment)[0];
+                                                                            const fileUrls = attachment[label]?.split(','); // Split URLs by comma
+                                                                            return (
+                                                                                <li key={subIdx} className="grid grid-cols-2 border-b py-2">
+                                                                                    <span className="modal-list-text">{subIdx + 1}: {label}</span>
+                                                                                    <div className="modal-url-list grid me-7 gap-2 justify-end">
+                                                                                        {fileUrls.map((url, urlIdx) => (
+                                                                                            <a
+                                                                                                key={urlIdx}
+                                                                                                href={url.trim()} // Trim to remove any extra spaces
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                className="modal-view-button w-auto m-0 bg-green-500 text-white p-2 rounded-md px-4 block mt-2 text-center"
+                                                                                            >
+                                                                                                View {urlIdx + 1}
+                                                                                            </a>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </li>
+                                                                            );
+                                                                        })}
+
+                                                                    </ul>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                        <div className="modal-footer">
+                                                            <button className="modal-close-button" onClick={handleCloseModalDoc}>
+                                                                Close
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </Modal>
+                                            )}
+
+
+
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
                                                 <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
                                                 <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
                                             </td>
                                         </tr>
+
                                     ))}
                                 </tbody>
 

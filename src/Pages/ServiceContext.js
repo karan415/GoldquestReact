@@ -65,7 +65,7 @@ export const ServiceProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "admin-login"; // Replace with your login route
                 });
             }
 
@@ -74,6 +74,7 @@ export const ServiceProvider = ({ children }) => {
                 ...item,
                 index: index + 1,
                 title: item.title,
+                group: item.group,
                 description: item.description,
                 sac_code: item.sac_code,
                 short_code: item.short_code,
@@ -98,7 +99,7 @@ export const ServiceProvider = ({ children }) => {
 
 
     return (
-        <ServiceContext.Provider value={{ selectedService, editService, ServiceList, updateServiceList, fetchData, loading, setData, data, error, setError }}>
+        <ServiceContext.Provider value={{ selectedService,setSelectedService, editService, ServiceList, updateServiceList, fetchData, loading, setData, data, error, setError }}>
             {children}
         </ServiceContext.Provider>
     );

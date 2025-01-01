@@ -12,7 +12,7 @@ const AdminChekin = () => {
 
     const { handleTabChange } = useSidebar();
     const [options, setOptions] = useState([]);
-    const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
+    const [expandedRow, setExpandedRow] = useState(null); // Initializing as null
     const navigate = useNavigate();
     const location = useLocation();
     const [itemsPerPage, setItemPerPage] = useState(10)
@@ -59,7 +59,7 @@ const AdminChekin = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -79,7 +79,6 @@ const AdminChekin = () => {
                 setOptions(result.data.filterOptions);
             })
             .catch((error) => {
-                console.error('Fetch error:', error);
             }).finally(() => {
                 setLoading(false);
             });
@@ -115,7 +114,7 @@ const AdminChekin = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -280,7 +279,7 @@ const AdminChekin = () => {
                         confirmButtonText: "Ok",
                     }).then(() => {
                         // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
+                        window.location.href = "admin-login"; // Replace with your login route
                     });
                 }
                 const filteredResults = result.results.filter((item) => item != null);
@@ -299,7 +298,6 @@ const AdminChekin = () => {
                 return [];
             }
         } catch (error) {
-            console.error("Error fetching service data:", error);
 
             Swal.fire({
                 icon: 'error',
@@ -347,68 +345,8 @@ const AdminChekin = () => {
         doc.line(margin, footerYPosition - 7, pageWidth - margin, footerYPosition - 7); // Line above the footer
     }
 
-
-    async function checkImageExists(url) {
-        try {
-            const response = await fetch(url, { method: 'HEAD' });
-            return response.ok; // Returns true if HTTP status is 200-299
-        } catch (error) {
-            console.error(`Error checking image existence at ${url}:`, error);
-            return false;
-        }
-    }
-
-    async function validateImage(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.warn(`Image fetch failed for URL: ${url}`);
-                return null;
-            }
-
-            const blob = await response.blob();
-            const img = new Image();
-            img.src = URL.createObjectURL(blob);
-
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-            });
-
-            return img; // Return the validated image
-        } catch (error) {
-            console.error(`Error validating image from ${url}:`, error);
-            return null;
-        }
-    }
-    const getImageFormat = (url) => {
-        const ext = url.split('.').pop().toLowerCase();
-        if (ext === 'png') return 'PNG';
-        if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
-        if (ext === 'webp') return 'WEBP';
-        return 'PNG'; // Default to PNG if not recognized
-    };
-
-    function scaleImage(img, maxWidth, maxHeight) {
-        const imgWidth = img.width;
-        const imgHeight = img.height;
-
-        let width = imgWidth;
-        let height = imgHeight;
-
-        // Scale image to fit within maxWidth and maxHeight
-        if (imgWidth > maxWidth) {
-            width = maxWidth;
-            height = (imgHeight * maxWidth) / imgWidth;
-        }
-
-        if (height > maxHeight) {
-            height = maxHeight;
-            width = (imgWidth * maxHeight) / imgHeight;
-        }
-
-        return { width, height };
-    }
+  
+    
     const generatePDF = async (index, reportDownloadFlag) => {
         const applicationInfo = data[index];
         const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services, reportDownloadFlag);
@@ -644,28 +582,21 @@ const AdminChekin = () => {
             const reportFormJson = JSON.parse(service.reportFormJson.json);
             const rows = reportFormJson.rows || [];
             const serviceData = [];
-            console.log('rows', rows);
 
             rows.forEach((row) => {
-                console.log("Processing row:", row);
 
                 const inputLabel = row.inputs.length > 0 ? row.inputs[0].label || "Unnamed Label" : "Unnamed Label";
-                console.log("Input label:", inputLabel);
 
                 const valuesObj = {};
-                console.log("Initializing valuesObj:", valuesObj);
 
                 row.inputs.forEach((input) => {
                     const inputName = input.name;
-                    console.log("Processing input:", input);
 
                     let reportDetailsInputName = inputName.includes("report_details_") ? inputName : `report_details_${inputName}`;
-                    console.log("Generated reportDetailsInputName:", reportDetailsInputName);
 
                     if (input.label && typeof input.label === "string") {
                         input.label = input.label.replace(/:/g, "");
                     }
-                    console.log("Cleaned label:", input.label);
 
                     if (service.annexureData) {
                         const value = service.annexureData[inputName] !== undefined && service.annexureData[inputName] !== null
@@ -676,7 +607,6 @@ const AdminChekin = () => {
                             ? service.annexureData[reportDetailsInputName]
                             : "";
 
-                        console.log("Fetched value:", value, "Fetched reportDetailsValue:", reportDetailsValue);
 
                         valuesObj[inputName] = value;
                         valuesObj["isReportDetailsExist"] = !!reportDetailsValue;
@@ -684,16 +614,12 @@ const AdminChekin = () => {
                             valuesObj[reportDetailsInputName] = reportDetailsValue;
                         }
 
-                        console.log("Updated valuesObj:", valuesObj);
 
                         valuesObj["name"] = inputName.replace("report_details_", "");
-                        console.log("Simplified name stored:", valuesObj["name"]);
                     } else {
-                        console.error("service.annexureData is not available for input:", inputName);
                         valuesObj[inputName] = "";
                         valuesObj["isReportDetailsExist"] = false;
                         valuesObj[reportDetailsInputName] = "";
-                        console.log("service.annexureData is missing, using fallback values:", valuesObj);
                     }
                 });
 
@@ -709,18 +635,14 @@ const AdminChekin = () => {
 
             const tableData = serviceData
                 .map((data) => {
-                    console.log("Processing data for table:", data);
 
                     if (!data || !data.values) {
-                        console.log("Skipping invalid data (empty values).");
                         return null;
                     }
 
                     const name = data.values.name;
-                    console.log("Processing name:", name);
 
                     if (!name || name.startsWith("annexure")) {
-                        console.log("Skipping annexure data for name:", name);
                         return null;
                     }
 
@@ -728,24 +650,19 @@ const AdminChekin = () => {
                     const value = data.values[name];
                     const reportDetails = data.values[`report_details_${name}`];
 
-                    console.log("isReportDetailsExist:", isReportDetailsExist, "value:", value, "reportDetails:", reportDetails);
 
                     if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
-                        console.log("Skipping data due to missing value or report details.");
                         return null;
                     }
 
                     if (isReportDetailsExist && reportDetails) {
-                        console.log("Row with reportDetails:", [data.label, value, reportDetails]);
                         return [data.label, value, reportDetails];
                     } else {
-                        console.log("Row without reportDetails:", [data.label, value]);
                         return [data.label, value];
                     }
                 })
                 .filter(Boolean);
 
-            console.log("Final tableData:", tableData);
 
             const pageWidth = doc.internal.pageSize.width;
 
@@ -834,11 +751,11 @@ const AdminChekin = () => {
             const annexureImagesKey = Object.keys(annexureData).find((key) =>
                 key.toLowerCase().startsWith("annexure") && !key.includes("[") && !key.includes("]")
             );
-
+            
             if (annexureImagesKey) {
                 const annexureImagesStr = annexureData[annexureImagesKey];
                 const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(",") : [];
-
+            
                 if (annexureImagesSplitArr.length === 0) {
                     doc.setFont("helvetica", "italic");
                     doc.setFontSize(10);
@@ -849,33 +766,35 @@ const AdminChekin = () => {
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
                         const imageUrlFull = `${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);
-
+                        console.log('imageUrlFull', imageUrlFull);
+            
                         if (!(await checkImageExists(imageUrlFull))) continue;
-
-                        const img = await validateImage(imageUrlFull);
-                        if (!img) continue;
-
+            
+                        const imgBlob = await validateImage(imageUrlFull);
+                        if (!imgBlob) continue;
+            
                         try {
+                            const img = await createImageFromBlob(imgBlob);
                             const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
                             if (yPosition + height > doc.internal.pageSize.height - 20) {
                                 doc.addPage();
                                 yPosition = 10;
                             }
-
+            
                             const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
                             const textWidth = doc.getTextWidth(annexureText);
                             const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-
+            
                             doc.setFont("helvetica", "bold");
                             doc.setFontSize(10);
                             doc.setTextColor(0, 0, 0);
                             doc.text(annexureText, centerX, yPosition + 10);
                             yPosition += 15;
-
+            
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
                             doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
                             yPosition += height + 15;
-
+            
                         } catch (error) {
                             console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
                         }
@@ -888,6 +807,83 @@ const AdminChekin = () => {
                 doc.text("No annexure images available.", 10, yPosition);
                 yPosition += 15;
             }
+            
+            // Function to convert Blob to Image
+            async function createImageFromBlob(blob) {
+                const img = new Image();
+                const url = URL.createObjectURL(blob);
+                img.src = url;
+            
+                return new Promise((resolve) => {
+                    img.onload = () => resolve(img);
+                });
+            }
+            
+            async function checkImageExists(url) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve(true);
+                    img.onerror = () => resolve(false);
+                    img.src = url;
+                });
+            }
+            
+            async function validateImage(imageUrl) {
+                try {
+                    const response = await fetch(imageUrl);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch image: ${response.statusText}`);
+                    }
+            
+                    const arrayBuffer = await response.arrayBuffer();
+                    const uint8Array = new Uint8Array(arrayBuffer);
+            
+                    // Check for PNG signature (first 8 bytes should be 89 50 4E 47 0D 0A 1A 0A)
+                    const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
+                    const isValidPNG = pngSignature.every((byte, index) => byte === uint8Array[index]);
+            
+                    if (!isValidPNG) {
+                        throw new Error('Invalid PNG format');
+                    }
+            
+                    // Return the image as a Blob for further use (e.g., rendering)
+                    return await response.blob();
+                } catch (error) {
+                    console.error(`Invalid image: ${imageUrl}`, error);
+                    return null;
+                }
+            }
+            
+            function getImageFormat(url) {
+                const ext = url.split('.').pop().toLowerCase();
+                if (ext === 'png') return 'PNG';
+                if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
+                if (ext === 'webp') return 'WEBP';
+                return 'PNG'; // Default to PNG if the format is unrecognized
+            }
+            
+            function scaleImage(img, maxWidth, maxHeight) {
+                const imgWidth = img.width;
+                const imgHeight = img.height;
+            
+                let width = imgWidth;
+                let height = imgHeight;
+            
+                // Scale the width if it exceeds maxWidth
+                if (imgWidth > maxWidth) {
+                    width = maxWidth;
+                    height = (imgHeight * maxWidth) / imgWidth;
+                }
+            
+                // Scale the height if it exceeds maxHeight
+                if (height > maxHeight) {
+                    height = maxHeight;
+                    width = (imgWidth * maxHeight) / imgHeight;
+                }
+            
+                return { width, height };
+            }
+            
 
 
             addFooter(doc);
@@ -939,18 +935,12 @@ const AdminChekin = () => {
         const disclaimerButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2;
 
 
-        console.log("disclaimerButtonXPosition:", disclaimerButtonXPosition);
-        console.log("disclaimerY:", disclaimerY);
-        console.log("disclaimerButtonWidth:", disclaimerButtonWidth);
-        console.log("disclaimerButtonHeight:", disclaimerButtonHeight);
-
         if (disclaimerButtonWidth > 0 && disclaimerButtonHeight > 0 && !isNaN(disclaimerButtonXPosition) && !isNaN(disclaimerY)) {
             doc.setDrawColor(62, 118, 165);
             doc.setFillColor(backgroundColor);
             doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F');
             doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D');
         } else {
-            console.error('Invalid rectangle dimensions:', disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight);
         }
 
         doc.setTextColor(0, 0, 0);
@@ -1002,7 +992,6 @@ const AdminChekin = () => {
             doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'F');
             doc.rect(endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight, 'D');
         } else {
-            console.error('Invalid rectangle dimensions for END OF DETAIL REPORT button:', endButtonXPosition, endOfDetailY, disclaimerButtonWidth, disclaimerButtonHeight);
         }
 
         doc.setTextColor(0, 0, 0);
@@ -1034,6 +1023,8 @@ const AdminChekin = () => {
 
     const handleViewMore = async (index) => {
         setServicesLoading((prev) => ({ ...prev, [index]: true })); // Set loading for this row
+
+        // Check if the row is already expanded
         if (expandedRow && expandedRow.index === index) {
             // Collapse the row if it's already expanded
             setExpandedRow(null);
@@ -1077,10 +1068,10 @@ const AdminChekin = () => {
                 });
             }
         } catch (error) {
-            console.error('Error fetching or processing service data:', error);
             setServicesLoading((prev) => ({ ...prev, [index]: false }));
         }
     };
+
 
 
     const handleSelectChange = (e) => {
@@ -1242,7 +1233,6 @@ const AdminChekin = () => {
                                                 <button
                                                     onClick={() => {
                                                         const reportDownloadFlag = (data.overall_status === 'completed' && data.is_verify === 'yes') ? 1 : 0;
-                                                        console.log(`reportDownloadFlag: ${reportDownloadFlag}, index: ${index}`);
 
                                                         // Set the button to loading
                                                         setLoadingStates(prevState => ({

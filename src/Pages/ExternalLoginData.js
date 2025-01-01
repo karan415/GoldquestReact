@@ -45,7 +45,7 @@ const ExternalLoginData = () => {
               confirmButtonText: "Ok",
             }).then(() => {
               // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
+              window.location.href = "admin-login"; // Replace with your login route
             });
           }
           if (!response.ok) {
@@ -180,7 +180,7 @@ const ExternalLoginData = () => {
   const getEmail = (email) => {
     localStorage.removeItem("branch");
     localStorage.removeItem("branch_token");
-    window.open(`/customer-login?email=${encodeURIComponent(email)}`, '_blank');
+    window.open(`customer-login?email=${encodeURIComponent(email)}`, '_blank');
 
   }
 

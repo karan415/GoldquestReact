@@ -84,7 +84,7 @@ const ClientManagementList = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
+            window.location.href = "admin-login"; // Replace with your login route
           });
         }
         Swal.fire('Error!', `An error occurred: ${errorData.message || response.statusText}`, 'error');
@@ -140,7 +140,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
             Swal.fire({
@@ -320,7 +320,7 @@ const ClientManagementList = () => {
                   confirmButtonText: "Ok",
                 }).then(() => {
                   // Redirect to admin login page
-                  window.location.href = "/admin-login"; // Replace with your login route
+                  window.location.href = "admin-login"; // Replace with your login route
                 });
               }
               return response.text().then(text => {
@@ -389,7 +389,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -452,7 +452,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -475,7 +475,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
           })
@@ -526,7 +526,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -549,7 +549,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
           })
@@ -652,29 +652,36 @@ const ClientManagementList = () => {
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.mobile || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.client_standard || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                        {services.length > 0 ? (
-                          <>
-                            {/* Find the services for this particular client */}
-                            {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, 1).map((service) => (
-                              <div key={service.serviceId} className="py-2 pb-1 text-start flex">
-                                <div className="px-4 py-2 bg-green-100 border text-center   border-green-500 rounded-lg text-sm">{service.serviceTitle}</div>
+                    {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services?.length > 0 ? (
+                      <>
+                        {/* Find the services for this particular client */}
+                        {services
+                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                          ?.services?.slice(0, 1)
+                          .map((service) => (
+                            <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                              <div className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">
+                                {service.serviceTitle}
                               </div>
-                            ))}
+                            </div>
+                          ))}
 
-                            {/* Check if there are multiple services */}
-                            {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.length > 1 && (
-                              <button
-                                className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                                onClick={() => setShowPopup(item.main_id)} // Open the popup
-                              >
-                                View More
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          "No services available"
-                        )}
-                      </td>
+                        {/* Check if there are multiple services */}
+                        {services
+                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                          ?.services?.length > 1 && (
+                            <button
+                              className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                              onClick={() => setShowPopup(item.main_id)} // Open the popup
+                            >
+                              View More
+                            </button>
+                          )}
+                      </>
+                    ) : (
+                      "No services available"
+                    )}
+                  </td>
 
                       {/* Popup */}
                       {showPopup === item.main_id && (

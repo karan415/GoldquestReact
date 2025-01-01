@@ -181,7 +181,7 @@ const GenerateReport = () => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "admin-login"; // Replace with your login route
                 });
                 return;
             }
@@ -559,7 +559,7 @@ const GenerateReport = () => {
             case "tel":
                 return (
                     <>
-                        <label className='text-sm md:text-lg'>{input.label}</label>
+                        <label className='text-sm'>{input.label}</label>
                         <input
                             type={input.type}
                             name={input.name}
@@ -572,7 +572,7 @@ const GenerateReport = () => {
             case "datepicker":
                 return (
                     <>
-                        <label>{input.label}</label>
+                        <label className='text-sm'>{input.label}</label>
                         <input
                             type="date"
                             name={input.name}
@@ -585,7 +585,7 @@ const GenerateReport = () => {
             case "dropdown":
                 return (
                     <>
-                        <label>{input.label}</label>
+                        <label className='text-sm'>{input.label}</label>
                         <select
                             name={input.name}
                             value={inputValue}
@@ -603,7 +603,7 @@ const GenerateReport = () => {
             case "file":
                 return (
                     <>
-                        <label>{input.label}</label>
+                        <label className='text-sm'>{input.label}</label>
                         <input
                             type="file"
                             name={input.name}
@@ -648,7 +648,7 @@ const GenerateReport = () => {
                 );
             default:
                 return (
-                    <><label>{input.label}</label>
+                    <><label className='text-sm'>{input.label}</label>
                         <input
                             type="text"
                             name={input.name}
@@ -668,7 +668,7 @@ const GenerateReport = () => {
         const fileCount = Object.keys(files).length;
         const swalInstance = Swal.fire({
             title: 'Processing...',
-            text: 'Please wait while we create the Client.',
+            text: 'Please wait while we Generate Your Report',
             didOpen: () => {
                 Swal.showLoading(); // This starts the loading spinner
             },

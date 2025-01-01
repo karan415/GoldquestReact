@@ -207,3 +207,97 @@ div#popup-2 {
   color: #192330 !important;
   margin-left: 12px !important;
 }
+/* Overlay: Transparent background */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgb(0 0 0 / 10%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal content container */
+.custom-modal-content {
+  outline: none;
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 1001;
+}
+
+/* Modal container styling */
+.modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+
+
+/* List of attachments */
+.modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.modal-list-text {
+  font-size: 1rem;
+  color: #333;
+}
+
+
+/* Footer (close button container) */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.modal-close-button {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-close-button:hover {
+  background-color: #c82333;
+}
+.select-search-container.select-search-is-multiple ul.select-search-options {
+  display: none;
+}
+
+
+.select-search-container.select-search-is-multiple.select-search-has-focus ul.select-search-options {
+  display: block !important;
+}
+.fileViewer img{
+max-width: 150px;
+height: 150px;
+object-fit: contain; 
+}
+.fileViewer_service img{
+  max-width: 60px;
+height: 60px;
+}

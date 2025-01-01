@@ -7,6 +7,8 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ReportCaseTable = () => {
+    const [servicesLoading, setServicesLoading] = useState(false);
+
     const [options, setOptions] = useState([]);
     const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
@@ -248,61 +250,65 @@ const ReportCaseTable = () => {
     }, [clientId]);
 
     const handleViewMore = async (index) => {
-        // If the clicked row is already expanded, collapse it and scroll to the table
+        setServicesLoading((prev) => ({ ...prev, [index]: true }));
+
         if (expandedRow && expandedRow.index === index) {
-            tableRef.current?.scrollIntoView({
-                behavior: 'smooth', // Smooth scrolling
-                block: 'start', // Scroll to the top of the table
-            });
-            setExpandedRow(null); // Collapse the row by setting it to null
+            setExpandedRow(null);
+            setServicesLoading((prev) => ({ ...prev, [index]: false }));
             return;
         }
-        tableRef.current?.scrollIntoView({
-            behavior: 'smooth', // Smooth scrolling
-            block: 'start', // Scroll to the top of the table
-        });
-        // Fetch data for the selected application
-        const applicationInfo = data[index];
 
         try {
+            const applicationInfo = data[index];
             const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
             const headingsAndStatuses = [];
 
-            // Process each service data
-            servicesData.forEach(service => {
-                const heading = JSON.parse(service.reportFormJson.json).heading;
-                if (heading && service.annexureData) {
-                    let status = service.annexureData.status;
-
-                    // If status is null or an empty string, set it to 'NIL'
-                    if (!status) {
-                        status = "NIL";
-                    }
-                    // If the length of the status is less than 4, sanitize it
-                    else if (status.length < 4) {
-                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL'; // Remove special chars and make uppercase
-                    }
-                    // If the length of the status is 4 or more but less than 6, format it
-                    else {
-                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ") // Remove special chars
-                            .toLowerCase()
-                            .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL'; // Capitalize first letter of each word
-                    }
-
-                    // Push the heading and formatted status into the array
-                    headingsAndStatuses.push({ heading, status });
+            servicesData.forEach((service) => {
+                // Ensure `reportFormJson` and its `json` property are defined
+                if (!service?.reportFormJson?.json) {
+                    console.warn('Missing or invalid reportFormJson data:', service);
+                    headingsAndStatuses.push({ heading: 'Unknown Heading', status: 'NIL' });
+                    return;
                 }
+
+                let heading;
+                try {
+                    heading = JSON.parse(service.reportFormJson.json).heading;
+                } catch (error) {
+                    console.error('Failed to parse JSON:', service.reportFormJson.json, error);
+                    heading = 'Invalid Heading';
+                }
+
+                let status = service.annexureData?.status || "NIL";
+                if (status.length < 4) {
+                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
+                } else {
+                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL';
+                }
+
+                headingsAndStatuses.push({ heading, status });
             });
 
-            // Set the expanded row with fetched data
             setExpandedRow({
                 index: index,
                 headingsAndStatuses: headingsAndStatuses,
             });
 
+            setServicesLoading((prev) => ({ ...prev, [index]: false }));
+
+            // Scroll to the expanded row after it is updated
+            const expandedRowElement = document.getElementById(`expanded-row-${index}`);
+            if (expandedRowElement) {
+                expandedRowElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            }
         } catch (error) {
-            // Handle errors in fetching or processing the services data
             console.error('Error fetching or processing service data:', error);
+            setServicesLoading((prev) => ({ ...prev, [index]: false }));
         }
     };
 
@@ -1218,101 +1224,107 @@ const ReportCaseTable = () => {
 
                                                 </tr>
 
-                                                {expandedRow && expandedRow.index === index && (
-                                                    <>
-                                                        <tr ref={tableRef}>
-                                                            <td colSpan="100%" className="text-center p-4 bg-gray-100">
-                                                                {/* Table structure to display headings in the first column and statuses in the second column */}
-                                                                <div className="relative w-full max-w-full overflow-hidden">
-                                                                    <table className="w-full table-auto">
-                                                                        <tbody className='min-h-[260px] overflow-y-auto block'>
-                                                                            <tr>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
-                                                                                <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
+                                                {servicesLoading[index] ? (
+                                                    <tr>
+                                                        <td colSpan={12} className="py-4 text-center text-gray-500">
+                                                            <div className='flex justify-center'>
+                                                                <PulseLoader color="#36D7B7" loading={servicesLoading[index]} size={15} aria-label="Loading Spinner" />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : (expandedRow && expandedRow.index === index && (
+                                                    <tr id={`expanded-row-${index}`} className="expanded-row">
+                                                        <td colSpan="100%" className="text-center p-4 bg-gray-100">
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.report_date && !isNaN(new Date(data.report_date))
-                                                                                        ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                            {/* Table structure to display headings in the first column and statuses in the second column */}
+                                                            <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
+                                                                <table className="w-full table-auto">
+                                                                    <tbody className='h-[320px] overflow-scroll block'>
+                                                                        <tr>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
+                                                                            <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
-                                                                                <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
-                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.report_date && !isNaN(new Date(data.report_date))
+                                                                                    ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
-                                                                                        ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                                            <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
+                                                                            <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
+                                                                            <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
-                                                                                        ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
+                                                                                    ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
+                                                                                    ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
-                                                                                        ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                                            <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
+                                                                                    ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
-                                                                                        ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                                            <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
-                                                                                        ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
-                                                                                        : 'NIL'}
-                                                                                </td>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
+                                                                                    ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
 
-                                                                                <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
-                                                                            </tr>
+                                                                            <td className="text-left p-2 border border-black capitalize">
+                                                                                {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
+                                                                                    ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
+                                                                                    : 'NIL'}
+                                                                            </td>
+
+                                                                            <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
+                                                                        </tr>
 
 
-                                                                            {expandedRow.headingsAndStatuses &&
-                                                                                expandedRow.headingsAndStatuses.map((item, idx) => (
-                                                                                    <tr key={`row-${idx}`}>
-                                                                                        <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                                                            {sanitizeText(item.heading)}
-                                                                                        </td>
-                                                                                        <td className="text-left p-2 border border-black capitalize">
-                                                                                            {sanitizeText(item.status || 'NIL')}
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                ))
-                                                                            }
+                                                                        {expandedRow.headingsAndStatuses &&
+                                                                            expandedRow.headingsAndStatuses.map((item, idx) => (
+                                                                                <tr key={`row-${idx}`}>
+                                                                                    <td className="text-left p-2 border border-black capitalize bg-gray-200">
+                                                                                        {sanitizeText(item.heading)}
+                                                                                    </td>
+                                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                                        {sanitizeText(item.status || 'NIL')}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))
+                                                                        }
 
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-
-                                                            </td>
-                                                        </tr>
-                                                    </>
-                                                )}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                             </React.Fragment>
                                         ))}
                                     </>

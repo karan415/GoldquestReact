@@ -64,7 +64,7 @@ export const HolidayManagementProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "admin-login"; // Replace with your login route
                 });
             }
             const processedData = (result.holidays || []).map((item, index) => ({

@@ -105,7 +105,7 @@ const InactiveClients = () => {
           confirmButtonText: "Ok",
         }).then(() => {
           // Redirect to admin login page
-          window.location.href = "/admin-login"; // Replace with your login route
+          window.location.href = "admin-login"; // Replace with your login route
         });
       }
 
@@ -177,7 +177,7 @@ const InactiveClients = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
+            window.location.href = "admin-login"; // Replace with your login route
           });
         }
         if (newToken) {
@@ -191,7 +191,7 @@ const InactiveClients = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
+            window.location.href = "admin-login"; // Replace with your login route
           });
         }
         if (!response.ok) {
@@ -281,46 +281,55 @@ const InactiveClients = () => {
                     <input type="checkbox" className="me-2" />
                     {index + 1 + (currentPage - 1) * itemsPerPage}
                   </td>
-                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
+                  <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id || 'NIL'}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name || 'NIL'}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact || 'NIL'}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
                     {new Date(item.agreement_date).getDate()}-
                     {new Date(item.agreement_date).getMonth() + 1}-
                     {new Date(item.agreement_date).getFullYear()}
                   </td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile}</td>
-                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.contact_person_name || 'NIL'}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.mobile || 'NIL'}</td>
+                  <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.client_standard || 'NIL'}</td>
                   <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                    {services.length > 0 ? (
+                    {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services?.length > 0 ? (
                       <>
                         {/* Find the services for this particular client */}
-                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.slice(0, 1).map((service) => (
-                          <div key={service.serviceId} className="py-2 pb-1 text-start flex">
-                            <div className="text-start pb-0">{service.serviceTitle}</div>
-                          </div>
-                        ))}
+                        {services
+                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                          ?.services?.slice(0, 1)
+                          .map((service) => (
+                            <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                              <div className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">
+                                {service.serviceTitle}
+                              </div>
+                            </div>
+                          ))}
 
                         {/* Check if there are multiple services */}
-                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.length > 1 && (
-                          <button
-                            className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                            onClick={() => setShowPopup(item.main_id)} // Open the popup
-                          >
-                            View More
-                          </button>
-                        )}
+                        {services
+                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                          ?.services?.length > 1 && (
+                            <button
+                              className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                              onClick={() => setShowPopup(item.main_id)} // Open the popup
+                            >
+                              View More
+                            </button>
+                          )}
                       </>
                     ) : (
                       "No services available"
                     )}
                   </td>
 
+
+
                   {/* Popup */}
                   {showPopup === item.main_id && (
                     <div
-                      className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                      className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center P-8 justify-center z-50"
                       onClick={() => setShowPopup(null)} // Close the popup when clicking outside
                     >
                       <div
@@ -339,7 +348,7 @@ const InactiveClients = () => {
                           {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
                             <div
                               key={service.serviceId}
-                              className="p-2 text-center bg-green-400 text-white rounded-md border-b last:border-b-0"
+                              className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm"
                             >
                               <div>{service.serviceTitle}</div>
                             </div>

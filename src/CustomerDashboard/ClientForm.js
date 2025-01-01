@@ -74,8 +74,11 @@ const ClientForm = () => {
             if (!clientInput[field] || clientInput[field].trim() === "") {
                 newErrors[field] = "This Field is Required";
             }
+            if (field === 'employee_id' && /\s/.test(clientInput[field])) { // Check for spaces in employee_id
+                newErrors[field] = 'Employee ID cannot contain spaces';
+            }
         });
-
+        
         return newErrors;
     };
 
@@ -202,7 +205,7 @@ const ClientForm = () => {
     
               const swalInstance = Swal.fire({
                    title: 'Processing...',
-                   text: 'Please wait while we create the Client.',
+                   text: 'Please wait while we create the Client Application.',
                    didOpen: () => {
                        Swal.showLoading(); // This starts the loading spinner
                    },
@@ -472,11 +475,11 @@ const ClientForm = () => {
                                     {loading ? (
                                         <PulseLoader color="#36A2EB" loading={loading} size={15} />
                                     ) : services.length > 0 ? (
-                                        <ul>
+                                        <ul className='grid grid-cols-2 gap-2'>
                                             {services.map((item) => (
                                                 <li
                                                     key={item.serviceId}
-                                                    className={`border p-2 my-1 flex gap-3 items-center ${clientInput.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
+                                                    className={`border p-2 my-1 mb-0 flex gap-3 text-sm  items-center ${clientInput.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
                                                 >
                                                     <input
                                                         type="checkbox"

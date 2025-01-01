@@ -14,15 +14,23 @@ const ServiceEditForm = () => {
     const [selectedPackages,] = useState({});
     const [priceData, setPriceData] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { clientData, setClientData } = useEditClient();
     const API_URL = useApi();
     const itemsPerPage = 10;
-    const totalPages = Math.ceil(paginated.length / itemsPerPage);
+    const filteredItems = paginated.filter(item => {
+        return (
+            item.service_title?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
+
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = paginated.slice(indexOfFirstItem, indexOfLastItem);
-
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    console.log('paginated', paginated)
+    console.log('currentItems', currentItems)
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -52,7 +60,7 @@ const ServiceEditForm = () => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "admin-login"; // Replace with your login route
                 });
             }
             if (result?.services) {
@@ -268,6 +276,19 @@ const ServiceEditForm = () => {
 
     return (
         <div className="overflow-x-auto py-6 px-0 bg-white mt-10 m-auto">
+            <div className="col md:flex mb-4">
+                <form action="">
+                    <div className="flex md:items-stretch items-center gap-3">
+                        <input
+                            type="search"
+                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                            placeholder='Search by Service Name'
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </form>
+            </div>
             <table className="min-w-full">
                 <thead>
                     <tr className='bg-green-500'>

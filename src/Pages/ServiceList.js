@@ -19,7 +19,10 @@ const ServiceList = () => {
 
   const filteredItems = data.filter(item => {
     return (
-      item?.title.toLowerCase().includes(searchTerm.toLowerCase())
+      item?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item?.group.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item?.short_code.toLowerCase().includes(searchTerm.toLowerCase()) 
+
 
     );
   });
@@ -141,7 +144,7 @@ const ServiceList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -223,6 +226,7 @@ const ServiceList = () => {
                 <th className="py-2 px-4 text-white border-r border-b text-left text-sm uppercase whitespace-nowrap">Service Description</th>
                 <th className="py-2 px-4 text-white border-r border-b text-left text-sm uppercase whitespace-nowrap">SAC Code</th>
                 <th className="py-2 px-4 text-white border-r border-b text-left text-sm uppercase whitespace-nowrap">Short Code</th>
+                <th className="py-2 px-4 text-white border-r border-b text-left text-sm uppercase whitespace-nowrap">Group</th>
                 <th className="py-2 px-4 text-white border-r border-b text-center text-sm uppercase whitespace-nowrap">Action</th>
               </tr>
             </thead>
@@ -234,6 +238,7 @@ const ServiceList = () => {
                   <td className="py-2 px-4 border-r text-sm border-b">{item.description}</td>
                   <td className="py-2 px-4 border-r text-sm border-b">{item.sac_code}</td>
                   <td className="py-2 px-4 border-r text-sm border-b">{item.short_code}</td>
+                  <td className="py-2 px-4 border-r text-sm border-b">{item.group}</td>
                   <td className="py-2 px-4 border-r text-sm border-b whitespace-nowrap text-center">
                     <button
                       disabled={loading}

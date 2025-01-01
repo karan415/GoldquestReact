@@ -10,7 +10,8 @@ const Customer = ({ children }) => {
   const API_URL=useApi();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
+console.log('branchEmail',branchEmail)
   useEffect(() => {
     const checkAuthentication = async () => {
       const storedAdminData = localStorage.getItem("branch");
@@ -41,7 +42,7 @@ const Customer = ({ children }) => {
         } else {
           // If the response indicates session is expired, redirect to login
           if (response.data.message && response.data.message.toLowerCase().includes("invalid") && response.data.message.toLowerCase().includes("token")) {
-            handleSessionExpired(adminData);
+            handleSessionExpired();
           } else {
             localStorage.clear();
             redirectToLogin();
@@ -55,10 +56,10 @@ const Customer = ({ children }) => {
     };
   
     const redirectToLogin = () => {
-      navigate('/customer-login', { state: { from: location }, replace: true });
+      navigate(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
     };
   
-    const handleSessionExpired = (adminData) => {
+    const handleSessionExpired = () => {
       Swal.fire({
         title: "Session Expired",
         text: "Your session has expired. Please log in again.",
@@ -66,7 +67,7 @@ const Customer = ({ children }) => {
         confirmButtonText: "Ok",
       }).then(() => {
         // Redirect to the customer login page with the email address
-        window.open(`/customer-login?email=${encodeURIComponent(adminData.email)}`, '_blank');
+        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
       });
     };
   

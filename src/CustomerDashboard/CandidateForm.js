@@ -3,13 +3,11 @@ import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
-import { useNavigate } from 'react-router-dom';
 
 const CandidateForm = () => {
     const { services, uniquePackages, input, setInput, fetchClient, isEditCandidate, setIsEditCandidate, candidateLoading } = useContext(DropBoxContext);
     const [formLoading, setFormLoading] = useState(false);
     const API_URL = useApi();
-    const navigate = useNavigate();
 
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
@@ -92,7 +90,10 @@ const CandidateForm = () => {
 
         if (!employee_id) {
             NewErr.employee_id = 'Employee ID is required';
+        } else if (/\s/.test(employee_id)) { // Check for spaces
+            NewErr.employee_id = 'Employee ID cannot contain spaces';
         }
+
 
         if (!mobile_number) {
             NewErr.mobile_number = 'Mobile number is required';
@@ -158,7 +159,7 @@ const CandidateForm = () => {
 
             const swalInstance = Swal.fire({
                 title: 'Processing...',
-                text: 'Please wait while we create the Client.',
+                text: 'Please wait while we create the Application.',
                 didOpen: () => {
                     Swal.showLoading(); // This starts the loading spinner
                 },
@@ -184,7 +185,7 @@ const CandidateForm = () => {
                                 // Redirect to customer login page
                                 window.open(
                                     `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
-                                   
+
                                 );
                             });
                         } else {
@@ -283,11 +284,11 @@ const CandidateForm = () => {
                                     ) : services.length > 0 ? (
                                         <div>
 
-                                            <ul>
+                                            <ul className='grid grid-cols-2 gap-2'>
                                                 {services.map((item) => (
                                                     <li
                                                         key={item.serviceId}
-                                                        className={`border p-2 my-1 flex gap-3 items-center ${input.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
+                                                        className={`border p-2 my-1 mb-0 flex gap-3 text-sm  items-center ${input.services.includes(String(item.serviceId)) ? 'selected' : ''}`}
                                                     >
                                                         <input
                                                             type="checkbox"
@@ -296,6 +297,7 @@ const CandidateForm = () => {
                                                             onChange={handleChange}
                                                             checked={input.services.includes(String(item.serviceId))} // Match ID type
                                                         />
+
                                                         <div className='font-bold'>{item.serviceTitle}</div>
                                                     </li>
                                                 ))}
@@ -330,8 +332,7 @@ const CandidateForm = () => {
                         </div>
                     </div>
                     <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
-                    {/* <span className='flex justify-center py-4 font-bold text-lg'>OR</span>
-                    <button type="button" className='bg-green-400 text-white p-3 rounded-md w-full hover:bg-green-200'>Bulk Mailer</button> */}
+
                 </form>
             )}
 

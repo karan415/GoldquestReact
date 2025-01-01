@@ -74,7 +74,7 @@ const ReportsList = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
+            window.location.href = "admin-login"; // Replace with your login route
           });
         }
         if (!response.ok) {

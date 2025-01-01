@@ -13,15 +13,27 @@ export const LoginProvider = ({ children }) => {
         email: "",
         password: "",
         role: "",
+        service_groups: [], // This will store the selected groups in an array
+
     });
     const [data, setData] = useState([]); // State to store the response data
     const [loading, setLoading] = useState(true); // Loading state
-    const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-    const storedToken = localStorage.getItem("_token");
+    const [parsedServiceGroups, setParsedServiceGroups] = useState([]);
 
 
     const handleEditAdmin = (selectedAdmin) => {
-        setEditAdmin(true)
+        setEditAdmin(true);
+    
+        // Safely parse service_groups if it's a stringified array, default to an empty array if invalid
+        const parsedServiceGroups = (() => {
+            try {
+                return selectedAdmin.service_groups ? JSON.parse(selectedAdmin.service_groups) : [];
+            } catch (error) {
+                console.error("Failed to parse service_groups:", error);
+                return [];
+            }
+        })();
+    
         setFormData({
             employee_id: selectedAdmin.emp_id || '',
             name: selectedAdmin.name || '',
@@ -30,28 +42,42 @@ export const LoginProvider = ({ children }) => {
             password: selectedAdmin.password || '',
             role: selectedAdmin.role || '',
             id: selectedAdmin.id || '',
-            status: selectedAdmin.status || ''
+            status: selectedAdmin.status || '',
+            service_groups: selectedAdmin.role !== "admin" ? parsedServiceGroups : [], // Clear service_groups for "admin" role
         });
+    
+        console.log('selectedAdmin', selectedAdmin);
+    };
+    
 
-        console.log('selectedAdmin', selectedAdmin)
-    }
     const fetchData = async () => {
-        setLoading(true); // Start loading
+        const adminData = localStorage.getItem("admin");
+        const admin_id = adminData ? JSON.parse(adminData)?.id : null;
+        const storedToken = localStorage.getItem("_token");
+
+        if (!admin_id || !storedToken) {
+            console.error("Admin ID or token is missing!");
+            return; // Exit if required data is missing
+        }
+
+        setLoading(true);
 
         try {
             const response = await axios.get("https://octopus-app-www87.ondigitalocean.app/admin/list", {
                 params: {
                     admin_id: admin_id,
-                    _token: storedToken
-                }
+                    _token: storedToken,
+                },
             });
-            console.log('response', response)
 
-            const newToken = response._token || response.token;
+            console.log("API Response:", response.data);
+
+            const newToken = response.data?._token || response.data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
             }
-            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+
+            if (response.data?.message?.toLowerCase().includes("invalid token")) {
                 Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
@@ -61,20 +87,28 @@ export const LoginProvider = ({ children }) => {
                     // Redirect to admin login page
                     window.location.href = "/admin-login"; // Replace with your login route
                 });
+                return; // Stop further processing
             }
 
-            setData(response.data.admins || []); // Set the response data in state
+            // Parse service_groups for each admin
+            const parsedGroups = response.data?.admins?.map((admin) =>
+                JSON.parse(admin.service_groups || "[]")
+            ) || [];
+
+            setParsedServiceGroups(parsedGroups);
+            setData(response.data?.admins || []);
         } catch (error) {
-            console.error(error.message); // Set error message if the request fails
+            console.error("Error fetching data:", error.message);
         } finally {
-            setLoading(false); // End loading
+            setLoading(false);
         }
     };
 
 
+
     return (
         <LoginContext.Provider value={{
-            data, loading, formData, fetchData, setFormData, handleEditAdmin, editAdmin
+            data, loading, formData, fetchData, setFormData,setEditAdmin, handleEditAdmin, editAdmin, parsedServiceGroups
         }}>
             {children}
         </LoginContext.Provider>

@@ -148,7 +148,7 @@ const ClientManagement = () => {
       "name_of_escalation", "client_spoc", "contact_person", "gstin", "tat",
       "date_agreement", "custom_template", "additional_login", "industry_classification",
     ];
-
+  
     // Define file validation parameters
     const maxSize = 2 * 1024 * 1024; // 2MB size limit
     const allowedTypes = [
@@ -156,36 +156,37 @@ const ClientManagement = () => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ]; // Allowed file types
-
+  
+    // Initialize the errors object
+    let errors = {};
+  
     // Validate if files are selected for 'custom_logo' and 'agr_upload'
     const validateFile = (fileName) => {
-      console.log(`errorserrors - `, errors);
       if (errors[fileName] && errors[fileName].length > 0) {
         // If there are errors, skip validation
         return errors[fileName];
       } else {
         const file = fileName === 'custom_logo' ? files.custom_logo : files.agr_upload;
-        let errors = [];
-
+        let fileErrors = [];
+  
         if (file && file.length > 0) {
           file.forEach((file) => {
             if (file.size > maxSize) {
-              errors.push(`${file.name}: File size must be less than 2MB.`);
+              fileErrors.push(`${file.name}: File size must be less than 2MB.`);
             }
-
+  
             if (!allowedTypes.includes(file.type)) {
-              errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+              fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
             }
           });
         } else {
-          errors.push(`${fileName} is required.`);
+          fileErrors.push(`${fileName} is required.`);
         }
-
-        return errors;
+  
+        return fileErrors;
       }
-
     };
-
+  
     // Validate file errors for custom_logo and agr_upload
     if (input.custom_template === 'yes') {
       const customLogoErrors = validateFile('custom_logo');
@@ -193,19 +194,35 @@ const ClientManagement = () => {
         newErrors.custom_logo = customLogoErrors;
       }
     }
-
+  
     const agrUploadErrors = validateFile('agr_upload');
     if (agrUploadErrors.length > 0) {
       newErrors.agr_upload = agrUploadErrors;
     }
-
+  
     // Validate required fields
     requiredFields.forEach((field) => {
       if (!input[field]) {
         newErrors[field] = "This field is required*";
       }
     });
-
+  
+    // Validate mobile_number to be 10 digits
+    const mobileNumber = input.mobile_number;
+    if (mobileNumber && !/^\d{10}$/.test(mobileNumber)) {
+      newErrors.mobile_number = "Mobile number must be exactly 10 digits";
+    }
+  
+    // Validate client_code: no spaces and must be uppercase
+    const clientCode = input.client_code;
+    if (clientCode) {
+      if (/\s/.test(clientCode)) {
+        newErrors.client_code = "Client code must not contain spaces";
+      } else if (clientCode !== clientCode.toUpperCase()) {
+        newErrors.client_code = "Client code must be uppercase";
+      }
+    }
+  
     // Validate emails
     const emailSet = new Set();
     emails.forEach((email, index) => {
@@ -217,11 +234,11 @@ const ClientManagement = () => {
         emailSet.add(email);
       }
     });
-
-
-
+  
     return newErrors;
   };
+  
+  
 
 
 
@@ -365,7 +382,7 @@ const ClientManagement = () => {
                 confirmButtonText: "Ok",
             }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "admin-login"; // Replace with your login route
             });
             return;
         }
@@ -448,7 +465,7 @@ const ClientManagement = () => {
               confirmButtonText: "Ok",
           }).then(() => {
               // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
+              window.location.href = "admin-login"; // Replace with your login route
           });
           return;
       }
@@ -528,12 +545,13 @@ const ClientManagement = () => {
                   <label className="text-gray-500" htmlFor="company_name">Company Name: <span className="text-red-600">*</span></label>
                   <input
                     type="text"
+                    ref={(el) => (refs.current["company_name"] = el)} // Attach ref here
+
                     name="company_name"
                     id="company_name"
                     className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
                     value={input.company_name}
                     onChange={handleChange}
-                    ref={(el) => (refs.current["company_name"] = el)} // Attach ref here
 
                   />
                   {errors.company_name && <p className="text-red-500">{errors.company_name}</p>}

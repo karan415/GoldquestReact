@@ -5,16 +5,29 @@ import PulseLoader from "react-spinners/PulseLoader";
 import Swal from 'sweetalert2';
 import LoginContext from './InternalLoginContext';
 const InternalLoginList = () => {
-    const { data, loading, fetchData, handleEditAdmin } = useContext(LoginContext)
+    const { data, loading, fetchData, handleEditAdmin, parsedServiceGroups } = useContext(LoginContext)
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
     useEffect(() => {
-        fetchData(); 
-    }, []); 
+        fetchData();
+    }, []);
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalServices, setModalServices] = useState([]);
+
+    // Handle "View More" button click
+    const handleViewMore = (adminId, services) => {
+        setModalServices(services); // Set the services for the clicked admin
+        setIsModalOpen(true); // Open the modal
+    };
+
+    // Close the modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
 
 
     const filteredItems = data.filter(item => {
@@ -140,7 +153,7 @@ const InternalLoginList = () => {
                                 confirmButtonText: "Ok",
                             }).then(() => {
                                 // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
+                                window.location.href = "admin-login"; // Replace with your login route
                             });
                         }
 
@@ -232,27 +245,61 @@ const InternalLoginList = () => {
                                 <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Email</th>
                                 <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Role</th>
                                 <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Status</th>
+                                <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Service Group</th>
                                 <th className="py-2 px-4 border-b text-left text-white border-r uppercase whitespace-nowrap">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map((item, index) => (
-                                <tr key={index}>
-                                    <td className="py-2 px-4 border-b border-r border-l text-center whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}
-                                    </td>
-                                    <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.emp_id || 'NIL'}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.name || 'NIL'}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.mobile || 'NIL'}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.email}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.role || 'NIL'}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">{item.status || 'NIL'}</td>
-                                    <td className="py-2 px-4 border-b border-r text-center  whitespace-nowrap">
-                                        <button className='bg-green-500 hover:bg-green-200 rounded-md me-3 p-2 text-white' onClick={() => editAdmin(item)}>Edit</button>
-                                        <button className='bg-red-600 rounded-md p-2 text-white' onClick={() => deleteAdmin(item.id)}>Delete</button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {currentItems.map((item, index) => {
+                                const serviceGroups = parsedServiceGroups[index] || []; // Access service groups for each admin
+                                const servicesToShow = serviceGroups.length > 1 ? serviceGroups[0] : serviceGroups.join(', '); // Show only the first service or all if there's only one
+                                const showMoreButton = serviceGroups.length > 1; // Check if there are more than one service to show the "View More" button
+
+                                return (
+                                    <tr key={index}>
+                                        <td className="py-2 px-4 border-b border-r border-l text-center whitespace-nowrap">
+                                            {index + 1 + (currentPage - 1) * itemsPerPage}
+                                        </td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.emp_id || 'NIL'}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.name || 'NIL'}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.mobile || 'NIL'}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.email}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.role || 'NIL'}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">{item.status || 'NIL'}</td>
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">
+                                            {item.role !== "admin" ? (
+                                                <>
+                                                    {servicesToShow ? (
+                                                        <span className="px-4 py-2 bg-green-100 border border-green-500 rounded-lg text-sm">
+                                                            {servicesToShow}
+                                                        </span>
+                                                    ) : (
+                                                        "Nil"
+                                                    )}
+
+                                                    {showMoreButton && (
+                                                        <button
+                                                            className="ms-3"
+                                                            onClick={() => handleViewMore(item.id, serviceGroups)} // Open the modal on click
+                                                        >
+                                                            View More
+                                                        </button>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                'NIL'
+                                            )}
+                                        </td>
+
+                                        <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">
+                                            <button className='bg-green-500 hover:bg-green-200 rounded-md me-3 p-2 text-white' onClick={() => editAdmin(item)}>Edit</button>
+                                            <button className='bg-red-600 rounded-md p-2 text-white' onClick={() => deleteAdmin(item.id)}>Delete</button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
+
                     </table>
                 ) : (
                     <div className="text-center py-6">
@@ -260,6 +307,30 @@ const InternalLoginList = () => {
                     </div>
                 )}
 
+                {isModalOpen && (
+
+
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-lg p-4 w-1/3">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-lg font-bold">Services Groups</h2>
+                                <button
+                                    className="text-red-500 text-2xl"
+                                    onClick={handleCloseModal}
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
+                                <ul className='grid grid-cols-3 gap-3'>
+                                    {modalServices.map((service, idx) => (
+                                        <li key={idx} className="px-4 py-2 bg-green-100 border text-center whitespace-nowrap  border-green-500 rounded-lg text-sm">{service}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
             <div className="flex items-center justify-end  p-3 py-2">

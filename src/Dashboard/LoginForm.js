@@ -48,13 +48,15 @@ const LoginForm = () => {
         password: input.password,
       };
   
-      Swal.fire({
+      const swalInstance = Swal.fire({
         title: 'Processing...',
-        text: 'Please wait while we log you in.',
+        text: 'Please wait while we have Loged you in',
         didOpen: () => {
-          Swal.showLoading();
-        }
-      });
+            Swal.showLoading(); // This starts the loading spinner
+        },
+        allowOutsideClick: false, // Prevent closing Swal while processing
+        showConfirmButton: false, // Hide the confirm button
+    });
   
       axios
         .post(`${API_URL}/admin/login`, loginData)
@@ -100,7 +102,7 @@ const LoginForm = () => {
               confirmButtonText: "Ok",
             }).then(() => {
               // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
+              window.location.href = "admin-login"; // Replace with your login route
             });
           }
         })
@@ -116,6 +118,7 @@ const LoginForm = () => {
           });
         })
         .finally(() => {
+          swalInstance.close();
           setLoading(false); // Stop loading indicator
         });
     } else {
@@ -139,7 +142,7 @@ const LoginForm = () => {
       confirmButtonText: 'Ok',
     });
 
-    navigate('/', { state: { from: location }, replace: true });
+    navigate('', { state: { from: location }, replace: true });
   };
 
   const handleOtpSubmit = () => {
