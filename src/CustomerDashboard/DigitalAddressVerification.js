@@ -172,7 +172,7 @@ const DigitalAddressVerification = () => {
             decodedValues.customer_id
         ) {
             fetch(
-                `https://octopus-app-www87.ondigitalocean.appbranch//candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                `http://147.93.29.154:5000branch//candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
             )
                 .then(res => res.json())
                 .then(result => {
@@ -274,7 +274,7 @@ const DigitalAddressVerification = () => {
             customerLogoFormData.append("send_mail", 1);
 
             try {
-                const response = await axios.post(`https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/upload`, customerLogoFormData, {
+                const response = await axios.post(`http://147.93.29.154:5000/branch/candidate-application/digital-address-verification/upload`, customerLogoFormData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
             } catch (err) {
@@ -316,7 +316,7 @@ const DigitalAddressVerification = () => {
 
         try {
             const response = await fetch(
-                "https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/digital-address-verification/submit",
+                "http://147.93.29.154:5000/branch/candidate-application/digital-address-verification/submit",
                 requestOptions
             );
             const result = await response.json();

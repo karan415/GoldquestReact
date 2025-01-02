@@ -97,13 +97,13 @@ const ScopeOfServices = () => {
     useEffect(() => {
         fetchServicePackage();
     }, [fetchServicePackage]);
-    console.log('services', services)
 
     return (
         <>
             <div className=''>
-                <div>  <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Client Master Data</h2>
-                    <div className='md:mx-16 md:my-8'>  <table className="min-w-full border bg-white shadow-md rounded-md p-3 ">
+                <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Client Master Data</h2>
+                <div className='md:mx-16 md:my-8'>
+                    <table className="min-w-full border bg-white overflow-auto shadow-md rounded-md p-3 ">
 
                         <tr className='bg-green-500 text-white'>
                             <th className="py-2 px-4 border-b border-r-2 whitespace-nowrap text-center font-bold">PARTICULARS</th>
@@ -146,58 +146,58 @@ const ScopeOfServices = () => {
                         </tr>
 
                     </table></div>
-                    <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Scope Of Services</h2>
+                <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Scope Of Services</h2>
 
-                    <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3 h-full">
-                        {loading && (
-                            <div className="flex justify-center items-center py-5">
-                                <PulseLoader
-                                    color={color}
-                                    loading={loading}
-                                    cssOverride={override}
-                                    size={15}
-                                    aria-label="Loading Spinner"
-                                    data-testid="loader"
-                                />
-                            </div>
-                        )}
-                        {error && <p className="text-center text-red-500 p-6">{error}</p>}
-                        {!loading && !error && (
-                            <table className="min-w-full">
-                                <thead>
-                                    <tr className='bg-green-500'>
-                                        <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">SL NO</th>
-                                        <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">SERVICES</th>
-                                        <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">PRICING</th>
-                                        <th className="py-3 px-4 border-b text-center text-white uppercase whitespace-nowrap">SERVICE PACKAGE</th>
-                                    </tr>
-                                </thead>
-                                {services.length > 0 ? (
-                                    <tbody>
-                                        {services.map((item, index) => (
-                                            <tr>
-                                                <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{index + 1}</td>
-                                                <td className="py-2 px-4 border-b border-r-2 whitespace-nowrap">{item.serviceTitle}</td>
-                                                <td className="py-2 px-4 border-b border-r-2 text-center whitespace-nowrap">{item.price} RS</td>
-                                                <td className="py-2 px-4 border-b whitespace-nowrap text-center">
-                                                    {Object.values(item.packages).join(', ')}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                ) : (
-                                    <tbody>
+                <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3 h-full">
+                    {loading && (
+                        <div className="flex justify-center items-center py-5">
+                            <PulseLoader
+                                color={color}
+                                loading={loading}
+                                cssOverride={override}
+                                size={15}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                            />
+                        </div>
+                    )}
+                    {error && <p className="text-center text-red-500 p-6">{error}</p>}
+                    {!loading && !error && (
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className='bg-green-500'>
+                                    <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">SL NO</th>
+                                    <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">SERVICES</th>
+                                    <th className="py-3 px-4 border-b text-center border-r-2 text-white uppercase whitespace-nowrap">PRICING</th>
+                                    <th className="py-3 px-4 border-b text-center text-white uppercase whitespace-nowrap">SERVICE PACKAGE</th>
+                                </tr>
+                            </thead>
+                            {services.length > 0 ? (
+                                <tbody>
+                                    {services.map((item, index) => (
                                         <tr>
-                                            <td colSpan={4} className='text-center py-5 text-lg'>No data found</td>
+                                            <td className="py-2 px-4 border-b text-center border-r-2 whitespace-nowrap">{index + 1}</td>
+                                            <td className="py-2 px-4 border-b border-r-2 whitespace-nowrap">{item.serviceTitle}</td>
+                                            <td className="py-2 px-4 border-b border-r-2 text-center whitespace-nowrap">{item.price} RS</td>
+                                            <td className="py-2 px-4 border-b whitespace-nowrap text-center">
+                                                {Object.values(item.packages).join(', ')}
+                                            </td>
                                         </tr>
-                                    </tbody>
-                                )}
+                                    ))}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td colSpan={4} className='text-center py-5 text-lg'>No data found</td>
+                                    </tr>
+                                </tbody>
+                            )}
 
-                            </table>
-                        )}
-                    </div></div>
-
+                        </table>
+                    )}
+                </div>
             </div>
+
         </>
     );
 };

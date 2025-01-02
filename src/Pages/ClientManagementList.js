@@ -84,7 +84,7 @@ const ClientManagementList = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "admin-login"; // Replace with your login route
+            window.location.href = "/admin-login"; // Replace with your login route
           });
         }
         Swal.fire('Error!', `An error occurred: ${errorData.message || response.statusText}`, 'error');
@@ -140,7 +140,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
             Swal.fire({
@@ -320,7 +320,7 @@ const ClientManagementList = () => {
                   confirmButtonText: "Ok",
                 }).then(() => {
                   // Redirect to admin login page
-                  window.location.href = "admin-login"; // Replace with your login route
+                  window.location.href = "/admin-login"; // Replace with your login route
                 });
               }
               return response.text().then(text => {
@@ -369,7 +369,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`http://147.93.29.154:5000/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -389,7 +389,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -432,7 +432,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`http://147.93.29.154:5000/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -452,7 +452,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -475,7 +475,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
           })
@@ -526,7 +526,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
             if (!response.ok) {
@@ -549,7 +549,7 @@ const ClientManagementList = () => {
                 confirmButtonText: "Ok",
               }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
               });
             }
           })

@@ -18,14 +18,15 @@ import Invoice from './CreateInvoice'; // Invoice component
 import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component
-import ExelTrackerStatus from './ExelTrackerStatus'; 
-import CandidateExcelTrackerStatus from './CandidateExcelTrackerStatus'; 
-
+import ExelTrackerStatus from './ExelTrackerStatus';
+import CandidateExcelTrackerStatus from './CandidateExcelTrackerStatus';
+import Tickets from './Tickets'
 // Excel Tracker Status component
 import CreateInvoice from './CreateInvoice';
 import { ClientEditForm } from './ClientEditForm';
 import HolidayManagement from './HolidayManagement';
 import GenerateReportList from './GenerateReportList';
+import DeletionCertification from './DeletionCertification';
 
 
 
@@ -38,7 +39,7 @@ const tabComponents = {
   service_management: <ServiceMangement />,
   internal_login: <InternalLogin />,
   report_summary: <Reports />,
-  generate_report:<GenerateReportList/>,
+  generate_report: <GenerateReportList />,
   external: <ExternalLogin />,
   client_master: <ClientMasterTracker />,
   candidate_master: <CandidateMasterTracker />,
@@ -47,14 +48,15 @@ const tabComponents = {
   Acknowledgement: <Acknowledgement />,
   // update_password: <UpdatePassword />,
   // invoice: <Invoice />,
-  // email_temp: <EmailTemplate />,
+  tickets: <Tickets />,
   add_clients: <ClientManagement />,
   active_clients: <ClientManagementList />,
   inactive_clients: <InactiveClients />,
   tracker_status: <ExelTrackerStatus />,
+  deletion_certificate: <DeletionCertification />,
   Candidate_tracker_status: <CandidateExcelTrackerStatus />,
 
-  
+
 
   generate_invoice: <CreateInvoice />,
   edit: <ClientEditForm />,
@@ -65,7 +67,7 @@ const MainContent = () => {
   const { activeTab } = useSidebar();
 
   return (
-    <div className="w-full md:w-4/5 flex flex-col items-stretch bg-[#1a1a1a05]">
+    <div className="w-full md:w-4/5 flex flex-col items-stretch ">
       {tabComponents[activeTab] || <DashBoard />}
     </div>
   );

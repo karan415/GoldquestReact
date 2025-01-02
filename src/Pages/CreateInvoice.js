@@ -66,7 +66,7 @@ const CreateInvoice = () => {
       showConfirmButton: false, // Hide the confirm button
     });
 
-    fetch(`https://octopus-app-www87.ondigitalocean.app/generate-invoice?${queryString}`, requestOptions)
+    fetch(`http://147.93.29.154:5000/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
 
 
@@ -95,7 +95,7 @@ const CreateInvoice = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "admin-login"; // Replace with your login route
+            window.location.href = "/admin-login"; // Replace with your login route
           });
         }
 
@@ -158,10 +158,6 @@ const CreateInvoice = () => {
         setIsLoading(false); // Hide loader
       });
   };
-
-
-
-
 
 
   function getTotalAdditionalFeeByService(serviceId, applications) {
@@ -671,8 +667,8 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
 
 
   return (
-    <div className=" p-12">
-      <div className="bg-white p-12 rounded-md w-full mx-auto">
+    <div className="p-2 md:p-12">
+      <div className="bg-white p-3 md:p-12 rounded-md w-full mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Generate Invoice</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

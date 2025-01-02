@@ -33,15 +33,13 @@ import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
 import 'react-select-search/style.css'
 import UpdatePassword from './Pages/UpdatePassword';
-import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
-import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 import { HolidayManagementProvider } from './Pages/HolidayManagementContext';
 import DashboardProvider from './CustomerDashboard/DashboardContext';
 import LoginPage from './Dashboard/LoginPage';
 import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 import CandidiateDav from './Pages/CandidateDAV';
 import { LoginProvider } from './Pages/InternalLoginContext';
-
+import Demo from './Pages/Demo';
 
 
 
@@ -67,6 +65,7 @@ const App = () => {
                                     <Routes>
                                       {/* Main Route */}
                                       <Route path="" element={<Admin><Render /></Admin>} />
+                                      <Route path="/demo" element={<Admin><Demo /></Admin>} />
 
                                       {/* Customer Routes */}
                                       <Route path="/customer-login" element={<CustomerLogin />} />

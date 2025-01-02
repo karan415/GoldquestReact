@@ -131,7 +131,7 @@ const InternalLoginList = () => {
 
                 // Make the delete API request using axios
                 axios
-                    .delete(`https://octopus-app-www87.ondigitalocean.app/admin/delete`, {
+                    .delete(`http://147.93.29.154:5000/admin/delete`, {
                         params: {
                             id,
                             admin_id,
@@ -153,7 +153,7 @@ const InternalLoginList = () => {
                                 confirmButtonText: "Ok",
                             }).then(() => {
                                 // Redirect to admin login page
-                                window.location.href = "admin-login"; // Replace with your login route
+                                window.location.href = "/admin-login"; // Replace with your login route
                             });
                         }
 
@@ -311,7 +311,7 @@ const InternalLoginList = () => {
 
 
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-lg p-4 w-1/3">
+                        <div className="bg-white rounded-lg shadow-lg p-4 md:w-6/12">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-lg font-bold">Services Groups</h2>
                                 <button
@@ -322,9 +322,9 @@ const InternalLoginList = () => {
                                 </button>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
-                                <ul className='grid grid-cols-3 gap-3'>
+                                <ul className='grid grid-cols-4 gap-3'>
                                     {modalServices.map((service, idx) => (
-                                        <li key={idx} className="px-4 py-2 bg-green-100 border text-center whitespace-nowrap  border-green-500 rounded-lg text-sm">{service}</li>
+                                        <li key={idx} className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">{service}</li>
                                     ))}
                                 </ul>
                             </div>

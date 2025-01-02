@@ -29,7 +29,7 @@ const GenerateReportList = () => {
     setLoading(true);
 
     fetch(
-      `https://octopus-app-www87.ondigitalocean.app/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
+      `http://147.93.29.154:5000/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
       .then((response) => {
@@ -46,7 +46,7 @@ const GenerateReportList = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "admin-login"; // Replace with your login route
+            window.location.href = "/admin-login"; // Replace with your login route
           });
         }
         if (!response.ok) {

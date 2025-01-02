@@ -66,7 +66,7 @@ const CandidateExcelTrackerStatus = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -91,7 +91,7 @@ const CandidateExcelTrackerStatus = () => {
                         confirmButtonText: "Ok",
                     }).then(() => {
                         // Redirect to admin login page
-                        window.location.href = "admin-login"; // Replace with your login route
+                        window.location.href = "/admin-login"; // Replace with your login route
                     });
                 }
 
@@ -296,7 +296,7 @@ const CandidateExcelTrackerStatus = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Replace with your login route
                         });
                     }
 
@@ -329,7 +329,7 @@ const CandidateExcelTrackerStatus = () => {
 
     return (
         <div className="bg-[#c1dff2]">
-            <div className="space-y-4 py-[30px] px-[51px] bg-white">
+            <div className="space-y-4 p-3 md:py-[30px] md:px-[51px] bg-white">
 
 
                 <div className=" mx-4 bg-white">
@@ -545,7 +545,7 @@ const CandidateExcelTrackerStatus = () => {
                                                                         const label = Object.keys(attachment)[0];
                                                                         const fileUrls = attachment[label]?.split(','); // Split URLs by comma
                                                                         return (
-                                                                            <li key={subIdx} className="grid grid-cols-2 border-b py-2">
+                                                                            <li key={subIdx} className="grid grid-cols-2 items-center border-b py-2">
                                                                                 <span className="modal-list-text">{subIdx + 1}: {label}</span>
                                                                                 <div className="modal-url-list grid me-7 gap-2 justify-end">
                                                                                     {fileUrls.map((url, urlIdx) => (

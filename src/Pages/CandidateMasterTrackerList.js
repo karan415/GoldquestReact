@@ -60,7 +60,7 @@ const CandidateMasterTrackerList = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -118,7 +118,7 @@ const CandidateMasterTrackerList = () => {
                                 confirmButtonText: "Ok",
                             }).then(() => {
                                 // Redirect to admin login page
-                                window.location.href = "admin-login"; // Replace with your login route
+                                window.location.href = "/admin-login"; // Replace with your login route
                             });
                         }
                         // Show SweetAlert if response is not OK

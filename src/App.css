@@ -37,7 +37,9 @@ div#root {
   opacity: 1;
   max-height: 100px; /* Adjust this value based on your expected content height */
 }
-
+body{
+  background-color: #1a1a1a05;
+}
 /* this is my demo comment */
 
 [role='tooltip'].popup-content {

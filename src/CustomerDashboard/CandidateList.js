@@ -249,8 +249,8 @@ const CandidateList = () => {
                     <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
-                                <div className="flex gap-5 justify-between">
-                                    <select name="" id="" onChange={handleSelectChange} className='outline-none border p-3  text-left rounded-md w-6/12'>
+                                <div className="md:flex gap-5 justify-between">
+                                    <select name="" id="" onChange={handleSelectChange} className='outline-none border p-2 md:p-3 w-full text-left rounded-md md:w-6/12'>
                                         <option value="10">10 Rows</option>
                                         <option value="20">20 Rows</option>
                                         <option value="50">50 Rows</option>
@@ -417,7 +417,7 @@ const CandidateList = () => {
                                                                             const label = Object.keys(attachment)[0];
                                                                             const fileUrls = attachment[label]?.split(','); // Split URLs by comma
                                                                             return (
-                                                                                <li key={subIdx} className="grid grid-cols-2 border-b py-2">
+                                                                                <li key={subIdx} className="grid items-center grid-cols-2 border-b py-2">
                                                                                     <span className="modal-list-text">{subIdx + 1}: {label}</span>
                                                                                     <div className="modal-url-list grid me-7 gap-2 justify-end">
                                                                                         {fileUrls.map((url, urlIdx) => (

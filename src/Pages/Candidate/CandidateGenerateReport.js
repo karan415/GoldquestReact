@@ -152,7 +152,7 @@ const CandidateGenerateReport = () => {
 
             // Construct the URL with service IDs
             const url = new URL(
-                "https://octopus-app-www87.ondigitalocean.app/client-master-tracker/services-annexure-data"
+                "http://147.93.29.154:5000/client-master-tracker/services-annexure-data"
             );
             url.searchParams.append("service_ids", servicesList);
             url.searchParams.append("application_id", applicationId);
@@ -224,7 +224,7 @@ const CandidateGenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`https://octopus-app-www87.ondigitalocean.app/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://147.93.29.154:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
 
@@ -406,7 +406,7 @@ const CandidateGenerateReport = () => {
         }
 
         // Construct the URL with query parameters
-        const url = `https://octopus-app-www87.ondigitalocean.app/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `http://147.93.29.154:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',  // GET request doesn't need a body
@@ -492,7 +492,7 @@ const CandidateGenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/upload`,
+                    `http://147.93.29.154:5000/client-master-tracker/upload`,
                     customerLogoFormData,
                     {
                         headers: {
@@ -738,7 +738,7 @@ const CandidateGenerateReport = () => {
 
             // API Request
             const response = await fetch(
-                `https://octopus-app-www87.ondigitalocean.app/client-master-tracker/generate-report`,
+                `http://147.93.29.154:5000/client-master-tracker/generate-report`,
                 requestOptions
             );
 

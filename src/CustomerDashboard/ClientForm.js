@@ -405,7 +405,7 @@ const ClientForm = () => {
             ) : (
 
                 <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 grid-cols-2 mb-4">
+                    <div className="md:grid gap-4 grid-cols-2 mb-4">
                         <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
@@ -468,14 +468,14 @@ const ClientForm = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
+                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6 md:mt-4">
                             <div className="flex flex-wrap flex-col-reverse">
                                 <div className='mt-4'>
                                     <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
                                     {loading ? (
                                         <PulseLoader color="#36A2EB" loading={loading} size={15} />
                                     ) : services.length > 0 ? (
-                                        <ul className='grid grid-cols-2 gap-2'>
+                                        <ul className='md:grid grid-cols-2 gap-2'>
                                             {services.map((item) => (
                                                 <li
                                                     key={item.serviceId}

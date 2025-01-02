@@ -57,38 +57,38 @@ const ReportsList = () => {
     setLoading(true); // Start loading before the fetch request
 
     fetch(
-      `https://goldquestreact.onrender.com/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`,
+      `http://147.93.29.154:5000/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
       .then((response) => {
-        const result = response.json();
-        const newToken = result._token || result.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-          Swal.fire({
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again.",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          }).then(() => {
-            // Redirect to admin login page
-            window.location.href = "admin-login"; // Replace with your login route
-          });
-        }
-        if (!response.ok) {
-          return response.text().then(text => {
-            const errorData = JSON.parse(text);
-            Swal.fire(
-              'Error!',
-              `An error occurred: ${errorData.message}`,
-              'error'
-            );
-            throw new Error(text);
-          });
-        }
-        return result;
+        return response.json().then((result) => {
+          // Handle response token
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+
+          if (!response.ok) {
+            // Handle invalid token
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+              Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+              }).then(() => {
+                window.location.href = "/admin-login"; // Redirect to admin login page
+              });
+              return; // Exit further processing
+            }
+
+            // Show the error message from the response
+            Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
+            throw new Error(result.message || 'Unknown error');
+          }
+
+          return result; // Continue with the result if response is okay
+        });
       })
       .then((result) => {
         if (result.status) {
@@ -120,13 +120,13 @@ const ReportsList = () => {
           icon: "error",
           title: "Oops...",
           text: error.message || "Failed to fetch data. Please try again later.",
-          footer: `<small>${error.message}</small>`,
         });
       })
       .finally(() => {
         setLoading(false); // Stop loading after fetch completes
       });
   }, []);
+
 
 
   const filtered = data.filter((item) => {
@@ -332,7 +332,15 @@ const ReportsList = () => {
                   <React.Fragment key={index}>
                     <tr>
                       <td className="py-2 px-4 text-center border-l border-b border-r whitespace-nowrap">{report.num}</td>
-                      <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.date}</td>
+                      <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">
+                        {(() => {
+                          const date = new Date(report.date);
+                          const day = date.getDate();
+                          const month = date.getMonth() + 1; // Months are zero-indexed
+                          const year = date.getFullYear();
+                          return `${day}-${month}-${year}`;
+                        })()}
+                      </td>
                       <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.applicationId}</td>
                       <td className="py-2 px-4 text-left border-b border-r whitespace-nowrap">{report.applicantName}</td>
                       <td className="py-2 px-4 text-center border-b border-r whitespace-nowrap">{report.status}</td>

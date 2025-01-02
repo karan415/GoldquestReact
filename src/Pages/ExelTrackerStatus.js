@@ -59,7 +59,7 @@ const AdminChekin = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -114,7 +114,7 @@ const AdminChekin = () => {
                             confirmButtonText: "Ok",
                         }).then(() => {
                             // Redirect to admin login page
-                            window.location.href = "admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Replace with your login route
                         });
                     }
                     if (!response.ok) {
@@ -279,7 +279,7 @@ const AdminChekin = () => {
                         confirmButtonText: "Ok",
                     }).then(() => {
                         // Redirect to admin login page
-                        window.location.href = "admin-login"; // Replace with your login route
+                        window.location.href = "/admin-login"; // Replace with your login route
                     });
                 }
                 const filteredResults = result.results.filter((item) => item != null);

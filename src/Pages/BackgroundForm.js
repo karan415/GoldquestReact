@@ -289,7 +289,7 @@ console.log('errors',errors)
         ) {
             try {
                 const response = await fetch(
-                    `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                    `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
                 );
 
                 const result = await response.json();
@@ -424,7 +424,7 @@ console.log('errors',errors)
 
         const fetchPromises = serviceArr.map(serviceId =>
             fetch(
-                `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`,
+                `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`,
                 requestOptions
             )
                 .then(res => {
@@ -578,7 +578,7 @@ console.log('errors',errors)
         try {
             // Send the form data request to the API
             const response = await fetch(
-                "https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/submit",
+                "http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/submit",
                 requestOptions
             );
 
@@ -665,7 +665,7 @@ console.log('errors',errors)
             try {
                 // Make the API request to upload the logo
                 await axios.post(
-                    `https://octopus-app-www87.ondigitalocean.app/branch/candidate-application/backgroud-verification/upload`,
+                    `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/upload`,
                     customerLogoFormData,
                     {
                         headers: {

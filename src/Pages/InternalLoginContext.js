@@ -63,7 +63,7 @@ export const LoginProvider = ({ children }) => {
         setLoading(true);
 
         try {
-            const response = await axios.get("https://octopus-app-www87.ondigitalocean.app/admin/list", {
+            const response = await axios.get("http://147.93.29.154:5000/admin/list", {
                 params: {
                     admin_id: admin_id,
                     _token: storedToken,
@@ -85,7 +85,7 @@ export const LoginProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "//admin-login"; // Replace with your login route
                 });
                 return; // Stop further processing
             }

@@ -1047,14 +1047,15 @@ const ReportCaseTable = () => {
     );
     return (
 
-        <div className="bg-[#c1dff2]">
-            <div className="space-y-4 py-[30px] px-[51px] bg-white">
+        <div className="">
+            <h2 className='py-4 text-2xl font-bold text-center '>Report & Case Status</h2>
+            <div className="mt-8 bg-white p-4 rounded-md">
 
-                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border p-4">
+                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
-                            <div className="flex gap-5 justify-between">
-                                <select name="options" id="" onChange={handleSelectChange} className='outline-none border  p-2 text-left rounded-md w-6/12'>
+                            <div className="md:flex gap-5 justify-between">
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-2 md:p-3 w-full text-left rounded-md md:w-6/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -1064,28 +1065,15 @@ const ReportCaseTable = () => {
                                     <option value="400">400 Rows</option>
                                     <option value="500">500 Rows</option>
                                 </select>
-
                             </div>
                         </form>
                     </div>
-                    <div className="col md:flex gap-3 justify-end ">
-                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
-                            <option value="">Search By Option</option>
-                            {options.map((item, index) => {
-                                return item.status !== 'closed' ? (
-                                    <option key={index} value={item.status}>
-                                        {item.status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())} - {item.count}
-                                    </option>
-                                ) : null;
-                            })}
-
-
-                        </select>
+                    <div className="col md:flex justify-end ">
                         <form action="">
-                            <div className="flex md:items-stretch items-center  gap-3">
+                            <div className="flex md:items-stretch items-center gap-3">
                                 <input
                                     type="search"
-                                    className='outline-none border-2 p-2 rounded-md w-full my-4 text-sm md:my-0'
+                                    className='outline-none border-2 p-3 text-sm rounded-md w-full my-4 md:my-0'
                                     placeholder='Search by Client Code...'
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}

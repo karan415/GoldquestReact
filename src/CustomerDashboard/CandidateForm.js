@@ -247,7 +247,7 @@ const CandidateForm = () => {
                 <div className='flex justify-center'>  <PulseLoader color="#36A2EB" loading={formLoading} size={15} /></div>
             ) : (
                 <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 grid-cols-2 mb-4">
+                    <div className="md:grid gap-4 grid-cols-2 mb-4">
                         <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
                             <div className="mb-4">
                                 <label htmlFor="applicant_name" className='text-sm'>Name of the organisation<span className='text-red-500'>*</span></label>
@@ -274,7 +274,7 @@ const CandidateForm = () => {
                                 {error.email && <p className='text-red-500'>{error.email}</p>}
                             </div>
                         </div>
-                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6">
+                        <div className="col bg-white shadow-md rounded-md p-3 mt-5 md:p-6">
                             <div className="flex flex-wrap flex-col-reverse">
                                 <div className='mt-4'>
                                     <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
@@ -284,7 +284,7 @@ const CandidateForm = () => {
                                     ) : services.length > 0 ? (
                                         <div>
 
-                                            <ul className='grid grid-cols-2 gap-2'>
+                                            <ul className='md:grid grid-cols-2 gap-2'>
                                                 {services.map((item) => (
                                                     <li
                                                         key={item.serviceId}

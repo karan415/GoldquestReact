@@ -26,7 +26,7 @@ const InternalLoginForm = () => {
         const fetchAdminOptions = async () => {
             try {
                 const response = await axios.get(
-                    `https://octopus-app-www87.ondigitalocean.app/admin/permission/roles`,
+                    `http://147.93.29.154:5000/admin/permission/roles`,
                     {
                         params: {
                             admin_id,
@@ -54,7 +54,6 @@ const InternalLoginForm = () => {
         fetchAdminOptions();
     }, []); // Dependency array ensures this runs only once
 
-    const options = group.map((item) => ({ value: item, name: item })); // Map groups to SelectSearch options
 
 
     const Validate = () => {
@@ -121,8 +120,8 @@ const InternalLoginForm = () => {
                 const response = await axios({
                     method: editAdmin ? 'PUT' : 'POST', // Dynamically set HTTP method based on editAdmin
                     url: editAdmin
-                        ? 'https://octopus-app-www87.ondigitalocean.app/admin/update'
-                        : 'https://octopus-app-www87.ondigitalocean.app/admin/create',
+                        ? 'http://147.93.29.154:5000/admin/update'
+                        : 'http://147.93.29.154:5000/admin/create',
                     data: requestformData, // Pass request data
                     headers: {
                         'Content-Type': 'application/json',
@@ -151,7 +150,7 @@ const InternalLoginForm = () => {
                         confirmButtonText: 'Ok',
                     }).then(() => {
                         // Redirect to admin login page
-                        window.location.href = 'admin-login'; // Replace with your login route
+                        window.location.href = '/admin-login'; // Replace with your login route
                     });
                 } else if (result.status) {
                     // Success
@@ -171,7 +170,8 @@ const InternalLoginForm = () => {
                         password: '',
                         role: '',
                         id: '',
-                        status: ''
+                        status: '',
+                        service_groups:[],
                     });
 
                     fetchData(); // Call to fetch data after success
@@ -209,11 +209,30 @@ const InternalLoginForm = () => {
             role: '',
             id: '',
             status: '',
-            service_groups: '',
+            service_groups: [],
         });
     setError({});
     }
+    const options = [
+        { value: 'select_all', name: 'Select All / Deselect All' }, // Add the "Select All" option
+        ...group.map((item) => ({ value: item, name: item })), // Map groups to SelectSearch options
+    ];
 
+    const handleServiceGroupChange = (selected) => {
+        if (selected.includes('select_all')) {
+            // Toggle Select All / Deselect All
+            if (formData.service_groups?.length === group.length) {
+                // If all selected, deselect all
+                setFormData((prev) => ({ ...prev, service_groups: [] }));
+            } else {
+                // Otherwise, select all
+                setFormData((prev) => ({ ...prev, service_groups: group }));
+            }
+        } else {
+            // Update with selected options
+            setFormData((prev) => ({ ...prev, service_groups: selected }));
+        }
+    };
 
 
     return (
@@ -346,27 +365,28 @@ const InternalLoginForm = () => {
                     {error.role && <p className='text-red-500'>{error.role}</p>}
                 </div>
 
-                {formData.role !== "admin" && (
-                    <div className="mb-4 relative">
-                        <label htmlFor="service_group" className="block mb-2">Service Group</label>
-                        <SelectSearch
-                            multiple
-                            options={options}
-                            value={formData.service_groups}
-                            name="service_groups"
-                            placeholder="Select Group"
-                            onChange={(value) => setFormData((prev) => ({ ...prev, service_groups: value }))}
-                            search
-                            disabled={loading}
-
-                        />
-                        {loading && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                <div className="loader border-t-transparent border-gray-400 border-2 w-5 h-5 rounded-full z-50 animate-spin"></div>
-                            </div>
-                        )}
-                    </div>
-                )}
+                {formData.role !== 'admin' && (
+                <div className="mb-4 relative">
+                    <label htmlFor="service_group" className="block mb-2">Service Group</label>
+                    <SelectSearch
+                        multiple
+                        options={options}
+                        value={formData.service_groups}
+                        name="service_groups"
+                        placeholder="Select Group"
+                        onChange={(value) => {
+                            handleServiceGroupChange(value);
+                        }}
+                        search
+                        disabled={loading}
+                    />
+                    {loading && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <div className="loader border-t-transparent border-gray-400 border-2 w-5 h-5 rounded-full z-50 animate-spin"></div>
+                        </div>
+                    )}
+                </div>
+            )}
                 <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-full'>Send</button>
                 <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 mt-5 rounded-md w-full'>Reset Form</button>
             </form>

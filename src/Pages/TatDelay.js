@@ -90,7 +90,7 @@ const TatDelay = () => {
     }
 
     // Use template literals for better readability
-    const url = `https://octopus-app-www87.ondigitalocean.app/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `http://147.93.29.154:5000/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     fetch(url, {
       method: "GET",
@@ -218,7 +218,11 @@ const TatDelay = () => {
                 <tr key={index}>
                   <td className="py-3 px-4 border-b border-l whitespace-nowrap text-center border-r">{index + 1}</td>
                   <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.tat_days}</td>
-                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_created_at}</td>
+                  <td className=" p-3 border-b border-r  text-center cursor-pointer">
+                        {new Date(item.application_created_at).getDate()}-
+                        {new Date(item.application_created_at).getMonth() + 1}-
+                        {new Date(item.application_created_at).getFullYear()}
+                      </td>
                   <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_id}</td>
                   <td className="py-3 px-4 border-b whitespace-nowrap text-left border-r">{item.application_name}</td>
                   <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.days_out_of_tat}</td>

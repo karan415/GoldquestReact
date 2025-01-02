@@ -382,7 +382,7 @@ const ClientManagement = () => {
                 confirmButtonText: "Ok",
             }).then(() => {
                 // Redirect to admin login page
-                window.location.href = "admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Replace with your login route
             });
             return;
         }
@@ -465,7 +465,7 @@ const ClientManagement = () => {
               confirmButtonText: "Ok",
           }).then(() => {
               // Redirect to admin login page
-              window.location.href = "admin-login"; // Replace with your login route
+              window.location.href = "/admin-login"; // Replace with your login route
           });
           return;
       }

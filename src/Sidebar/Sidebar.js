@@ -3,12 +3,15 @@ import { useSidebar } from './SidebarContext';
 import { BiSolidPackage } from "react-icons/bi";
 import { HomeIcon, UserIcon } from "@heroicons/react/24/outline";
 import { IoMdPersonAdd } from "react-icons/io";
-import { RiLockPasswordFill, RiCustomerServiceFill } from "react-icons/ri";
-import { FaFileInvoiceDollar, FaEye, FaEyeSlash } from "react-icons/fa";
+import { RiLockPasswordFill, RiCustomerServiceFill, RiAiGenerate } from "react-icons/ri";
+import { FaFileInvoiceDollar, FaEye, FaEyeSlash, } from "react-icons/fa";
+import { FaSquarePollHorizontal, FaTicketSimple } from "react-icons/fa6";
+
 import { TiCloudStorage } from "react-icons/ti";
 import { TbReportSearch } from "react-icons/tb";
 import { VscLinkExternal } from "react-icons/vsc";
-import { MdOutlineTrackChanges, MdTrackChanges, MdEmail,MdAccessTime
+import {
+  MdOutlineTrackChanges, MdOutlineDelete, MdEmail, MdAccessTime
 } from "react-icons/md";
 import { IoNotificationsCircle } from "react-icons/io5";
 import { GrServices } from "react-icons/gr";
@@ -30,20 +33,21 @@ const tabNames = {
 
   generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
 
- internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login</>),
+  internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login Credentials</>),
   report: {
     icon: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
     subItems: [
-      { id: 'report_summary', name: 'Report Tracker', icon: <IoMdPersonAdd className="h-5 w-5 mr-2 text-gray-500" /> },
-      { id: 'generate_report', name: 'Generate Report', icon: <FaEye className="h-5 w-5 mr-2 text-gray-500" /> },
+      { id: 'report_summary', name: 'Report Tracker', icon: <FaSquarePollHorizontal className="h-5 w-5 mr-2 text-gray-500" /> },
+      { id: 'generate_report', name: 'Generate Report', icon: <RiAiGenerate className="h-5 w-5 mr-2 text-gray-500" /> },
     ]
   },
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
+  deletion_certificate: (<><MdOutlineDelete  className="h-6 w-6 mr-3 text-gray-600" />Deletion Certificate</>),
   client_master: (<><MdOutlineTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Client Master Tracker</>),
   candidate_master: (<><MdAccessTime
     className="h-6 w-6 mr-3 text-gray-600" />Candidate Master Tracker</>),
 
-  // exel_tracker: (<><MdTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Exel Tracker</>),
+  tickets: (<><FaTicketSimple className="h-6 w-6 mr-3 text-gray-600" />Tickets</>),
   tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />Tat Delay Notification</>),
   Acknowledgement: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgement Email</>),
   // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
@@ -65,7 +69,14 @@ const Sidebar = () => {
   const onTabChange = (tab) => {
     handleTabChange(tab);
     setToggle(!toggle);
+    
+    // Scroll to the top with a smooth effect
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
+  
 
   const handleExpand = (tab) => {
     setExpandedTab(expandedTab === tab ? null : tab);
