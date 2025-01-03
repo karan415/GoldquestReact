@@ -162,7 +162,7 @@ const TatDelay = () => {
           <div className="col">
             <form action="">
               <div className="flex gap-5 justify-between">
-                <select name="options" id="" onChange={handleSelectChange} className='outline-none p-3  ps-2 text-left rounded-md w-6/12'>
+                <select name="options" id="" onChange={handleSelectChange} className='outline-none p-3  ps-2 text-left rounded-md w-full md:w-6/12'>
                   <option value="10">10 Rows</option>
                   <option value="20">20 Rows</option>
                   <option value="50">50 Rows</option>

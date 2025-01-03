@@ -271,17 +271,15 @@ const ClientMasterTrackerList = () => {
 
     return (
         <>
-            <h2 className='text-center text-3xl md:mt-12 font-bold py-4'>Client Master Tracker</h2>
+            <h2 className='text-center md:text-3xl text-xl md:mt-12 font-bold py-4'>Client Master Tracker</h2>
 
             <div className="bg-white m-4 md:m-6 shadow-md rounded-md p-3">
-
-
 
                 <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-2 text-left rounded-md w-6/12'>
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-2 text-left rounded-md w-full md:w-6/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -295,7 +293,7 @@ const ClientMasterTrackerList = () => {
                         </form>
                     </div>
                     <div className="col md:flex justify-end gap-3">
-                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-8/12 my-4 md:my-0' >
+                        <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 w-full rounded-md md:w-8/12 my-4 md:my-0' >
                             <option value="">Select Any Status</option>
                             {options.map((item, index) => {
                                 return item.status !== 'closed' ? (
@@ -321,7 +319,7 @@ const ClientMasterTrackerList = () => {
 
                 </div>
 
-                <div className="overflow-x-auto py-6 px-4">
+                <div className="overflow-x-auto py-6 md:px-4">
                     {loading ? (
                         <div className='flex justify-center items-center py-6 h-full'>
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -331,27 +329,27 @@ const ClientMasterTrackerList = () => {
                         <table className="min-w-full mb-4" ref={tableRef}>
                             <thead>
                                 <tr className='bg-green-500'>
-                                    <th className="py-3 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
-                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
-                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
-                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Spoc</th>
-                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Active Cases</th>
-                                    <th className="py-3 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r border-l text-white text-left uppercase whitespace-nowrap">SL</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Code</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Company Name</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Client Spoc</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Active Cases</th>
+                                    <th className="md:py-3 p-2 px-4 border-b border-r text-white text-left uppercase whitespace-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {currentItems.map((item, index) => (
                                     <>
                                         <tr key={index}>
-                                            <td className="py-3 px-4 border-b border-l border-r text-left whitespace-nowrap">
+                                            <td className="md:py-3 p-2 px-4 border-b border-l border-r text-left whitespace-nowrap">
                                                 <input type="checkbox" className='me-2' />
                                                 {index + 1 + (currentPage - 1) * itemsPerPage}
                                             </td>
-                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center cursor-pointer">{item.application_count}</td>
-                                            <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
+                                            <td className="md:py-3 p-2 px-4 border-b border-r text-center whitespace-nowrap">{item.client_unique_id}</td>
+                                            <td className="md:py-3 p-2 px-4 border-b border-r whitespace-nowrap">{item.name}</td>
+                                            <td className="md:py-3 p-2 px-4 border-b border-r whitespace-nowrap text-center">{item.single_point_of_contact}</td>
+                                            <td className="md:py-3 p-2 px-4 border-b border-r whitespace-nowrap text-center cursor-pointer">{item.application_count}</td>
+                                            <td className="md:py-3 p-2 px-4 border-b border-r text-center whitespace-nowrap">
                                                 <button
                                                     className='bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 me-2 text-white'
                                                     onClick={() => handleBranches(item.main_id)}>
@@ -368,7 +366,7 @@ const ClientMasterTrackerList = () => {
                                         {expandedClient === item.main_id && (
                                             branchLoading ? (
                                                 <tr>
-                                                    <td colSpan="6" className="py-3 px-4">
+                                                    <td colSpan="6" className="py-3 md:px-4">
                                                         <div className="flex justify-center items-center">
                                                             <PulseLoader
                                                                 color="#36D7B7"
@@ -382,21 +380,21 @@ const ClientMasterTrackerList = () => {
                                             ) : (
                                                 branches[item.main_id]?.length > 0 ? (
                                                     <tr>
-                                                        <td colSpan="6" className="py-3 px-4">
+                                                        <td colSpan="6" className="py-3 md:px-4">
                                                             <table className='w-full'>
                                                                 <thead>
                                                                     <tr className='bg-green-500 text-white'>
-                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Name</th>
-                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Application Count</th>
-                                                                        <th className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center">Action</th>
+                                                                        <th className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Name</th>
+                                                                        <th className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">Branch Application Count</th>
+                                                                        <th className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center">Action</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     {branches[item.main_id]?.map((branch, branchIndex) => (
                                                                         <tr key={branchIndex} className="border bg-gray-100">
-                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.branch_name}</td>
-                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.application_count}</td>
-                                                                            <td className="w-4/12 py-3 px-4 border-b border-r border-l whitespace-nowrap text-center">
+                                                                            <td className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.branch_name}</td>
+                                                                            <td className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center text-bold">{branch.application_count}</td>
+                                                                            <td className="w-4/12 md:py-3 p-2 px-4 border-b border-r border-l whitespace-nowrap text-center">
                                                                                 <button className="bg-green-600 hover:bg-green-200 rounded-md p-2 text-white" onClick={() => handleClick(branch.branch_id)}>Check In</button>
                                                                             </td>
                                                                         </tr>
@@ -407,7 +405,7 @@ const ClientMasterTrackerList = () => {
                                                     </tr>
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="6" className="py-3 px-4 text-center text-gray-500">
+                                                        <td colSpan="6" className="md:py-3 p-2 px-4 text-center text-gray-500">
                                                             No branches available
                                                         </td>
                                                     </tr>

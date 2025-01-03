@@ -364,7 +364,7 @@ const DeletionCertification = () => {
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 p-3">
         <div className="col">
           <div className="flex gap-5 justify-between">
-            <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-6/12'>
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-full md:w-6/12'>
               <option value="10">10 Rows</option>
               <option value="20">20 Rows</option>
               <option value="50">50 Rows</option>
@@ -390,7 +390,7 @@ const DeletionCertification = () => {
           </form>
         </div>
       </div>
-      <h2 className='text-center text-2xl font-bold my-5'>List Of Active Clients</h2>
+      <h2 className='text-center md:text-2xl text-xl font-bold my-5'>List Of Active Clients</h2>
 
       <div className="overflow-x-auto py-6 p-3 border m-3 bg-white shadow-md rounded-md">
 

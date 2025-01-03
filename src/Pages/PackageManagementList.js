@@ -176,7 +176,7 @@ const PackageManagementList = () => {
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-10/12'>
+                                <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left w-full rounded-md md:w-10/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -213,10 +213,10 @@ const PackageManagementList = () => {
                         <table className="min-w-full mb-4">
                             <thead>
                                 <tr className='bg-green-500'>
-                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Sl</th>
-                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Package Name</th>
-                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Description</th>
-                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase whitespace-nowrap">Action</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase  whitespace-nowrap">Sl</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase  whitespace-nowrap">Package Name</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase  whitespace-nowrap">Description</th>
+                                    <th className="py-2 px-4 border-b border-r text-sm text-white text-left uppercase  whitespace-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

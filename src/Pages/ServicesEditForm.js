@@ -275,7 +275,7 @@ const ServiceEditForm = () => {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <div className="overflow-x-auto py-6 px-0 bg-white mt-10 m-auto">
+        <>
             <div className="col md:flex mb-4">
                 <form action="">
                     <div className="flex md:items-stretch items-center gap-3">
@@ -289,49 +289,52 @@ const ServiceEditForm = () => {
                     </div>
                 </form>
             </div>
-            <table className="min-w-full">
-                <thead>
-                    <tr className='bg-green-500'>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
-                        <th className="py-2 md:py-3 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems.map((item) => (
-                        <tr key={item.service_id}>
-                            <td className="py-2 md:py-3 px-4 border-l border-r border-b whitespace-nowrap">
-                                <input
-                                    type="checkbox"
-                                    className='me-2'
-                                    checked={!!selectedServices[item.service_id]} // Ensure this is derived directly from state
-                                    onChange={() => handleCheckboxChange(item.service_id)}
-                                />
-                                {item.service_title}
-                            </td>
-                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
-                                <input
-                                    type="number"
-                                    name="price"
-                                    value={item.price}
-                                    onChange={(e) => handleChange(e, item.service_id)}
-                                    className='outline-none'
-                                />
-                            </td>
-                            <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap uppercase text-left">
-                                <Multiselect
-                                    options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
-                                    selectedValues={Object.entries(item.packages).map(([id, name]) => ({ name, id }))}
-                                    onSelect={(selectedList) => handlePackageChange(selectedList, item.service_id)}
-                                    onRemove={(selectedList) => handlePackageChange(selectedList, item.service_id)}
-                                    displayValue="name"
-                                    className='text-left'
-                                />
-                            </td>
+            <div className="overflow-x-auto py-6 px-0 bg-white md:mt-10 m-auto">
+
+                <table className="min-w-full">
+                    <thead>
+                        <tr className='bg-green-500'>
+                            <th className="py-2 md:py-3 px-4 text-sm text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
+                            <th className="py-2 md:py-3 px-4 text-sm text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
+                            <th className="py-2 md:py-3 px-4 text-sm text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {currentItems.map((item) => (
+                            <tr key={item.service_id}>
+                                <td className="py-2 md:py-3 text-sm px-4 border-l border-r border-b whitespace-nowrap">
+                                    <input
+                                        type="checkbox"
+                                        className='me-2'
+                                        checked={!!selectedServices[item.service_id]} // Ensure this is derived directly from state
+                                        onChange={() => handleCheckboxChange(item.service_id)}
+                                    />
+                                    {item.service_title}
+                                </td>
+                                <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap">
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        value={item.price}
+                                        onChange={(e) => handleChange(e, item.service_id)}
+                                        className='outline-none'
+                                    />
+                                </td>
+                                <td className="py-2 md:py-3 px-4 border-r border-b whitespace-nowrap uppercase text-left">
+                                    <Multiselect
+                                        options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
+                                        selectedValues={Object.entries(item.packages).map(([id, name]) => ({ name, id }))}
+                                        onSelect={(selectedList) => handlePackageChange(selectedList, item.service_id)}
+                                        onRemove={(selectedList) => handlePackageChange(selectedList, item.service_id)}
+                                        displayValue="name"
+                                        className='text-left text-sm'
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
             <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
                 <button
                     type="button"
@@ -364,7 +367,7 @@ const ServiceEditForm = () => {
                     <MdArrowForwardIos />
                 </button>
             </div>
-        </div>
+        </>
     );
 };
 

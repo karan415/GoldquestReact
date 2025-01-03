@@ -1153,7 +1153,7 @@ const GenerateReport = () => {
                         </div>
 
                         <div>
-                            <div className="SelectedServices border md:p-5 p-2  rounded-md md:mx-12">
+                            <div className="SelectedServices border md:p-5 p-2 h-[300px] overflow-auto  rounded-md md:mx-12">
                                 <h1 className="text-center md:text-2xl text-lg">SELECTED SERVICES</h1>
                                 {servicesDataInfo && servicesDataInfo.map((serviceData, index) => {
                                     if (serviceData.serviceStatus) {
@@ -1162,12 +1162,12 @@ const GenerateReport = () => {
                                         let preselectedStatus = selectedStatuses[index] || status;
 
                                         return (
-                                            <div key={index} className="mb-6 flex justify-between mt-5">
+                                            <div key={index} className="mb-6 md:flex justify-between mt-5">
                                                 {formJson.heading && (
                                                     <>
-                                                        <span>{formJson.heading}</span>
+                                                        <span className='text-sm block '>{formJson.heading}</span>
                                                         <select
-                                                            className="border p-2 w-7/12 rounded-md"
+                                                            className="border p-2 md:w-7/12 mt-4 md:mt-0 w-full rounded-md"
                                                             value={preselectedStatus}
                                                             onChange={(e) => handleStatusChange(e, index)}  // Call the handler here
                                                             required

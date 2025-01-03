@@ -245,7 +245,7 @@ const CandidateList = () => {
                         <CandidateForm />
                     </div>
                 </div>
-                <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-10 m-3">
+                <div className="overflow-x-auto p-2 py-6 md:px-4 bg-white shadow-md rounded-md md:m-10 m-3">
                     <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
@@ -278,7 +278,7 @@ const CandidateList = () => {
                         </div>
 
                     </div>
-                    <div className="overflow-x-auto py-6 px-4">
+                    <div className="overflow-x-auto py-6 md:px-4">
                         {candidateLoading ? (
                             <div className='flex justify-center items-center py-6 h-full'>
                                 <PulseLoader color="#36D7B7" loading={candidateLoading} size={15} aria-label="candidateLoading Spinner" />
@@ -288,29 +288,29 @@ const CandidateList = () => {
                             <table className="min-w-full">
                                 <thead>
                                     <tr className='bg-green-500'>
-                                        <th className="py-3 text-left border-r border-l text-white px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Name of the applicant</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Email Id</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Services</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
-                                        <th className="py-3 text-left border-r text-white px-4 border-b whitespace-nowrap uppercase">View Docs</th>
-                                        <th className="py-3 text-center px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
+                                        <th className="md:py-3 p-2 text-left border-r border-l text-white md:px-4 border-b whitespace-nowrap uppercase">SL NO.</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">Name of the applicant</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">Email Id</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">Mobile Number</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">Services</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">Date/Time</th>
+                                        <th className="md:py-3 p-2 text-left border-r text-white md:px-4 border-b whitespace-nowrap uppercase">View Docs</th>
+                                        <th className="md:py-3 p-2 text-center md:px-4 text-white border-r border-b whitespace-nowrap uppercase">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {currentItems.map((report, index) => (
                                         <tr key={report.id || index}>
-                                            <td className="py-3 px-4 border-l border-b border-r whitespace-nowrap capitalize">{index + 1}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.name}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.email}</td>
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">{report.mobile_number}</td>
-                                            <td className="border  px-4 py-2 text-left">
+                                            <td className="md:py-3 p-2 md:px-4 border-l border-b border-r whitespace-nowrap capitalize">{index + 1}</td>
+                                            <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize">{report.name}</td>
+                                            <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize">{report.email}</td>
+                                            <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize">{report.mobile_number}</td>
+                                            <td className="border p-2  md:px-4 py-2 text-left">
                                                 <div className='flex whitespace-nowrap'>
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
                                                         report.serviceNames.length === 1 ? (
 
-                                                            <span className="px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                            <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                 {typeof report.serviceNames[0] === "string"
                                                                     ? report.serviceNames[0]
                                                                     : report.serviceNames[0].join(", ")}
@@ -319,11 +319,11 @@ const CandidateList = () => {
 
                                                             <>
                                                                 {typeof report.serviceNames[0] === "string" ? (
-                                                                    <span className="px-4 py-2 bg-green-100 border   border-green-500 rounded-lg text-sm">
+                                                                    <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
                                                                         {report.serviceNames[0]}
                                                                     </span>
                                                                 ) : (
-                                                                    <span className="px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                                    <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0].join(", ")}
                                                                     </span>
                                                                 )}
@@ -337,7 +337,7 @@ const CandidateList = () => {
                                                         )
                                                     ) : (
                                                         // No services or serviceNames is not an array
-                                                        <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
+                                                        <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
                                                             You have no services
                                                         </span>
                                                     )}
@@ -345,7 +345,7 @@ const CandidateList = () => {
                                             </td>
                                             {isModalOpen && (
                                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                                    <div className="bg-white rounded-lg shadow-lg p-4 w-1/3">
+                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
                                                         <div className="flex justify-between items-center">
                                                             <h2 className="text-lg font-bold">Services</h2>
                                                             <button
@@ -360,7 +360,7 @@ const CandidateList = () => {
                                                                 modalServices.map((service, idx) => (
                                                                     <span
                                                                         key={idx}
-                                                                        className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm"
+                                                                        className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
                                                                     >
                                                                         {service}
                                                                     </span>
@@ -375,7 +375,7 @@ const CandidateList = () => {
 
 
 
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize">
+                                            <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize">
                                                 {report.created_at ? (
                                                     (() => {
                                                         const date = new Date(report.created_at);
@@ -386,10 +386,10 @@ const CandidateList = () => {
                                                     })()
                                                 ) : 'NIL'}
                                             </td>
-                                            <td className="py-3 px-4 border whitespace-nowrap">
+                                            <td className="md:py-3 p-2 md:px-4 border whitespace-nowrap">
                                                 {report.service_data?.cef ? (
                                                     <button
-                                                        className="px-4 py-2 bg-green-500 text-white rounded"
+                                                        className="md:px-4 py-2 p-2 bg-green-500 text-white rounded"
                                                         onClick={() => handleViewDocuments(report.service_data.cef)}
                                                     >
                                                         View Documents
@@ -426,7 +426,7 @@ const CandidateList = () => {
                                                                                                 href={url.trim()} // Trim to remove any extra spaces
                                                                                                 target="_blank"
                                                                                                 rel="noopener noreferrer"
-                                                                                                className="modal-view-button w-auto m-0 bg-green-500 text-white p-2 rounded-md px-4 block mt-2 text-center"
+                                                                                                className="modal-view-button w-auto m-0 bg-green-500 text-white p-2 rounded-md md:px-4 block mt-2 text-center"
                                                                                             >
                                                                                                 View {urlIdx + 1}
                                                                                             </a>
@@ -451,7 +451,7 @@ const CandidateList = () => {
 
 
 
-                                            <td className="py-3 px-4 border-b border-r whitespace-nowrap capitalize text-center">
+                                            <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize text-center">
                                                 <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
                                                 <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
                                             </td>
@@ -469,11 +469,11 @@ const CandidateList = () => {
 
 
                     </div>
-                    <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                    <div className="flex items-center justify-end  rounded-md bg-white md:px-4 md:py-3 p-2 sm:px-6 md:m-4 mt-2">
                         <button
                             onClick={showPrev}
                             disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white md:px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             aria-label="Previous page"
                         >
                             <MdArrowBackIosNew />
@@ -484,7 +484,7 @@ const CandidateList = () => {
                         <button
                             onClick={showNext}
                             disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white md:px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             aria-label="Next page"
                         >
                             <MdArrowForwardIos />

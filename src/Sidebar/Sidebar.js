@@ -3,16 +3,13 @@ import { useSidebar } from './SidebarContext';
 import { BiSolidPackage } from "react-icons/bi";
 import { HomeIcon, UserIcon } from "@heroicons/react/24/outline";
 import { IoMdPersonAdd } from "react-icons/io";
-import { RiLockPasswordFill, RiCustomerServiceFill, RiAiGenerate } from "react-icons/ri";
-import { FaFileInvoiceDollar, FaEye, FaEyeSlash, } from "react-icons/fa";
+import { RiAiGenerate } from "react-icons/ri";
+import { FaFileInvoiceDollar, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FaSquarePollHorizontal, FaTicketSimple } from "react-icons/fa6";
-
 import { TiCloudStorage } from "react-icons/ti";
 import { TbReportSearch } from "react-icons/tb";
 import { VscLinkExternal } from "react-icons/vsc";
-import {
-  MdOutlineTrackChanges, MdOutlineDelete, MdEmail, MdAccessTime
-} from "react-icons/md";
+import { MdOutlineTrackChanges, MdOutlineDelete, MdEmail, MdAccessTime } from "react-icons/md";
 import { IoNotificationsCircle } from "react-icons/io5";
 import { GrServices } from "react-icons/gr";
 import classNames from 'classnames';
@@ -30,9 +27,7 @@ const tabNames = {
   },
   package_management: (<><BiSolidPackage className="h-6 w-6 mr-3 text-gray-600" />Package Management</>),
   service_management: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Service Management</>),
-
-  generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create invoice</>),
-
+  generate_invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Create Invoice</>),
   internal_login: (<><TiCloudStorage className="h-6 w-6 mr-3 text-gray-600" />Internal Login Credentials</>),
   report: {
     icon: (<><TbReportSearch className="h-6 w-6 mr-3 text-gray-600" />Reports Summary</>),
@@ -42,19 +37,13 @@ const tabNames = {
     ]
   },
   external: (<><VscLinkExternal className="h-6 w-6 mr-3 text-gray-600" />External Login Credentials</>),
-  deletion_certificate: (<><MdOutlineDelete  className="h-6 w-6 mr-3 text-gray-600" />Deletion Certificate</>),
+  deletion_certificate: (<><MdOutlineDelete className="h-6 w-6 mr-3 text-gray-600" />Deletion Certificate</>),
   client_master: (<><MdOutlineTrackChanges className="h-6 w-6 mr-3 text-gray-600" />Client Master Tracker</>),
-  candidate_master: (<><MdAccessTime
-    className="h-6 w-6 mr-3 text-gray-600" />Candidate Master Tracker</>),
-
+  candidate_master: (<><MdAccessTime className="h-6 w-6 mr-3 text-gray-600" />Candidate Master Tracker</>),
   tickets: (<><FaTicketSimple className="h-6 w-6 mr-3 text-gray-600" />Tickets</>),
-  tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />Tat Delay Notification</>),
-  Acknowledgement: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgement Email</>),
-  // update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
-  // invoice: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Invoice</>),
-  // email_temp: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Email Template</>),
-  holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>),
-
+  tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />TAT Delay Notification</>),
+  acknowledgment: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgment Email</>),
+  holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>)
 };
 
 const Sidebar = () => {
@@ -62,96 +51,43 @@ const Sidebar = () => {
   const [expandedTab, setExpandedTab] = useState(null);
   const { activeTab, handleTabChange } = useSidebar();
 
-  const handleToggle = () => {
-    setToggle(!toggle);
-  };
+  const handleToggle = () => setToggle(!toggle);
 
   const onTabChange = (tab) => {
     handleTabChange(tab);
-    setToggle(!toggle);
-    
-    // Scroll to the top with a smooth effect
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    setToggle(false); // Close sidebar on mobile after selection
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
 
-  const handleExpand = (tab) => {
-    setExpandedTab(expandedTab === tab ? null : tab);
-  };
+  const handleExpand = (tab) => setExpandedTab(expandedTab === tab ? null : tab);
 
   return (
-    <div className="w-full md:w-1/5 flex flex-col bg-white border-e">
-      <div className="px-3" id='sider_content'>
-        <div className="flex flex-col px-1 md:py-8 p-2">
-          <div className='md:hidden sm:block'>
-            <div className='flex items-center justify-between border-b p-3'>
-              <div>Menu</div>
-              <div className='md:hidden sm:block' onClick={handleToggle} aria-label="Toggle Sidebar">
-                <span className='border-b-4 border-black w-8 block text-black mb-1'></span>
-                <span className='border-b-4 border-black w-8 block text-black mb-1'></span>
-                <span className='border-b-4 border-black w-8 block text-black mb-1'></span>
-              </div>
-            </div>
-          </div>
-          {
-            toggle && (
-              <ul className='md:hidden mb-2'>
-                {Object.keys(tabNames).map((tab) => {
-                  const tabContent = tabNames[tab];
-                  return (
-                    <React.Fragment key={tab}>
-                      <li
-                        className={classNames(
-                          'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
-                          { 'bg-green-200': activeTab === tab, 'hover:bg-green-200': activeTab !== tab }
-                        )}
-                        onClick={() => {
-                          if (tabContent.subItems) {
-                            handleExpand(tab);
-                          } else {
-                            onTabChange(tab);
-                          }
-                        }}
-                      >
-                        {tabContent.icon || tabContent}
-                      </li>
-                      {expandedTab === tab && tabContent.subItems && (
-                        <ul className="pl-6">
-                          {tabContent.subItems.map((subItem) => (
-                            <li
-                              key={subItem.id}
-                              className={classNames(
-                                'w-full flex items-center p-3 cursor-pointer rounded-md my-2',
-                                { 'bg-green-100': activeTab === subItem.id, 'hover:bg-green-100': activeTab !== subItem.id }
-                              )}
-                              onClick={() => {
-                                onTabChange(subItem.id);
-                                setToggle(false); // Optionally close the menu after selecting a sub-item
-                              }}
-                            >
-                              {subItem.icon}
-                              {subItem.name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </ul>
-            )
-          }
-          <ul className='hidden md:block'>
+    <div className="flex flex-col md:flex-row  h-full md:w-2/12">
+      <button
+        className="md:hidden p-3 fixed top-0 left-0 z-50 bg-green-400 text-white w-full  focus:outline-none"
+        onClick={handleToggle}
+        aria-label="Toggle Sidebar"
+      >
+      <div className='flex justify-between items-center'>  <div><span className="block w-8 h-1 bg-white mb-1"></span>
+          <span className="block w-8 h-1 bg-white mb-1"></span>
+          <span className="block w-8 h-1 bg-white"></span></div>
+        <div>BGV</div></div>
+
+      </button>
+      {/* Sidebar */}
+      <div
+        className={`w-full  bg-white border-e fixed md:relative top-0 left-0  z-40 transition-transform transform ${toggle ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0`}
+      >
+        <div className="px-3 py-4 mt-10 md:mt-0 h-[500px] md:h-auto overflow-auto">
+          <ul>
             {Object.keys(tabNames).map((tab) => {
               const tabContent = tabNames[tab];
               return (
                 <React.Fragment key={tab}>
                   <li
                     className={classNames(
-                      'w-full flex items-center p-3 cursor-pointer rounded-md my-2',
+                      'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
                       { 'bg-green-200': activeTab === tab, 'hover:bg-green-200': activeTab !== tab }
                     )}
                     onClick={() => {
@@ -173,10 +109,7 @@ const Sidebar = () => {
                             'w-full flex items-center p-3 cursor-pointer rounded-md my-2',
                             { 'bg-green-100': activeTab === subItem.id, 'hover:bg-green-100': activeTab !== subItem.id }
                           )}
-                          onClick={() => {
-                            onTabChange(subItem.id);
-                            setToggle(false);
-                          }}
+                          onClick={() => onTabChange(subItem.id)}
                         >
                           {subItem.icon}
                           {subItem.name}

@@ -236,100 +236,106 @@ const ClientManagementData = () => {
     };
 
     return (
-        <div className="overflow-x-auto py-6 px-0 bg-white mt-10 m-auto">
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <PulseLoader color={"#36D7B7"} loading={loading} size={15} aria-label="Loading Spinner" />
-                </div>
-            ) : (
-                <>
-                    {paginated.length === 0 ? (
-                        <p className="text-center py-4">No data available</p>
-                    ) : (
-                        <>
-                            <div className="col md:flex mb-4">
-                                <form action="">
-                                    <div className="flex md:items-stretch items-center gap-3">
-                                        <input
-                                            type="search"
-                                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
-                                            placeholder='Search by Service Name'
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                </form>
-                            </div>
-                            <table className="min-w-full">
-                                <thead>
-                                    <tr className='bg-green-500'>
-                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
-                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
-                                        <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {currentItems.map((item) => (
-                                        <tr key={item.serviceId}>
-                                            <td className="py-2 text-sm px-4 border-l border-r border-b whitespace-nowrap">
-                                                <input
-                                                    type="checkbox"
-                                                    className='me-2'
-                                                    checked={!!selectedServices[item.serviceId]}
-                                                    onChange={() => handleCheckboxChange(item.serviceId)}
-                                                /> {item.serviceTitle}
-                                            </td>
-                                            <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap">
-                                                <input
-                                                    type="number"
-                                                    name="price"
-                                                    value={priceData[item.serviceId]?.price || ''}
-                                                    onChange={(e) => handleChange(e, item.serviceId)}
-                                                    className='outline-none'
-                                                />
-                                                {validationsErrors[item.serviceId]?.price && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].price}</span>}
-                                            </td>
-                                            <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap uppercase text-left">
-                                                <Multiselect
-                                                    options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
-                                                    selectedValues={packageList.filter(pkg => (selectedPackages[item.serviceId] || []).includes(pkg.id)).map(pkg => ({ name: pkg.title, id: pkg.id }))}
-                                                    onSelect={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
-                                                    onRemove={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
-                                                    displayValue="name"
-                                                    className='text-left'
-                                                />
-                                                {validationsErrors[item.serviceId]?.packages && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].packages}</span>}
-                                            </td>
+        <>
+            <div className="col md:flex mb-4">
+                <form action="">
+                    <div className="flex md:items-stretch items-center gap-3">
+                        <input
+                            type="search"
+                            className='outline-none border-2 p-2 rounded-md w-full my-4 md:my-0'
+                            placeholder='Search by Service Name'
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </form>
+            </div>
+
+
+            <div className="overflow-x-auto md:py-6 p-3 px-0 bg-white md:mt-10 m-auto">
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <PulseLoader color={"#36D7B7"} loading={loading} size={15} aria-label="Loading Spinner" />
+                    </div>
+                ) : (
+                    <>
+                        {paginated.length === 0 ? (
+                            <p className="text-center py-4">No data available</p>
+                        ) : (
+                            <>
+
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className='bg-green-500'>
+                                            <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Service Name</th>
+                                            <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Price</th>
+                                            <th className="py-2 text-sm px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Select Package</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-                                <button
-                                    onClick={showPrev}
-                                    disabled={currentPage === 1}
-                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    aria-label="Previous page"
-                                >
-                                    <MdArrowBackIosNew />
-                                </button>
-                                <div className="flex items-center">
-                                    {renderPagination()}
-                                </div>
-                                <button
-                                    onClick={showNext}
-                                    disabled={currentPage === totalPages}
-                                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                    aria-label="Next page"
-                                >
-                                    <MdArrowForwardIos />
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </>
-            )}
-        </div>
+                                    </thead>
+                                    <tbody>
+                                        {currentItems.map((item) => (
+                                            <tr key={item.serviceId}>
+                                                <td className="py-2 text-sm px-4 border-l border-r border-b whitespace-nowrap">
+                                                    <input
+                                                        type="checkbox"
+                                                        className='me-2'
+                                                        checked={!!selectedServices[item.serviceId]}
+                                                        onChange={() => handleCheckboxChange(item.serviceId)}
+                                                    /> {item.serviceTitle}
+                                                </td>
+                                                <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap">
+                                                    <input
+                                                        type="number"
+                                                        name="price"
+                                                        value={priceData[item.serviceId]?.price || ''}
+                                                        onChange={(e) => handleChange(e, item.serviceId)}
+                                                        className='outline-none'
+                                                    />
+                                                    {validationsErrors[item.serviceId]?.price && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].price}</span>}
+                                                </td>
+                                                <td className="py-2 text-sm px-4 border-r border-b whitespace-nowrap uppercase text-left">
+                                                    <Multiselect
+                                                        options={packageList.map(pkg => ({ name: pkg.title, id: pkg.id }))}
+                                                        selectedValues={packageList.filter(pkg => (selectedPackages[item.serviceId] || []).includes(pkg.id)).map(pkg => ({ name: pkg.title, id: pkg.id }))}
+                                                        onSelect={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
+                                                        onRemove={(selectedList) => handlePackageChange(selectedList, item.serviceId)}
+                                                        displayValue="name"
+                                                        className='text-left'
+                                                    />
+                                                    {validationsErrors[item.serviceId]?.packages && <span className="text-red-500 capitalize">{validationsErrors[item.serviceId].packages}</span>}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
+            <div className="flex items-center justify-end  rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+                <button
+                    onClick={showPrev}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Previous page"
+                >
+                    <MdArrowBackIosNew />
+                </button>
+                <div className="flex items-center">
+                    {renderPagination()}
+                </div>
+                <button
+                    onClick={showNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    aria-label="Next page"
+                >
+                    <MdArrowForwardIos />
+                </button>
+            </div>
+        </>
     );
 };
 

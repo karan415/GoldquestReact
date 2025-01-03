@@ -576,8 +576,8 @@ const ClientManagementList = () => {
 
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 p-3">
         <div className="col">
-          <div className="flex gap-5 justify-between">
-            <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-6/12'>
+          <div className="md:flex gap-5 justify-between">
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-3 text-left rounded-md w-full md:w-6/12'>
               <option value="10">10 Rows</option>
               <option value="20">20 Rows</option>
               <option value="50">50 Rows</option>
@@ -648,18 +648,18 @@ const ClientManagementList = () => {
                       </td>
 
 
-                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.contact_person_name || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer  whitespace-nowrap md:whitespace-normal">{item.contact_person_name || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.mobile || 'NIL'}</td>
-                      <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.client_standard || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r text-center text-sm whitespace-nowrap md:whitespace-normal cursor-pointer">{item.client_standard || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
                     {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services?.length > 0 ? (
                       <>
                         {/* Find the services for this particular client */}
-                        {services
+                       <div className='flex gap-2'> {services
                           .find(serviceGroup => serviceGroup.customerId === item.main_id)
                           ?.services?.slice(0, 1)
                           .map((service) => (
-                            <div key={service.serviceId} className="py-2 pb-1 text-start flex">
+                            <div key={service.serviceId} className=" text-start flex">
                               <div className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">
                                 {service.serviceTitle}
                               </div>
@@ -676,7 +676,7 @@ const ClientManagementList = () => {
                             >
                               View More
                             </button>
-                          )}
+                          )}</div>
                       </>
                     ) : (
                       "No services available"
@@ -690,7 +690,7 @@ const ClientManagementList = () => {
                           onClick={() => setShowPopup(null)} // Close the popup when clicking outside
                         >
                           <div
-                            className="popup-content bg-white rounded-lg shadow-lg w-6/12 p-6"
+                            className="popup-content bg-white rounded-lg shadow-lg md:w-6/12 p-6"
                             onClick={(e) => e.stopPropagation()} // Prevent popup close when clicking inside
                           >
                             <button
@@ -700,7 +700,7 @@ const ClientManagementList = () => {
                               ✕
                             </button>
                             <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
-                            <div className="space-y-2 grid p-3 grid-cols-3 gap-3">
+                            <div className="space-y-2 grid p-3 md:grid-cols-3 grid-cols-1 gap-3">
                               {/* Display all services for the current client */}
                               {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
                                 <div
@@ -717,19 +717,19 @@ const ClientManagementList = () => {
 
 
 
-                      <td className=" p-3 border-b border-r whitespace-wrap capitalize  text-sm">{item.address || 'NIL'}</td>
+                      <td className=" p-3 border-b border-r whitespace-wrap capitalize  text-sm  whitespace-nowrap md:whitespace-normal">{item.address || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-left whitespace-nowrap text-sm fullwidth">
-                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 md:p-3 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
                         <button
-                          className="bg-green-600 hover:bg-green-200  text-sm rounded-md p-3 px-5 text-white"
+                          className="bg-green-600 hover:bg-green-200  text-sm rounded-md p-2 md:p-3 px-5 text-white"
                           onClick={() => handleEditForm(item)}
                         >
                           Edit
                         </button>
-                        <button className="bg-red-600 hover:bg-red-200  text-sm rounded-md p-3 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        <button className="bg-red-600 hover:bg-red-200  text-sm rounded-md p-2 md:p-3 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
                         {item.branch_count > 1 && (
                           <button
-                            className="bg-green-600 hover:bg-green-200   text-sm rounded-md p-3 px-5 text-white"
+                            className="bg-green-600 hover:bg-green-200   text-sm rounded-md p-2 md:p-3 px-5 text-white"
                             onClick={() => toggleAccordion(item.main_id)}
                           >
                             View Branches

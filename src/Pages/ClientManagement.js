@@ -669,7 +669,7 @@ const ClientManagement = () => {
                 </div>
 
               </div>
-              <div className="my-8 grid gap-5 grid-cols-2 items-center flex-wrap">
+              <div className="my-8 md:grid gap-5 grid-cols-2 items-center flex-wrap">
                 {emails.map((email, index) => (
                   <div key={index} className="mb-4 md:flex items-center gap-3 ">
                     <label className="text-gray-500 whitespace-nowrap">Email {index + 1}: <span className="text-red-600">*</span></label>
@@ -685,7 +685,7 @@ const ClientManagement = () => {
                     {errors[`email${index}`] && <p className="text-red-500 text-sm whitespace-nowrap">{errors[`email${index}`]}</p>}
                     {index > 0 && (
                       <button
-                        className="bg-red-500 rounded-md p-3  text-white"
+                        className="bg-red-500 rounded-md p-3 mt-3 md:mt-0  text-white"
                         type="button"
                         onClick={() => deleteEmails(index)}
                       >
@@ -917,7 +917,7 @@ const ClientManagement = () => {
               <div className="my-8">
                 <h3 className="text-lg font-semibold mb-4">Branch Details</h3>
                 {branchForms.map((branch, index) => (
-                  <div key={index} className="flex content-between items-center gap-4 mb-3">
+                  <div key={index} className="md:flex content-between items-center gap-4 mb-3">
                     <div>
                       <label className="text-gray-500" htmlFor={`branch_name_${index}`}>
                         Branch Name

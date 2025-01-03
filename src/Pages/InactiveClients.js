@@ -226,7 +226,7 @@ const InactiveClients = () => {
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4 px-4">
         <div className="col">
           <div className="flex gap-5 justify-between">
-            <select name="options" onChange={handleSelectChange} className='outline-none  p-2 text-left rounded-md w-6/12'>
+            <select name="options" onChange={handleSelectChange} className='outline-none  p-2 text-left rounded-md w-full md:w-6/12'>
               <option value="10">10 Rows</option>
               <option value="20">20 Rows</option>
               <option value="50">50 Rows</option>

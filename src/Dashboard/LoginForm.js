@@ -142,7 +142,7 @@ const LoginForm = () => {
       confirmButtonText: 'Ok',
     });
 
-    navigate('', { state: { from: location }, replace: true });
+    navigate('/', { state: { from: location }, replace: true });
   };
 
   const handleOtpSubmit = () => {
@@ -188,8 +188,8 @@ const LoginForm = () => {
     <>
 
       <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center">
-        <div className="md:flex  bg-white w-10/12 m-auto rounded-md">
-          <div className="md:w-7/12 w-full">
+        <div className="flex wrap lg:flex-nowrap flex-col-reverse lg:flex-row   bg-white lg:w-10/12 p-3 m-auto rounded-md">
+          <div className="md:w-10/12 lg:w-7/12 w-full m-auto">
             <img
               src={bg_img}
               alt="Logo"
@@ -197,8 +197,8 @@ const LoginForm = () => {
             />
           </div>
 
-          <div className="md:w-5/12 flex  justify-center  md:mt-0 mt-10">
-            <div className="w-full max-w-xl md:p-8">
+          <div className="lg:w-5/12 flex mb-10 md:mb-0 justify-center  md:mt-0 mt-10">
+            <div className="w-full lg:max-w-xl md:p-8">
 
               <div className="flex flex-col items-center mb-3 md:mb-12">
                 <img

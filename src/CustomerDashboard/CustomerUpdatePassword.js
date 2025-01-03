@@ -111,8 +111,8 @@ const CustomerUpdatePassword = () => {
     };
 
     return (
-        <div className='h-screen flex items-center flex-wrap justify-center'>
-            <form className='mt-4 w-6/12 m-0 bg-white shadow-md p-3 rounded-md' onSubmit={handleSubmit}>
+        <div className='h-screen mx-6 md:mx-0 md:flex items-center flex-wrap justify-center'>
+            <form className='mt-4 md:w-6/12 m-0 bg-white shadow-md p-3 rounded-md' onSubmit={handleSubmit}>
                 <h2 className='text-xl py-5 font-bold text-center'>Update Password</h2>
 
                 <div className="mb-6 text-left">

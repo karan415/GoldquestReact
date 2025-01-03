@@ -332,12 +332,12 @@ const CandidateExcelTrackerStatus = () => {
             <div className="space-y-4 p-3 md:py-[30px] md:px-[51px] bg-white">
 
 
-                <div className=" mx-4 bg-white">
+                <div className=" md:mx-4 bg-white">
                     <div className="md:flex justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
                                 <div className="flex gap-5 justify-between">
-                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-full border md:w-10/12'>
                                         <option value="10">10 Rows</option>
                                         <option value="20">20 Rows</option>
                                         <option value="50">50 Rows</option>
@@ -347,7 +347,6 @@ const CandidateExcelTrackerStatus = () => {
                                         <option value="400">400 Rows</option>
                                         <option value="500">500 Rows</option>
                                     </select>
-                                    <button className="bg-green-600 text-white py-3 px-8 rounded-md capitalize" type='button'>exel</button>
                                     <button onClick={goBack} className="bg-green-500 mx-2 whitespace-nowrap hover:bg-green-400 text-white rounded-md p-3">Go Back</button>
 
                                 </div>
@@ -370,7 +369,7 @@ const CandidateExcelTrackerStatus = () => {
                     </div>
 
                 </div>
-                <div ref={tableRef} className="overflow-x-auto py-6 px-4 shadow-md rounded-md bg-white">
+                <div ref={tableRef} className="overflow-x-auto py-6 md:px-4 shadow-md rounded-md bg-white">
                     {loading ? (
                         <div className='flex justify-center items-center py-6 h-full'>
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />

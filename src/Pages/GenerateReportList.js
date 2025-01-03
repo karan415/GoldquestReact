@@ -208,12 +208,12 @@ const GenerateReportList = () => {
     <>
       <div className=" py-4 px-4">
 
-        <h2 className='text-center text-3xl font-bold py-4'>Report Generate DATA</h2>
+        <h2 className='text-center md:text-3xl text-xl font-bold py-4'>Report Generate DATA</h2>
         <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
           <div className="col">
             <form action="">
               <div className="flex gap-5 justify-between">
-                <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-6/12'>
+                <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-full md:w-6/12'>
                   <option value="10">10 Rows</option>
                   <option value="20">20 Rows</option>
                   <option value="50">50 Rows</option>

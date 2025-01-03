@@ -16,7 +16,7 @@ const BackgroundForm = () => {
     const [status, setStatus] = useState([]);
 
     // Handler to toggle row visibility
-console.log('errors',errors)
+    console.log('errors', errors)
     const [fileNames, setFileNames] = useState([]);
     const [serviceDataImageInputNames, setServiceDataImageInputNames] = useState([]);
     const [apiStatus, setApiStatus] = useState(true);
@@ -143,13 +143,13 @@ console.log('errors',errors)
             "full_name", "former_name", "mb_no", "father_name", "dob",
             "gender", "full_address", "pin_code", "current_address", "current_address_landline_number",
             "current_address_state", "current_prominent_landmark", "current_address_stay_to",
-            "nearest_police_station", "nationality", "marital_status", 
+            "nearest_police_station", "nationality", "marital_status",
         ];
 
         if (status === 1) {
             const additionalFields = [
                 "name_declaration", "declaration_date",
-                "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number","aadhar_card_name", "pan_card_name",
+                "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number", "aadhar_card_name", "pan_card_name",
                 "bank_details_account_number", "bank_details_bank_name", "bank_details_branch_name",
                 "bank_details_ifsc_code", "insurance_details_name", "insurance_details_nominee_relation",
                 "insurance_details_nominee_dob", "insurance_details_contact_number", "icc_bank_acc", "food_coupon"
@@ -694,10 +694,10 @@ console.log('errors',errors)
                             <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 z-50">
                                 <div className="bg-white p-8 rounded-lg w-5/12  shadow-xl">
                                     <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-semibold text-gray-800">Generating Candidate Application</h2>
+                                        <h2 className="md:text-2xl text-sm font-semibold text-gray-800">Generating Candidate Application</h2>
                                         <button
                                             onClick={() => setShowModal(false)}
-                                            className="text-gray-600 hover:text-gray-900 font-bold text-2xl">&times;</button>
+                                            className="text-gray-600 hover:text-gray-900 font-bold md:text-2xl text-sm">&times;</button>
                                     </div>
                                     <p className="mt-4 text-gray-700 text-lg">
                                         Uploading.......<span className=""> {fileNames.join(', ')} {progress >= 90 && ' - Generating final report...'}
@@ -714,7 +714,7 @@ console.log('errors',errors)
                                                 style={{ width: `${progress}%` }}
                                             ></div>
                                         </div>
-                                        <div className="mt-4 text-center text-xl text-green-600">{Math.round(progress)}%</div>
+                                        <div className="mt-4 md:text-center text-start md:text-xl text-sm text-green-600">{Math.round(progress)}%</div>
                                     </div>
                                     <div className="mt-6 flex justify-between">
                                         <button
@@ -732,13 +732,13 @@ console.log('errors',errors)
                     <form className='py-6 bg-[#e5e7eb24]' onSubmit={handleSubmit} id='bg-form'>
                         {status === 1 && (
                             <div className='flex justify-center my-3'>
-                                <img src={LogoBgv} className='w-[12%] m-auto' alt="Logo" />
+                                <img src={LogoBgv} className='md:w-[12%] w-[50%] m-auto' alt="Logo" />
                             </div>
                         )}
 
-                        <h4 className="text-Black text-3xl mb-6 text-center font-bold">Background Verification Form</h4>
-                        <div className="p-6 rounded md:w-9/12 m-auto ">
-                            <div className="mb-6  p-4 rounded-md">
+                        <h4 className="text-Black md:text-3xl  text-xl md:mb-6 mb-3 text-center  font-bold">Background Verification Form</h4>
+                        <div className="md:p-6 p-3 rounded xl:w-9/12 m-auto ">
+                            <div className="md:mb-6 mb-2 p-4 rounded-md">
                                 <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
                             </div>
 
@@ -805,9 +805,9 @@ console.log('errors',errors)
                             </div>
 
                             <div className='border bg-white shadow-md  p-4 rounded-md'>
-                                <h4 className="text-center text-2xl my-6 font-bold ">Personal Information</h4>
+                                <h4 className="md:text-center text-start md:text-2xl text-sm my-6 font-bold ">Personal Information</h4>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 ">
                                     <div className="form-group">
                                         <label htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500">*</span></label>
                                         <input
@@ -896,9 +896,9 @@ console.log('errors',errors)
                                         {errors.dob && <p className="text-red-500">{errors.dob}</p>}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
 
-                                    <div className="form-group">
+                                    <div className="form-group my-4">
                                         <label htmlFor="gender">
                                             Gender: <span className="text-red-500">*</span>
                                         </label>
@@ -919,6 +919,8 @@ console.log('errors',errors)
                                         </select>
                                         {errors.gender && <p className="text-red-500">{errors.gender}</p>}
                                     </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                                     <div className='form-group'>
                                         <label>Aadhar card No</label>
@@ -932,19 +934,6 @@ console.log('errors',errors)
                                         />
 
                                     </div>
-                                    <div className='form-group'>
-                                        <label>Pan card No</label>
-                                        <input
-                                            type="text"
-                                            name="pan_card_number"
-                                            value={formData.personal_information.pan_card_number}
-                                            onChange={handleChange}
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-
-                                    </div>
-
                                     {status === 1 && (
                                         <>
                                             <div className='form-group'>
@@ -979,6 +968,25 @@ console.log('errors',errors)
                                                     Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                                 </p>
                                             </div>
+
+                                        </>
+                                    )}
+                                    <div className='form-group'>
+                                        <label>Pan card No</label>
+                                        <input
+                                            type="text"
+                                            name="pan_card_number"
+                                            value={formData.personal_information.pan_card_number}
+                                            onChange={handleChange}
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+
+                                    </div>
+
+                                    {status === 1 && (
+                                        <>
+
                                             <div className='form-group'>
                                                 <label>Name as per Pan Card<span className='text-red-500'>*</span></label>
                                                 <input
@@ -993,20 +1001,6 @@ console.log('errors',errors)
                                                 {errors.pan_card_name && <p className="text-red-500">{errors.pan_card_name}</p>}
                                             </div>
                                         </>
-                                    )}
-
-                                    {status == 0 && (
-                                        <div className="form-group">
-                                            <label>Social Security Number(if applicable):</label>
-                                            <input
-                                                onChange={handleChange}
-                                                value={formData.ssn_number}
-                                                type="text"
-                                                className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
-                                                name="ssn_number"
-
-                                            />
-                                        </div>
                                     )}
                                     {status === 1 && (
                                         <div className='form-group'>
@@ -1028,6 +1022,22 @@ console.log('errors',errors)
                                             </p>
                                         </div>
                                     )}
+
+                                    {status == 0 && (
+                                        <div className="form-group">
+                                            <label>Social Security Number(if applicable):</label>
+                                            <input
+                                                onChange={handleChange}
+                                                value={formData.ssn_number}
+                                                type="text"
+                                                className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
+                                                name="ssn_number"
+
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="form-group">
                                         <label htmlFor="nationality">Nationality: <span className="text-red-500">*</span></label>
                                         <input
@@ -1065,7 +1075,7 @@ console.log('errors',errors)
                                 </div>
                                 <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
 
-                                    <h3 className='text-center text-2xl font-bold my-5'>Current Address </h3>
+                                    <h3 className='md:text-center text-start md:text-2xl text-sm font-bold my-5'>Current Address </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                         <div className="form-group">
@@ -1219,8 +1229,8 @@ console.log('errors',errors)
                                         </div>
 
                                         <div className='border rounded-md p-3 my-5 '>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Add Emergency Contact Details</h3>
-                                            <div className='grid grid-cols-3 gap-3 '>
+                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Add Emergency Contact Details</h3>
+                                            <div className='md:grid grid-cols-3 gap-3 '>
                                                 <div className='form-group'>
                                                     <label>Name<span className='text-red-500'>*</span></label>
                                                     <input
@@ -1263,8 +1273,8 @@ console.log('errors',errors)
                                             </div>
                                         </div>
                                         <div className='border rounded-md p-3  my-5'>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Add PF Details</h3>
-                                            <div className='grid grid-cols-3 gap-3'>
+                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Add PF Details</h3>
+                                            <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group'>
                                                     <label>PF Number</label>
                                                     <input
@@ -1298,8 +1308,8 @@ console.log('errors',errors)
                                             </div>
                                         </div>
                                         <div className='border rounded-md p-3   mt-3'>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Do you have an NPS Account? If yes</h3>
-                                            <div className='grid grid-cols-3 gap-3'>
+                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Do you have an NPS Account? If yes</h3>
+                                            <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group '>
                                                     <label>PRAN (Permanent Retirement Account Number).</label>
                                                     <input
@@ -1361,8 +1371,8 @@ console.log('errors',errors)
                                         {errors.icc_bank_acc && <p className="text-red-500">{errors.icc_bank_acc}</p>}
 
                                         <div className='border rounded-md p-3 my-6  '>
-                                            <h3 className='text-center text-xl font-bold pb-2'>Banking Details: </h3>
-                                            <span className='text-sm text-center block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
+                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'>Banking Details: </h3>
+                                            <span className='text-sm md:text-center text-start block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
                                             <div className='form-group mt-4'>
                                                 <label>Bank Account Number<span className='text-red-500'>*</span></label>
                                                 <input
@@ -1410,8 +1420,8 @@ console.log('errors',errors)
                                         </div>
 
                                         <div className='border rounded-md p-3 mt-3  '>
-                                            <h3 className='text-center text-xl font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
-                                            <div className='grid grid-cols-2 gap-3'>
+                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
+                                            <div className='md:grid grid-cols-2 gap-3'>
                                                 <div className='form-group'>
                                                     <label>Name(s)
                                                     </label>
@@ -1497,7 +1507,7 @@ console.log('errors',errors)
                                             key={serviceIndex}
                                             className="border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300"
                                         >
-                                            <h2 className="text-center py-4 text-2xl font-bold mb-6 text-black">
+                                            <h2 className="md:text-center text-start py-4 md:text-2xl text-sm font-bold mb-6 text-black">
                                                 {service.heading}
                                             </h2>
                                             <div className="space-y-6">
@@ -1515,7 +1525,7 @@ console.log('errors',errors)
                                                             {row.inputs && row.inputs.length > 0 ? (
                                                                 <div className="space-y-4">
                                                                     <div
-                                                                        className={`grid grid-cols-${row.inputs.length === 1 ? '1' : row.inputs.length === 2 ? '2' : '3'} gap-3`}
+                                                                        className={`md:grid grid-cols-${row.inputs.length === 1 ? '1' : row.inputs.length === 2 ? '2' : '3'} gap-3`}
                                                                     >
                                                                         {row.inputs.map((input, inputIndex) => {
                                                                             const isCheckbox = input.type === 'checkbox';
@@ -1648,17 +1658,14 @@ console.log('errors',errors)
                                     );
                                 })
                             ) : (
-                                <p className="text-center text-xl text-gray-500">No services available.</p>
+                                <p className="md:text-center text-start md:text-xl text-sm text-gray-500">No services available.</p>
                             )}
 
-
-                            <div className='mb-6  p-4 rounded-md border shadow-md bg-white'>
-                                <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>
-
+                            <div className='mb-6  p-4 rounded-md border shadow-md bg-white mt-8'>
+                                <h4 className="md:text-center text-start md:text-xl text-sm my-6 font-bold">Declaration and Authorization</h4>
                                 <div className="mb-6">
-                                    <p>
+                                    <p className='text-sm'>
                                         I hereby authorize GoldQuest Global HR Services Private Limited and its representative to verify information provided in my application for employment and this employee background verification form, and to conduct enquiries as may be necessary, at the company’s discretion. I authorize all persons who may have information relevant to this enquiry to disclose it to GoldQuest Global HR Services Pvt Ltd or its representative. I release all persons from liability on account of such disclosure.
-                                        <br /><br />
                                         I confirm that the above information is correct to the best of my knowledge. I agree that in the event of my obtaining employment, my probationary appointment, confirmation as well as continued employment in the services of the company are subject to clearance of medical test and background verification check done by the company.
                                     </p>
                                 </div>
@@ -1711,36 +1718,36 @@ console.log('errors',errors)
                                 </div>
                             </div>
 
-                            <h5 className="text-center text-lg my-6 font-bold">Documents  (Mandatory)</h5>
+                            <h5 className="md:text-center text-start text-lg my-6 font-bold">Documents  (Mandatory)</h5>
 
                             <div className="grid grid-cols-1 bg-white shadow-md  md:grid-cols-3 gap-4 pt-4  md:p-4 p-1 rounded-md border">
                                 <div className="p-4">
-                                    <h6 className="flex items-center text-lg font-bold mb-2">
+                                    <h6 className="flex items-center md:text-lg text-sm font-bold mb-2">
                                         <FaGraduationCap className="mr-3" />
                                         Education
                                     </h6>
-                                    <p>Photocopy of degree certificate and final mark sheet of all examinations.</p>
+                                    <p className='text-sm'>Photocopy of degree certificate and final mark sheet of all examinations.</p>
                                 </div>
 
                                 <div className="p-4">
-                                    <h6 className="flex items-center text-lg font-bold mb-2">
+                                    <h6 className="flex items-center md:text-lg text-sm font-bold mb-2">
                                         <FaBriefcase className="mr-3" />
                                         Employment
                                     </h6>
-                                    <p>Photocopy of relieving / experience letter for each employer mentioned in the form.</p>
+                                    <p className='text-sm'>Photocopy of relieving / experience letter for each employer mentioned in the form.</p>
                                 </div>
 
                                 <div className="p-4">
-                                    <h6 className="flex items-center text-lg font-bold mb-2">
+                                    <h6 className="flex items-center md:text-lg text-sm font-bold mb-2">
                                         <FaIdCard className="mr-3" />
                                         Government ID/ Address Proof
                                     </h6>
-                                    <p>Aadhaar Card / Bank Passbook / Passport Copy / Driving License / Voter ID.</p>
+                                    <p className='text-sm'>Aadhaar Card / Bank Passbook / Passport Copy / Driving License / Voter ID.</p>
                                 </div>
                             </div>
 
 
-                            <p className='text-center text-sm mt-4'>
+                            <p className='md:text-center text-start text-sm mt-4'>
                                 NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .
                             </p>
 

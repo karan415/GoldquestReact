@@ -273,16 +273,15 @@ const CandidateMasterTrackerList = () => {
 
     return (
         <>
-            <h2 className='text-center text-3xl md:mt-12 font-bold py-4'>Candidate Master Tracker</h2>
+            <h2 className='text-center md:text-3xl text-xl md:mt-12 font-bold py-4'>Candidate Master Tracker</h2>
 
             <div className="bg-white m-4 md:m-6 shadow-md rounded-md p-3">
-
 
                 <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-3 text-left rounded-md w-6/12'>
+                                <select name="" id="" onChange={handleSelectChange} className='outline-none border p-3 text-left rounded-md w-full md:w-6/12'>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -311,7 +310,7 @@ const CandidateMasterTrackerList = () => {
 
                 </div>
 
-                <div className="overflow-x-auto py-6 px-4">
+                <div className="overflow-x-auto py-6 md:px-4">
                     {loading ? (
                         <div className='flex justify-center items-center py-6 h-full'>
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -372,7 +371,7 @@ const CandidateMasterTrackerList = () => {
                                             ) : (
                                                 branches[item.main_id]?.length > 0 ? (
                                                     <tr>
-                                                        <td colSpan="6" className="py-3 px-4">
+                                                        <td colSpan="6" className="py-3 md:px-4">
                                                             <table className="w-full">
                                                                 <thead>
                                                                     <tr className="bg-green-500 text-white">

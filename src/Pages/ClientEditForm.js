@@ -221,10 +221,10 @@ export const ClientEditForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label className="text-gray-500" htmlFor="emails">Emails:</label>
-                                <div className="grid grid-cols-3 gap-3 flex-wrap">
+                                <div className="md:grid grid-cols-3 gap-3 flex-wrap">
                                     {newEmails.length > 0 ? (
                                         newEmails.map((email, index) => (
-                                            <div key={index} className="flex gap-2">
+                                            <div key={index} className="flex gap-2 mt-3 md:mt-0">
                                                 <input
                                                     type="email"
                                                     value={email}

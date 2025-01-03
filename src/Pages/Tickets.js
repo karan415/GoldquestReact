@@ -155,7 +155,7 @@ const Tickets = () => {
                     <div className="col">
                         <form action="">
                             <div className="flex gap-5 justify-between">
-                                <select name="options" onChange={handleSelectChange} id="" className='border outline-none w-10/12  p-2 text-left rounded-md '>
+                                <select name="options" onChange={handleSelectChange} id="" className='border outline-none w-full md:w-10/12  p-2 text-left rounded-md '>
                                     <option value="10">10 Rows</option>
                                     <option value="20">20 Rows</option>
                                     <option value="50">50 Rows</option>
@@ -182,7 +182,7 @@ const Tickets = () => {
                     </div>
 
                 </div>
-                <div className="overflow-auto w-full py-6 px-4">
+                <div className="overflow-auto w-full py-6 md:px-4">
                     <table className="min-w-full">
                         <thead>
                             <tr className='bg-green-500'>

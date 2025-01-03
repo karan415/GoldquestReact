@@ -670,8 +670,8 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
     <div className="p-2 md:p-12">
       <div className="bg-white p-3 md:p-12 rounded-md w-full mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Generate Invoice</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="">
+          <div className='mb-3'>
             <label htmlFor="clrefin" className="block mb-2">Client Code:</label>
             <SelectSearch
               options={options}

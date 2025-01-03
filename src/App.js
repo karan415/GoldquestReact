@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect ,useState} from 'react';
 import { BrowserRouter as Router, useLocation, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Render from './Pages/Render';
@@ -40,10 +40,35 @@ import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 import CandidiateDav from './Pages/CandidateDAV';
 import { LoginProvider } from './Pages/InternalLoginContext';
 import Demo from './Pages/Demo';
+import { AiOutlineArrowUp } from "react-icons/ai";
 
 
 
 const App = () => {
+    const [showGoToTop, setShowGoToTop] = useState(false);
+  
+  const handleScroll = () => {
+    if (window.scrollY > 60) {
+      setShowGoToTop(true);
+    } else {
+      setShowGoToTop(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   return (
     <BranchProviderExel>
       <TabProvider>
@@ -64,13 +89,13 @@ const App = () => {
                                   <Router basename="/">
                                     <Routes>
                                       {/* Main Route */}
-                                      <Route path="" element={<Admin><Render /></Admin>} />
+                                      <Route path="/" element={<Admin><Render /></Admin>} />
                                       <Route path="/demo" element={<Admin><Demo /></Admin>} />
 
                                       {/* Customer Routes */}
                                       <Route path="/customer-login" element={<CustomerLogin />} />
                                       <Route path="/customer-dashboard" element={<Customer><CustomerDashboard /></Customer>} />
-                                      
+
                                       {/* Admin Routes */}
                                       <Route path="/admin-login" element={<Login />} />
                                       <Route path="/forgotpassword" element={<ForgotPassword />} />
@@ -90,6 +115,15 @@ const App = () => {
                                       {/* Client Bulk Upload */}
                                       <Route path="/ClientBulkUpload" element={<ClientBulkUpload />} />
                                     </Routes>
+                                    {showGoToTop && (
+                                      <div
+                                        className="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-green-600"
+                                        onClick={scrollToTop}
+                                        aria-label="Scroll to top"
+                                      >
+                                        <AiOutlineArrowUp className="h-6 w-6" />
+                                      </div>
+                                    )}
                                   </Router>
                                 </LoginProvider>
                               </DashboardProvider>
@@ -106,6 +140,7 @@ const App = () => {
         </ApiProvider>
       </TabProvider>
     </BranchProviderExel>
+
   );
 };
 

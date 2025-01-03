@@ -205,20 +205,20 @@ const CandidateBGV = () => {
                     <form className='py-6 bg-[#e5e7eb24]' id='bg-form'>
                         {customBgv === 1 && (
                             <div className='flex justify-center my-3'>
-                                <img src={LogoBgv} className='w-[12%] m-auto' alt="Logo" />
+                                <img src={LogoBgv} className='md:w-[12%] w-[50%] m-auto' alt="Logo" />
                             </div>
                         )}
 
-                        <h4 className="text-Black text-3xl mb-6 text-center font-bold">Background Verification Form</h4>
-                        <div className="p-6 rounded md:w-9/12 m-auto">
+                        <h4 className="text-Black md:text-3xl mb-6 text-center mt-5  font-bold">Background Verification Form</h4>
+                        <div className="md:p-6 rounded md:w-9/12 m-auto p-3">
                             <div className="mb-6  p-4 rounded-md">
                                 <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-1 bg-white shadow-md gap-4 mb-6 border rounded-md  p-4">
+                            <div className="md:grid grid-cols-1 md:grid-cols-1 bg-white shadow-md gap-4 mb-6 border rounded-md  p-4">
                                 <div className="form-group col-span-2">
                                     <label>Applicant’s CV: <span className="text-red-500">*</span></label>
-                                    <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
 
                                         <FileViewer fileUrl={cefData?.resume_file} className="w-full max-w-xs" />
 
@@ -228,19 +228,19 @@ const CandidateBGV = () => {
                                 </div>
                                 <div className="form-group col-span-2">
                                     <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
-                                        <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
-                                            {cefData?.govt_id ? (
-                                                cefData.govt_id.split(',').map((fileUrl, index) => (
-                                                    <FileViewer
-                                                        key={index}
-                                                        fileUrl={fileUrl.trim()} // Trim to remove any extra spaces
-                                                        className="w-full max-w-xs mb-4"
-                                                    />
-                                                ))
-                                            ) : (
-                                                <span className="text-gray-500">No files available</span>
-                                            )}
-                                        </div>
+                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                        {cefData?.govt_id ? (
+                                            cefData.govt_id.split(',').map((fileUrl, index) => (
+                                                <FileViewer
+                                                    key={index}
+                                                    fileUrl={fileUrl.trim()} // Trim to remove any extra spaces
+                                                    className="w-full max-w-xs mb-4"
+                                                />
+                                            ))
+                                        ) : (
+                                            <span className="text-gray-500">No files available</span>
+                                        )}
+                                    </div>
 
 
 
@@ -251,19 +251,19 @@ const CandidateBGV = () => {
                                                 <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
 
 
-                                                    <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
-                                                        {cefData?.passport_photo ? (
-                                                            cefData.passport_photo.split(',').map((fileUrl, index) => (
-                                                                <FileViewer
-                                                                    key={index}
-                                                                    fileUrl={fileUrl.trim()} // Trim any extra spaces from the URLs
-                                                                    className="w-full max-w-xs mb-4"
-                                                                />
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-gray-500">No passport photo available</span>
-                                                        )}
-                                                    </div>
+                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                                    {cefData?.passport_photo ? (
+                                                        cefData.passport_photo.split(',').map((fileUrl, index) => (
+                                                            <FileViewer
+                                                                key={index}
+                                                                fileUrl={fileUrl.trim()} // Trim any extra spaces from the URLs
+                                                                className="w-full max-w-xs mb-4"
+                                                            />
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-gray-500">No passport photo available</span>
+                                                    )}
+                                                </div>
 
 
                                             </div>
@@ -274,9 +274,9 @@ const CandidateBGV = () => {
                             </div>
 
                             <div className='border bg-white shadow-md  p-4 rounded-md'>
-                                <h4 className="text-center text-2xl my-6 font-bold ">Personal Information</h4>
+                                <h4 className="md:text-center text-left text-xl md:text-2xl my-6 font-bold ">Personal Information</h4>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ">
+                                <div className="md:grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ">
                                     <div className="form-group">
                                         <label htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500">*</span></label>
                                         <input
@@ -312,7 +312,7 @@ const CandidateBGV = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="md:grid grid-cols-1 md:grid-cols-3 gap-4">
 
                                     <div className="form-group">
                                         <label htmlFor="father_name">Father's Name: <span className="text-red-500">*</span></label>
@@ -348,7 +348,7 @@ const CandidateBGV = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                     <div className="form-group">
                                         <label htmlFor="gender">
@@ -380,18 +380,6 @@ const CandidateBGV = () => {
                                         />
 
                                     </div>
-                                    <div className='form-group'>
-                                        <label>Pan card No</label>
-                                        <input
-                                            type="text"
-                                            name="pan_card_number"
-                                            value={cefData?.pan_card_number}
-
-                                            className="form-control border rounded w-full p-2 mt-2"
-                                        />
-
-                                    </div>
-
                                     {customBgv === 1 && (
                                         <>
                                             <div className='form-group'>
@@ -409,13 +397,29 @@ const CandidateBGV = () => {
                                             <div className='form-group'>
                                                 <label>Aadhar Card Image<span className='text-red-500'>*</span></label>
 
-                                                <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
 
                                                     <FileViewer fileUrl={cefData?.aadhar_card_image} className="w-full max-w-xs" />
 
 
                                                 </div>
                                             </div>
+                                        </>
+                                    )}
+                                    <div className='form-group'>
+                                        <label>Pan card No</label>
+                                        <input
+                                            type="text"
+                                            name="pan_card_number"
+                                            value={cefData?.pan_card_number}
+
+                                            className="form-control border rounded w-full p-2 mt-2"
+                                        />
+
+                                    </div>
+                                    {customBgv === 1 && (
+                                        <>
+
                                             <div className='form-group'>
                                                 <label>Name as per Pan Card<span className='text-red-500'>*</span></label>
                                                 <input
@@ -430,6 +434,19 @@ const CandidateBGV = () => {
                                         </>
                                     )}
 
+                                    {customBgv === 1 && (
+                                        <div className='form-group'>
+                                            <label>Pan Card Image<span className='text-red-500'>*</span></label>
+
+                                            <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+
+                                                <FileViewer fileUrl={cefData?.pan_card_image} className="w-full max-w-xs" />
+
+
+                                            </div>
+
+                                        </div>
+                                    )}
                                     {customBgv == 0 && (
                                         <div className="form-group">
                                             <label>Social Security Number(if applicable):</label>
@@ -442,19 +459,7 @@ const CandidateBGV = () => {
                                             />
                                         </div>
                                     )}
-                                    {customBgv === 1 && (
-                                        <div className='form-group'>
-                                            <label>Pan Card Image<span className='text-red-500'>*</span></label>
 
-                                            <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
-
-                                                <FileViewer fileUrl={cefData?.pan_card_image} className="w-full max-w-xs" />
-
-
-                                            </div>
-
-                                        </div>
-                                    )}
                                     <div className="form-group">
                                         <label htmlFor="nationality">Nationality: <span className="text-red-500">*</span></label>
                                         <input
@@ -486,8 +491,8 @@ const CandidateBGV = () => {
                                 </div>
                                 <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
 
-                                    <h3 className='text-center text-2xl font-bold my-5'>Current Address </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <h3 className='md:text-center text-left text-xl md:text-2xl font-bold my-5'>Current Address </h3>
+                                    <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                         <div className="form-group">
                                             <label htmlFor="full_name">Full Address<span className="text-red-500">*</span></label>
@@ -612,8 +617,8 @@ const CandidateBGV = () => {
                                         </div>
 
                                         <div className='border rounded-md p-3 my-5 '>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Add Emergency Contact Details</h3>
-                                            <div className='grid grid-cols-3 gap-3 '>
+                                            <h3 className='md:text-center text-left md:text-xl font-bold pb-4'>Add Emergency Contact Details</h3>
+                                            <div className='md:grid grid-cols-3 gap-3 '>
                                                 <div className='form-group'>
                                                     <label>Name<span className='text-red-500'>*</span></label>
                                                     <input
@@ -648,8 +653,8 @@ const CandidateBGV = () => {
                                             </div>
                                         </div>
                                         <div className='border rounded-md p-3  my-5'>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Add PF Details</h3>
-                                            <div className='grid grid-cols-3 gap-3'>
+                                            <h3 className='md:text-center text-left md:text-xl font-bold pb-4'>Add PF Details</h3>
+                                            <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group'>
                                                     <label>PF Number</label>
                                                     <input
@@ -680,8 +685,8 @@ const CandidateBGV = () => {
                                             </div>
                                         </div>
                                         <div className='border rounded-md p-3   mt-3'>
-                                            <h3 className='text-center text-xl font-bold pb-4'>Do you have an NPS Account? If yes</h3>
-                                            <div className='grid grid-cols-3 gap-3'>
+                                            <h3 className='md:text-center text-left md:text-xl font-bold pb-4'>Do you have an NPS Account? If yes</h3>
+                                            <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group '>
                                                     <label>PRAN (Permanent Retirement Account Number).</label>
                                                     <input
@@ -737,8 +742,8 @@ const CandidateBGV = () => {
                                         </div>
 
                                         <div className='border rounded-md p-3 my-6  '>
-                                            <h3 className='text-center text-xl font-bold pb-2'>Banking Details: </h3>
-                                            <span className='text-sm text-center block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
+                                            <h3 className='md:text-center text-left md:text-xl font-bold pb-2'>Banking Details: </h3>
+                                            <span className='text-sm md:text-center text-left block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
                                             <div className='form-group mt-4'>
                                                 <label>Bank Account Number<span className='text-red-500'>*</span></label>
                                                 <input
@@ -778,8 +783,8 @@ const CandidateBGV = () => {
                                         </div>
 
                                         <div className='border rounded-md p-3 mt-3  '>
-                                            <h3 className='text-center text-xl font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
-                                            <div className='grid grid-cols-2 gap-3'>
+                                            <h3 className='md:text-center text-left md:text-xl font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
+                                            <div className='md:grid grid-cols-2 gap-3'>
                                                 <div className='form-group'>
                                                     <label>Name(s)
                                                     </label>
@@ -858,7 +863,7 @@ const CandidateBGV = () => {
                                             key={serviceIndex}
                                             className="border border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300"
                                         >
-                                            <h2 className="text-center py-4 text-2xl font-bold mb-6 text-green-600">
+                                            <h2 className="md:text-center text-left py-4 text-xl md:text-2xl font-bold mb-6 text-green-600">
                                                 {service.heading}
                                             </h2>
                                             <div className="space-y-6">
@@ -871,7 +876,7 @@ const CandidateBGV = () => {
                                                         {row.inputs && row.inputs.length > 0 ? (
                                                             <div className="space-y-4">
                                                                 <div
-                                                                    className={`grid grid-cols-${row.inputs.length === 1
+                                                                    className={`md:grid grid-cols-${row.inputs.length === 1
                                                                         ? '1'
                                                                         : row.inputs.length === 2
                                                                             ? '2'
@@ -957,7 +962,7 @@ const CandidateBGV = () => {
                                                                                     />
                                                                                 )}
                                                                                 {input.type === 'file' && inputValue && typeof inputValue === 'string' && (
-                                                                                    <div className="grid grid-cols-4 gap-4 border p-3 fileViewer_service rounded-md">
+                                                                                    <div className="md:grid grid-cols-4 gap-4 border p-3 fileViewer_service rounded-md">
                                                                                         {inputValue.split(',').map((fileUrl, index) => (
                                                                                             <FileViewer
                                                                                                 key={index}
@@ -992,7 +997,7 @@ const CandidateBGV = () => {
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <p>No inputs available for this row.</p>
+                                                            <p className='text-sm'>No inputs available for this row.</p>
                                                         )}
                                                     </div>
                                                 ))}
@@ -1000,27 +1005,27 @@ const CandidateBGV = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-center text-xl text-gray-500">No services available.</p>
+                                    <p className="md:text-center text-left md:text-xl text-gray-500">No services available.</p>
                                 )
                             }
 
 
-                            <div className='mb-6  p-4 rounded-md border shadow-md bg-white'>
-                                <h4 className="text-center text-xl my-6 font-bold">Declaration and Authorization</h4>
+                            <div className='mb-6 mt-6  p-4 rounded-md border shadow-md bg-white'>
+                                <h4 className="md:text-center text-left md:text-xl my-6 font-bold">Declaration and Authorization</h4>
 
                                 <div className="mb-6">
-                                    <p>
+                                    <p className='text-sm'>
                                         I hereby authorize GoldQuest Global HR Services Private Limited and its representative to verify information provided in my application for employment and this employee background verification form, and to conduct enquiries as may be necessary, at the company’s discretion. I authorize all persons who may have information relevant to this enquiry to disclose it to GoldQuest Global HR Services Pvt Ltd or its representative. I release all persons from liability on account of such disclosure.
                                         <br /><br />
                                         I confirm that the above information is correct to the best of my knowledge. I agree that in the event of my obtaining employment, my probationary appointment, confirmation as well as continued employment in the services of the company are subject to clearance of medical test and background verification check done by the company.
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
+                                <div className="md:grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
                                     <div className="form-group">
                                         <label>Attach signature: <span className="text-red-500">*</span></label>
 
-                                        <div className="grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                        <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
 
                                             <FileViewer fileUrl={cefData?.signature} className="w-full max-w-xs" />
 

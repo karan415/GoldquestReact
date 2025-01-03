@@ -187,13 +187,13 @@ const ExternalLoginData = () => {
 
   return (
     <div className="bg-white m-4 md:m-24 shadow-md rounded-md p-3">
-      <h2 className='text-center text-3xl font-bold py-4'>External Login Credentials</h2>
+      <h2 className='text-center md:text-3xl text-xl font-bold py-4'>External Login Credentials</h2>
 
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
-              <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-6/12'>
+              <select name="options" onChange={handleSelectChange} id="" className='outline-none border p-2 ps-2 text-left rounded-md w-full md:w-6/12'>
                 <option value="10">10 Rows</option>
                 <option value="20">20 Rows</option>
                 <option value="50">50 Rows</option>
@@ -220,7 +220,7 @@ const ExternalLoginData = () => {
         </div>
 
       </div>
-      <div className="overflow-x-auto py-6 px-4">
+      <div className="overflow-x-auto py-6 md:px-4">
         {loading ? (
           <div className="flex justify-center items-center py-6 h-full">
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
@@ -229,11 +229,11 @@ const ExternalLoginData = () => {
           <table className="min-w-full mb-4" ref={tableRef}>
             <thead>
               <tr className="bg-green-500 border">
-                <th className="py-3 px-4 border-b border-l text-white text-left uppercase">SL</th>
-                <th className="py-3 px-4 border-b border-l text-white text-left uppercase">Client Code</th>
-                <th className="py-3 px-4 border-b border-l text-white text-left uppercase">Company Name</th>
-                <th className="py-3 px-4 border-b border-l text-white text-left uppercase">Mobile</th>
-                <th className="py-3 px-4 border-b border-l text-white text-center uppercase">Action</th>
+                <th className="py-3 px-4 border-b border-l text-white text-left uppercase whitespace-nowrap">SL</th>
+                <th className="py-3 px-4 border-b border-l text-white text-left uppercase whitespace-nowrap">Client Code</th>
+                <th className="py-3 px-4 border-b border-l text-white text-left uppercase whitespace-nowrap">Company Name</th>
+                <th className="py-3 px-4 border-b border-l text-white text-left uppercase whitespace-nowrap">Mobile</th>
+                <th className="py-3 px-4 border-b border-l text-white text-center uppercase whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -249,69 +249,73 @@ const ExternalLoginData = () => {
                     <td className="py-3 px-4 border-b border-l whitespace-nowrap capitalize">{item.name}</td>
                     <td className="py-3 px-4 border-b border-l text-left cursor-pointer">{item.mobile}</td>
                     <td className="py-3 px-4 border-b border-l text-center cursor-pointer">
-  {item.branch_count > 1 ? (
-    <button
-      className="bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 text-white"
-      onClick={() => toggleAccordion(item.main_id)}
-    >
-      View Branches
-    </button>
-  ) : (
-    // Handle the case where there's 1 or no branch
-    (() => {
-      const parsedEmails = JSON.parse(item.emails); // Parse the string into an array
-      return (
-        <button onClick={() => getEmail(parsedEmails[0])} className="bg-green-600 hover:bg-green-200 text-sm rounded-md p-3 px-5 text-white">
-          Go
-        </button>
-      );
-    })()
-  )}
-</td>
+                      {item.branch_count > 1 ? (
+                        <button
+                          className="bg-green-600 hover:bg-green-200 whitespace-nowrap rounded-md p-2 px-5 text-white"
+                          onClick={() => toggleAccordion(item.main_id)}
+                        >
+                          View Branches
+                        </button>
+                      ) : (
+                        // Handle the case where there's 1 or no branch
+                        (() => {
+                          const parsedEmails = JSON.parse(item.emails); // Parse the string into an array
+                          return (
+                            <button onClick={() => getEmail(parsedEmails[0])} className="bg-green-600 hover:bg-green-200 text-sm rounded-md md:p-3 p-2 px-5 text-white">
+                              Go
+                            </button>
+                          );
+                        })()
+                      )}
+                    </td>
+
+                  </tr>
+                  <tr>
+
+                    <td colSpan={5}>{openAccordionId === item.main_id && (
+                      branchLoading ? (
+                        <tr>
+                          <td colSpan="4" className="py-3 px-4">
+                            <div className="flex justify-center items-center">
+                              <PulseLoader
+                                color="#36D7B7"
+                                loading={branchLoading}
+                                size={10}
+                                aria-label="Loading Spinner"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <>
+                          <tr className="bg-green-500 text-white">
+                            <th className="py-3 px-4 border-b border-l text-center whitespace-nowrap">Branch Name</th>
+                            <th className="py-3 px-4 border-b border-l text-center whitespace-nowrap">Email</th>
+                            <th className="py-3 px-4 border-b border-l text-center whitespace-nowrap">Action</th>
+                            <th className="py-3 px-4 border-b border-l text-center whitespace-nowrap">Delete</th>
+                          </tr>
+                          {branches.map((branch) => (
+                            <tr key={branch.id} className="border bg-gray-100">
+                              <td className="py-2 px-4 border-b border-l text-center whitespace-nowrap">{branch.name}</td>
+                              <td className="py-2 px-4 border-b border-l whitespace-nowrap">{branch.email}</td>
+                              <td className="py-2 px-4 border-b border-l text-center uppercase whitespace-nowrap text-blue-500 font-bold">
+                                <button onClick={() => getEmail(branch.email)}>
+                                  Go
+                                </button>
+                              </td>
+                              <td className="py-2 px-4 border-b border-l text-center">
+                                <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 whitespace-nowrap text-white">
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </>
+                      )
+                    )}</td>
 
                   </tr>
 
-                  {openAccordionId === item.main_id && (
-                    branchLoading ? (
-                      <tr>
-                        <td colSpan="4" className="py-3 px-4">
-                          <div className="flex justify-center items-center">
-                            <PulseLoader
-                              color="#36D7B7"
-                              loading={branchLoading}
-                              size={10}
-                              aria-label="Loading Spinner"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      <>
-                        <tr className="bg-green-500 text-white">
-                          <th className="py-3 px-4 border-b border-l text-center">Branch Name</th>
-                          <th className="py-3 px-4 border-b border-l text-center">Email</th>
-                          <th className="py-3 px-4 border-b border-l text-center">Action</th>
-                          <th className="py-3 px-4 border-b border-l text-center">Delete</th>
-                        </tr>
-                        {branches.map((branch) => (
-                          <tr key={branch.id} className="border bg-gray-100">
-                            <td className="py-2 px-4 border-b border-l text-center whitespace-nowrap">{branch.name}</td>
-                            <td className="py-2 px-4 border-b border-l whitespace-nowrap">{branch.email}</td>
-                            <td className="py-2 px-4 border-b border-l text-center uppercase text-blue-500 font-bold">
-                              <button onClick={() => getEmail(branch.email)}>
-                                Go
-                              </button>
-                            </td>
-                            <td className="py-2 px-4 border-b border-l text-center">
-                              <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 text-white">
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </>
-                    )
-                  )}
 
                 </React.Fragment>
               ))}
@@ -323,27 +327,26 @@ const ExternalLoginData = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
-          <button
-            onClick={showPrev}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            aria-label="Previous page"
-          >
-            <MdArrowBackIosNew />
-          </button>
-          <div className="flex items-center">{renderPagination()}</div>
-          <button
-            onClick={showNext}
-            disabled={currentPage === totalPages}
-            className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            aria-label="Next page"
-          >
-            <MdArrowForwardIos />
-          </button>
-        </div>
       </div>
-
+      <div className="flex items-center justify-end rounded-md bg-white px-4 py-3 sm:px-6 md:m-4 mt-2">
+        <button
+          onClick={showPrev}
+          disabled={currentPage === 1}
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          aria-label="Previous page"
+        >
+          <MdArrowBackIosNew />
+        </button>
+        <div className="flex items-center">{renderPagination()}</div>
+        <button
+          onClick={showNext}
+          disabled={currentPage === totalPages}
+          className="relative inline-flex items-center rounded-0 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          aria-label="Next page"
+        >
+          <MdArrowForwardIos />
+        </button>
+      </div>
     </div>
   );
 };

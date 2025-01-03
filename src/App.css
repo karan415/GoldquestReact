@@ -303,3 +303,22 @@ object-fit: contain;
   max-width: 60px;
 height: 60px;
 }
+@media(max-width:767px){
+  td{
+    font-size: 12px !important;
+  }
+  th {
+    font-size: 13px !important;
+}
+  label {
+    font-size: 14px !important;
+}
+input,select{
+  font-size: 13px !important;
+}
+.fileViewer_service img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+}
+}

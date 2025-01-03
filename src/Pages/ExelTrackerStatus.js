@@ -1095,10 +1095,10 @@ const AdminChekin = () => {
 
     return (
         <div className="bg-[#c1dff2]">
-            <div className="space-y-4 py-[30px] px-[51px] bg-white">
+            <div className="space-y-4 md:py-[30px] md:px-[51px] bg-white">
 
                 <div className='flex gap-4 justify-end p-4'>
-                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-5/12 my-4 md:my-0' >
+                    <select id="" name='status' onChange={handleStatusChange} className='outline-none border-2 p-2 rounded-md w-full md:w-5/12 my-4 md:my-0' >
                         {options.map((item, index) => {
                             return item.status !== 'closed' ? (
                                 <option key={index} value={item.status}>
@@ -1115,7 +1115,7 @@ const AdminChekin = () => {
                         <div className="col">
                             <form action="">
                                 <div className="flex gap-5 justify-between">
-                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md w-10/12'>
+                                    <select name="options" id="" onChange={handleSelectChange} className='outline-none pe-14 ps-2 text-left rounded-md border w-10/12'>
                                         <option value="10">10 Rows</option>
                                         <option value="20">20 Rows</option>
                                         <option value="50">50 Rows</option>
@@ -1186,7 +1186,7 @@ const AdminChekin = () => {
                                                         <img
                                                             src={`${data.photo}`}
                                                             alt="Image"
-                                                            className="h-20 w-20 rounded-full"
+                                                            className="md:h-20 h-10 w-20 rounded-full"
                                                         />
                                                     ) : (
                                                         <a

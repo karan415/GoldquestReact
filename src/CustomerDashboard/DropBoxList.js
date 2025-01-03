@@ -276,7 +276,7 @@ const DropBoxList = () => {
                                                         <img
                                                             src={`${report.photo}`}
                                                             alt="Image"
-                                                            className="h-20 w-20 rounded-full"
+                                                            className="md:h-20 h-10 w-20 rounded-full"
                                                         />
                                                     ) : (
                                                         // If it's a document (pdf, doc, etc.), show a button
@@ -315,7 +315,7 @@ const DropBoxList = () => {
                                                         <img
                                                             src={`${report.attach_documents}`}
                                                             alt="Image"
-                                                            className="h-20 w-20 rounded-full"
+                                                            className="md:h-20 h-10 w-20 rounded-full"
                                                         />
                                                     ) : (
                                                         // If it's a document (pdf, doc, etc.), show a button
@@ -333,23 +333,25 @@ const DropBoxList = () => {
                                                     '----'
                                                 )}
                                             </td>
-                                            <td className="border  px-4 py-2 text-left">
+                                            <td className="border p-2  md:px-4 py-2 text-left">
                                                 <div className='flex whitespace-nowrap'>
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
                                                         report.serviceNames.length === 1 ? (
-                                                            <span className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm">
+
+                                                            <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                 {typeof report.serviceNames[0] === "string"
                                                                     ? report.serviceNames[0]
                                                                     : report.serviceNames[0].join(", ")}
                                                             </span>
                                                         ) : (
+
                                                             <>
                                                                 {typeof report.serviceNames[0] === "string" ? (
-                                                                    <span className="px-4 py-2 bg-green-100 border   border-green-500 rounded-lg text-sm">
+                                                                    <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
                                                                         {report.serviceNames[0]}
                                                                     </span>
                                                                 ) : (
-                                                                    <span className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                                    <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
                                                                         {report.serviceNames[0].join(", ")}
                                                                     </span>
                                                                 )}
@@ -362,7 +364,8 @@ const DropBoxList = () => {
                                                             </>
                                                         )
                                                     ) : (
-                                                        <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
+                                                        // No services or serviceNames is not an array
+                                                        <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
                                                             You have no services
                                                         </span>
                                                     )}
@@ -370,7 +373,7 @@ const DropBoxList = () => {
                                             </td>
                                             {isModalOpen && (
                                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                                    <div className="bg-white rounded-lg shadow-lg p-4 w-1/3">
+                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
                                                         <div className="flex justify-between items-center">
                                                             <h2 className="text-lg font-bold">Services</h2>
                                                             <button
@@ -380,12 +383,12 @@ const DropBoxList = () => {
                                                                 &times;
                                                             </button>
                                                         </div>
-                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto overflow-scroll">
+                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
                                                             {modalServices.length > 0 ? (
                                                                 modalServices.map((service, idx) => (
                                                                     <span
                                                                         key={idx}
-                                                                        className="px-4 py-2 bg-green-100 border  border-green-500 rounded-lg text-sm"
+                                                                        className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
                                                                     >
                                                                         {service}
                                                                     </span>

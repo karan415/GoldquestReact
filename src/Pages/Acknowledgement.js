@@ -206,13 +206,13 @@ const Acknowledgement = () => {
   return (
     <div className='p-4 md:py-16'>
       <div className="text-center">
-        <h2 className='md:text-4xl text-2xl font-bold pb-8 md:pb-4'>Acknowledgement Emails</h2>
+        <h2 className='md:text-4xl text-xl font-bold pb-8 md:pb-4'>Acknowledgement Emails</h2>
       </div>
       <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
         <div className="col">
           <form action="">
             <div className="flex gap-5 justify-between">
-              <select name="options" onChange={handleSelectChange} id="" className='outline-none p-3  text-left rounded-md w-6/12'>
+              <select name="options" onChange={handleSelectChange} id="" className='outline-none p-3  text-left rounded-md w-full md:w-6/12'>
                 <option value="10">10 Rows</option>
                 <option value="20">20 Rows</option>
                 <option value="50">50 Rows</option>
@@ -239,7 +239,7 @@ const Acknowledgement = () => {
         </div>
 
       </div>
-      <div className="overflow-x-auto py-6 px-4 bg-white rounded-md shadow-md">
+      <div className="overflow-x-auto py-6 md:px-4 bg-white rounded-md shadow-md">
         {loading ? (
           <div className='flex justify-center items-center py-6 h-full'>
             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />

@@ -177,7 +177,7 @@ const HolidayManagement = () => {
         <>
             <h2 className='text-center md:text-3xl md:mt-14 mt-3 font-bold'> Holiday Management </h2>
 
-            <div className="grid md:grid-cols-2 items-stretch grid-cols-1 gap-7 p-8">
+            <div className="grid md:grid-cols-2 items-stretch grid-cols-1 gap-7 p-3 md:p-8">
                 <div className='bg-white shadow-md rounded-md p-3'>
                     <HolidayManagementForm />
                 </div>
@@ -189,7 +189,7 @@ const HolidayManagement = () => {
                         <div className="col">
                             <form action="">
                                 <div className="flex gap-5 justify-between">
-                                    <select name="options" onChange={handleSelectChange} id="" className='border outline-none w-10/12  p-2 text-left rounded-md '>
+                                    <select name="options" onChange={handleSelectChange} id="" className='border outline-none w-full md:w-10/12  p-2 text-left rounded-md '>
                                         <option value="10">10 Rows</option>
                                         <option value="20">20 Rows</option>
                                         <option value="50">50 Rows</option>

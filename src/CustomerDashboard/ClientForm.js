@@ -468,9 +468,9 @@ const ClientForm = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6 md:mt-4">
+                        <div className="col bg-white shadow-md rounded-md p-3 md:p-6 md:mt-0 mt-5">
                             <div className="flex flex-wrap flex-col-reverse">
-                                <div className='mt-4'>
+                                <div className='mt-4 md:h-[450px] h-[200px] overflow-auto'>
                                     <h2 className='bg-green-500 rounded-md p-4 text-white mb-4 hover:bg-green-200'>Service Names</h2>
                                     {loading ? (
                                         <PulseLoader color="#36A2EB" loading={loading} size={15} />

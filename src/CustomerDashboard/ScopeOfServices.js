@@ -101,8 +101,8 @@ const ScopeOfServices = () => {
     return (
         <>
             <div className=''>
-                <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 pt-7 md:pb-4'>Client Master Data</h2>
-                <div className='md:mx-16 md:my-8'>
+                <h2 className='text-center md:text-4xl text-2xl font-bold pb-8 md:pt-7 md:pb-4'>Client Master Data</h2>
+                <div className="overflow-x-auto bg-white shadow-md rounded-md md:m-10 m-3 h-full">
                     <table className="min-w-full border bg-white overflow-auto shadow-md rounded-md p-3 ">
 
                         <tr className='bg-green-500 text-white'>

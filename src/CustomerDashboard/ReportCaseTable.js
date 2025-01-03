@@ -1168,7 +1168,7 @@ const ReportCaseTable = () => {
                                                                 <img
                                                                     src={`${data.photo}`}
                                                                     alt="Image"
-                                                                    className="h-20 w-20 rounded-full"
+                                                                    className="md:h-20 h-10 w-20 rounded-full"
                                                                 />
                                                             ) : (
                                                                 // If it's a document (pdf, doc, etc.), show a button
