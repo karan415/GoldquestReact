@@ -47,7 +47,7 @@ const CustomerResetPassword = () => {
       redirect: "follow",
     };
 
-    fetch("http://bgvadmin.goldquestglobal.in:5000/branch/forgot-password", requestOptions)
+    fetch("http://147.93.29.154:5000/branch/forgot-password", requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

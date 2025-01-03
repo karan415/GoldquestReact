@@ -64,7 +64,7 @@ const CustomerUpdatePassword = () => {
                 redirect: "follow",
             };
 
-            fetch("http://bgvadmin.goldquestglobal.in:5000/branch/update-password", requestOptions)
+            fetch("http://147.93.29.154:5000/branch/update-password", requestOptions)
                 .then((response) => {
                     const result = response.json();
                     const newToken = result._token || result.token;

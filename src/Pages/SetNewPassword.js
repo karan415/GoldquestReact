@@ -37,7 +37,7 @@ const SetNewPassword = () => {
             redirect: "follow",
         };
 
-        fetch("http://bgvadmin.goldquestglobal.in:5000/admin/forgot-password", requestOptions)
+        fetch("http://147.93.29.154:5000/admin/forgot-password", requestOptions)
         .then((response) => {
             const result = response.json();
             const newToken = result._token || result.token;

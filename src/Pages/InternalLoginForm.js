@@ -26,7 +26,7 @@ const InternalLoginForm = () => {
         const fetchAdminOptions = async () => {
             try {
                 const response = await axios.get(
-                    `http://bgvadmin.goldquestglobal.in:5000/admin/permission/roles`,
+                    `http://147.93.29.154:5000/admin/permission/roles`,
                     {
                         params: {
                             admin_id,
@@ -120,8 +120,8 @@ const InternalLoginForm = () => {
                 const response = await axios({
                     method: editAdmin ? 'PUT' : 'POST', // Dynamically set HTTP method based on editAdmin
                     url: editAdmin
-                        ? 'http://bgvadmin.goldquestglobal.in:5000/admin/update'
-                        : 'http://bgvadmin.goldquestglobal.in:5000/admin/create',
+                        ? 'http://147.93.29.154:5000/admin/update'
+                        : 'http://147.93.29.154:5000/admin/create',
                     data: requestformData, // Pass request data
                     headers: {
                         'Content-Type': 'application/json',

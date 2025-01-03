@@ -29,7 +29,7 @@ const GenerateReportList = () => {
     setLoading(true);
 
     fetch(
-      `http://bgvadmin.goldquestglobal.in:5000/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
+      `http://147.93.29.154:5000/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
       .then((response) => {
