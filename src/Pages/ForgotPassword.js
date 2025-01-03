@@ -35,7 +35,7 @@ const ForgotPassword = () => {
       redirect: "follow",
     };
   
-    fetch("http://147.93.29.154:5000/admin/forgot-password-request", requestOptions)
+    fetch("http://bgvadmin.goldquestglobal.in:5000/admin/forgot-password-request", requestOptions)
       .then((response) => response.json())  // Parse the response as JSON
       .then((result) => {
         if (result.status) {  // Check if the status is true

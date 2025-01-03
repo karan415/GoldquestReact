@@ -60,7 +60,7 @@ const ClientBulkUpload = () => {
         setLoading(true);
         if (!branchData) return;
 
-        const url = `http://147.93.29.154:5000/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${_token}`;
+        const url = `http://bgvadmin.goldquestglobal.in:5000/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${_token}`;
 
         try {
             const response = await fetch(url);
@@ -171,7 +171,7 @@ const ClientBulkUpload = () => {
 
             // Make the API request
             const response = await fetch(
-                "http://147.93.29.154:5000/branch/client-application/bulk-create",
+                "http://bgvadmin.goldquestglobal.in:5000/branch/client-application/bulk-create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

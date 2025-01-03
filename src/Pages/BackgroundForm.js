@@ -289,7 +289,7 @@ const BackgroundForm = () => {
         ) {
             try {
                 const response = await fetch(
-                    `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                    `http://bgvadmin.goldquestglobal.in:5000/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
                 );
 
                 const result = await response.json();
@@ -424,7 +424,7 @@ const BackgroundForm = () => {
 
         const fetchPromises = serviceArr.map(serviceId =>
             fetch(
-                `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`,
+                `http://bgvadmin.goldquestglobal.in:5000/branch/candidate-application/backgroud-verification/service-form-json?service_id=${serviceId}`,
                 requestOptions
             )
                 .then(res => {
@@ -578,7 +578,7 @@ const BackgroundForm = () => {
         try {
             // Send the form data request to the API
             const response = await fetch(
-                "http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/submit",
+                "http://bgvadmin.goldquestglobal.in:5000/branch/candidate-application/backgroud-verification/submit",
                 requestOptions
             );
 
@@ -665,7 +665,7 @@ const BackgroundForm = () => {
             try {
                 // Make the API request to upload the logo
                 await axios.post(
-                    `http://147.93.29.154:5000/branch/candidate-application/backgroud-verification/upload`,
+                    `http://bgvadmin.goldquestglobal.in:5000/branch/candidate-application/backgroud-verification/upload`,
                     customerLogoFormData,
                     {
                         headers: {

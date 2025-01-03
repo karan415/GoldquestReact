@@ -369,7 +369,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`http://147.93.29.154:5000/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`http://bgvadmin.goldquestglobal.in:5000/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -432,7 +432,7 @@ const ClientManagementList = () => {
           return;
         }
 
-        fetch(`http://147.93.29.154:5000/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
+        fetch(`http://bgvadmin.goldquestglobal.in:5000/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
