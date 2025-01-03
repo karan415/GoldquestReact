@@ -1,17 +1,17 @@
-import axios from 'axios';
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import { useApi } from '../ApiContext';
-import logo from '../Images/Logo.png'
-import bg_img from '../Images/login-bg-img.png';
+import axios from "axios";
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
+import { useApi } from "../ApiContext";
+import logo from "../Images/Logo.png";
+import bg_img from "../Images/login-bg-img.png";
 
 const LoginForm = () => {
   const [input, setInput] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false); // State for OTP modal
   const [isOtpLoading, setIsOtpLoading] = useState(false); // State for OTP button
@@ -19,7 +19,6 @@ const LoginForm = () => {
   const [error, setError] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
-
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -31,38 +30,56 @@ const LoginForm = () => {
 
   const validateError = () => {
     const newErrors = {};
-    if (!input.username) newErrors.username = 'This is Required';
-    if (!input.password) newErrors.password = 'This is Required';
+    if (!input.username) newErrors.username = "This is Required";
+    if (!input.password) newErrors.password = "This is Required";
     return newErrors;
   };
 
   const handleSubmit = (event) => {
+    const checkConnection = async () => {
+      try {
+        const requestOptions = {
+          method: "GET",
+          redirect: "follow",
+        };
+        const response = await fetch(
+          `${API_URL}/test/connection`,
+          requestOptions
+        );
+        const result = await response.text();
+        console.log(result); // Handle the response
+      } catch (error) {
+        console.error("Connection error:", error); // Handle connection errors
+      }
+    };
+
+    checkConnection();
     event.preventDefault();
     const errors = validateError();
-  
+
     if (Object.keys(errors).length === 0) {
       setLoading(true); // Show loading indicator
-  
+
       const loginData = {
         username: input.username,
         password: input.password,
       };
-  
+
       const swalInstance = Swal.fire({
-        title: 'Processing...',
-        text: 'Please wait while we have Loged you in',
+        title: "Processing...",
+        text: "Please wait while we have Loged you in",
         didOpen: () => {
-            Swal.showLoading(); // This starts the loading spinner
+          Swal.showLoading(); // This starts the loading spinner
         },
         allowOutsideClick: false, // Prevent closing Swal while processing
         showConfirmButton: false, // Hide the confirm button
-    });
-  
+      });
+
       axios
         .post(`${API_URL}/admin/login`, loginData)
         .then((response) => {
           const result = response.data;
-  
+
           // Handle the API message
           if (!result.status) {
             Swal.fire({
@@ -86,15 +103,19 @@ const LoginForm = () => {
               handleLoginSuccess(result);
             }
           }
-  
+
           // Handle token storage
           const newToken = result._token || result.token;
           if (newToken) {
             localStorage.setItem("_token", newToken);
           }
-  
+
           // Handle session expiration
-          if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          if (
+            result.message &&
+            result.message.toLowerCase().includes("invalid") &&
+            result.message.toLowerCase().includes("token")
+          ) {
             Swal.fire({
               title: "Session Expired",
               text: "Your session has expired. Please log in again.",
@@ -109,7 +130,9 @@ const LoginForm = () => {
         .catch((error) => {
           // Display API or Network error message
           const errorMessage =
-            error.response?.data?.message || error.message || "An unexpected error occurred";
+            error.response?.data?.message ||
+            error.message ||
+            "An unexpected error occurred";
           Swal.fire({
             title: "Error!",
             text: errorMessage,
@@ -125,24 +148,22 @@ const LoginForm = () => {
       setError(errors); // Display validation errors
     }
   };
-  
-
 
   const handleLoginSuccess = (result) => {
     const adminData = result.adminData;
     const _token = result.token;
 
-    localStorage.setItem('admin', JSON.stringify(adminData));
-    localStorage.setItem('_token', _token);
+    localStorage.setItem("admin", JSON.stringify(adminData));
+    localStorage.setItem("_token", _token);
 
     Swal.fire({
-      title: 'Success',
-      text: 'Login Successful',
-      icon: 'success',
-      confirmButtonText: 'Ok',
+      title: "Success",
+      text: "Login Successful",
+      icon: "success",
+      confirmButtonText: "Ok",
     });
 
-    navigate('/', { state: { from: location }, replace: true });
+    navigate("/", { state: { from: location }, replace: true });
   };
 
   const handleOtpSubmit = () => {
@@ -157,10 +178,10 @@ const LoginForm = () => {
         const result = response.data;
         if (!result.status) {
           Swal.fire({
-            title: 'Error!',
+            title: "Error!",
             text: result.message,
-            icon: 'error',
-            confirmButtonText: 'Ok',
+            icon: "error",
+            confirmButtonText: "Ok",
           });
         } else {
           setShowOtpModal(false); // Hide OTP modal
@@ -169,10 +190,10 @@ const LoginForm = () => {
       })
       .catch((error) => {
         Swal.fire({
-          title: 'Error!',
+          title: "Error!",
           text: `Error: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Ok',
+          icon: "error",
+          confirmButtonText: "Ok",
         });
       })
       .finally(() => {
@@ -181,25 +202,19 @@ const LoginForm = () => {
   };
 
   const goToForgotPassword = () => {
-    navigate('/ForgotPassword');
+    navigate("/ForgotPassword");
   };
 
   return (
     <>
-
       <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center">
         <div className="flex wrap lg:flex-nowrap flex-col-reverse lg:flex-row   bg-white lg:w-10/12 p-3 m-auto rounded-md">
           <div className="md:w-10/12 lg:w-7/12 w-full m-auto">
-            <img
-              src={bg_img}
-              alt="Logo"
-              className=""
-            />
+            <img src={bg_img} alt="Logo" className="" />
           </div>
 
           <div className="lg:w-5/12 flex mb-10 md:mb-0 justify-center  md:mt-0 mt-10">
             <div className="w-full lg:max-w-xl md:p-8">
-
               <div className="flex flex-col items-center mb-3 md:mb-12">
                 <img
                   src={logo}
@@ -225,7 +240,9 @@ const LoginForm = () => {
                     value={input.username}
                     name="username"
                   />
-                  {error.username && <p className="text-red-500">{error.username}</p>}
+                  {error.username && (
+                    <p className="text-red-500">{error.username}</p>
+                  )}
                 </div>
                 <div className="mb-10">
                   <input
@@ -237,7 +254,9 @@ const LoginForm = () => {
                     onChange={handleChange}
                     placeholder="Password"
                   />
-                  {error.password && <p className="text-red-500">{error.password}</p>}
+                  {error.password && (
+                    <p className="text-red-500">{error.password}</p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between mb-6">
                   <label className="flex items-center">
@@ -245,7 +264,10 @@ const LoginForm = () => {
                     Remember me
                   </label>
                   <div onClick={goToForgotPassword}>
-                    <a href="#" className="text-red-500 hover:underline text-sm">
+                    <a
+                      href="#"
+                      className="text-red-500 hover:underline text-sm"
+                    >
                       Forgot Password?
                     </a>
                   </div>
@@ -255,7 +277,7 @@ const LoginForm = () => {
                   className="w-full bg-[#24245a] hover:bg-[#24245a] xxl:py-5 text-white font-semibold py-2 md:py-3 px-4 signinbtn rounded-full text-xl tracking-widest"
                   disabled={loading}
                 >
-                  {loading ? 'Signing In...' : 'Sign In'}
+                  {loading ? "Signing In..." : "Sign In"}
                 </button>
                 {showOtpModal && (
                   <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
@@ -269,25 +291,24 @@ const LoginForm = () => {
                         onChange={(e) => setOtp(e.target.value)}
                       />
                       <button
-                        type='submit'
-                        className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        type="submit"
+                        className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${
+                          isOtpLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                         onClick={handleOtpSubmit}
                         disabled={isOtpLoading}
                       >
-                        {isOtpLoading ? 'Verifying...' : 'Verify'}
+                        {isOtpLoading ? "Verifying..." : "Verify"}
                       </button>
                     </div>
                   </div>
                 )}
-
               </form>
             </div>
           </div>
         </div>
       </div>
-
     </>
-
   );
 };
 
