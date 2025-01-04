@@ -90,7 +90,7 @@ const TatDelay = () => {
     }
 
     // Use template literals for better readability
-    const url = `http://147.93.29.154:5000/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.goldquestglobal.in/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     fetch(url, {
       method: "GET",

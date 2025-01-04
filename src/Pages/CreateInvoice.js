@@ -66,7 +66,7 @@ const CreateInvoice = () => {
       showConfirmButton: false, // Hide the confirm button
     });
 
-    fetch(`http://147.93.29.154:5000/generate-invoice?${queryString}`, requestOptions)
+    fetch(`https://api.goldquestglobal.in/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
 
 

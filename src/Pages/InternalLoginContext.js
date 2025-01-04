@@ -63,7 +63,7 @@ export const LoginProvider = ({ children }) => {
         setLoading(true);
 
         try {
-            const response = await axios.get("http://147.93.29.154:5000/admin/list", {
+            const response = await axios.get("https://api.goldquestglobal.in/admin/list", {
                 params: {
                     admin_id: admin_id,
                     _token: storedToken,

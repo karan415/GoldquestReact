@@ -151,7 +151,7 @@ const GenerateReport = () => {
 
             // Construct the URL with service IDs
             const url = new URL(
-                "http://147.93.29.154:5000/client-master-tracker/services-annexure-data"
+                "https://api.goldquestglobal.in/client-master-tracker/services-annexure-data"
             );
             url.searchParams.append("service_ids", servicesList);
             url.searchParams.append("application_id", applicationId);
@@ -235,7 +235,7 @@ const GenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`http://147.93.29.154:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.goldquestglobal.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
 
@@ -417,7 +417,7 @@ const GenerateReport = () => {
         }
 
         // Construct the URL with query parameters
-        const url = `http://147.93.29.154:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://api.goldquestglobal.in/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',  // GET request doesn't need a body
@@ -503,7 +503,7 @@ const GenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    `http://147.93.29.154:5000/client-master-tracker/upload`,
+                    `https://api.goldquestglobal.in/client-master-tracker/upload`,
                     customerLogoFormData,
                     {
                         headers: {
@@ -772,7 +772,7 @@ const GenerateReport = () => {
 
             // API Request
             const response = await fetch(
-                `http://147.93.29.154:5000/client-master-tracker/generate-report`,
+                `https://api.goldquestglobal.in/client-master-tracker/generate-report`,
                 requestOptions
             );
 

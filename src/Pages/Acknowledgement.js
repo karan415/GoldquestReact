@@ -16,7 +16,7 @@ const Acknowledgement = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
   
-    fetch(`http://147.93.29.154:5000/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
+    fetch(`https://api.goldquestglobal.in/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
       .then(response => response.json())
       .then(data => {
         const newToken = data._token || data.token;
@@ -80,7 +80,7 @@ const Acknowledgement = () => {
       redirect: "follow"
     };
 
-    fetch("http://147.93.29.154:5000/acknowledgement/send-notification", requestOptions)
+    fetch("https://api.goldquestglobal.in/acknowledgement/send-notification", requestOptions)
       .then(response => {
         const result = response.json();
         const newToken = result._token || result.token;

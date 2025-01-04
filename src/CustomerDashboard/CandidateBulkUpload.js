@@ -61,7 +61,7 @@ const CandidateBulkUpload = () => {
 
         const { customer_id, id: branch_id } = branchData;
         const branch_token = localStorage.getItem("branch_token");
-        const url = `http://147.93.29.154:5000/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
+        const url = `https://api.goldquestglobal.in/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
 
         try {
             const response = await fetch(url);
@@ -171,7 +171,7 @@ const CandidateBulkUpload = () => {
 
             // Make the API request
             const response = await fetch(
-                "http://147.93.29.154:5000/branch/candidate-application/bulk-create",
+                "https://api.goldquestglobal.in/branch/candidate-application/bulk-create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

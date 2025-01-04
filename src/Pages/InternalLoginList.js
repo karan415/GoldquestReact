@@ -131,7 +131,7 @@ const InternalLoginList = () => {
 
                 // Make the delete API request using axios
                 axios
-                    .delete(`http://147.93.29.154:5000/admin/delete`, {
+                    .delete(`https://api.goldquestglobal.in/admin/delete`, {
                         params: {
                             id,
                             admin_id,

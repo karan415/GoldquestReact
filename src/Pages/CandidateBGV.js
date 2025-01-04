@@ -123,7 +123,7 @@ const CandidateBGV = () => {
         };
 
         fetch(
-            `http://147.93.29.154:5000/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
+            `https://api.goldquestglobal.in/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
         )
             .then(res => {

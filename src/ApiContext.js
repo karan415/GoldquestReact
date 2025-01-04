@@ -3,7 +3,7 @@ import React, { createContext, useContext } from 'react';
 const ApiContext = createContext();
 
 export const ApiProvider = ({ children }) => {
-  const API_URL = "http://147.93.29.154:5000";
+  const API_URL = "https://api.goldquestglobal.in";
 
 
   return (

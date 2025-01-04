@@ -89,7 +89,7 @@ const InactiveClients = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://147.93.29.154:5000/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
+      const response = await fetch(`https://api.goldquestglobal.in/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`);
       const result = await response.json();
       const newToken = result._token || result.token;
 
@@ -165,7 +165,7 @@ const InactiveClients = () => {
       }
 
       try {
-        const response = await fetch(`http://147.93.29.154:5000/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
+        const response = await fetch(`https://api.goldquestglobal.in/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, { method: 'GET' });
 
         const result = await response.json();
         const newToken = result._token || result.token;

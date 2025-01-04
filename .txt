@@ -1,30 +1,62 @@
-Info@ensahadvisorypartners.com
-Schema2021!
+api.goldquestglobal.in
 
-#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(1) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider1-1-1.png)!important
-}
+<VirtualHost *:80>
+    ServerName api.goldquestglobal.in
+    DocumentRoot /root/goldquestnode
 
-#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(2) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-2-1-1.png)!important
-}
+    # Reverse Proxy to Node.js API
+    ProxyPass / http://localhost:5000/
+    ProxyPassReverse / http://localhost:5000/
 
-#swiperSection #crouselwithThum .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(3) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-3-1.png)!important
-}
+    ErrorLog ${APACHE_LOG_DIR}/node-error.log
+    CustomLog ${APACHE_LOG_DIR}/node-access.log combined
+RewriteEngine on
+RewriteCond %{SERVER_NAME} =api.goldquestglobal.in
+RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
 
+---------------------------------------------------------
 
+bgvadmin.goldquestglobal.in
 
-  #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(1) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider1-1-1.png)!important
-    }
+<VirtualHost *:80>
+    ServerName bgvadmin.goldquestglobal.in
+    DocumentRoot /root/GoldquestReact
 
-    #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(2) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-2-1-1.png)!important
-    }
+    <Directory /root/GoldquestReact>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
 
-    #crouselwithThumMobi .swiper-pagination-bullets span.swiper-pagination-bullet:nth-child(3) {
-    background-image: url(https://snoredoc.co.uk/wp-content/uploads/2023/06/new-slider-3-1.png)!important
-    }
+    # Reverse Proxy for React App
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
 
-hjghjgh
+    ErrorLog ${APACHE_LOG_DIR}/react-error.log
+    CustomLog ${APACHE_LOG_DIR}/react-access.log combined
+RewriteEngine on
+RewriteCond %{SERVER_NAME} =bgvadmin.goldquestglobal.in
+RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+
+----------------------------------------------------------
+
+phpmyadmin.goldquestglobal.in
+
+<VirtualHost *:80>
+    ServerName phpmyadmin.goldquestglobal.in
+    DocumentRoot /usr/share/phpmyadmin
+
+    <Directory /usr/share/phpmyadmin>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/phpmyadmin_error.log
+    CustomLog ${APACHE_LOG_DIR}/phpmyadmin_access.log combined
+RewriteEngine on
+RewriteCond %{SERVER_NAME} =phpmyadmin.goldquestglobal.in
+RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
