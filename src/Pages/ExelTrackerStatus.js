@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from "axios";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { useApi } from '../ApiContext';
@@ -345,8 +346,38 @@ const AdminChekin = () => {
         doc.line(margin, footerYPosition - 7, pageWidth - margin, footerYPosition - 7); // Line above the footer
     }
 
-  
-    
+
+    const fetchImageToBase = async (imageUrls) => {
+        try {
+      
+          const headers = {
+            "Content-Type": "application/json",
+          };
+      
+          const raw = {
+            image_urls: imageUrls,
+          };
+      
+          // Send the POST request to the API
+          const response = await axios.post(
+            "https://api.goldquestglobal.in/test/image-to-base",
+            raw,
+            { headers }
+          );
+      
+          // Return the images from the response
+          return response.data.images;
+        } catch (error) {
+          console.error("Error fetching images:", error);
+          if (error.response) {
+            console.error("Response error:", error.response.data);
+          }
+        }
+        return null; // Return null in case of an error
+      };
+      
+
+
     const generatePDF = async (index, reportDownloadFlag) => {
         const applicationInfo = data[index];
         const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services, reportDownloadFlag);
@@ -751,11 +782,11 @@ const AdminChekin = () => {
             const annexureImagesKey = Object.keys(annexureData).find((key) =>
                 key.toLowerCase().startsWith("annexure") && !key.includes("[") && !key.includes("]")
             );
-            
+
             if (annexureImagesKey) {
                 const annexureImagesStr = annexureData[annexureImagesKey];
                 const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(",") : [];
-            
+
                 if (annexureImagesSplitArr.length === 0) {
                     doc.setFont("helvetica", "italic");
                     doc.setFontSize(10);
@@ -763,16 +794,62 @@ const AdminChekin = () => {
                     doc.text("No annexure images available.", 10, yPosition);
                     yPosition += 10;
                 } else {
+                    const imageBases = await fetchImageToBase(annexureImagesStr.trim());
+                    if (imageBases) {
+                        imageBases.forEach((image, index) => {
+                            /*
+                            console.log(`Image ${index + 1}:`);
+                            console.log(`URL: ${image.imageUrl}`);
+                            console.log(`Base64: ${image.base64}`);
+                            console.log(`Type: ${image.type}`);
+                            console.log(`Width: ${image.width}`);
+                            console.log(`Height: ${image.height}`);
+                            */
+
+                            // Ensure valid base64 string
+                            if (!image.base64 || !image.base64.startsWith('data:image/')) {
+                                console.error(`Invalid base64 data for image ${index + 1}`);
+                                return;
+                            }
+                    
+                            const { width, height } = scaleImageForPDF(image.width, image.height, doc.internal.pageSize.width - 20, 80);
+                            if (yPosition + height > doc.internal.pageSize.height - 20) {
+                                doc.addPage();
+                                yPosition = 10;
+                            }
+                    
+                            const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
+                            const textWidth = doc.getTextWidth(annexureText);
+                            const centerX = (doc.internal.pageSize.width - textWidth) / 2;
+                    
+                            doc.setFont("helvetica", "bold");
+                            doc.setFontSize(10);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text(annexureText, centerX, yPosition + 10);
+                            yPosition += 15;
+                    
+                            const centerXImage = (doc.internal.pageSize.width - width) / 2;
+                            try {
+                                // Ensure that the base64 data and type are correctly passed
+                                doc.addImage(image.base64, image.type, centerXImage, yPosition, width, height);
+                                yPosition += height + 15;
+                            } catch (error) {
+                                console.error(`Error adding image ${index + 1}:`, error);
+                            }
+                        });
+                    }
+                    
+                    /*
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
                         const imageUrlFull = `${imageUrl.trim()}`;
                         const imageFormat = getImageFormat(imageUrlFull);
                         console.log('imageUrlFull', imageUrlFull);
-            
+
                         if (!(await checkImageExists(imageUrlFull))) continue;
-            
+
                         const imgBlob = await validateImage(imageUrlFull);
                         if (!imgBlob) continue;
-            
+
                         try {
                             const img = await createImageFromBlob(imgBlob);
                             const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
@@ -780,25 +857,27 @@ const AdminChekin = () => {
                                 doc.addPage();
                                 yPosition = 10;
                             }
-            
+
                             const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
                             const textWidth = doc.getTextWidth(annexureText);
                             const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-            
+
                             doc.setFont("helvetica", "bold");
                             doc.setFontSize(10);
                             doc.setTextColor(0, 0, 0);
                             doc.text(annexureText, centerX, yPosition + 10);
                             yPosition += 15;
-            
+
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
                             doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
                             yPosition += height + 15;
-            
+
                         } catch (error) {
                             console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
                         }
                     }
+                    */
+
                 }
             } else {
                 doc.setFont("helvetica", "italic");
@@ -807,18 +886,18 @@ const AdminChekin = () => {
                 doc.text("No annexure images available.", 10, yPosition);
                 yPosition += 15;
             }
-            
+
             // Function to convert Blob to Image
             async function createImageFromBlob(blob) {
                 const img = new Image();
                 const url = URL.createObjectURL(blob);
                 img.src = url;
-            
+
                 return new Promise((resolve) => {
                     img.onload = () => resolve(img);
                 });
             }
-            
+
             async function checkImageExists(url) {
                 return new Promise((resolve) => {
                     const img = new Image();
@@ -827,25 +906,25 @@ const AdminChekin = () => {
                     img.src = url;
                 });
             }
-            
+
             async function validateImage(imageUrl) {
                 try {
                     const response = await fetch(imageUrl);
                     if (!response.ok) {
                         throw new Error(`Failed to fetch image: ${response.statusText}`);
                     }
-            
+
                     const arrayBuffer = await response.arrayBuffer();
                     const uint8Array = new Uint8Array(arrayBuffer);
-            
+
                     // Check for PNG signature (first 8 bytes should be 89 50 4E 47 0D 0A 1A 0A)
                     const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
                     const isValidPNG = pngSignature.every((byte, index) => byte === uint8Array[index]);
-            
+
                     if (!isValidPNG) {
                         throw new Error('Invalid PNG format');
                     }
-            
+
                     // Return the image as a Blob for further use (e.g., rendering)
                     return await response.blob();
                 } catch (error) {
@@ -853,7 +932,9 @@ const AdminChekin = () => {
                     return null;
                 }
             }
-            
+
+
+
             function getImageFormat(url) {
                 const ext = url.split('.').pop().toLowerCase();
                 if (ext === 'png') return 'PNG';
@@ -861,29 +942,48 @@ const AdminChekin = () => {
                 if (ext === 'webp') return 'WEBP';
                 return 'PNG'; // Default to PNG if the format is unrecognized
             }
-            
+
+            function scaleImageForPDF(imageWidth, imageHeight, maxWidth, maxHeight) {
+                let width = imageWidth;
+                let height = imageHeight;
+
+                // Scale the width if it exceeds maxWidth
+                if (imageWidth > maxWidth) {
+                    width = maxWidth;
+                    height = (imageHeight * maxWidth) / imageWidth;
+                }
+
+                // Scale the height if it exceeds maxHeight
+                if (height > maxHeight) {
+                    height = maxHeight;
+                    width = (imageWidth * maxHeight) / imageHeight;
+                }
+
+                return { width, height };
+            }
+
             function scaleImage(img, maxWidth, maxHeight) {
                 const imgWidth = img.width;
                 const imgHeight = img.height;
-            
+
                 let width = imgWidth;
                 let height = imgHeight;
-            
+
                 // Scale the width if it exceeds maxWidth
                 if (imgWidth > maxWidth) {
                     width = maxWidth;
                     height = (imgHeight * maxWidth) / imgWidth;
                 }
-            
+
                 // Scale the height if it exceeds maxHeight
                 if (height > maxHeight) {
                     height = maxHeight;
                     width = (imgWidth * maxHeight) / imgHeight;
                 }
-            
+
                 return { width, height };
             }
-            
+
 
 
             addFooter(doc);
