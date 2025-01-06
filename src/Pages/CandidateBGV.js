@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import LogoBgv from '../Images/LogoBgv.jpg'
-import { FaGraduationCap, FaBriefcase, FaIdCard } from 'react-icons/fa';
 const CandidateBGV = () => {
-    const admin = JSON.parse(localStorage.getItem("admin"))?.name;
     const [error, setError] = useState(null);
     const [customBgv, setCustomBgv] = useState('');
     const [cefData, setCefData] = useState([]);
@@ -16,53 +12,6 @@ const CandidateBGV = () => {
 
     const [serviceValueData, setServiceValueData] = useState([]);
 
-
-    const [formData, setFormData] = useState({
-        personal_information: {
-            full_name: '',
-            former_name: '',
-            mb_no: '',
-            father_name: '',
-            husband_name: '',
-            dob: '',
-            gender: '',
-            full_address: '',
-            pin_code: '',
-            curren_address_stay_from: '',
-            curren_address_landline_number: '',
-            current_address_state: '',
-            current_prominent_landmark: '',
-            current_address_stay_to: '',
-            nearest_police_station: '',
-            nationality: '',
-            marital_status: '',
-            name_declaration: '',
-            declaration_date: '',
-            blood_group: '',
-            pan_card_name: '',
-            aadhar_card_name: '',
-            emergency_details_name: '',
-            emergency_details_relation: '',
-            emergency_details_contact_number: '',
-            pf_details_pf_number: '',
-            pf_details_pf_type: '',
-            pf_details_pg_nominee: '',
-            nps_details_details_pran_number: '',
-            nps_details_details_nominee_details: '',
-            nps_details_details_nps_contribution: '',
-            bank_details_account_number: '',
-            bank_details_bank_name: '',
-            bank_details_branch_name: '',
-            bank_details_ifsc_code: '',
-            insurance_details_name: '',
-            insurance_details_nominee_relation: '',
-            insurance_details_nominee_dob: '',
-            insurance_details_contact_number: '',
-            icc_bank_acc: '',
-            food_coupon: "",
-
-        },
-    });
     const location = useLocation();
     const currentURL = location.pathname + location.search;
 
@@ -210,7 +159,7 @@ const CandidateBGV = () => {
                         )}
 
                         <h4 className="text-Black md:text-3xl mb-6 text-center mt-5  font-bold">Background Verification Form</h4>
-                        <div className="md:p-6 rounded md:w-9/12 m-auto p-3">
+                        <div className="md:p-6 rounded md:w-9/12 m-auto md:p-3">
                             <div className="mb-6  p-4 rounded-md">
                                 <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
                             </div>
@@ -218,7 +167,7 @@ const CandidateBGV = () => {
                             <div className="md:grid grid-cols-1 md:grid-cols-1 bg-white shadow-md gap-4 mb-6 border rounded-md  p-4">
                                 <div className="form-group col-span-2">
                                     <label>Applicant’s CV: <span className="text-red-500">*</span></label>
-                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md justify-center">
 
                                         <FileViewer fileUrl={cefData?.resume_file} className="w-full max-w-xs" />
 
@@ -228,7 +177,7 @@ const CandidateBGV = () => {
                                 </div>
                                 <div className="form-group col-span-2">
                                     <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
-                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                    <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md justify-center">
                                         {cefData?.govt_id ? (
                                             cefData.govt_id.split(',').map((fileUrl, index) => (
                                                 <FileViewer
@@ -251,7 +200,7 @@ const CandidateBGV = () => {
                                                 <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
 
 
-                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md justify-center">
                                                     {cefData?.passport_photo ? (
                                                         cefData.passport_photo.split(',').map((fileUrl, index) => (
                                                             <FileViewer
@@ -397,7 +346,7 @@ const CandidateBGV = () => {
                                             <div className='form-group'>
                                                 <label>Aadhar Card Image<span className='text-red-500'>*</span></label>
 
-                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                                <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md justify-center">
 
                                                     <FileViewer fileUrl={cefData?.aadhar_card_image} className="w-full max-w-xs" />
 
@@ -438,7 +387,7 @@ const CandidateBGV = () => {
                                         <div className='form-group'>
                                             <label>Pan Card Image<span className='text-red-500'>*</span></label>
 
-                                            <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                            <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md justify-center">
 
                                                 <FileViewer fileUrl={cefData?.pan_card_image} className="w-full max-w-xs" />
 
@@ -489,7 +438,7 @@ const CandidateBGV = () => {
                                         </select>
                                     </div>
                                 </div>
-                                <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
+                                <div className='border bg-white shadow-md border-gray-300 p-2 md:p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
 
                                     <h3 className='md:text-center text-left text-xl md:text-2xl font-bold my-5'>Current Address </h3>
                                     <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -591,7 +540,7 @@ const CandidateBGV = () => {
                             </div>
                             {customBgv === 1 && (
                                 <>
-                                    <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
+                                    <div className='border bg-white shadow-md border-gray-300 md:p-6 p-2 rounded-md mt-5 hover:transition-shadow duration-300'>
 
                                         <label>Blood Group</label>
                                         <div className='form-group'>
@@ -861,9 +810,9 @@ const CandidateBGV = () => {
                                     serviceData.map((service, serviceIndex) => (
                                         <div
                                             key={serviceIndex}
-                                            className="border border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300"
+                                            className="border border-gray-300 bg-white p-6 rounded-md mt-5 hover:transition-shadow duration-300"
                                         >
-                                            <h2 className="md:text-center text-left py-4 text-xl md:text-2xl font-bold mb-6 text-green-600">
+                                            <h2 className="md:text-center text-left py-4 text-xl md:text-2xl font-bold mb-6 text-black">
                                                 {service.heading}
                                             </h2>
                                             <div className="space-y-6">
@@ -1025,7 +974,7 @@ const CandidateBGV = () => {
                                     <div className="form-group">
                                         <label>Attach signature: <span className="text-red-500">*</span></label>
 
-                                        <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer rounded-md">
+                                        <div className="md:grid grid-cols-5 gap-4 border p-3 fileViewer justify-center rounded-md">
 
                                             <FileViewer fileUrl={cefData?.signature} className="w-full max-w-xs" />
 

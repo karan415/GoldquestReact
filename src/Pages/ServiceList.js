@@ -7,7 +7,7 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 
 const ServiceList = () => {
   const API_URL = useApi();
-  const { editService, fetchData, loading, data, error } = useService();
+  const { editService, fetchData, loading, data } = useService();
   const [itemsPerPage, setItemPerPage] = useState(10);
   useEffect(() => {
     fetchData();

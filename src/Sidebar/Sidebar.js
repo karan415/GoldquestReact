@@ -14,6 +14,7 @@ import { IoNotificationsCircle } from "react-icons/io5";
 import { GrServices } from "react-icons/gr";
 import classNames from 'classnames';
 import Logout from '../Dashboard/Logout';
+import { IoCall } from "react-icons/io5";
 
 const tabNames = {
   dashboard: (<><HomeIcon className="h-6 w-6 mr-3 text-gray-600" />DashBoard</>),
@@ -43,7 +44,8 @@ const tabNames = {
   tickets: (<><FaTicketSimple className="h-6 w-6 mr-3 text-gray-600" />Tickets</>),
   tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />TAT Delay Notification</>),
   acknowledgment: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgment Email</>),
-  holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>)
+  holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>),
+  callback: (<><IoCall className="h-6 w-6 mr-3 text-gray-600" />Callback Request</>)
 };
 
 const Sidebar = () => {
@@ -62,7 +64,7 @@ const Sidebar = () => {
   const handleExpand = (tab) => setExpandedTab(expandedTab === tab ? null : tab);
 
   return (
-    <div className="flex flex-col md:flex-row  h-full md:w-2/12">
+    <div className="flex flex-col md:flex-row  h-full md:w-3/12 xl:w-2/12">
       <button
         className="md:hidden p-3 fixed top-0 left-0 z-50 bg-green-400 text-white w-full  focus:outline-none"
         onClick={handleToggle}
@@ -106,7 +108,7 @@ const Sidebar = () => {
                         <li
                           key={subItem.id}
                           className={classNames(
-                            'w-full flex items-center p-3 cursor-pointer rounded-md my-2',
+                            'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
                             { 'bg-green-100': activeTab === subItem.id, 'hover:bg-green-100': activeTab !== subItem.id }
                           )}
                           onClick={() => onTabChange(subItem.id)}

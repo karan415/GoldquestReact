@@ -74,11 +74,16 @@ const ClientForm = () => {
             if (!clientInput[field] || clientInput[field].trim() === "") {
                 newErrors[field] = "This Field is Required";
             }
-            if (field === 'employee_id' && /\s/.test(clientInput[field])) { // Check for spaces in employee_id
-                newErrors[field] = 'Employee ID cannot contain spaces';
+            if (field === 'employee_id') {
+                if (/\s/.test(clientInput[field])) {  // Check for spaces
+                    newErrors[field] = 'Employee ID cannot contain spaces';
+                } else if (/[^a-zA-Z0-9]/.test(clientInput[field])) {  // Check for special characters
+                    newErrors[field] = 'Employee ID cannot contain special characters';
+                }
             }
+
         });
-        
+
         return newErrors;
     };
 
@@ -148,8 +153,8 @@ const ClientForm = () => {
 
             for (const file of value) {
                 customerLogoFormData.append('images', file);
-                customerLogoFormData.append('upload_category', key);
             }
+            customerLogoFormData.append('upload_category', key);
 
             if (fileCount === (index + 1)) {
                 if (isEditClient) {
@@ -203,15 +208,16 @@ const ClientForm = () => {
                 };
             }
     
-              const swalInstance = Swal.fire({
-                   title: 'Processing...',
-                   text: 'Please wait while we create the Client Application.',
-                   didOpen: () => {
-                       Swal.showLoading(); // This starts the loading spinner
-                   },
-                   allowOutsideClick: false, // Prevent closing Swal while processing
-                   showConfirmButton: false, // Hide the confirm button
-               });
+            // Initialize swalInstance before making the API request
+            const swalInstance = Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the Client Application.',
+                didOpen: () => {
+                    Swal.showLoading(); // Start the loading spinner
+                },
+                allowOutsideClick: false, // Prevent closing Swal while processing
+                showConfirmButton: false, // Hide the confirm button
+            });
     
             try {
                 const response = await fetch(
@@ -228,14 +234,15 @@ const ClientForm = () => {
                 );
     
                 const result = await response.json();
+                console.log('API Response:', result); // Log the full response for debugging
     
                 if (!response.ok) {
                     const errorMessage = result.message || "Unknown error occurred";
-                    const apiError =
-                        result.errors || "An unexpected error occurred. Please try again later.";
-                    Swal.fire("Error!", `An error occurred: ${errorMessage}\n${apiError}`, "error");
+                    const apiError = result.errors || "An unexpected error occurred. Please try again later.";
     
-                    // Handle session expiration if token is invalid
+                    const messageToShow = result.message || `${apiError}`;
+                    Swal.fire("Error!", messageToShow, "error");
+    
                     if (
                         errorMessage.toLowerCase().includes("invalid") &&
                         errorMessage.toLowerCase().includes("token")
@@ -246,10 +253,7 @@ const ClientForm = () => {
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            // Redirect to customer login page with the email address
-                            window.open(
-                                `/customer-login?email=${encodeURIComponent(branchEmail)}`
-                            );
+                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                         });
                     }
     
@@ -271,7 +275,6 @@ const ClientForm = () => {
                     new_application_id = result.result.new_application_id;
                 }
     
-                // Reset the form fields including files
                 setClientInput({
                     name: "",
                     employee_id: "",
@@ -284,54 +287,46 @@ const ClientForm = () => {
                     client_application_id: "",
                 });
     
-                setFiles({}); // Clear files
-                setInputError({}); // Reset input errors
-                fetchClientDrop()
-
-
-                // Show success message
+                setFiles({});
+                setInputError({});
+                fetchClientDrop();
+    
                 if (fileCount === 0) {
                     Swal.fire({
                         title: "Success",
                         text: `${isEditClient ? "Application Updated Successfully" : "Application Created Successfully"}`,
                         icon: "success",
                         confirmButtonText: "Ok",
-                    })
+                    });
                 }
     
                 if (fileCount > 0) {
-                    // Proceed to upload files if files exist
                     await uploadCustomerLogo(insertedId, new_application_id);
-                
+    
                     Swal.fire({
                         title: "Success",
                         text: `Client Application Created Successfully.`,
                         icon: "success",
                         confirmButtonText: "Ok",
-                    })
+                    });
                 }
-                
-
+    
                 setIsEditClient(false);
     
             } catch (error) {
                 console.error("There was an error!", error);
-    
-                Swal.fire(
-                    "Error!",
-                    "There was an error with the request. Please try again later.",
-                    "error"
-                );
             } finally {
                 swalInstance.close(); // Close the Swal loading spinner
-
                 setFormLoading(false);
             }
         } else {
             setInputError(errors); // Set the input errors if validation fails
         }
     };
+     
     
+    
+
 
 
 
@@ -390,13 +385,29 @@ const ClientForm = () => {
                 return { ...prev, services: updatedServices };
             });
         } else {
-            setClientInput((prev) => ({ ...prev, [name]: value }));
+            setClientInput((prev) => ({
+                ...prev, [name]: name === 'employee_id' ? value.toUpperCase() : value,
+            }));
         }
     };
 
 
 
-
+    const emptyForm = () => {
+        setClientInput({
+            name: "",
+            employee_id: "",
+            spoc: "",
+            location: "",
+            batch_number: "",
+            sub_client: "",
+            services: [],
+            package: "",
+            client_application_id: "",
+        });
+        setInputError({});
+        setIsEditClient(false);
+    }
 
     return (
         <>
@@ -421,7 +432,7 @@ const ClientForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="attach_documents" className='text-sm'>Attach documents<span className="text-red-500">*</span></label>
-                                <input type="file" name="attach_documents" id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2"
+                                <input type="file" name="attach_documents" multiple id="Attach_Docs" className="border w-full capitalize rounded-md p-2 mt-2"
                                     accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                                     onChange={(e) => handleFileChange('attach_documents', e)} />
                                 {inputError.attach_documents && <p className='text-red-500'>{inputError.attach_documents}</p>}
@@ -432,8 +443,9 @@ const ClientForm = () => {
                             <div className="md:flex gap-5">
                                 <div className="mb-4 md:w-6/12">
                                     <label htmlFor="employee_id" className='text-sm'>Employee ID<span className="text-red-500">*</span></label>
-                                    <input type="text" name="employee_id" id="EmployeeId" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.employee_id} />
-                                    {inputError.employee_id && <p className='text-red-500'>{inputError.employee_id}</p>}
+                                    <input type="text" name="employee_id" disabled={isEditClient} id="EmployeeId" className="border w-full capitalize rounded-md p-2 mt-2" onChange={handleChange} value={clientInput.employee_id.toUpperCase()} />
+                                    {inputError.employee_id && <p className='text-red-500'
+                                    >{inputError.employee_id}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
                                     <label htmlFor="spoc" className='text-sm'>Name of the SPOC<span className="text-red-500">*</span></label>
@@ -523,9 +535,12 @@ const ClientForm = () => {
                         </div>
 
                     </div>
-                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md md:w-2/12' disabled={formLoading}>
-                        Send
-                    </button>
+                    <div className='flex gap-4'>
+                        <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md md:w-2/12' disabled={formLoading}>
+                            Send
+                        </button>
+                        <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 rounded-md '>Reset Form</button>
+                    </div>
                     {/* <button type="button" className='bg-green-400 hover:bg-green-200 mt-4 text-white p-3 rounded-md w-auto ms-3'>Bulk Upload</button> */}
                 </form>
             )}

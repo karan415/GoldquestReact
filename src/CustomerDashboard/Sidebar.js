@@ -15,6 +15,9 @@ import Logout from './Logout';
 import ReportCaseTable from "./ReportCaseTable";
 import DropBoxList from "./DropBoxList";
 import CandidateList from "./CandidateList";
+import CaseLog from './CaseLog'
+import Callback from './Callback'
+import { IoCall } from "react-icons/io5";
 
 const tabComponents = {
   dashboard: <DashBoard />,
@@ -26,6 +29,9 @@ const tabComponents = {
   bulkupload: <BulkUpload />,
   update_password: <UpdatePassword />,
   escalation: <EscalationMatrix />,
+  case_logs:<CaseLog/>,
+  // callback:<Callback/>,
+
 };
 
 const tabNames = {
@@ -33,8 +39,11 @@ const tabNames = {
   employee_management: (<><UserIcon className="h-6 w-6 mr-3 text-gray-600" />Client Master Data</>),
   report_case: (<><GrServices className="h-6 w-6 mr-3 text-gray-600" />Report & Case Status</>),
   dropbox: (<><FaDropbox className="h-6 w-6 mr-3 text-gray-600" />Client DropBox</>),
+  case_logs: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Case Logs</>),
+  // callback: (<><IoCall className="h-6 w-6 mr-3 text-gray-600" />Request Callback</>),
   Candidate: (<><AiFillDropboxCircle className="h-6 w-6 mr-3 text-gray-600" />Candidate DropBox</>),
   update_password: (<><RiLockPasswordFill className="h-6 w-6 mr-3 text-gray-600" />Update Password</>),
+ 
 };
 
 const Sidebar = () => {

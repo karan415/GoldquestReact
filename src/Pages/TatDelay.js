@@ -10,7 +10,6 @@ const TatDelay = () => {
   const [tatData, setTatData] = useState([]);
   const [loading, setLoading] = useState(null);
 
-
   const totalPages = Math.ceil(tatData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;

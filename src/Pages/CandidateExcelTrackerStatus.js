@@ -15,13 +15,11 @@ const CandidateExcelTrackerStatus = () => {
     const [selectedAttachments, setSelectedAttachments] = useState([]);
 
     const { handleTabChange } = useSidebar();
-    const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
     const navigate = useNavigate();
     const location = useLocation();
     const [itemsPerPage, setItemPerPage] = useState(10)
     const [selectedStatus, setSelectedStatus] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [adminTAT, setAdminTAT] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -33,11 +31,7 @@ const CandidateExcelTrackerStatus = () => {
     const clientId = queryParams.get('clientId');
     const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem('_token');
-    const [openSection, setOpenSection] = useState(null);
 
-    const toggleSection = (section) => {
-        setOpenSection((prev) => (prev === section ? null : section));
-    };
     // Fetch data from the main API
     const fetchData = useCallback(() => {
         if (!branch_id || !adminId || !token) {
@@ -130,20 +124,7 @@ const CandidateExcelTrackerStatus = () => {
 
     const tableRef = useRef(null); // Ref for the table container
 
-    // Function to reset expanded rows
-    const handleOutsideClick = (event) => {
-        if (tableRef.current && !tableRef.current.contains(event.target)) {
-            setExpandedRow({}); // Reset to empty object instead of null
-        }
-    };
-
-
-    useEffect(() => {
-        document.addEventListener("mousedown", handleOutsideClick);
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, []);
+    
 
 
     const filteredOptions = filteredItems.filter(item =>
@@ -221,9 +202,7 @@ const CandidateExcelTrackerStatus = () => {
     }, [clientId, branch_id]);
 
 
-    const handleViewMore = (id) => {
-        setExpandedRow((prevRow) => (prevRow === id ? null : id)); // Toggle expanded row
-    };
+ 
 
 
     const handleSelectChange = (e) => {
@@ -538,7 +517,7 @@ const CandidateExcelTrackerStatus = () => {
                                                     <ul className="modal-list h-[400px] overflow-scroll">
                                                         {Object.entries(selectedAttachments).map(([category, attachments], idx) => (
                                                             <li key={idx} className="modal-list-category">
-                                                                <h3 className="modal-category-title text-lg font-semibold my-2">{category}</h3>
+                                                                <h3 className="modal-category-title md:text-lg font-semibold my-2">{category}</h3>
                                                                 <ul>
                                                                     {attachments.map((attachment, subIdx) => {
                                                                         const label = Object.keys(attachment)[0];
@@ -546,7 +525,7 @@ const CandidateExcelTrackerStatus = () => {
                                                                         return (
                                                                             <li key={subIdx} className="grid grid-cols-2 items-center border-b py-2">
                                                                                 <span className="modal-list-text">{subIdx + 1}: {label}</span>
-                                                                                <div className="modal-url-list grid me-7 gap-2 justify-end">
+                                                                                <div className="modal-url-list grid md:me-7 gap-2 justify-end">
                                                                                     {fileUrls.map((url, urlIdx) => (
                                                                                         <a
                                                                                             key={urlIdx}

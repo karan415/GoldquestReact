@@ -411,7 +411,7 @@ const CandidateList = () => {
                                                         <ul className="modal-list h-[400px] overflow-scroll">
                                                             {Object.entries(selectedAttachments).map(([category, attachments], idx) => (
                                                                 <li key={idx} className="modal-list-category">
-                                                                    <h3 className="modal-category-title text-lg font-semibold my-2">{category}</h3>
+                                                                    <h3 className="modal-category-title md:text-lg font-semibold my-2">{category}</h3>
                                                                     <ul>
                                                                         {attachments.map((attachment, subIdx) => {
                                                                             const label = Object.keys(attachment)[0];
@@ -419,7 +419,7 @@ const CandidateList = () => {
                                                                             return (
                                                                                 <li key={subIdx} className="grid items-center grid-cols-2 border-b py-2">
                                                                                     <span className="modal-list-text">{subIdx + 1}: {label}</span>
-                                                                                    <div className="modal-url-list grid me-7 gap-2 justify-end">
+                                                                                    <div className="modal-url-list grid md:me-7 gap-2 justify-end">
                                                                                         {fileUrls.map((url, urlIdx) => (
                                                                                             <a
                                                                                                 key={urlIdx}

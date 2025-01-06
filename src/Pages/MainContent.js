@@ -27,6 +27,7 @@ import { ClientEditForm } from './ClientEditForm';
 import HolidayManagement from './HolidayManagement';
 import GenerateReportList from './GenerateReportList';
 import DeletionCertification from './DeletionCertification';
+import CallbackAdmin from './CallbackAdmin';
 
 
 
@@ -45,7 +46,7 @@ const tabComponents = {
   candidate_master: <CandidateMasterTracker />,
   exel_tracker: <ExelTracker />,
   tat_delay: <TatDelay />,
-  Acknowledgement: <Acknowledgement />,
+  acknowledgment: <Acknowledgement />,
   // update_password: <UpdatePassword />,
   // invoice: <Invoice />,
   tickets: <Tickets />,
@@ -55,6 +56,7 @@ const tabComponents = {
   tracker_status: <ExelTrackerStatus />,
   deletion_certificate: <DeletionCertification />,
   Candidate_tracker_status: <CandidateExcelTrackerStatus />,
+  callback:<CallbackAdmin/>,
 
 
 
@@ -67,7 +69,7 @@ const MainContent = () => {
   const { activeTab } = useSidebar();
 
   return (
-    <div className="w-full md:w-10/12 mt-16 md:mt-0 flex flex-col items-stretch ">
+    <div className="w-full xl:w-10/12 md:w-9/12 mt-16 md:mt-0 flex flex-col items-stretch ">
       {tabComponents[activeTab] || <DashBoard />}
     </div>
   );

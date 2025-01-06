@@ -70,7 +70,10 @@ const CandidateForm = () => {
                 return { ...prev, services: updatedServices };
             });
         } else {
-            setInput((prev) => ({ ...prev, [name]: value }));
+            setInput((prev) => ({
+                ...prev, [name]: name === 'employee_id' ? value.toUpperCase() : value,
+            }));
+
         }
     };
 
@@ -87,12 +90,16 @@ const CandidateForm = () => {
         if (!name) {
             NewErr.name = 'Name is required';
         }
+        
 
         if (!employee_id) {
             NewErr.employee_id = 'Employee ID is required';
-        } else if (/\s/.test(employee_id)) { // Check for spaces
+        } else if (/\s/.test(employee_id)) {  // Check for spaces
             NewErr.employee_id = 'Employee ID cannot contain spaces';
+        } else if (/[^a-zA-Z0-9]/.test(employee_id)) {  // Check for special characters
+            NewErr.employee_id = 'Employee ID cannot contain special characters';
         }
+        
 
 
         if (!mobile_number) {
@@ -239,7 +246,19 @@ const CandidateForm = () => {
     };
 
 
-
+    const emptyForm = () => {
+        setInput({
+            name: "",
+            employee_id: "",
+            mobile_number: "",
+            email: "",
+            services: [],
+            package: "",
+            candidate_application_id: "",
+        });
+        setError({});
+        setIsEditCandidate(false);
+    }
 
     return (
         <>
@@ -260,7 +279,7 @@ const CandidateForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="employee_id" className='text-sm'>Employee ID<span className='text-red-500'>*</span></label>
-                                <input type="text" name="employee_id" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.employee_id} />
+                                <input type="text" name="employee_id" disabled={isEditCandidate} className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.employee_id.toUpperCase()} />
                                 {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                             </div>
                             <div className="mb-4">
@@ -331,8 +350,10 @@ const CandidateForm = () => {
                             </div>
                         </div>
                     </div>
-                    <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
-
+                    <div className='flex gap-4'>
+                        <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
+                        <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 rounded-md '>Reset Form</button>
+                    </div>
                 </form>
             )}
 

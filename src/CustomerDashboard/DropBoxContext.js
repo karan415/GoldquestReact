@@ -77,7 +77,7 @@ export const DropBoxProvider = ({ children }) => {
                 package: selectedCandidate.packages || [],
                 candidate_application_id: selectedCandidate.id || ''
             });
-            setIsEditClient(true);
+            setIsEditCandidate(true);
         } else {
             setInput({
                 name: "",

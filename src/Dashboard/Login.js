@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
-import active_client from '../Images/Login.jpeg';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import LoginForm from './LoginForm';
-import LoginDes from './LoginDes';
 
 const Login = () => {
   const navigate = useNavigate();

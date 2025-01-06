@@ -195,6 +195,32 @@ const DropBoxList = () => {
             }
         });
     };
+    const handleViewMoreDoc = (documents) => {
+        Swal.fire({
+            title: 'Additional Documents',
+            html: `<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+                    ${documents.map((document, index) => (
+                        document.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                            `<img src="${document}" alt="Image" class="md:h-20 h-10 w-20 rounded-full" style="margin: 10px;" />`
+                        ) : (
+                            `<a href="${document}" target="_blank" rel="noopener noreferrer" style="display: block; margin: 10px;">
+                                <button type="button" class="px-4 py-2 bg-green-500 text-white rounded">
+                                    View Document ${index + 1}
+                                </button>
+                            </a>`
+                        )
+                    )).join('')}
+                  </div>`,
+            confirmButtonText: 'Close',
+            width: '600px',
+            padding: '20px',
+            showCloseButton: true,
+            showCancelButton: false,
+            focusConfirm: false,
+        });
+    };
+    
+    
 
     return (
         <>
@@ -207,7 +233,7 @@ const DropBoxList = () => {
 
                 </div>
                 <div className="overflow-x-auto py-6 px-4 bg-white shadow-md rounded-md md:m-10 m-3">
-                <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
+                    <div className="md:grid grid-cols-2 justify-between items-center md:my-4 border-b-2 pb-4">
                         <div className="col">
                             <form action="">
                                 <div className="md:flex gap-5 justify-between">
@@ -309,30 +335,50 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client || 'NIL'}</td>
 
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                                {report.attach_documents ? (
-                                                    // Check if the file is an image
-                                                    report.attach_documents.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                                        <img
-                                                            src={`${report.attach_documents}`}
-                                                            alt="Image"
-                                                            className="md:h-20 h-10 w-20 rounded-full"
-                                                        />
-                                                    ) : (
-                                                        // If it's a document (pdf, doc, etc.), show a button
-                                                        <a
-                                                            href={`${report.attach_documents}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
-                                                                View Document
-                                                            </button>
-                                                        </a>
-                                                    )
-                                                ) : (
-                                                    '----'
-                                                )}
+                                                {(() => {
+                                                    const documents = report.attach_documents ? report.attach_documents.split(', ') : [];
+
+                                                    if (documents.length > 0) {
+                                                        return (
+                                                            <>
+                                                                {documents[0].match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                                    <img
+                                                                        src={documents[0]}
+                                                                        alt="Image"
+                                                                        className="md:h-20 h-10 w-20 rounded-full"
+                                                                    />
+                                                                ) : (
+                                                                    <a
+                                                                        href={documents[0]}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                    >
+                                                                        <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                            View Document
+                                                                        </button>
+                                                                    </a>
+                                                                )}
+
+                                                                {/* View More button to show the rest of the documents in a popup */}
+                                                                {documents.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleViewMoreDoc(documents.slice(1))}
+                                                                        className="mt-2 px-4 py-2 ms-2 bg-blue-500 text-white rounded"
+                                                                    >
+                                                                        View More
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    } else {
+                                                        return '----';
+                                                    }
+                                                })()}
                                             </td>
+
+
+
                                             <td className="border p-2  md:px-4 py-2 text-left">
                                                 <div className='flex whitespace-nowrap'>
                                                     {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
@@ -443,7 +489,7 @@ const DropBoxList = () => {
                     </div>
                 </div>
 
-            </div>
+            </div >
 
         </>
     )

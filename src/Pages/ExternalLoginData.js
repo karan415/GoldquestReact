@@ -5,7 +5,6 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import { useApi } from '../ApiContext';
 import Swal from 'sweetalert2'
 const ExternalLoginData = () => {
-  const [isOpen, setIsOpen] = useState(false);
 
   const [branches, setBranches] = useState([]);
   const [openAccordionId, setOpenAccordionId] = useState(null);
@@ -21,7 +20,6 @@ const ExternalLoginData = () => {
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
-    setIsOpen(null);
     setError(null);
 
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;

@@ -1,6 +1,5 @@
 import React from 'react';
 import BulkUploadForm from './BulkUploadForm';
-import BulkUploadList from './BulkUploadList';
 
 const BulkUpload = () => {
   return (
@@ -14,7 +13,6 @@ const BulkUpload = () => {
           <BulkUploadForm />
         </div>
         <div className="bg-white shadow-md rounded-md overflow-hidden">
-          <BulkUploadList />
         </div>
       </div>
     </>

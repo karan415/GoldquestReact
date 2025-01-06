@@ -36,7 +36,6 @@ const ReportsList = () => {
   const [itemsPerPage, setItemPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState([]); // Original data
-  const [filteredData, setFilteredData] = useState([]); // Filtered data
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,10 +107,8 @@ const ReportsList = () => {
             )
           );
           setData(flattenedReports); // Set the original data
-          setFilteredData(flattenedReports); // Initialize filtered data with the original data
         } else {
           setData([]);
-          setFilteredData([]); // Handle cases with no data
         }
       })
       .catch((error) => {

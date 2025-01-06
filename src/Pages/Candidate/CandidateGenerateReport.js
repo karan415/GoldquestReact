@@ -7,13 +7,9 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 const CandidateGenerateReport = () => {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [servicesForm, setServicesForm] = useState('');
-    const [applicationRefID, setApplicationRefID] = useState('');
     const [servicesDataInfo, setServicesDataInfo] = useState('');
-    const [servicesData, setServicesData] = useState([]);
     const [branchInfo, setBranchInfo] = useState([]);
     const [customerInfo, setCustomerInfo] = useState([]);
-    const [referenceId, setReferenceId] = useState("");
     const [adminNames, setAdminNames] = useState([]);
 
     const [formData, setFormData] = useState({
@@ -118,10 +114,6 @@ const CandidateGenerateReport = () => {
     const applicationId = new URLSearchParams(window.location.search).get('applicationId');
     const branchid = new URLSearchParams(window.location.search).get('branchid');
 
-    // Set referenceId only once when applicationId changes
-    useEffect(() => {
-        if (applicationId) setReferenceId(applicationId);
-    }, [applicationId]); // Only rerun when applicationId changes
 
     const fetchServicesJson = useCallback(async (servicesList) => {
         setLoading(true);
@@ -236,11 +228,10 @@ const CandidateGenerateReport = () => {
                 const cmtData = result.CMTData || [];
                 const services = applicationData.services;
                 fetchServicesJson(services);
-                setServicesForm(services);
-                setServicesData(result);
                 setBranchInfo(result.branchInfo);
                 setCustomerInfo(result.customerInfo);
-                setApplicationRefID(applicationData.application_id);
+
+
                 setAdminNames(result.admins)
 
                 setFormData(prevFormData => ({
@@ -363,7 +354,7 @@ const CandidateGenerateReport = () => {
                 setLoading(false);
 
             })
-    }, [applicationId, branchid, fetchServicesJson, setServicesForm, setServicesData, setBranchInfo, setCustomerInfo, setFormData]);
+    }, [applicationId, branchid, fetchServicesJson, setBranchInfo, setCustomerInfo, setFormData]);
 
     useEffect(() => {
         fetchApplicationData();

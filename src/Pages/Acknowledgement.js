@@ -253,7 +253,6 @@ const Acknowledgement = () => {
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Client Code</th>
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Company Name</th>
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Application Count</th>
-                <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Case RCVD Date</th>
                 <th className="py-3 text-left text-white px-4 border-b-2 border-r-2 whitespace-nowrap uppercase text-sm md:text-lg">Send Notification</th>
               </tr>
             </thead>
@@ -264,7 +263,6 @@ const Acknowledgement = () => {
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
-                  <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.caseReceivedDate || 'N/A'}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
                     <button
                       className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200"

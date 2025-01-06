@@ -1,8 +1,5 @@
 import React from 'react'
 import InvoiceTable from './InvoiceTable'
-import ReportTable from './ReportTable'
-import TatDelayTable from './TatDelayTable'
-import LoginHistoryTable from './LoginHistoryTable'
 import Notification from './Notification'
 import active_client from '../Images/Icon_Order.png'
 const Main2 = () => {
@@ -55,16 +52,13 @@ const Main2 = () => {
             </div>
             <div className="p-4">
                 <div className="bg-white rounded-md shadow-md p-2">
-                    <ReportTable />
                 </div>
             </div>
             <div className="p-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-2 bg-white rounded-md shadow-md p-2">
-                        <TatDelayTable />
                     </div>
                     <div className="md:col-span-1 bg-white  rounded-md shadow-md p-2">
-                        <LoginHistoryTable />
                     </div>
                 </div>
             </div>

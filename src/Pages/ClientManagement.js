@@ -29,7 +29,7 @@ const ClientManagement = () => {
 
   const [, setInsertId] = useState();
   const API_URL = useApi();
-  const { clientData, setClientData, setValidationsErrors, validationsErrors } = useClient();
+  const { clientData, setClientData, validationsErrors } = useClient();
   useEffect(() => {
 
     if (!clientData) {
@@ -124,22 +124,37 @@ const ClientManagement = () => {
 
   const handleChange = (e, index) => {
     const { name, value } = e.target;
-
-    if (name.startsWith("branch_")) {
-      const newBranchForms = [...branchForms];
-      newBranchForms[index][name] = value;
-      setBranchForms(newBranchForms);
+  
+    if (name === "client_code") {
+      // Handle client_code: Ensure it starts with "GQ-" and is uppercase
+      const processedValue = `GQ-${value.replace(/^GQ-/, '').toUpperCase()}`;
+      setInput((prevInput) => ({
+        ...prevInput,
+        [name]: processedValue,
+      }));
+    } else if (name.startsWith("branch_")) {
+      // Update branchForms
+      setBranchForms((prevBranchForms) => {
+        const updatedBranchForms = [...prevBranchForms];
+        updatedBranchForms[index][name] = value;
+        return updatedBranchForms;
+      });
     } else if (name.startsWith("email")) {
-      const newEmails = [...emails];
-      newEmails[index] = value;
-      setEmails(newEmails);
+      // Update emails
+      setEmails((prevEmails) => {
+        const updatedEmails = [...prevEmails];
+        updatedEmails[index] = value;
+        return updatedEmails;
+      });
     } else {
-      setInput(prevInput => ({
+      // Generic input handler
+      setInput((prevInput) => ({
         ...prevInput,
         [name]: value,
       }));
     }
   };
+  
 
   const validate = () => {
     const newErrors = {};
@@ -218,10 +233,10 @@ const ClientManagement = () => {
     if (clientCode) {
       if (/\s/.test(clientCode)) {
         newErrors.client_code = "Client code must not contain spaces";
-      } else if (clientCode !== clientCode.toUpperCase()) {
-        newErrors.client_code = "Client code must be uppercase";
       }
     }
+    
+    
   
     // Validate emails
     const emailSet = new Set();
@@ -287,7 +302,6 @@ const ClientManagement = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     let newErrors = {};
 
@@ -319,11 +333,11 @@ const ClientManagement = () => {
             refs.current[errorField].focus();
         }
 
-        setIsLoading(false);
         return;
     } else {
         setErrors({});
     }
+    setErrors({});
 
     // Show the "Processing..." message and loading spinner
     const swalInstance = Swal.fire({
@@ -335,6 +349,8 @@ const ClientManagement = () => {
         allowOutsideClick: false, // Prevent closing Swal while processing
         showConfirmButton: false, // Hide the confirm button
     });
+    setIsLoading(true);
+
 
     try {
         // Proceed with the submission if no errors
@@ -525,6 +541,25 @@ const ClientManagement = () => {
   const deleteEmails = (index) => {
     setEmails(emails.filter((_, i) => i !== index));
   };
+  const clientCode = input.client_code.trim();
+  let processedCode = '';
+  
+  if (clientCode.startsWith('GQ-')) {
+    // If it starts with 'GQ-', process the part after the prefix
+    processedCode = clientCode.replace(/^GQ-/, '').toUpperCase();
+  } else {
+    // Otherwise, assume the whole input is a raw code
+    processedCode = clientCode.toUpperCase();
+  }
+  
+  // Add the 'GQ-' prefix back
+  let value = `GQ-${processedCode}`;
+  
+  // Debugging
+  console.log('processedCode:', processedCode);
+  console.log('input:', input.client_code);
+  console.log('value:', value);
+  
 
   return (
     <>
@@ -564,7 +599,7 @@ const ClientManagement = () => {
                     name="client_code"
                     id="client_code"
                     className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
-                    value={`GQ-${input.client_code.replace(/^GQ-/, '')}`} // Ensure the value starts with 'GQ-'
+                    value={ `GQ-${processedCode}`} // Ensure the value starts with 'GQ-' and is fully uppercase
                     onChange={handleChange}
                     ref={(el) => (refs.current["client_code"] = el)} // Attach ref here
 

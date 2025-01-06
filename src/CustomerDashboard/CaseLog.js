@@ -1,35 +1,250 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import axios from 'axios';
+import PulseLoader from 'react-spinners/PulseLoader';
+
+import Swal from 'sweetalert2';
 const CaseLog = () => {
+    const [conversationMsg, setConversationMsg] = useState([]);
+
     const [showPopup, setShowPopup] = useState(false);
+    const [data, setData] = useState([]);
+    const [conversation, setConversation] = useState([]);
+    const messageEndRef = useRef(null);
+    const [loading, setLoading] = useState(null);
+    const [formLoading, setFormLoading] = useState(null);
+    const [viewLoading, setViewLoading] = useState(null);
+
+    const [ticket, setTicket] = useState([]);
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+    });
+    const [passError, setPassError] = useState({});
 
     const [messages, setMessages] = useState([
         { sender: "bot", text: "Hello! How can I assist you with your ticket today?" },
     ]);
     const [userInput, setUserInput] = useState("");
 
+
+    const replyTickets = (ticket_number, msg) => {
+        setTicket(ticket_number);
+        setShowPopup(true); // Show the popup
+        setViewLoading(true); // Start loading state
+        setConversationMsg(msg);
+
+        const branchData = JSON.parse(localStorage.getItem("branch"));
+        const branch_id = branchData?.id;
+        const branch_token = localStorage.getItem("branch_token");
+
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow",
+        };
+
+        fetch(`https://api.goldquestglobal.in/branch/ticket/view?ticket_number=${ticket_number}&branch_id=${branch_id}&_token=${branch_token}`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((result) => {
+                        const errorMessage = result.message || 'An unexpected error occurred.';
+
+                        // Check if the token has expired
+                        if (
+                            errorMessage.toLowerCase().includes("invalid") &&
+                            errorMessage.toLowerCase().includes("token")
+                        ) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                const branchEmail = branchData?.email || ""; // Extract branch email
+                                window.open(
+                                    `/customer-login?email=${encodeURIComponent(branchEmail)}`,
+                                    "_self" // Open in the same tab
+                                );
+                            });
+                        } else {
+                            // Display error message from API
+                            Swal.fire({
+                                title: 'Error',
+                                text: result.message || 'An unexpected error occurred. Please try again.',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                            });
+                        }
+                        throw new Error(errorMessage); // Stop further processing in case of error
+                    });
+                }
+                return response.json(); // Return the successful response
+            })
+            .then((result) => {
+                if (result.error) {
+                    // Show API-level error message
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'An unexpected error occurred. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                } else {
+                    // Successfully fetched conversations, update state
+                    setConversation(result.branches?.conversations || []);
+
+                    // Scroll to the last message
+                    setTimeout(() => {
+                        if (messageEndRef.current) {
+                            messageEndRef.current.scrollIntoView({
+                                behavior: "smooth",
+                                block: "end",
+                                inline: "nearest"
+                            });
+
+                            // Add an offset of 40 pixels
+                            window.scrollBy(0, 40);
+                        }
+                    }, 0); // Use a small timeout to ensure DOM updates before scrolling
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                // Handle unexpected errors
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            })
+            .finally(() => {
+                setViewLoading(false); // Stop loading state once the request is done
+            });
+    };
+
+
     const handleSend = () => {
+        const branchData = JSON.parse(localStorage.getItem("branch"));
+        const branch_id = branchData?.id;
+        const branch_token = localStorage.getItem("branch_token");
+
+        // Set loading state to true when starting the request
+        setFormLoading(true);
+
         if (userInput.trim()) {
             const userMessage = { sender: "user", text: userInput };
             const botReply = { sender: "bot", text: "Thank you for your message. We'll look into it!" };
-
             setMessages([...messages, userMessage, botReply]);
             setUserInput("");
         }
+
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        const raw = JSON.stringify({
+            "ticket_number": ticket,
+            "message": userInput,
+            "branch_id": branch_id,
+            "_token": branch_token,
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow",
+        };
+
+        fetch("https://api.goldquestglobal.in/branch/ticket/chat", requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((result) => {
+                        const errorMessage = result.message || "An unexpected error occurred.";
+
+                        // Check if the session token has expired
+                        if (errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to customer login page
+                                window.open(
+                                    `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`,
+                                    "_self"
+                                );
+                            });
+                        }
+
+                        // Update token if needed
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
+
+                        // Show error message from API
+                        Swal.fire({
+                            title: 'Error',
+                            text: errorMessage,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
+                        throw new Error(errorMessage);
+                    });
+                }
+                return response.json();
+            })
+            .then((result) => {
+                if (result.error) {
+                    // Handle API-level errors
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'An unexpected error occurred.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
+                } else {
+                    // Refresh the conversation
+                    replyTickets(ticket);
+
+                    // Update token if needed
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                // Show a generic error message
+                Swal.fire({
+                    title: 'Error',
+                    text: "An error occurred while sending the message. Please try again later.",
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            })
+            .finally(() => {
+                // Stop loading state once the process is done
+                setFormLoading(false);
+            });
     };
-    const [case_title, setcase_title] = useState({
-        case_title: '',
-        case_description: '',
-    });
-    const [passError, setPassError] = useState({});
+
+
+
+
+
+
+
     const handleChange = (event) => {
         const { name, value } = event.target;
-        setcase_title((prev) => ({
+        setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
 
-        // Clear error when user starts typing
         if (passError[name]) {
             setPassError((prev) => ({ ...prev, [name]: '' }));
         }
@@ -37,45 +252,16 @@ const CaseLog = () => {
 
     const validate = () => {
         const errors = {};
-        if (!case_title.case_title) errors.case_title = 'Title is required';
-        if (!case_title.case_description) errors.case_description = 'Confirmation password is required';
-        else if (case_title.case_description !== case_title.case_title) errors.case_description = 'Passwords do not match';
+        if (!formData.title) errors.title = 'Title is required';
+        if (!formData.description) errors.description = 'Description is required';
         return errors;
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const errors = validate();
-    };
+
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const data = [
-        {
-            id: 1,
-            org_name: 'Organization',
-            title: 'case1',
-            description: 'case Description',
-        },
-        {
-            id: 2,
-            org_name: 'Organization',
-            title: 'case1',
-            description: 'case Description',
-        },
-        {
-            id: 3,
-            org_name: 'Organization',
-            title: 'case1',
-            description: 'case Description',
-        },
-        {
-            id: 4,
-            org_name: 'Organization',
-            title: 'case1',
-            description: 'case Description',
-        }
-    ]
+
     const filteredItems = data.filter(item => {
         return (
             item.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -155,13 +341,253 @@ const CaseLog = () => {
     };
 
 
-    const replyTickets = () => {
-        setShowPopup(true); // Show the popup
-    };
+
 
     const handleClose = () => {
         setShowPopup(false); // Close the popup
     };
+
+    const fetchTickets = () => {
+        const branchData = JSON.parse(localStorage.getItem("branch"));
+        const branch_id = branchData?.id;
+        const branch_token = localStorage.getItem("branch_token");
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+
+        setLoading(true); // Set loading state to true
+
+        fetch(`https://api.goldquestglobal.in/branch/ticket/list?branch_id=${branch_id}&_token=${branch_token}`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((result) => {
+                        const errorMessage = result.message || "An unexpected error occurred.";
+                        // Handle session expiration
+                        if (
+                            errorMessage.toLowerCase().includes("invalid") &&
+                            errorMessage.toLowerCase().includes("token")
+                        ) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "OK",
+                            }).then(() => {
+                                // Redirect to customer login page
+                                window.open(
+                                    `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`,
+                                    "_self"
+                                );
+                            });
+                        }
+
+                        // Show error message for other issues
+                        Swal.fire({
+                            title: 'Error',
+                            text: errorMessage,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                        });
+
+                        throw new Error(errorMessage);
+                    });
+                }
+                return response.json();
+            })
+            .then((result) => {
+                console.log(result);
+                setData(result.branches); // Set the data to the state if the request was successful
+
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("branch_token", newToken); // Update the token if returned by API
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                // Handle other types of errors (e.g., network issues)
+
+            })
+            .finally(() => {
+                setLoading(false); // Reset loading state after the operation
+            });
+    };
+
+    useEffect(() => {
+
+
+        fetchTickets();
+    }, []); // Make sure branch_id and branch_token are available
+
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('passerror', passError);
+
+        const branchData = JSON.parse(localStorage.getItem("branch"));
+        const branch_id = branchData?.id;
+        const branch_token = localStorage.getItem("branch_token");
+
+        // Validate form data
+        const formError = validate();
+        if (Object.keys(formError).length > 0) {
+            setPassError(formError); // Set the validation errors
+            return; // Prevent the form submission if there are validation errors
+        }
+
+        console.log('start');
+
+        const myHeaders = {
+            "Content-Type": "application/json",
+        };
+
+        const requestBody = {
+            "title": formData.title,
+            "description": formData.description,
+            "branch_id": branch_id,
+            "_token": branch_token,
+        };
+        const swalInstance = Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we create Your Ticket',
+            didOpen: () => {
+                Swal.showLoading(); // This starts the loading spinner
+            },
+            allowOutsideClick: false, // Prevent closing Swal while processing
+            showConfirmButton: false, // Hide the confirm button
+        });
+
+        axios.post("https://api.goldquestglobal.in/branch/ticket/create", requestBody, { headers: myHeaders })
+            .then((response) => {
+                console.log(response.data); // Log the API response
+
+                // Check for API-specific errors (if any)
+                if (response.data && response.data.errors) {
+                    // Show error message from API in SweetAlert
+                    Swal.fire({
+                        title: "Error",
+                        text: response.data.errors.join(", "), // Assuming `errors` is an array of messages
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                } else {
+                    // Show success message
+                    Swal.fire({
+                        title: "Success",
+                        text: "Ticket created successfully!",
+                        icon: "success",
+                        confirmButtonText: "OK",
+                    });
+                    const newToken = response._token || response.token;
+
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
+                    setFormData({
+                        title: '',
+                        description: '',
+                    });
+                    fetchTickets();
+                }
+            })
+            .catch((error) => {
+                console.error(error); // Handle the error
+
+                // Show generic error message if an error occurs in the API request
+
+            }).finally(() => {
+                swalInstance.close();
+            });
+    };
+
+
+
+    const deleteTicket = async (ticket_number) => {
+        const branchData = JSON.parse(localStorage.getItem("branch"));
+        const branch_id = branchData?.id;
+        const branch_token = localStorage.getItem("branch_token");
+        const formdata = new FormData();
+
+        const requestOptions = {
+            method: "DELETE",
+            body: formdata,
+            redirect: "follow",
+        };
+
+        // Show confirmation Swal
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This action will permanently delete the ticket. Do you want to proceed?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If user confirms, proceed with the deletion
+                fetch(
+                    `https://api.goldquestglobal.in/branch/ticket/delete?ticket_number=${ticket_number}&branch_id=${branch_id}&_token=${branch_token}`,
+                    requestOptions
+                )
+                    .then((response) => {
+                        if (!response.ok) {
+                            return response.json().then((result) => {
+                                const errorMessage = result.message || "An unexpected error occurred.";
+                                // Handle session expiration
+                                if (
+                                    errorMessage.toLowerCase().includes("invalid") &&
+                                    errorMessage.toLowerCase().includes("token")
+                                ) {
+                                    Swal.fire({
+                                        title: "Session Expired",
+                                        text: "Your session has expired. Please log in again.",
+                                        icon: "warning",
+                                        confirmButtonText: "OK",
+                                    }).then(() => {
+                                        // Redirect to customer login page
+                                        window.open(
+                                            `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`,
+                                            "_self"
+                                        );
+                                    });
+                                }
+
+                                throw new Error(errorMessage);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then((result) => {
+                        console.log(result);
+
+                        // Show success message
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: "The ticket has been successfully deleted.",
+                            icon: "success",
+                            confirmButtonText: "OK",
+                        });
+
+                        // Refresh the ticket list
+                        fetchTickets();
+
+                        // Update token if provided in the response
+                        const newToken = result._token || result.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+
+                    });
+            }
+        });
+    };
+
+
     return (
         <div className='grid md:grid-cols-2 gap-4 justify-between m-6 items-stretch'>
             <div>
@@ -169,31 +595,31 @@ const CaseLog = () => {
 
                 <div className='m-0 bg-white shadow-md p-3 md:h-100 rounded-md'>
 
-                    <form className='mt-4 ' onSubmit={handleSubmit}>
+                    <form className='mt-4' onSubmit={handleSubmit}>
 
                         <div className="mb-6 text-left">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="case_title">Case-Log Title</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">Case-Log Title<span className='text-red-500 font-bold'>*</span></label>
                             <input
                                 type="text"
-                                name="case_title"
+                                name="title"
                                 className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                id="case_title"
+                                id="title"
                                 onChange={handleChange}
-                                value={case_title.case_title}
+                                value={formData.title}
                             />
-                            {passError.case_title && <p className='text-red-500'>{passError.case_title}</p>}
+                            {passError.title && <p className='text-red-500'>{passError.title}</p>}
                         </div>
                         <div className="mb-6 text-left">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="case_description">Case-Log Description</label>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">Case-Log Description<span className='text-red-500 font-bold'>*</span></label>
                             <input
-                                type="password"
-                                name="case_description"
+                                type="text"
+                                name="description"
                                 className="appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                id="confirmcase_title"
+                                id="confirmtitle"
                                 onChange={handleChange}
-                                value={case_title.case_description}
+                                value={formData.description}
                             />
-                            {passError.case_description && <p className='text-red-500'>{passError.case_description}</p>}
+                            {passError.description && <p className='text-red-500'>{passError.description}</p>}
                         </div>
                         <button type="submit" className='bg-green-400 text-white p-3 rounded-md w-full mb-4 hover:bg-green-200'>Submit Case-Logs</button>
                     </form>
@@ -235,58 +661,58 @@ const CaseLog = () => {
 
                     </div>
                     <div className="overflow-x-auto py-6 px-4">
-
-                        <table className="min-w-full">
-                            <thead>
-                                <tr className='bg-green-500'>
-                                    <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SL</th>
-                                    <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">organisation name</th>
-                                    <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Case Title</th>
-                                    <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Case Description</th>
-                                    <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentItems.length > 0 ?
-                                    (currentItems.map((item, index) => (
-                                        <tr key={item.index}>
-                                            <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.id}</td>
-                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.org_name}</td>
-                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
-
-                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
-
-                                                {item.description}
+                        {loading ? (
+                            <div className="flex justify-center items-center py-6 h-full">
+                                <PulseLoader
+                                    color="#36D7B7"
+                                    loading={loading}
+                                    size={15}
+                                    aria-label="Loading Spinner"
+                                />
+                            </div>
+                        ) : currentItems.length > 0 ? (
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="bg-green-500">
+                                        <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">SL</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-left uppercase whitespace-nowrap">Case Title</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Ticket Number</th>
+                                        <th className="py-2 px-4 text-white border-r border-b text-center uppercase whitespace-nowrap">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {currentItems.map((item, index) => (
+                                        <tr key={index}>
+                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap">
+                                                {index + 1 + (currentPage - 1) * itemsPerPage}
                                             </td>
-                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap text-center">
+                                            <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
+                                            <td className="py-2 px-4 border-r border-b text-center whitespace-nowrap">{item.ticket_number}</td>
+                                            <td className="py-2 px-4 border-r border-b text-center whitespace-nowrap">
                                                 <button
-                                                    className='bg-green-500 rounded-md hover:bg-green-200 p-2 me-3 text-white'
-                                                    onClick={() => replyTickets()}
+                                                    className="bg-green-500 rounded-md hover:bg-green-200 p-2 me-3 text-white"
+                                                    onClick={() => replyTickets(item.ticket_number, item.description)}
                                                 >
-                                                    Check In
+                                                    View
                                                 </button>
                                                 <button
-                                                    className='bg-red-500 rounded-md hover:bg-red-200 p-2 text-white'
+                                                    className="bg-red-500 rounded-md hover:bg-red-200 p-2 text-white"
+                                                    onClick={() => deleteTicket(item.ticket_number)}
                                                 >
                                                     Delete
                                                 </button>
-
                                             </td>
                                         </tr>
-                                    ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="4" className="py-6 px-4 border-l border-r text-center border-b whitespace-nowrap">
-                                                No data available
-                                            </td>
-                                        </tr>
-                                    )}
-                            </tbody>
-                        </table>
-
-
-
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div className="text-center py-6">
+                                <p>No Data Found</p>
+                            </div>
+                        )}
                     </div>
+
                     <div className="flex items-center justify-end  rounded-md px-4 py-3 sm:px-6 md:m-4 mt-2">
                         <button
                             onClick={showPrev}
@@ -314,7 +740,7 @@ const CaseLog = () => {
 
             {showPopup && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="flex flex-col md:after:w-6/12 h-[500px] bg-white border relative border-gray-300 rounded-lg shadow-lg mx-auto mt-10">
+                    <div className="flex flex-col md:w-6/12 h-[500px] bg-white border relative border-gray-300 rounded-lg shadow-lg mx-auto mt-10">
                         {/* Close button */}
                         <button
                             className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600"
@@ -322,25 +748,44 @@ const CaseLog = () => {
                         >
                             X
                         </button>
+                        <div className="w-full text-yellow-800 text-center py-2 font-medium">
+                            {conversationMsg}
+                        </div>
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                            {messages.map((msg, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex ${msg.sender === 'bot' ? 'justify-start' : 'justify-end'
-                                        }`}
-                                >
-                                    <div
-                                        className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.sender === 'bot'
-                                                ? 'bg-gray-300 text-gray-900'
-                                                : 'bg-blue-500 text-white'
-                                            }`}
-                                    >
-                                        {msg.text}
-                                    </div>
+                            {viewLoading ? (
+                                <div className="flex justify-center items-center h-full">
+                                    <PulseLoader color="#36D7B7" size={15} aria-label="Loading Spinner" />
                                 </div>
-                            ))}
+                            ) : (
+                                (conversation || []).map((conversation, index) => {
+                                    const isFromBranch = conversation.from === "branch";
+                                    const isFromAdmin = conversation.from === "admin";
+
+                                    if (isFromAdmin) {
+                                        return (
+                                            <div key={index} className="flex justify-start">
+                                                <div className="max-w-[70%] p-3 rounded-lg text-sm bg-gray-300 text-gray-900">
+                                                    {conversation.message}
+                                                </div>
+                                            </div>
+                                        );
+                                    } else if (isFromBranch) {
+                                        return (
+                                            <div key={index} className="flex justify-end">
+                                                <div className="max-w-[70%] p-3 rounded-lg text-sm bg-blue-500 text-white">
+                                                    {conversation.message}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return null; // Handle cases where 'from' is neither 'branch' nor 'admin'
+                                })
+                            )}
+                            {/* Reference element to scroll to */}
+                            <div ref={messageEndRef} />
                         </div>
 
                         {/* Input and Send Button */}
@@ -349,19 +794,29 @@ const CaseLog = () => {
                                 type="text"
                                 value={userInput}
                                 onChange={(e) => setUserInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {  // Check if Enter key is pressed
+                                        e.preventDefault();    // Prevent the default form submission or other behavior
+                                        handleSend();          // Trigger the send function
+                                    }
+                                }}
                                 placeholder="Type your message..."
                                 className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                             />
                             <button
                                 onClick={handleSend}
+                                type="submit"
+                                disabled={userInput.length === 0}
                                 className="ml-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
                             >
-                                Send
+                                {formLoading ? 'Sending.....' : "Send"}
+
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
         </div>
     );
 };

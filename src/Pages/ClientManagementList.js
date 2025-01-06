@@ -8,7 +8,6 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Modal from 'react-modal';
-import Popup from 'reactjs-popup';
 
 Modal.setAppElement('#root');
 const ClientManagementList = () => {
@@ -30,8 +29,6 @@ const ClientManagementList = () => {
     setEditData({ id: branch.id, name: branch.name, email: branch.email });
     setIsPopupOpen(true); // Only open the popup
   };
-  const hasMultipleServices = services.length > 1;
-  console.log('services', services)
 
 
   const handleEditBranch = async (e) => {

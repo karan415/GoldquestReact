@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 const ForgotPassword = () => {
 
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
   });

@@ -8,7 +8,6 @@ const ClientEditContext = createContext();
 
 export const ClientEditProvider = ({ children }) => {
     const refs = useRef({});
-
     const [errors, setErrors] = useState({});
     const [files, setFiles] = useState([]);
     const API_URL = useApi();

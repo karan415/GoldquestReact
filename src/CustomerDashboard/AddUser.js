@@ -1,6 +1,5 @@
 import React from 'react';
 import AddUserForm from './AddUserForm';
-import CreateSubUserList from './CreateSubUserList';
 
 const AddUser = () => {
   return (
@@ -13,7 +12,6 @@ const AddUser = () => {
           <AddUserForm />
         </div>
         <div className="bg-white shadow-md rounded-md p-3">
-          <CreateSubUserList />
         </div>
       </div>
     </div>

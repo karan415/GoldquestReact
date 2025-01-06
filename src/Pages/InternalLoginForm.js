@@ -15,9 +15,11 @@ const InternalLoginForm = () => {
     const handleChange = (event) => {
         const { name, value } = event.target;
         setFormData((prev) => ({
-            ...prev, [name]: value,
+            ...prev, 
+            [name]: name === 'employee_id' ? value.toUpperCase() : value,
         }));
     };
+    
     console.log('formData', formData)
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
@@ -64,7 +66,10 @@ const InternalLoginForm = () => {
             errors.employee_id = 'This field is required';
         } else if (/\s/.test(formData.employee_id)) {
             errors.employee_id = 'Employee ID should not contain spaces';
+        } else if (/[^a-zA-Z0-9]/.test(formData.employee_id)) {
+            errors.employee_id = 'Employee ID should not contain special characters';
         }
+        
 
         // Validate mobile: no spaces and exactly 10 digits
         if (!formData.mobile) {
@@ -212,6 +217,7 @@ const InternalLoginForm = () => {
             service_groups: [],
         });
     setError({});
+    setEditAdmin(false);
     }
     const options = [
         { value: 'select_all', name: 'Select All / Deselect All' }, // Add the "Select All" option
@@ -233,6 +239,7 @@ const InternalLoginForm = () => {
             setFormData((prev) => ({ ...prev, service_groups: selected }));
         }
     };
+    console.log('employee_id',formData.employee_id)
 
 
     return (
@@ -244,10 +251,11 @@ const InternalLoginForm = () => {
                         type="text"
                         name="employee_id"
                         id="employee_id"
-                        className="border w-full rounded-md p-2 mt-2"
+                        className="border w-full rounded-md p-2 mt-2 uppercase"
                         onChange={handleChange}
-                        value={formData.employee_id}
-                    />
+                        value={formData.employee_id.toUpperCase()}
+                        disabled={editAdmin}
+                        />
                     {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                 </div>
                 <div className="mb-4">
@@ -271,6 +279,7 @@ const InternalLoginForm = () => {
                         className="border w-full rounded-md p-2 mt-2"
                         onChange={handleChange}
                         value={formData.mobile}
+                        
                     />
                     {error.mobile && <p className='text-red-500'>{error.mobile}</p>}
                 </div>
