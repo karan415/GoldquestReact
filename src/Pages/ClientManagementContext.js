@@ -9,10 +9,11 @@ export const useClient = () => useContext(ClientManagementContext);
 
 export const ClientProvider = ({ children }) => {
   const [clientData, setClientData] = useState([]);
+  const [admins, setAdmins] = useState([]);
   const [validationsErrors, setValidationsErrors] = useState({});
 
   return (
-    <ClientManagementContext.Provider value={{ clientData, setClientData, validationsErrors, setValidationsErrors }}>
+    <ClientManagementContext.Provider value={{ clientData, admins, setAdmins, setClientData, validationsErrors, setValidationsErrors }}>
       {children}
     </ClientManagementContext.Provider>
   );

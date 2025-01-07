@@ -8,7 +8,6 @@ const DigitalAddressVerification = () => {
 
     const [loading, setLoading] = useState(false);
 
-    const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
     const [isValidApplication, setIsValidApplication] = useState(true);
     const location = useLocation();
     const currentURL = location.pathname + location.search;
@@ -22,7 +21,7 @@ const DigitalAddressVerification = () => {
             mobile_number: '',
             email: '',
             candidate_location: '',
-            candidate_address:'',
+            candidate_address: '',
             aadhaar_number: '',
             dob: '',
             father_name: '',
@@ -39,6 +38,8 @@ const DigitalAddressVerification = () => {
             id_type: ''
         },
     });
+    console.log('files',)
+
     const getLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -90,8 +91,11 @@ const DigitalAddressVerification = () => {
 
         return decodeKeyValuePairs(result);
     };
+    const decodedValues = getValuesFromUrl(currentURL);
+
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
+        console.log('selectedFiles',selectedFiles)
 
         const maxSize = 2 * 1024 * 1024; // 2MB size limit
         const allowedTypes = [
@@ -124,7 +128,6 @@ const DigitalAddressVerification = () => {
             return; // Don't update state if there are errors
         }
 
-        // If no errors, update the state with the selected files
         setFiles((prevFiles) => ({
             ...prevFiles,
             [fileName]: selectedFiles,
@@ -135,7 +138,67 @@ const DigitalAddressVerification = () => {
             return restErrors;
         });
     };
-    const decodedValues = getValuesFromUrl(currentURL);
+    const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
+
+    const validate = () => {
+        const newErrors = {}; // Object to hold validation errors
+    
+        const requiredFields = [
+            "candidate_address",
+            "latitude",
+            "longitude",
+            "years_staying"  // Add more required fields as needed
+        ];
+    
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        const allowedTypes = [
+            "image/jpeg", "image/png", "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ]; // Allowed file types
+    
+        // Field validation for required fields
+        requiredFields.forEach((field) => {
+            if (
+                !formData.personal_information[field] ||
+                formData.personal_information[field].trim() === ""
+            ) {
+                newErrors[field] = "This field is required*";
+            }
+        });
+    
+        // File validation for files
+        Object.keys(files).forEach((fileName) => {
+            const selectedFiles = files[fileName]; // Get the files for the current field
+            let fileErrors = [];
+    
+            // Check if files are present (required validation)
+            if (selectedFiles.length === 0) {
+                fileErrors.push("This file is required*");
+            }
+    
+            selectedFiles.forEach((file) => {
+                // Check file size
+                if (file.size > maxSize) {
+                    fileErrors.push(`${file.name}: File size must be less than 2MB.`);
+                }
+    
+                // Check file type (MIME type)
+                if (!allowedTypes.includes(file.type)) {
+                    fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+                }
+            });
+    
+            // If there are errors for this file field, add them to the newErrors object
+            if (fileErrors.length > 0) {
+                newErrors[fileName] = fileErrors;
+            }
+        });
+    
+        return newErrors;
+    };
+    
+
 
     const handleChange = (e) => {
         e.preventDefault();
@@ -150,7 +213,7 @@ const DigitalAddressVerification = () => {
                 }
             }));
         } else {
-            console.log('printerfdtaha',formData);
+            console.log('printerfdtaha', formData);
             setFormData(prev => ({
                 ...prev,
                 personal_information: {
@@ -160,7 +223,7 @@ const DigitalAddressVerification = () => {
                     longitude: mapLocation.longitude
                 }
             }));
-            
+
         }
     };
     const isApplicationExists = useCallback(() => {
@@ -172,7 +235,7 @@ const DigitalAddressVerification = () => {
             decodedValues.customer_id
         ) {
             fetch(
-                `https://api.goldquestglobal.inbranch//candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                `https://api.goldquestglobal.in/branch/candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
             )
                 .then(res => res.json())
                 .then(result => {
@@ -225,7 +288,7 @@ const DigitalAddressVerification = () => {
                                 mobile_number: result.data?.mobile_number || '',
                                 email: result.data?.email || '',
                                 candidate_location: '',
-                                candidate_address:'',
+                                candidate_address: '',
                                 aadhaar_number: '',
                                 dob: '',
                                 father_name: '',
@@ -260,6 +323,14 @@ const DigitalAddressVerification = () => {
         }
     }, [isValidApplication, decodedValues]);
 
+
+
+    useEffect(() => {
+        isApplicationExists();
+
+    }, []);
+
+
     const uploadCustomerLogo = async (candidate_application_id, branch_id, customer_id) => {
         for (const [key, value] of Object.entries(files)) {
             const customerLogoFormData = new FormData();
@@ -283,17 +354,20 @@ const DigitalAddressVerification = () => {
             }
         }
     };
-
-    useEffect(() => {
-        isApplicationExists();
-
-    }, []);
-
-
-
     const handleSubmitForm = async (e) => {
         e.preventDefault();
         setLoading(true); // Start loading
+
+        // Validate form before submission
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setLoading(false); // Stop loading
+            // Optionally, show an alert or update the UI to display validation errors
+            setErrors(validationErrors);
+            return; // Stop submission if validation errors are found
+        }
+
+        // If validation passes, proceed with the submission
         const fileCount = Object.keys(files).length;
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -362,24 +436,22 @@ const DigitalAddressVerification = () => {
         }
     };
 
-
-    console.log('data', data)
     return (
         <>
 
             <form action="" onSubmit={handleSubmitForm} className='p-4' id='bg-form'>
                 {loading ? (
                     <div className="flex justify-center items-center h-screen w-screen">
-                    <PulseLoader 
-                        color="#36D7B7" 
-                        loading={loading} 
-                        size={15} 
-                        aria-label="Candidate Loading Spinner" 
-                    />
-                </div>
+                        <PulseLoader
+                            color="#36D7B7"
+                            loading={loading}
+                            size={15}
+                            aria-label="Candidate Loading Spinner"
+                        />
+                    </div>
                 ) : (
                     <>
-                    
+
                         <h3 className="text-center py-3 font-bold text-2xl">Digital Address Verification</h3>
 
                         <div className="border md:w-7/12 m-auto p-4 ">
@@ -412,8 +484,11 @@ const DigitalAddressVerification = () => {
                             </div>
                             <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
-                                    <textarea className="mt-1 block w-full border-gray-300 rounded-md border p-2" value={formData.personal_information.candidate_address} onChange={handleChange} id="address" name="candidate_address" rows="2"></textarea>
+                                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address <span className='text-red-500'>*</span></label>
+                                    <textarea className="mt-1 block w-full border-gray-300 rounded-md border p-2" rows='1' value={formData.personal_information.candidate_address} onChange={handleChange} id="address" name="candidate_address" ></textarea>
+                                    {errors.candidate_address && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.candidate_address}</p>
+                                    )}
                                 </div>
 
                                 <div className=" my-3 form-group">
@@ -424,12 +499,18 @@ const DigitalAddressVerification = () => {
                             </div>
                             <div className="md:grid grid-cols-1 md:grid-cols-2 mb-2 gap-4">
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude:</label>
+                                    <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude<span className='text-red-500'>*</span></label>
                                     <input type="text" value={mapLocation.latitude} onChange={handleChange} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="latitude" name="latitude" />
+                                    {errors.latitude && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.latitude}</p>
+                                    )}
                                 </div>
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude:</label>
+                                    <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude<span className='text-red-500'>*</span></label>
                                     <input type="text" onChange={handleChange} value={mapLocation.longitude} className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="longitude" name="longitude" />
+                                    {errors.longitude && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.longitude}</p>
+                                    )}
                                 </div>
 
                             </div>
@@ -540,25 +621,34 @@ const DigitalAddressVerification = () => {
 
                             <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="id_proof" className="block text-sm font-medium text-gray-700">Upload ID:</label>
+                                    <label htmlFor="id_proof" className="block text-sm font-medium text-gray-700">Upload ID<span className='text-red-500'>*</span></label>
                                     <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="id_proof" name="id_proof"
                                         onChange={(e) => handleFileChange('identity_proof', e)}
                                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx"
                                         multiple
                                     />
+                                    {errors.identity_proof && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.identity_proof}</p>
+                                    )}
                                 </div>
 
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Home Photos:</label>
+                                    <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Home Photos<span className='text-red-500'>*</span></label>
                                     <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="home_photos" onChange={(e) => handleFileChange('home_photo', e)}
                                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" multiple />
+                                    {errors.home_photo && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.home_photo}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="md:grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className=" my-3 form-group">
-                                    <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Locality Photos:</label>
+                                    <label htmlFor="locality_proof" className="block text-sm font-medium text-gray-700">Locality Photos<span className='text-red-500'>*</span></label>
                                     <input type="file" className="mt-1 block w-full border-gray-300 rounded-md border p-2" id="locality_proof" name="locality_proof" onChange={(e) => handleFileChange('locality', e)}
                                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" multiple />
+                                    {errors.locality && (
+                                        <p className="text-sm text-red-500 mt-1">{errors.locality}</p>
+                                    )}
                                 </div>
                                 <div className="form-group my-3">
                                     <label htmlFor="nof_yrs_staying" className="block text-sm font-medium text-gray-700">No of years staying in the address:</label>

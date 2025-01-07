@@ -107,13 +107,12 @@ const DeletionCertification = () => {
     fetchData();
   }, [fetchData]);
   const generatePDF = (setBranchData) => {
-    console.log('setBranchData', setBranchData);
     const doc = new jsPDF();
-  
+
     // Adding logo image
     const logoImg = 'https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png?w=771&ssl=1';
     doc.addImage(logoImg, 'PNG', 10, 10, 40, 20);
-  
+
     // Text content
     doc.setFontSize(12);
     const rightContent = 'All applications and branch data of this client have been deleted.';
@@ -121,128 +120,186 @@ const DeletionCertification = () => {
     const textWidth = doc.getTextWidth(rightContent);
     let textY = 20;
     doc.text(rightContent, pageWidth - textWidth - 10, textY);
-  
+
     // Title for the document
     const text = 'Below are the applications of the deleted client';
     const xPosition = (pageWidth - textWidth) / 2;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(text, xPosition, textY + 20);
-  
-    let currentY = textY + 40; // Starting Y position for tables after title
-    
+
+    let currentY = textY + 30; // Starting Y position for tables after title
+
     // Loop through each branch data
     setBranchData.forEach((branch, index) => {
-      // Heading for Branch
-      doc.text(`Branch: ${branch.branchName}`, 14, currentY);
-      currentY += 10; // Adjust Y for next content
-  
+      // Draw a full-width border line before branch name
+      doc.setLineWidth(0.5);
+      doc.line(10, currentY, pageWidth - 10, currentY); // Full-width line
+      currentY += 10; // Space between line and branch name
+
+      const text2 = `Branch: ${branch.branchName}`;
+
+      const textWidthNew = doc.getTextWidth(text2);
+
+      const xPositionNew = (pageWidth - textWidthNew) / 2;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(text2, xPositionNew, currentY);
+      currentY += 20; // Adjust Y for next content
+
       // **Client Applications Heading**
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-
       doc.text('Client Applications', 14, currentY);
       currentY += 10; // Adjust Y for table content
-  
-      // Create table for Client Applications
-      const clientTableData = branch.clientApplications.map((client, sn) => ({
-        sn: sn + 1,
-        applicationId: client.application_id,
-        applicantName: client.name
-      }));
-  
-      const clientTableColumns = [
-        { header: 'S.N.', dataKey: 'sn' },
-        { header: 'Application ID', dataKey: 'applicationId' },
-        { header: 'Applicant Name', dataKey: 'applicantName' }
-      ];
-  
-      doc.autoTable({
-        head: [clientTableColumns.map(col => col.header)],
-        body: clientTableData.map(row => Object.values(row)),
-        startY: currentY,
-        theme: 'striped',
-        margin: { top: 10, bottom: 10 },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          halign: 'center',
-          valign: 'middle',
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontSize: 12,
-          fontStyle: 'bold',
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255],
-          textColor: 50,
-          lineWidth: 0.1,
-          lineColor: [200, 200, 200],
-        },
-      });
-  
-      currentY = doc.lastAutoTable.finalY + 10; // Update currentY for next section
-  
+
+      if (branch.clientApplications && branch.clientApplications.length > 0) {
+        // Create table for Client Applications
+        const clientTableData = branch.clientApplications.map((client, sn) => ({
+          sn: sn + 1,
+          applicationId: client.application_id,
+          applicantName: client.name
+        }));
+
+        const clientTableColumns = [
+          { header: 'S.N.', dataKey: 'sn' },
+          { header: 'Application ID', dataKey: 'applicationId' },
+          { header: 'Applicant Name', dataKey: 'applicantName' }
+        ];
+
+        doc.autoTable({
+          head: [clientTableColumns.map(col => col.header)],
+          body: clientTableData.map(row => Object.values(row)),
+          startY: currentY,
+          theme: 'striped',
+          margin: { top: 10, bottom: 10 },
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            halign: 'center',
+            valign: 'middle',
+          },
+          headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontSize: 12,
+            fontStyle: 'bold',
+          },
+          bodyStyles: {
+            fillColor: [255, 255, 255],
+            textColor: 50,
+            lineWidth: 0.1,
+            lineColor: [200, 200, 200],
+          },
+        });
+
+        currentY = doc.lastAutoTable.finalY + 10; // Update currentY for next section
+      } else {
+        // If no client applications, show "No applications" with full-width border
+        const noAppsText = 'No applications';
+        const textWidthNoApps = doc.getTextWidth(noAppsText);
+
+        // Draw the full-width box
+        const boxX = 10;
+        const boxY = currentY - 4;
+        const boxWidth = pageWidth - 20; // Full width of the page (with padding on both sides)
+        const boxHeight = 8;
+
+        doc.setDrawColor(0, 0, 0); // Black border
+        doc.rect(boxX, boxY, boxWidth, boxHeight); // Draw the rectangle around text
+
+        // Show the "No applications" text inside the box, centered
+        const xPosNoApps = (pageWidth - textWidthNoApps) / 2;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(noAppsText, xPosNoApps, currentY);
+
+        currentY += boxHeight + 10; // Adjust Y for next section
+      }
+
       // **Candidate Applications Heading**
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text('Candidate Applications', 14, currentY);
       currentY += 10; // Adjust Y for table content
-  
-      // Create table for Candidate Applications
-      const candidateTableData = branch.candidateApplications.map((candidate, sn) => ({
-        sn: sn + 1,
-        applicationId: candidate.application_id,
-        applicantName: candidate.name
-      }));
-  
-      const candidateTableColumns = [
-        { header: 'S.N.', dataKey: 'sn' },
-        { header: 'Application ID', dataKey: 'applicationId' },
-        { header: 'Applicant Name', dataKey: 'applicantName' }
-      ];
-  
-      doc.autoTable({
-        head: [candidateTableColumns.map(col => col.header)],
-        body: candidateTableData.map(row => Object.values(row)),
-        startY: currentY,
-        theme: 'striped',
-        margin: { top: 10, bottom: 10 },
-        styles: {
-          fontSize: 10,
-          cellPadding: 3,
-          halign: 'center',
-          valign: 'middle',
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontSize: 12,
-          fontStyle: 'bold',
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255],
-          textColor: 50,
-          lineWidth: 0.1,
-          lineColor: [200, 200, 200],
-        },
-      });
-  
-      currentY = doc.lastAutoTable.finalY + 10; // Update currentY for next section if needed
+
+      if (branch.candidateApplications && branch.candidateApplications.length > 0) {
+        // Create table for Candidate Applications
+        const candidateTableData = branch.candidateApplications.map((candidate, sn) => ({
+          sn: sn + 1,
+          applicationId: candidate.application_id,
+          applicantName: candidate.name
+        }));
+
+        const candidateTableColumns = [
+          { header: 'S.N.', dataKey: 'sn' },
+          { header: 'Application ID', dataKey: 'applicationId' },
+          { header: 'Applicant Name', dataKey: 'applicantName' }
+        ];
+
+        doc.autoTable({
+          head: [candidateTableColumns.map(col => col.header)],
+          body: candidateTableData.map(row => Object.values(row)),
+          startY: currentY,
+          theme: 'striped',
+          margin: { top: 10, bottom: 10 },
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            halign: 'center',
+            valign: 'middle',
+          },
+          headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontSize: 12,
+            fontStyle: 'bold',
+          },
+          bodyStyles: {
+            fillColor: [255, 255, 255],
+            textColor: 50,
+            lineWidth: 0.1,
+            lineColor: [200, 200, 200],
+          },
+        });
+
+        currentY = doc.lastAutoTable.finalY + 10; // Update currentY for next section
+      } else {
+        // If no candidate applications, show "No applications"
+        const noAppsText = 'No applications';
+        const textWidthNoApps = doc.getTextWidth(noAppsText);
+
+        // Draw the full-width box
+        const boxX = 10;
+        const boxY = currentY - 4;
+        const boxWidth = pageWidth - 20; // Full width of the page (with padding on both sides)
+        const boxHeight = 8;
+
+        doc.setDrawColor(0, 0, 0); // Black border
+        doc.rect(boxX, boxY, boxWidth, boxHeight); // Draw the rectangle around text
+
+        // Show the "No applications" text inside the box, centered
+        const xPosNoApps = (pageWidth - textWidthNoApps) / 2;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(noAppsText, xPosNoApps, currentY);
+
+        currentY += boxHeight + 10; // Adjust Y for next section
+      }
     });
-  
+
     // Optional: Add footer if needed
     addFooter(doc);
-  
+
     addNotesPage(doc);
-  
+
     addFooter(doc);
-  
+
     doc.save('Client.pdf');
   };
-  
+
+
+
 
   function addNotesPage(doc) {
     doc.addPage();

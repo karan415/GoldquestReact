@@ -9,7 +9,7 @@ const ClientManagementData = () => {
     const [selectedServices, setSelectedServices] = useState({});
     const [, setSelectedData] = useState([]);
     const API_URL = useApi();
-    const { setClientData, validationsErrors, setValidationsErrors } = useClient();
+    const { setClientData, validationsErrors, setValidationsErrors, setAdmins } = useClient();
     const [service, setService] = useState([]);
     const [packageList, setPackageList] = useState([]);
     const [paginated, setPaginated] = useState([]);
@@ -127,7 +127,8 @@ const ClientManagementData = () => {
             if (!result || !result.data || !Array.isArray(result.data.services)) {
                 throw new Error('Invalid response format: Missing or invalid services data');
             }
-
+            const admins = result.data.admins || [];
+            setAdmins(admins)
             const processedServices = result.data.services.map(item => ({
                 ...item,
                 service_id: item.id,

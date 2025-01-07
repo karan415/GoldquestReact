@@ -66,9 +66,10 @@ const InternalLoginForm = () => {
             errors.employee_id = 'This field is required';
         } else if (/\s/.test(formData.employee_id)) {
             errors.employee_id = 'Employee ID should not contain spaces';
-        } else if (/[^a-zA-Z0-9]/.test(formData.employee_id)) {
-            errors.employee_id = 'Employee ID should not contain special characters';
+        } else if (/[^a-zA-Z0-9-]/.test(formData.employee_id)) {
+            errors.employee_id = 'Employee ID should only contain letters, numbers, and hyphens';
         }
+        
         
 
         // Validate mobile: no spaces and exactly 10 digits
@@ -246,7 +247,7 @@ const InternalLoginForm = () => {
         <>
             <form action="" onSubmit={handleSubmit}>
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="employee_id">Employee ID: *</label>
+                    <label className="text-gray-500" htmlFor="employee_id">Employee ID: <span className='text-red-500'>*</span></label>
                     <input
                         type="text"
                         name="employee_id"
@@ -259,7 +260,7 @@ const InternalLoginForm = () => {
                     {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                 </div>
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="Employee-name">Employee Name: *</label>
+                    <label className="text-gray-500" htmlFor="Employee-name">Employee Name: <span className='text-red-500'>*</span></label>
                     <input
                         type="text"
                         name="name"
@@ -271,7 +272,7 @@ const InternalLoginForm = () => {
                     {error.name && <p className='text-red-500'>{error.name}</p>}
                 </div>
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="mobile-mobile">Employee Mobile: *</label>
+                    <label className="text-gray-500" htmlFor="mobile-mobile">Employee Mobile: <span className='text-red-500'>*</span></label>
                     <input
                         type="number"
                         name="mobile"
@@ -284,7 +285,7 @@ const InternalLoginForm = () => {
                     {error.mobile && <p className='text-red-500'>{error.mobile}</p>}
                 </div>
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="emailid">Email: *</label>
+                    <label className="text-gray-500" htmlFor="emailid">Email: <span className='text-red-500'>*</span></label>
                     <input
                         type="email"
                         name="email"
@@ -297,7 +298,7 @@ const InternalLoginForm = () => {
                 </div>
                 {!editAdmin && (
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="password">Password: *</label>
+                    <label className="text-gray-500" htmlFor="password">Password: <span className='text-red-500'>*</span></label>
                     <input
                         type="password"
                         name="password"
@@ -311,9 +312,8 @@ const InternalLoginForm = () => {
                 )}
                 {editAdmin && (
                     <div className="mb-4">
-                        <label className="text-gray-500">Status: *</label>
+                        <label className="text-gray-500">Status</label>
                         <div className="flex items-center space-x-4 mt-3">
-                            {/* Active Status */}
                             <div className="flex items-center">
                                 <input
                                     type="radio"
@@ -346,7 +346,7 @@ const InternalLoginForm = () => {
 
 
                 <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="role">Role: *</label>
+                    <label className="text-gray-500" htmlFor="role">Role: <span className='text-red-500'>*</span></label>
 
                     <div className="relative">
                         <select

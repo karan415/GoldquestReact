@@ -217,6 +217,20 @@ export const ClientEditForm = () => {
                                     />
                                     {errors.escalation_point_contact && <p className="text-red-500">{errors.escalation_point_contact}</p>}
                                 </div>
+                                <div className="mb-4">
+                                    <label className="text-gray-500" htmlFor="director_email">Director email
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="director_email"
+                                        id="director_email"
+                                        value={clientData.director_email}
+                                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
+                                        onChange={handleClientChange}
+
+                                    />
+
+                                </div>
 
                             </div>
                             <div className="mb-4">

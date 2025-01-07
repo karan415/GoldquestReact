@@ -77,8 +77,8 @@ const ClientForm = () => {
             if (field === 'employee_id') {
                 if (/\s/.test(clientInput[field])) {  // Check for spaces
                     newErrors[field] = 'Employee ID cannot contain spaces';
-                } else if (/[^a-zA-Z0-9]/.test(clientInput[field])) {  // Check for special characters
-                    newErrors[field] = 'Employee ID cannot contain special characters';
+                }  else if (/[^a-zA-Z0-9-]/.test(clientInput[field])) {
+                    newErrors[field] = 'Employee ID should only contain letters, numbers, and hyphens';
                 }
             }
 
@@ -289,7 +289,6 @@ const ClientForm = () => {
     
                 setFiles({});
                 setInputError({});
-                fetchClientDrop();
     
                 if (fileCount === 0) {
                     Swal.fire({
@@ -312,7 +311,8 @@ const ClientForm = () => {
                 }
     
                 setIsEditClient(false);
-    
+                fetchClientDrop();
+
             } catch (error) {
                 console.error("There was an error!", error);
             } finally {

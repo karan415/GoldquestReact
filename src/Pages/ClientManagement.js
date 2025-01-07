@@ -29,7 +29,7 @@ const ClientManagement = () => {
 
   const [, setInsertId] = useState();
   const API_URL = useApi();
-  const { clientData, setClientData, validationsErrors } = useClient();
+  const { clientData, setClientData, validationsErrors, admins } = useClient();
   useEffect(() => {
 
     if (!clientData) {
@@ -49,7 +49,8 @@ const ClientManagement = () => {
     state_code: "",
     state: "",
     mobile_number: "",
-    name_of_escalation: "",
+    escalation_admin_id
+      : "",
     client_spoc: "",
     contact_person: "",
     gstin: "",
@@ -62,6 +63,7 @@ const ClientManagement = () => {
     custom_address: "",
     username: "",
     industry_classification: '',
+    director_email: '',
   });
 
   const handleCheckBoxChange = (event) => {
@@ -124,7 +126,7 @@ const ClientManagement = () => {
 
   const handleChange = (e, index) => {
     const { name, value } = e.target;
-  
+
     if (name === "client_code") {
       // Handle client_code: Ensure it starts with "GQ-" and is uppercase
       const processedValue = `GQ-${value.replace(/^GQ-/, '').toUpperCase()}`;
@@ -154,16 +156,16 @@ const ClientManagement = () => {
       }));
     }
   };
-  
+
 
   const validate = () => {
     const newErrors = {};
     const requiredFields = [
       "company_name", "client_code", "address", "state_code", "state", "mobile_number",
-      "name_of_escalation", "client_spoc", "contact_person", "gstin", "tat",
+      "escalation_admin_id", "client_spoc", "contact_person", "gstin", "tat",
       "date_agreement", "custom_template", "additional_login", "industry_classification",
     ];
-  
+
     // Define file validation parameters
     const maxSize = 2 * 1024 * 1024; // 2MB size limit
     const allowedTypes = [
@@ -171,10 +173,10 @@ const ClientManagement = () => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ]; // Allowed file types
-  
+
     // Initialize the errors object
     let errors = {};
-  
+
     // Validate if files are selected for 'custom_logo' and 'agr_upload'
     const validateFile = (fileName) => {
       if (errors[fileName] && errors[fileName].length > 0) {
@@ -183,13 +185,13 @@ const ClientManagement = () => {
       } else {
         const file = fileName === 'custom_logo' ? files.custom_logo : files.agr_upload;
         let fileErrors = [];
-  
+
         if (file && file.length > 0) {
           file.forEach((file) => {
             if (file.size > maxSize) {
               fileErrors.push(`${file.name}: File size must be less than 2MB.`);
             }
-  
+
             if (!allowedTypes.includes(file.type)) {
               fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
             }
@@ -197,11 +199,11 @@ const ClientManagement = () => {
         } else {
           fileErrors.push(`${fileName} is required.`);
         }
-  
+
         return fileErrors;
       }
     };
-  
+
     // Validate file errors for custom_logo and agr_upload
     if (input.custom_template === 'yes') {
       const customLogoErrors = validateFile('custom_logo');
@@ -209,35 +211,38 @@ const ClientManagement = () => {
         newErrors.custom_logo = customLogoErrors;
       }
     }
-  
+
     const agrUploadErrors = validateFile('agr_upload');
     if (agrUploadErrors.length > 0) {
       newErrors.agr_upload = agrUploadErrors;
     }
-  
+
     // Validate required fields
     requiredFields.forEach((field) => {
       if (!input[field]) {
         newErrors[field] = "This field is required*";
       }
     });
-  
+
     // Validate mobile_number to be 10 digits
     const mobileNumber = input.mobile_number;
     if (mobileNumber && !/^\d{10}$/.test(mobileNumber)) {
       newErrors.mobile_number = "Mobile number must be exactly 10 digits";
     }
-  
+
     // Validate client_code: no spaces and must be uppercase
     const clientCode = input.client_code;
     if (clientCode) {
       if (/\s/.test(clientCode)) {
         newErrors.client_code = "Client code must not contain spaces";
       }
+      else if (/[^a-zA-Z0-9-]/.test(clientCode)) {
+        newErrors.client_code = 'Client Code should only contain letters, numbers, and hyphens';
+      }
     }
-    
-    
-  
+
+
+
     // Validate emails
     const emailSet = new Set();
     emails.forEach((email, index) => {
@@ -249,11 +254,11 @@ const ClientManagement = () => {
         emailSet.add(email);
       }
     });
-  
+
     return newErrors;
   };
-  
-  
+
+
 
 
 
@@ -310,137 +315,137 @@ const ClientManagement = () => {
 
     // Merge flat and nested validation errors
     Object.keys(validationError).forEach((key) => {
-        if (validationError[key]) {
-            newErrors[key] = validationError[key];
-        }
+      if (validationError[key]) {
+        newErrors[key] = validationError[key];
+      }
     });
 
     Object.keys(ServicesErrors).forEach((key) => {
-        Object.keys(ServicesErrors[key]).forEach((field) => {
-            if (ServicesErrors[key][field]) {
-                newErrors[`${key}_${field}`] = ServicesErrors[key][field];
-            }
-        });
+      Object.keys(ServicesErrors[key]).forEach((field) => {
+        if (ServicesErrors[key][field]) {
+          newErrors[`${key}_${field}`] = ServicesErrors[key][field];
+        }
+      });
     });
 
     // Show errors only for the current submission
     if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
+      setErrors(newErrors);
 
-        // Focus on the first field with an error
-        const errorField = Object.keys(newErrors)[0];
-        if (refs.current[errorField]) {
-            refs.current[errorField].focus();
-        }
+      // Focus on the first field with an error
+      const errorField = Object.keys(newErrors)[0];
+      if (refs.current[errorField]) {
+        refs.current[errorField].focus();
+      }
 
-        return;
+      return;
     } else {
-        setErrors({});
+      setErrors({});
     }
     setErrors({});
 
     // Show the "Processing..." message and loading spinner
     const swalInstance = Swal.fire({
-        title: 'Processing...',
-        text: 'Please wait while we create the Client.',
-        didOpen: () => {
-            Swal.showLoading(); // This starts the loading spinner
-        },
-        allowOutsideClick: false, // Prevent closing Swal while processing
-        showConfirmButton: false, // Hide the confirm button
+      title: 'Processing...',
+      text: 'Please wait while we create the Client.',
+      didOpen: () => {
+        Swal.showLoading(); // This starts the loading spinner
+      },
+      allowOutsideClick: false, // Prevent closing Swal while processing
+      showConfirmButton: false, // Hide the confirm button
     });
     setIsLoading(true);
 
 
     try {
-        // Proceed with the submission if no errors
-        const adminData = JSON.parse(localStorage.getItem("admin"));
-        let token = localStorage.getItem("_token");
-        const fileCount = Object.keys(files).length;
+      // Proceed with the submission if no errors
+      const adminData = JSON.parse(localStorage.getItem("admin"));
+      let token = localStorage.getItem("_token");
+      const fileCount = Object.keys(files).length;
 
-        const requestData = {
-            admin_id: adminData.id,
-            ...input,
-            _token: token,
-            clientData: clientData,
-            custom_bgv: custom_bgv,
-            send_mail: fileCount === 0 ? 1 : 0,
-        };
+      const requestData = {
+        admin_id: adminData.id,
+        ...input,
+        _token: token,
+        clientData: clientData,
+        custom_bgv: custom_bgv,
+        send_mail: fileCount === 0 ? 1 : 0,
+      };
 
-        if (branchForms.some(branch => branch.branch_name.trim() !== "" && branch.branch_email.trim() !== "")) {
-            requestData.branches = branchForms;
-        }
+      if (branchForms.some(branch => branch.branch_name.trim() !== "" && branch.branch_email.trim() !== "")) {
+        requestData.branches = branchForms;
+      }
 
-        if (emails && emails.length > 0) {
-            requestData.emails = emails;
-        }
+      if (emails && emails.length > 0) {
+        requestData.emails = emails;
+      }
 
-        const response = await fetch(`${API_URL}/customer/create`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData),
+      const response = await fetch(`${API_URL}/customer/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+      const newToken = data._token || data.token;
+
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+        token = newToken;
+      }
+
+      // Check if the response message starts with "INVALID TOKEN"
+      if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Your session has expired. Please log in again.",
+          icon: "warning",
+          confirmButtonText: "Ok",
+        }).then(() => {
+          // Redirect to admin login page
+          window.location.href = "/admin-login"; // Replace with your login route
         });
+        return;
+      }
 
-        const data = await response.json();
-        const newToken = data._token || data.token;
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create client");
+      }
 
-        if (newToken) {
-            localStorage.setItem("_token", newToken);
-            token = newToken;
-        }
+      const customerInsertId = data.data.customerId;
+      const password = data.password;
+      setInsertId(customerInsertId);
 
-        // Check if the response message starts with "INVALID TOKEN"
-        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
-            Swal.fire({
-                title: "Session Expired",
-                text: "Your session has expired. Please log in again.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-            }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
-            });
-            return;
-        }
+      if (fileCount === 0) {
+        Swal.fire({
+          title: "Success",
+          text: `Client Created Successfully.`,
+          icon: "success",
+          confirmButtonText: "Ok",
+        });
+      }
 
-        if (!response.ok) {
-            throw new Error(data.message || "Failed to create client");
-        }
+      if (fileCount > 0) {
+        await uploadCustomerLogo(adminData.id, token, customerInsertId, password);
 
-        const customerInsertId = data.data.customerId;
-        const password = data.password;
-        setInsertId(customerInsertId);
+        Swal.fire({
+          title: "Success",
+          text: `Client Created Successfully.`,
+          icon: "success",
+          confirmButtonText: "Ok",
+        });
+      }
 
-        if (fileCount === 0) {
-            Swal.fire({
-                title: "Success",
-                text: `Client Created Successfully.`,
-                icon: "success",
-                confirmButtonText: "Ok",
-            });
-        }
-
-        if (fileCount > 0) {
-            await uploadCustomerLogo(adminData.id, token, customerInsertId, password);
-
-            Swal.fire({
-                title: "Success",
-                text: `Client Created Successfully.`,
-                icon: "success",
-                confirmButtonText: "Ok",
-            });
-        }
-
-        handleTabChange("active_clients");
-        resetFormFields();
+      handleTabChange("active_clients");
+      resetFormFields();
     } catch (error) {
-        console.error("Error:", error);
-        Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
+      console.error("Error:", error);
+      Swal.fire("Error!", `An error occurred: ${error.message}`, "error");
     } finally {
-        swalInstance.close(); // Close the Swal loading spinner
-        setIsLoading(false);
+      swalInstance.close(); // Close the Swal loading spinner
+      setIsLoading(false);
     }
-};
+  };
 
 
 
@@ -475,16 +480,16 @@ const ClientManagement = () => {
         }
         if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
           Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
           }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
+            // Redirect to admin login page
+            window.location.href = "/admin-login"; // Replace with your login route
           });
           return;
-      }
+        }
       } catch (err) {
         Swal.fire("Error!", `Error uploading files: ${err.message}`, "error");
         throw err; // Stop process if upload fails
@@ -502,7 +507,8 @@ const ClientManagement = () => {
       state_code: "",
       state: "",
       mobile_number: "",
-      name_of_escalation: "",
+      escalation_admin_id
+        : "",
       client_spoc: "",
       contact_person: "",
       gstin: "",
@@ -543,7 +549,7 @@ const ClientManagement = () => {
   };
   const clientCode = input.client_code.trim();
   let processedCode = '';
-  
+
   if (clientCode.startsWith('GQ-')) {
     // If it starts with 'GQ-', process the part after the prefix
     processedCode = clientCode.replace(/^GQ-/, '').toUpperCase();
@@ -551,15 +557,15 @@ const ClientManagement = () => {
     // Otherwise, assume the whole input is a raw code
     processedCode = clientCode.toUpperCase();
   }
-  
+
   // Add the 'GQ-' prefix back
   let value = `GQ-${processedCode}`;
-  
+
   // Debugging
   console.log('processedCode:', processedCode);
   console.log('input:', input.client_code);
   console.log('value:', value);
-  
+
 
   return (
     <>
@@ -599,7 +605,7 @@ const ClientManagement = () => {
                     name="client_code"
                     id="client_code"
                     className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
-                    value={ `GQ-${processedCode}`} // Ensure the value starts with 'GQ-' and is fully uppercase
+                    value={`GQ-${processedCode}`} // Ensure the value starts with 'GQ-' and is fully uppercase
                     onChange={handleChange}
                     ref={(el) => (refs.current["client_code"] = el)} // Attach ref here
 
@@ -689,25 +695,34 @@ const ClientManagement = () => {
                   {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
                 </div>
                 <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="name_of_escalation">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
-                  <input
-                    type="text"
-                    name="name_of_escalation"
-                    id="name_of_escalation"
-                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
-                    value={input.name_of_escalation}
-                    onChange={handleChange}
-                    ref={(el) => (refs.current["name_of_escalation"] = el)} // Attach ref here
+                  <label className="text-gray-500" htmlFor="escalation_admin_id">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
 
-                  />
-                  {errors.name_of_escalation && <p className="text-red-500">{errors.name_of_escalation}</p>}
+                  <select
+                    name="escalation_admin_id"
+                    ref={(el) => (refs.current["escalation_admin_id"] = el)} // Attach ref here
+                    id="escalation_admin_id"
+                    value={input.escalation_admin_id}
+                    className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Option</option>
+                    {admins.map((item,index) => {
+                      return (
+                        <>
+                          <option value={item.id}>{item.name}({item.emp_id})</option>
+
+                        </>
+                      )
+                    })}
+                  </select>
+                  {errors.escalation_admin_id && <p className="text-red-500">{errors.escalation_admin_id}</p>}
                 </div>
 
               </div>
               <div className="my-8 md:grid gap-5 grid-cols-2 items-center flex-wrap">
                 {emails.map((email, index) => (
                   <div key={index} className="mb-4 md:flex items-center gap-3 ">
-                    <label className="text-gray-500 whitespace-nowrap">Email {index + 1}: <span className="text-red-600">*</span></label>
+                    <label className="text-gray-500 whitespace-nowrap">Client Email {index + 1}: <span className="text-red-600">*</span></label>
                     <input
                       type="email"
                       name={`email${index}`}
@@ -748,6 +763,7 @@ const ClientManagement = () => {
                     ref={(el) => (refs.current["client_spoc"] = el)} // Attach ref here
 
                   />
+
                   {errors.client_spoc && <p className="text-red-500">{errors.client_spoc}</p>}
                 </div>
 
@@ -854,6 +870,20 @@ const ClientManagement = () => {
 
                 />
                 {errors.industry_classification && <p className="text-red-500">{errors.industry_classification}</p>}
+
+              </div>
+              <div className="mb-4">
+                <label className="text-gray-500" htmlFor="director_email">Director email
+                </label>
+                <input
+                  type="text"
+                  name="director_email"
+                  id="director_email"
+                  value={input.director_email}
+                  className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
+                  onChange={handleChange}
+
+                />
 
               </div>
 
@@ -1033,7 +1063,7 @@ const ClientManagement = () => {
             </form>)}
         </div>
 
-      </div>
+      </div >
     </>
   );
 };
