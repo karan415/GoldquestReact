@@ -149,7 +149,6 @@ const ClientManagementData = () => {
             setPackageList(processedPackages);
 
         } catch (error) {
-            console.error("Error fetching services:", error);
 
             // Show the error message in a Swal alert
             Swal.fire({

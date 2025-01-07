@@ -412,7 +412,6 @@ const DeletionCertification = () => {
           url = `${API_URL}/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`;
           successMessage = 'Your client has been deleted.';
         } else {
-          console.error("Unknown delete type.");
           Swal.close();
           return;
         }

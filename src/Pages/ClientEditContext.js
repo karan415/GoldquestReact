@@ -9,6 +9,7 @@ const ClientEditContext = createContext();
 export const ClientEditProvider = ({ children }) => {
     const refs = useRef({});
     const [errors, setErrors] = useState({});
+    const [admins, setAdmins] = useState([]);
     const [files, setFiles] = useState([]);
     const API_URL = useApi();
     const [loading, setLoading] = useState(false);
@@ -85,7 +86,7 @@ export const ClientEditProvider = ({ children }) => {
             "name", "address", "state_code", "state", "mobile",
             "address",
             "contact_person_name",
-            "escalation_point_contact",
+            "escalation_admin_id",
             "single_point_of_contact",
             "gst_number",
             "tat_days",
@@ -105,7 +106,6 @@ export const ClientEditProvider = ({ children }) => {
         ];
 
         const validateFile = (fileName) => {
-            console.log(`errorserrors - `, errors);
 
             if (errors[fileName] && errors[fileName].length > 0) {
                 return errors[fileName];
@@ -250,7 +250,6 @@ export const ClientEditProvider = ({ children }) => {
             }
 
         } catch (error) {
-            console.error('There was a problem with the fetch operation:', error);
             Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
         } finally {
             setLoading(false);
@@ -262,7 +261,7 @@ export const ClientEditProvider = ({ children }) => {
 
 
     return (
-        <ClientEditContext.Provider value={{ loading, clientData, errors, setErrors, setClientData, setCustom_Bgv, refs, custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
+        <ClientEditContext.Provider value={{ loading,admins, setAdmins, clientData, errors, setErrors, setClientData, setCustom_Bgv, refs, custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
             {children}
         </ClientEditContext.Provider>
     );

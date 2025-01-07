@@ -8,6 +8,7 @@ const ServiceEditForm = () => {
     const [selectedServices, setSelectedServices] = useState({});
     const [serviceData, setServiceData] = useState([]);
     const [packageList, setPackageList] = useState([]);
+    
     const [paginated, setPaginated] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -16,7 +17,7 @@ const ServiceEditForm = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const { clientData, setClientData } = useEditClient();
+    const { clientData, setClientData,setAdmins } = useEditClient();
     const API_URL = useApi();
     const itemsPerPage = 10;
     const filteredItems = paginated.filter(item => {
@@ -29,8 +30,7 @@ const ServiceEditForm = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-    console.log('paginated', paginated)
-    console.log('currentItems', currentItems)
+  
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -50,7 +50,7 @@ const ServiceEditForm = () => {
         try {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
-            const res = await fetch(`${API_URL}/service/list?admin_id=${admin_id}&_token=${storedToken}`);
+            const res = await fetch(`${API_URL}/customer/add-customer-listings?admin_id=${admin_id}&_token=${storedToken}`);
             const result = await res.json();
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
@@ -63,15 +63,23 @@ const ServiceEditForm = () => {
                     window.location.href = "/admin-login"; // Replace with your login route
                 });
             }
-            if (result?.services) {
-                const processedServices = result.services.map(item => ({
-                    service_id: item.id,
-                    service_title: item.title,
-                    price: '',
-                    packages: {},
-                }));
-                setServiceData(processedServices);
-            }
+
+            const admins = result.data.admins || [];
+            setAdmins(admins)
+            const processedServices = result.data.services.map(item => ({
+                ...item,
+                service_id: item.id,
+                service_title: item.title,
+                price: '', // Assuming this is still required
+                packages: {} // Assuming this is still required
+            }));
+            setServiceData(processedServices);
+
+            const processedPackages = result.data.packages.map(item => ({
+                ...item,
+                service_id: item.id
+            }));
+            setPackageList(processedPackages);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -79,29 +87,9 @@ const ServiceEditForm = () => {
         }
     }, [API_URL]);
 
-    const fetchPackages = useCallback(async () => {
-        setError(null);
-        try {
-            const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
-            const storedToken = localStorage.getItem("_token");
-            if (!storedToken) throw new Error('No token found in local storage');
-
-            const res = await fetch(`${API_URL}/package/list?admin_id=${admin_id}&_token=${storedToken}`);
-            const result = await res.json();
-            const processedPackages = result.packages.map(item => ({
-                ...item,
-                service_id: item.id,
-            }));
-            setPackageList(processedPackages);
-        } catch (error) {
-            setError(error.message);
-        }
-    }, [API_URL]);
-
     useEffect(() => {
         fetchServices();
-        fetchPackages();
-    }, [fetchServices, fetchPackages]);
+    }, [fetchServices]);
     useEffect(() => {
         let prefilledData = [];
         try {
@@ -235,11 +223,7 @@ const ServiceEditForm = () => {
             }
         }
 
-        if (!serviceFound) {
-            console.log("Service not found.");
-        } else {
-            console.log("Service updated successfully.");
-        }
+      
 
         return obj;
     }

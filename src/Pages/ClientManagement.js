@@ -15,18 +15,25 @@ const debounce = (func, delay) => {
     timeoutId = setTimeout(() => func(...args), delay);
   };
 };
-const states = State.getStatesOfCountry('IN');
 
-const options = states.map(state => ({ value: state.isoCode, label: state.name }));
+
 
 const ClientManagement = () => {
+  const [showModal, setShowModal] = useState(false); // State to handle modal visibility
+  const states = State.getStatesOfCountry('IN');
+
+  const optionState = states.map(state => ({ value: state.isoCode, label: state.name }));
+
   const { handleTabChange } = useSidebar();
   const [files, setFiles] = useState([]);
+  const [options, setOptions] = useState(optionState);
 
   const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
   const [dataLoading, setDataLoading] = useState(false); // New state for loading indicator
   const [custom_bgv, setCustom_Bgv] = useState(0);
-
+  const handleModalToggle = () => {
+    setShowModal(!showModal); // Toggle modal visibility
+  };
   const [, setInsertId] = useState();
   const API_URL = useApi();
   const { clientData, setClientData, validationsErrors, admins } = useClient();
@@ -213,6 +220,7 @@ const ClientManagement = () => {
     }
 
     const agrUploadErrors = validateFile('agr_upload');
+
     if (agrUploadErrors.length > 0) {
       newErrors.agr_upload = agrUploadErrors;
     }
@@ -507,8 +515,7 @@ const ClientManagement = () => {
       state_code: "",
       state: "",
       mobile_number: "",
-      escalation_admin_id
-        : "",
+      escalation_admin_id: "",
       client_spoc: "",
       contact_person: "",
       gstin: "",
@@ -561,12 +568,22 @@ const ClientManagement = () => {
   // Add the 'GQ-' prefix back
   let value = `GQ-${processedCode}`;
 
-  // Debugging
-  console.log('processedCode:', processedCode);
-  console.log('input:', input.client_code);
-  console.log('value:', value);
 
 
+  const handleSaveCustomState = () => {
+    // Add the custom state to options
+    if (input.customState && !options.some((option) => option.label === input.customState)) {
+      setOptions((prevOptions) => [
+        ...prevOptions,
+        { value: input.customState.toLowerCase().replace(/\s+/g, '-'), label: input.customState },
+      ]);
+      setInput((prevState) => ({
+        ...prevState,
+        state: input.customState, // Set the custom state as selected
+        customState: '', // Clear customState after saving
+      }));
+    }
+  };
   return (
     <>
       <div className="py-4 md:py-16 m-4">
@@ -661,21 +678,58 @@ const ClientManagement = () => {
                   />
                   {errors.contact_person && <p className="text-red-500">{errors.contact_person}</p>}
                 </div>
-                <div className="mb-4 md:w-6/12">
-                  <label className="text-gray-500" htmlFor="state">State: <span className="text-red-600">*</span></label>
-                  <select name="state" id="state" className="w-full border p-2 rounded-md mt-2" ref={(el) => (refs.current["state"] = el)} // Attach ref here
-                    value={input.state} onChange={handleChange}>
-                    <option value="">
-                      Select State
-                    </option>
-                    {options.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mb-4 md:w-6/12">
+                    <label className="text-gray-500" htmlFor="state">
+                      State: <span className="text-red-600">*</span>
+                    </label>
+                    <select
+                      name="state"
+                      id="state"
+                      className="w-full border p-2 rounded-md mt-2"
+                      value={input.state}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select State</option>
+                      <option value="other">Other (Enter Custom State)</option>
+                      {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
 
-                  {errors.state && <p className="text-red-500">{errors.state}</p>}
+                    {input.state === 'other' && (
+                      <div>
+                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                          <div className="bg-white p-6 rounded-md shadow-md w-96">
+                            <h3 className="text-lg font-semibold mb-4">Enter Custom State</h3>
+                            <input
+                              type="text"
+                              name="customState"
+                              id="customState"
+                              className="w-full border p-2 rounded-md mt-2"
+                              value={input.customState}
+                              onChange={handleChange}
+                              placeholder="Enter custom state"
+                            />
+                            <div className="mt-4 flex justify-end">
+                              <button
+                                onClick={() => setInput((prevState) => ({ ...prevState, state: '' }))} // Close modal by clearing the state
+                                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2"
+                              >
+                                Close
+                              </button>
+                              <button
+                                onClick={handleSaveCustomState} // Save the custom state to the state field and add it to options
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
 
@@ -706,7 +760,7 @@ const ClientManagement = () => {
                     onChange={handleChange}
                   >
                     <option value="">Select Option</option>
-                    {admins.map((item,index) => {
+                    {admins.map((item, index) => {
                       return (
                         <>
                           <option value={item.id}>{item.name}({item.emp_id})</option>
@@ -876,7 +930,7 @@ const ClientManagement = () => {
                 <label className="text-gray-500" htmlFor="director_email">Director email
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   name="director_email"
                   id="director_email"
                   value={input.director_email}

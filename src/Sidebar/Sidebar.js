@@ -4,7 +4,7 @@ import { BiSolidPackage } from "react-icons/bi";
 import { HomeIcon, UserIcon } from "@heroicons/react/24/outline";
 import { IoMdPersonAdd } from "react-icons/io";
 import { RiAiGenerate } from "react-icons/ri";
-import { FaFileInvoiceDollar, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaFileInvoiceDollar, FaEye, FaEyeSlash,FaFileAlt } from "react-icons/fa";
 import { FaSquarePollHorizontal, FaTicketSimple } from "react-icons/fa6";
 import { TiCloudStorage } from "react-icons/ti";
 import { TbReportSearch } from "react-icons/tb";
@@ -45,7 +45,8 @@ const tabNames = {
   tat_delay: (<><IoNotificationsCircle className="h-6 w-6 mr-3 text-gray-600" />TAT Delay Notification</>),
   acknowledgment: (<><MdEmail className="h-6 w-6 mr-3 text-gray-600" />Acknowledgment Email</>),
   holiday_management: (<><FaFileInvoiceDollar className="h-6 w-6 mr-3 text-gray-600" />Holiday Management</>),
-  callback: (<><IoCall className="h-6 w-6 mr-3 text-gray-600" />Callback Request</>)
+  callback: (<><IoCall className="h-6 w-6 mr-3 text-gray-600" />Callback Request</>),
+  // file_manager: (<><FaFileAlt className="h-6 w-6 mr-3 text-gray-600" />File Manager</>),
 };
 
 const Sidebar = () => {

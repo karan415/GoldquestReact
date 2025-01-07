@@ -8,13 +8,12 @@ import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 export const ClientEditForm = () => {
     const states = State.getStatesOfCountry('IN');
     const options = states.map(state => ({ value: state.isoCode, label: state.name }));
-    const { refs, clientData, handleClientChange, handleClientSubmit, setFiles, errors, loading, setClientData, setErrors } = useEditClient();
+    const { refs, clientData, handleClientChange, handleClientSubmit, setFiles, errors, loading, setClientData, setErrors, admins } = useEditClient();
     let emails = clientData.emails;
     if (typeof emails === 'string') {
         try {
             emails = JSON.parse(emails);
         } catch (error) {
-            console.error("Error parsing emails JSON:", error);
             emails = [];
         }
     }
@@ -204,19 +203,29 @@ export const ClientEditForm = () => {
                                     {errors.state_code && <p className="text-red-500">{errors.state_code}</p>}
                                 </div>
                                 <div className="mb-4 md:w-6/12">
-                                    <label className="text-gray-500" htmlFor="escalation_point_contact">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="escalation_point_contact"
-                                        id="escalation_point_contact"
-                                        className="border w-full rounded-md p-2 mt-2 outline-none"
-                                        value={clientData.escalation_point_contact}
-                                        onChange={handleClientChange}
-                                        ref={(el) => (refs.current["escalation_point_contact"] = el)}
+                                    <label className="text-gray-500" htmlFor="escalation_admin_id">Name of the Escalation Point of Contact:<span className="text-red-600">*</span></label>
 
-                                    />
-                                    {errors.escalation_point_contact && <p className="text-red-500">{errors.escalation_point_contact}</p>}
+                                    <select
+                                        name="escalation_admin_id"
+                                        ref={(el) => (refs.current["escalation_admin_id"] = el)} // Attach ref here
+                                        id="escalation_admin_id"
+                                        value={clientData.escalation_admin_id}
+                                        className="border w-full rounded-md p-2 mt-2 outline-none text-sm"
+                                        onChange={handleClientChange}
+                                    >
+                                        <option value="">Select Option</option>
+                                        {admins.map((item, index) => {
+                                            return (
+                                                <>
+                                                    <option value={item.id}>{item.name}({item.emp_id})</option>
+
+                                                </>
+                                            )
+                                        })}
+                                    </select>
+                                    {errors.escalation_admin_id && <p className="text-red-500">{errors.escalation_admin_id}</p>}
                                 </div>
+
                                 <div className="mb-4">
                                     <label className="text-gray-500" htmlFor="director_email">Director email
                                     </label>
@@ -546,7 +555,6 @@ export const ClientEditForm = () => {
 
                             <div className="mb-4 flex gap-2 justify-start items-center">
                                 {/* Log the current value of is_custom_bgv */}
-                                {console.log(`clientData.is_custom_bgv - `, clientData.is_custom_bgv)}
 
                                 <input
                                     type="checkbox"

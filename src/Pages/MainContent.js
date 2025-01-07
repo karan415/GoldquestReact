@@ -9,13 +9,10 @@ import Reports from '../Pages/Reports'; // Reports component
 import ExternalLogin from './ExternalLoginData'; // External Login component
 import ClientMasterTracker from '../Pages/ClientMasterTracker'; // Client Master Tracker component
 import CandidateMasterTracker from '../Pages/CandidatemasterTracker'; // Client Master Tracker component
-
+import FolderGrid from './FolderGrid'
 import ExelTracker from '../Pages/ExelTracker'; // Excel Tracker component
 import TatDelay from '../Pages/TatDelay'; // TAT Delay component
 import Acknowledgement from '../Pages/Acknowledgement'; // Acknowledgement component
-import UpdatePassword from '../Pages/UpdatePassword'; // Update Password component
-import Invoice from './CreateInvoice'; // Invoice component
-import EmailTemplate from "../Pages/EmailTemplate"; // Email Template component
 import ClientManagementList from './ClientManagementList'; // Client Management List component
 import InactiveClients from './InactiveClients'; // Inactive Clients component
 import ExelTrackerStatus from './ExelTrackerStatus';
@@ -57,6 +54,7 @@ const tabComponents = {
   deletion_certificate: <DeletionCertification />,
   Candidate_tracker_status: <CandidateExcelTrackerStatus />,
   callback:<CallbackAdmin/>,
+  file_manager:<FolderGrid/>,
 
 
 

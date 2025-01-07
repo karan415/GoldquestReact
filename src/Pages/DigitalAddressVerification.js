@@ -7,6 +7,7 @@ const DigitalAddressVerification = () => {
     const [data, setData] = useState([]);
 
     const [loading, setLoading] = useState(false);
+    const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
 
     const [isValidApplication, setIsValidApplication] = useState(true);
     const location = useLocation();
@@ -38,7 +39,8 @@ const DigitalAddressVerification = () => {
             id_type: ''
         },
     });
-    console.log('files',)
+    console.log('files', files)
+    console.log('errors', errors)
 
     const getLocation = () => {
         if (navigator.geolocation) {
@@ -93,9 +95,12 @@ const DigitalAddressVerification = () => {
     };
     const decodedValues = getValuesFromUrl(currentURL);
 
+
+
+
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
-        console.log('selectedFiles',selectedFiles)
+        console.log('Selected Files:', selectedFiles); // Log selected files
 
         const maxSize = 2 * 1024 * 1024; // 2MB size limit
         const allowedTypes = [
@@ -105,99 +110,141 @@ const DigitalAddressVerification = () => {
         ]; // Allowed file types
 
         let errors = [];
+        console.log('Validating files...'); // Start validating files
 
         // Validate each file
         selectedFiles.forEach((file) => {
+            console.log('Validating file:', file.name); // Log current file being validated
+
             // Check file size
             if (file.size > maxSize) {
                 errors.push(`${file.name}: File size must be less than 2MB.`);
+                console.log('File size error:', file.name); // Log size error
             }
 
             // Check file type (MIME type)
             if (!allowedTypes.includes(file.type)) {
                 errors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+                console.log('File type error:', file.name); // Log type error
             }
         });
 
         // If there are errors, show them and don't update the state
         if (errors.length > 0) {
+            console.log('Validation errors:', errors); // Log all errors found
             setErrors((prevErrors) => ({
                 ...prevErrors,
-                [fileName]: errors, // Set errors for this file
+                [fileName]: errors, // Set errors for this file field
             }));
             return; // Don't update state if there are errors
         }
 
+        console.log('No errors found. Updating files state...');
+        // Update the state with the selected files if no errors
         setFiles((prevFiles) => ({
             ...prevFiles,
-            [fileName]: selectedFiles,
+            [fileName]: selectedFiles, // Update the specific file field
         }));
 
+        // Remove any existing errors for this file field
         setErrors((prevErrors) => {
             const { [fileName]: removedError, ...restErrors } = prevErrors; // Remove the error for this field if valid
+            console.log('Removing errors for', fileName); // Log when errors are removed
             return restErrors;
         });
     };
-    const [mapLocation, setMapLocation] = useState({ latitude: '', longitude: '' });
 
     const validate = () => {
         const newErrors = {}; // Object to hold validation errors
+        console.log('Validating form fields...'); // Log validation start
     
+        // Required Fields to check (for form inputs)
         const requiredFields = [
-            "candidate_address",
-            "latitude",
-            "longitude",
-            "years_staying"  // Add more required fields as needed
+            "candidate_address", // Add more fields as required
         ];
     
-        const maxSize = 2 * 1024 * 1024; // 2MB size limit
+        // Validate mapLocation (latitude and longitude)
+        if (!mapLocation.latitude) {
+            newErrors.latitude = 'Latitude is required';
+        }
+        if (!mapLocation.longitude) {
+            newErrors.longitude = 'Longitude is required';
+        }
+    
+        const maxSize = 2 * 1024 * 1024; // 2MB size limit for files
         const allowedTypes = [
             "image/jpeg", "image/png", "application/pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ]; // Allowed file types
     
-        // Field validation for required fields
-        requiredFields.forEach((field) => {
-            if (
-                !formData.personal_information[field] ||
-                formData.personal_information[field].trim() === ""
-            ) {
-                newErrors[field] = "This field is required*";
-            }
-        });
-    
-        // File validation for files
-        Object.keys(files).forEach((fileName) => {
-            const selectedFiles = files[fileName]; // Get the files for the current field
+        // Function to validate file uploads
+        const validateFile = (fileName) => {
             let fileErrors = [];
+            const selectedFiles = files[fileName]; // Dynamically fetch the files by fileName
     
-            // Check if files are present (required validation)
-            if (selectedFiles.length === 0) {
-                fileErrors.push("This file is required*");
+            console.log(`Validating files for field: ${fileName}`); // Log current field being validated
+    
+            if (selectedFiles && selectedFiles.length > 0) {
+                selectedFiles.forEach((file) => {
+                    console.log('Validating file:', file.name); // Log current file being validated
+    
+                    // Check file size
+                    if (file.size > maxSize) {
+                        fileErrors.push(`${file.name}: File size must be less than 2MB.`);
+                        console.log('File size error:', file.name); // Log size error
+                    }
+    
+                    // Check file type
+                    if (!allowedTypes.includes(file.type)) {
+                        fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
+                        console.log('File type error:', file.name); // Log type error
+                    }
+                });
+            } else {
+                // If no file is selected, mark it as required
+                fileErrors.push(`${fileName} is required.`);
+                console.log(`No files selected for ${fileName}. Marking as required.`);
             }
     
-            selectedFiles.forEach((file) => {
-                // Check file size
-                if (file.size > maxSize) {
-                    fileErrors.push(`${file.name}: File size must be less than 2MB.`);
-                }
+            return fileErrors;
+        };
     
-                // Check file type (MIME type)
-                if (!allowedTypes.includes(file.type)) {
-                    fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
-                }
-            });
-    
-            // If there are errors for this file field, add them to the newErrors object
+        // Validate files dynamically (for each file input field)
+        const fileFields = ['identity_proof', 'home_photo', 'locality']; // Define dynamic file fields
+        fileFields.forEach((fileName) => {
+            console.log('Checking for errors in file field:', fileName); // Log the field being checked
+            const fileErrors = validateFile(fileName);
             if (fileErrors.length > 0) {
+                console.log(`Errors found for ${fileName}:`, fileErrors); // Log file field errors
                 newErrors[fileName] = fileErrors;
             }
         });
     
+        // Validate required fields for text-based fields
+        requiredFields.forEach((field) => {
+            console.log(`Checking required field: ${field}`); // Log each required field being checked
+    
+            if (
+                !formData.personal_information[field] ||
+                formData.personal_information[field].trim() === ""
+            ) {
+                console.log(`Required field ${field} is missing!`); // Log when a required field is missing
+                newErrors[field] = "This field is required*";
+            }
+        });
+    
+        console.log('Validation errors found:', newErrors); // Log final validation errors
         return newErrors;
     };
     
+
+
+
+
+
+
+
 
 
     const handleChange = (e) => {
