@@ -71,7 +71,7 @@ const CandidateForm = () => {
             });
         } else {
             setInput((prev) => ({
-                ...prev, [name]: name === 'employee_id' ? value.toUpperCase() : value,
+                ...prev, [name]: name === 'employee_id' ? value.replace(/\s+/g, '').toUpperCase() : value
             }));
 
         }
@@ -284,7 +284,7 @@ const CandidateForm = () => {
                             </div>
                             <div className="mb-4">
                                 <label htmlFor="mobile_number" className='text-sm'>Mobile Number<span className='text-red-500'>*</span></label>
-                                <input type="tel" name="mobile_number" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.mobile_number} />
+                                <input type="number" name="mobile_number" className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.mobile_number} />
                                 {error.mobile_number && <p className='text-red-500'>{error.mobile_number}</p>}
                             </div>
                             <div className="mb-4">

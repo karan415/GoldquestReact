@@ -16,7 +16,7 @@ export const ClientEditProvider = ({ children }) => {
     const [clientData, setClientData] = useState();
     const [custom_bgv, setCustom_Bgv] = useState(0);
 
-
+console.log('errors,',errors)
 
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId,) => {
         const fileCount = Object.keys(files).length;

@@ -697,7 +697,7 @@ const ClientManagementList = () => {
                               ✕
                             </button>
                             <h3 className="text-xl text-center font-bold mb-4">All Services</h3>
-                            <div className="space-y-2 grid p-3 md:grid-cols-3 grid-cols-1 gap-3">
+                            <div className="p-3 flex flex-wrap gap-3">
                               {/* Display all services for the current client */}
                               {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services.map((service) => (
                                 <div

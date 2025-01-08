@@ -30,7 +30,7 @@ const CreateInvoice = () => {
 
   const options = listData.map((client) => ({
     name: client.name + `(${client.client_unique_id})`,
-    value: client.id,
+    value: client.main_id,
   }));
 
   useEffect(() => {

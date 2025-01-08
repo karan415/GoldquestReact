@@ -386,7 +386,7 @@ const ClientForm = () => {
             });
         } else {
             setClientInput((prev) => ({
-                ...prev, [name]: name === 'employee_id' ? value.toUpperCase() : value,
+                ...prev, [name]: name === 'employee_id' ? value.replace(/\s+/g, '').toUpperCase() : value,
             }));
         }
     };

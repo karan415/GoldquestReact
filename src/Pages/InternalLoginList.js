@@ -322,7 +322,7 @@ const InternalLoginList = () => {
                                 </button>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
-                                <ul className='grid grid-cols-4 gap-3'>
+                                <ul className='flex flex-wrap gap-3'>
                                     {modalServices.map((service, idx) => (
                                         <li key={idx} className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">{service}</li>
                                     ))}

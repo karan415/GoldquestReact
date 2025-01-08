@@ -14,11 +14,16 @@ const InternalLoginForm = () => {
 
     const handleChange = (event) => {
         const { name, value } = event.target;
+        
+        // Remove spaces from employee_id and convert to uppercase
+        const updatedValue = name === 'employee_id' ? value.replace(/\s+/g, '').toUpperCase() : value;
+    
         setFormData((prev) => ({
-            ...prev, 
-            [name]: name === 'employee_id' ? value.toUpperCase() : value,
+            ...prev,
+            [name]: updatedValue,
         }));
     };
+    
     
     console.log('formData', formData)
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;

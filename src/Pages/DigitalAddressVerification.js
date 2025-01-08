@@ -386,8 +386,8 @@ const DigitalAddressVerification = () => {
             customerLogoFormData.append("application_id", candidate_application_id);
             for (const file of value) {
                 customerLogoFormData.append("images", file);
-                customerLogoFormData.append("upload_category", key);
             }
+            customerLogoFormData.append("upload_category", key);
 
             customerLogoFormData.append("send_mail", 1);
 
