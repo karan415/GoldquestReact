@@ -33,6 +33,7 @@ const BackgroundForm = () => {
             gender: '',
             full_address: '',
             pin_code: '',
+            declaration_date:'',
             current_address: '',
             current_address_landline_number: '',
             current_address_state: '',
@@ -42,7 +43,6 @@ const BackgroundForm = () => {
             nationality: '',
             marital_status: '',
             name_declaration: '',
-            declaration_date: '',
             blood_group: '',
             pan_card_name: '',
             aadhar_card_name: '',
@@ -50,20 +50,6 @@ const BackgroundForm = () => {
             emergency_details_name: '',
             emergency_details_relation: '',
             emergency_details_contact_number: '',
-            pf_details_pf_number: '',
-            pf_details_pf_type: '',
-            pf_details_pg_nominee: '',
-            nps_details_details_pran_number: '',
-            nps_details_details_nominee_details: '',
-            nps_details_details_nps_contribution: '',
-            bank_details_account_number: '',
-            bank_details_bank_name: '',
-            bank_details_branch_name: '',
-            bank_details_ifsc_code: '',
-            insurance_details_name: '',
-            insurance_details_nominee_relation: '',
-            insurance_details_nominee_dob: '',
-            insurance_details_contact_number: '',
             icc_bank_acc: '',
             food_coupon: "",
             ssn_number: "",
@@ -143,16 +129,12 @@ const BackgroundForm = () => {
             "full_name", "former_name", "mb_no", "father_name", "dob",
             "gender", "full_address", "pin_code", "current_address", "current_address_landline_number",
             "current_address_state", "current_prominent_landmark", "current_address_stay_to",
-            "nearest_police_station", "nationality", "marital_status",
+            "nationality", "marital_status","declaration_date",
         ];
 
         if (status === 1) {
             const additionalFields = [
-                "name_declaration", "declaration_date",
-                "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number", "aadhar_card_name", "pan_card_name",
-                "bank_details_account_number", "bank_details_bank_name", "bank_details_branch_name",
-                "bank_details_ifsc_code", "insurance_details_name", "insurance_details_nominee_relation",
-                "insurance_details_nominee_dob", "insurance_details_contact_number", "icc_bank_acc", "food_coupon"
+                "name_declaration", "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number", "aadhar_card_name", "pan_card_name", "food_coupon"
             ];
 
             // Concatenate the requiredFields array with additionalFields
@@ -465,7 +447,16 @@ const BackgroundForm = () => {
 
             .catch(err => console.error('Fetch error:', err));
     }, [serviceIds]);
-
+    useEffect(() => {
+        const currentDate = new Date().toISOString().split('T')[0];
+        setFormData((prevData) => ({
+            ...prevData,
+            personal_information: {
+                ...prevData.personal_information,
+                declaration_date: currentDate,  // Update declaration_date
+            },
+        }));
+    }, []);
 
     useEffect(() => {
         if (serviceIds) {
@@ -1177,7 +1168,7 @@ const BackgroundForm = () => {
                                             {errors.current_address_stay_to && <p className="text-red-500 text-sm">{errors.current_address_stay_to}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label className='text-sm' htmlFor="nearest_police_station">Nearest Police Station.<span className="text-red-500 text-lg">*</span></label>
+                                            <label className='text-sm' htmlFor="nearest_police_station">Nearest Police Station.</label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.nearest_police_station}
@@ -1188,7 +1179,6 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["nearest_police_station"] = el)} // Attach ref here
 
                                             />
-                                            {errors.nearest_police_station && <p className="text-red-500 text-sm">{errors.nearest_police_station}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -1210,22 +1200,6 @@ const BackgroundForm = () => {
                                                 onChange={handleChange}
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
-                                        </div>
-
-
-
-
-                                        <div className='form-group'>
-                                            <label className='text-sm'>Declaration Date<span className='text-red-500 text-lg'>*</span></label>
-                                            <input
-                                                type="date"
-                                                name="declaration_date"
-                                                value={formData.personal_information.declaration_date}
-                                                onChange={handleChange}
-                                                ref={(el) => (refs.current["declaration_date"] = el)}
-                                                className="form-control border rounded w-full p-2 mt-2"
-                                            />
-                                            {errors.declaration_date && <p className="text-red-500 text-sm">{errors.declaration_date}</p>}
                                         </div>
 
                                         <div className='border rounded-md p-3 my-5 '>
@@ -1272,152 +1246,7 @@ const BackgroundForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className='border rounded-md p-3  my-5'>
-                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Add PF Details</h3>
-                                            <div className='md:grid grid-cols-3 gap-3'>
-                                                <div className='form-group'>
-                                                    <label className='text-sm'>PF Number</label>
-                                                    <input
-                                                        type="text"
-                                                        name="pf_details_pf_number"
-                                                        value={formData.personal_information.pf_details_pf_number}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                                <div className='form-group'>
-                                                    <label className='text-sm'>PF Type</label>
-                                                    <input
-                                                        type="text"
-                                                        name="pf_details_pf_type"
-                                                        value={formData.personal_information.pf_details_pf_type}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                                <div className='form-group'>
-                                                    <label className='text-sm'>PF Nominee</label>
-                                                    <input
-                                                        type="text"
-                                                        name="pf_details_pg_nominee"
-                                                        value={formData.personal_information.pf_details_pg_nominee}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className='border rounded-md p-3   mt-3'>
-                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Do you have an NPS Account? If yes</h3>
-                                            <div className='md:grid grid-cols-3 gap-3'>
-                                                <div className='form-group '>
-                                                    <label className='text-sm'>PRAN (Permanent Retirement Account Number).</label>
-                                                    <input
-                                                        type="text"
-                                                        name="nps_details_details_pran_number"
-                                                        value={formData.personal_information.nps_details_details_pran_number}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                                <div className='form-group'>
-                                                    <label className='text-sm'>Enter Nominee Details of NPS. </label>
-                                                    <input
-                                                        type="text"
-                                                        name="nps_details_details_nominee_details"
-                                                        value={formData.personal_information.nps_details_details_nominee_details}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                                <div className='form-group'>
-                                                    <label className='text-sm'>Enter your contribution details of NPS</label>
-                                                    <input
-                                                        type="text"
-                                                        name="nps_details_details_nps_contribution"
-                                                        value={formData.personal_information.nps_details_details_nps_contribution}
-                                                        onChange={handleChange}
-                                                        className="form-control border rounded w-full p-2 mt-2"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <label  className='mt-5 block text-sm'>Do you have an ICICI Bank A/c<span className='text-red-500 text-lg'>*</span></label>
 
-                                        <div className='flex gap-6 mb-4  '>
-                                            <div className='form-group pt-2 flex  gap-2'>
-
-                                                <input
-                                                    type="radio"
-                                                    name="icc_bank_acc"
-                                                    value='yes'
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded p-2 "
-                                                />
-                                                <label className='text-sm'>Yes</label>
-                                            </div>
-                                            <div className='form-group pt-2 flex  gap-2'>
-                                                <input
-                                                    type="radio"
-                                                    name="icc_bank_acc"
-                                                    value='no'
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded p-2 "
-                                                />
-                                                <label className='text-sm'>No</label>
-                                            </div>
-
-                                        </div>
-                                        {errors.icc_bank_acc && <p className="text-red-500 text-sm">{errors.icc_bank_acc}</p>}
-
-                                        <div className='border rounded-md p-3 my-6  '>
-                                            <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'>Banking Details: </h3>
-                                            <span className='text-sm md:text-center text-start block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
-                                            <div className='form-group mt-4'>
-                                                <label className='text-sm'>Bank Account Number<span className='text-red-500 text-lg'>*</span></label>
-                                                <input
-                                                    type="text"
-                                                    name="bank_details_account_number"
-                                                    value={formData.personal_information.bank_details_account_number}
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded w-full p-2 mt-2"
-                                                />
-                                                {errors.bank_details_account_number && <p className="text-red-500 text-sm">{errors.bank_details_account_number}</p>}
-                                            </div>
-                                            <div className='form-group'>
-                                                <label className='text-sm'>Bank Name<span className='text-red-500 text-lg'>*</span></label>
-                                                <input
-                                                    type="text"
-                                                    name="bank_details_bank_name"
-                                                    value={formData.personal_information.bank_details_bank_name}
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded w-full p-2 mt-2"
-                                                />
-                                                {errors.bank_details_bank_name && <p className="text-red-500 text-sm">{errors.bank_details_bank_name}</p>}
-                                            </div>
-                                            <div className='form-group'>
-                                                <label className='text-sm'>Bank Branch Name<span className='text-red-500 text-lg'>*</span></label>
-                                                <input
-                                                    type="text"
-                                                    name="bank_details_branch_name"
-                                                    value={formData.personal_information.bank_details_branch_name}
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded w-full p-2 mt-2"
-                                                />
-                                                {errors.bank_details_branch_name && <p className="text-red-500 text-sm">{errors.bank_details_branch_name}</p>}
-                                            </div>
-                                            <div className='form-group'>
-                                                <label className='text-sm'>IFSC Code<span className='text-red-500 text-lg'>*</span></label>
-                                                <input
-                                                    type="text"
-                                                    name="bank_details_ifsc_code"
-                                                    value={formData.personal_information.bank_details_ifsc_code}
-                                                    onChange={handleChange}
-                                                    className="form-control border rounded w-full p-2 mt-2"
-                                                />
-                                                {errors.bank_details_ifsc_code && <p className="text-red-500 text-sm">{errors.bank_details_ifsc_code}</p>}
-                                            </div>
-                                        </div>
 
                                         <div className='border rounded-md p-3 mt-3  '>
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
@@ -1468,7 +1297,7 @@ const BackgroundForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <label  className='text-sm mt-5 block'>Do you want to opt for a Food Coupon?<span className='text-red-500 text-lg'>*</span></label>
+                                        <label className='text-sm mt-5 block'>Do you want to opt for a Food Coupon?<span className='text-red-500 text-lg'>*</span></label>
 
                                         <div className='flex gap-6 mb-4  '>
                                             <div className='form-group pt-2 flex gap-2'>
@@ -1550,7 +1379,7 @@ const BackgroundForm = () => {
                                                                                     key={inputIndex}
                                                                                     className={`flex flex-col space-y-2 ${row.inputs.length === 1 ? 'col-span-1' : row.inputs.length === 2 ? 'col-span-1' : ''}`}
                                                                                 >
-                                                                                    <label  className="text-sm block font-medium mb-2 text-gray-700 capitalize">
+                                                                                    <label className="text-sm block font-medium mb-2 text-gray-700 capitalize">
                                                                                         {input.label.replace(/[\/\\]/g, '')}
                                                                                         {input.required && <span className="text-red-500 text-lg">*</span>} {/* Add the red color to the asterisk if required */}
                                                                                     </label>
@@ -1706,16 +1535,16 @@ const BackgroundForm = () => {
 
 
                                     <div className="form-group">
-                                        <label className='text-sm'>Date</label>
+                                        <label className='text-sm'>Date<span className='text-red-500'>*</span></label>
                                         <input
-
                                             onChange={handleChange}
-                                            value={formData.declaration_date}
+                                            value={formData.personal_information.declaration_date}
                                             type="date"
                                             className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
                                             name="declaration_date"
-
                                         />
+                                        {errors.declaration_date && <p className="text-red-500 text-sm">{errors.declaration_date}</p>}
+
                                     </div>
                                 </div>
                             </div>
