@@ -5,8 +5,8 @@ api.goldquestglobal.in
     DocumentRoot /root/goldquestnode
 
     # Reverse Proxy to Node.js API
-    ProxyPass / https://api.goldquestglobal.in/
-    ProxyPassReverse / https://api.goldquestglobal.in/
+    ProxyPass / http://localhost:5000/
+    ProxyPassReverse / http://localhost:5000/
 
     ErrorLog ${APACHE_LOG_DIR}/node-error.log
     CustomLog ${APACHE_LOG_DIR}/node-access.log combined

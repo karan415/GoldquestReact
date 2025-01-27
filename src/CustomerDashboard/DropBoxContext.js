@@ -5,13 +5,12 @@ import { useApi } from '../ApiContext';
 const DropBoxContext = createContext();
 
 export const DropBoxProvider = ({ children }) => {
-
+    const [inputError, setInputError] = useState({});
     const API_URL = useApi();
     const [services, setServices] = useState([]);
     const [uniquePackages, setUniquePackages] = useState([]);
     const [listData, setListData] = useState([]);
     const [candidateListData, setCandidateListData] = useState([]);
-    const [branchId, setBranchId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [servicesLoading, setServicesLoading] = useState(false);
     const [candidateLoading, setCandidateLoading] = useState(false);
@@ -43,6 +42,7 @@ export const DropBoxProvider = ({ children }) => {
 
 
     const handleEditDrop = (selectedDropBox) => {
+        setInputError({});
         const parsedServices = Array.isArray(selectedDropBox.services)
             ? selectedDropBox.services
             : selectedDropBox.services ? selectedDropBox.services.split(',') : [];
@@ -276,26 +276,26 @@ export const DropBoxProvider = ({ children }) => {
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
-        
+
         if (!branch_id || !_token) {
             setLoading(false);
             return;
         }
-    
+
         try {
             const response = await fetch(`${API_URL}/branch/client-application/list?customer_id=${customer_id}&branch_id=${branch_id}&_token=${_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             const result = await response.json();
             const newToken = result?._token || result?.branch_token;
-            
+
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
-    
+
             // Handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
@@ -309,7 +309,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return; // Stop further processing after session expiration
             }
-    
+
             if (!response.ok) {
                 const errorMessage = result?.message || 'Something went wrong. Please try again.';
                 Swal.fire({
@@ -321,18 +321,20 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return;
             }
-    
+
             // Process and set data if response is successful
-            setListData(result.data.clientApplications || []);
-    
+            const FinalData = result.data.clientApplications;
+            setListData(FinalData || []);
+  
+
             if (result.data.customerInfo) {
                 const customer = result.data.customerInfo;
                 const customer_code = customer.client_unique_id;
                 localStorage.setItem('customer_code', customer_code);
-    
+
                 const parsedServices = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
                 setServices(parsedServices);
-    
+
                 const uniquePackagesList = [];
                 const packageSet = new Set();
                 parsedServices.forEach(service => {
@@ -347,7 +349,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 setUniquePackages(uniquePackagesList);
             }
-    
+
         } catch (error) {
             console.error('Fetch error:', error);
             Swal.fire('Error!', 'An unexpected error occurred. Please try again later.', 'error');
@@ -355,7 +357,7 @@ export const DropBoxProvider = ({ children }) => {
             setLoading(false);
         }
     }, [API_URL]);
-    
+
 
     return (
         <DropBoxContext.Provider value={{
@@ -376,7 +378,7 @@ export const DropBoxProvider = ({ children }) => {
             clientInput,
             servicesLoading,
             candidateListData,
-            isEditClient, setIsEditClient, input, setInput, isEditCandidate, setIsEditCandidate
+            isEditClient, setIsEditClient, input, setInput, isEditCandidate, setIsEditCandidate, inputError, setInputError
         }}>
             {children}
         </DropBoxContext.Provider>

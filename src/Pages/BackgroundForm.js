@@ -1079,7 +1079,7 @@ const BackgroundForm = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                         <div className="form-group">
-                                            <label htmlFor="full_name">Full Address<span className="text-red-500">*</span></label>
+                                            <label htmlFor="full_name">Permanenet Address<span className="text-red-500">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.full_address}
@@ -1121,7 +1121,7 @@ const BackgroundForm = () => {
                                             {errors.pin_code && <p className="text-red-500">{errors.pin_code}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="current_address_landline_number">Current Landline Number <span className="text-red-500">*</span></label>
+                                            <label htmlFor="current_address_landline_number">Mobile Number<span className="text-red-500">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address_landline_number}

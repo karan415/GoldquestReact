@@ -20,8 +20,8 @@ const ClientForm = () => {
     const GotoBulk = () => {
         navigate('/ClientBulkUpload')
     }
-    const { isEditClient, setIsEditClient, fetchClientDrop, setClientInput, services, uniquePackages, clientInput, loading } = useContext(DropBoxContext);
-    const [inputError, setInputError] = useState({});
+    const { isEditClient, setIsEditClient,inputError, setInputError, fetchClientDrop, setClientInput, services, uniquePackages, clientInput, loading } = useContext(DropBoxContext);
+   
     const validate = () => {
         const newErrors = {};
         const maxSize = 2 * 1024 * 1024; // 2MB size limit
@@ -30,7 +30,7 @@ const ClientForm = () => {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ]; // Allowed file types
-
+    
         // Helper function to validate a file field
         const validateFile = (fileName) => {
             if (inputError[fileName] && inputError[fileName].length > 0) {
@@ -39,28 +39,28 @@ const ClientForm = () => {
             } else {
                 const selectedFiles = files[fileName]; // Get the files for this field
                 let fileErrors = [];
-
+    
+                // If no files are selected for 'attach_documents', add an error
+                if (fileName === 'attach_documents' && (!selectedFiles || selectedFiles.length === 0)) {
+                    fileErrors.push('Attach documents are required.');
+                }
+    
                 if (selectedFiles && selectedFiles.length > 0) {
                     selectedFiles.forEach((file) => {
                         if (file.size > maxSize) {
                             fileErrors.push(`${file.name}: File size must be less than 2MB.`);
                         }
-
+    
                         if (!allowedTypes.includes(file.type)) {
                             fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
                         }
                     });
-                } else {
-                    // Only add "required" error if it's not an edit case
-                    if (!isEditClient) {
-                        fileErrors.push(`${fileName} is required.`);
-                    }
                 }
-
+    
                 return fileErrors;
             }
         };
-
+    
         // Validate file fields: photo and attach_documents
         ['photo', 'attach_documents'].forEach((fileField) => {
             const fileErrors = validateFile(fileField);
@@ -68,7 +68,7 @@ const ClientForm = () => {
                 newErrors[fileField] = fileErrors;
             }
         });
-
+    
         // Validate required text fields
         ['name', 'employee_id', 'spoc', 'location', 'batch_number', 'sub_client'].forEach((field) => {
             if (!clientInput[field] || clientInput[field].trim() === "") {
@@ -77,22 +77,22 @@ const ClientForm = () => {
             if (field === 'employee_id') {
                 if (/\s/.test(clientInput[field])) {  // Check for spaces
                     newErrors[field] = 'Employee ID cannot contain spaces';
-                }  else if (/[^a-zA-Z0-9-]/.test(clientInput[field])) {
+                } else if (/[^a-zA-Z0-9-]/.test(clientInput[field])) {
                     newErrors[field] = 'Employee ID should only contain letters, numbers, and hyphens';
                 }
             }
-
         });
-
+    
         return newErrors;
     };
+    
+    
+    
 
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
 
-    useEffect(() => {
 
-    }, []);
 
 
 
@@ -190,11 +190,12 @@ const ClientForm = () => {
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
     
+            // Prepare the request body
             if (fileCount === 0) {
                 requestBody = {
                     customer_id,
                     branch_id,
-                    send_mail: 1,
+                    send_mail: 1, // No file uploaded, so we send mail
                     _token: branch_token,
                     ...clientInput,
                 };
@@ -202,7 +203,7 @@ const ClientForm = () => {
                 requestBody = {
                     customer_id,
                     branch_id,
-                    send_mail: 0,
+                    send_mail: 0, // File uploaded, so we don't send mail initially
                     _token: branch_token,
                     ...clientInput,
                 };
@@ -220,6 +221,7 @@ const ClientForm = () => {
             });
     
             try {
+                // Make the API request
                 const response = await fetch(
                     isEditClient
                         ? `${API_URL}/branch/client-application/update`
@@ -260,6 +262,7 @@ const ClientForm = () => {
                     throw new Error(errorMessage);
                 }
     
+                // Handle token update
                 const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("branch_token", newToken);
@@ -267,52 +270,62 @@ const ClientForm = () => {
     
                 let insertedId;
                 let new_application_id;
+    
                 if (isEditClient) {
-                    insertedId = clientInput.client_application_id;
-                    new_application_id = clientInput.application_id;
+                    // Only assign if available, otherwise continue
+                    if (clientInput?.client_application_id && clientInput?.application_id) {
+                        insertedId = clientInput?.client_application_id;
+                        new_application_id = clientInput?.application_id;
+                    } else {
+                        // Skip this part and continue to the next step
+                        console.warn("Client application ID or application ID is missing for edit.");
+                    }
                 } else {
-                    insertedId = result.result.results.insertId;
-                    new_application_id = result.result.new_application_id;
+                    // Assign for new client
+                    insertedId = result?.result?.results?.insertId;
+                    new_application_id = result?.result?.new_application_id;
                 }
     
-                setClientInput({
-                    name: "",
-                    employee_id: "",
-                    spoc: "",
-                    location: "",
-                    batch_number: "",
-                    sub_client: "",
-                    services: [],
-                    package: "",
-                    client_application_id: "",
-                });
-    
-                setFiles({});
-                setInputError({});
-    
-                if (fileCount === 0) {
-                    Swal.fire({
-                        title: "Success",
-                        text: `${isEditClient ? "Application Updated Successfully" : "Application Created Successfully"}`,
-                        icon: "success",
-                        confirmButtonText: "Ok",
-                    });
-                }
+                // Handle success message
+                let successMessage = `${isEditClient ? "Application Updated Successfully" : "Application Created Successfully"}`;
     
                 if (fileCount > 0) {
-                    await uploadCustomerLogo(insertedId, new_application_id);
-    
-                    Swal.fire({
-                        title: "Success",
-                        text: `Client Application Created Successfully.`,
-                        icon: "success",
-                        confirmButtonText: "Ok",
-                    });
+                    // Handle file upload and call the upload function
+                    if (insertedId && new_application_id) {
+                        await uploadCustomerLogo(insertedId, new_application_id);
+                        successMessage = "Client Application Created Successfully.";
+                    } else {
+                        console.warn("Inserted ID or Application ID not available, skipping upload.");
+                    }
                 }
     
-                setIsEditClient(false);
-                fetchClientDrop();
-
+                // Show the success message
+                Swal.fire({
+                    title: "Success",
+                    text: successMessage,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Reset form and state after showing success message
+                    setClientInput({
+                        name: "",
+                        employee_id: "",
+                        spoc: "",
+                        location: "",
+                        batch_number: "",
+                        sub_client: "",
+                        services: [],
+                        package: "",
+                        client_application_id: "",
+                    });
+    
+                    setFiles({});
+                    setInputError({});
+                    fetchClientDrop(); // Fetch client dropdown data
+    
+                    setIsEditClient(false); // Reset edit mode
+                });
+    
             } catch (error) {
                 console.error("There was an error!", error);
             } finally {
@@ -323,13 +336,8 @@ const ClientForm = () => {
             setInputError(errors); // Set the input errors if validation fails
         }
     };
-     
     
     
-
-
-
-
 
     const handlePackageChange = (e) => {
         const selectedValue = e.target.value; // The selected package ID
@@ -365,7 +373,6 @@ const ClientForm = () => {
             }));
         }
     };
-    console.log('services', clientInput.services)
 
     const handleChange = (event) => {
         const { name, value, checked } = event.target;

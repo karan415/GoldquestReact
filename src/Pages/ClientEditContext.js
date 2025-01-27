@@ -94,7 +94,6 @@ console.log('errors,',errors)
             "custom_template",
             "state",
             "state_code",
-            "client_standard",
             "industry_classification",
         ];
 

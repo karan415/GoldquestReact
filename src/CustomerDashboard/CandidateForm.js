@@ -92,9 +92,7 @@ const CandidateForm = () => {
         }
         
 
-        if (!employee_id) {
-            NewErr.employee_id = 'Employee ID is required';
-        } else if (/\s/.test(employee_id)) {  // Check for spaces
+        if (/\s/.test(employee_id)) {  // Check for spaces
             NewErr.employee_id = 'Employee ID cannot contain spaces';
         } else if (/[^a-zA-Z0-9-]/.test(employee_id)) {
             NewErr.employee_id = 'Employee ID should only contain letters, numbers, and hyphens';

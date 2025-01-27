@@ -10,7 +10,15 @@ const DropBoxList = () => {
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
+    const [activeReportId, setActiveReportId] = useState(null); // Track which report's modal is active
 
+  const openModal = (reportId) => {
+    setActiveReportId(reportId); // Set the active report ID to open its modal
+  };
+
+  const closeModal = () => {
+    setActiveReportId(null); // Reset active report ID to close the modal
+  };
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
     const API_URL = useApi();
@@ -195,32 +203,7 @@ const DropBoxList = () => {
             }
         });
     };
-    const handleViewMoreDoc = (documents) => {
-        Swal.fire({
-            title: 'Additional Documents',
-            html: `<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
-                    ${documents.map((document, index) => (
-                        document.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                            `<img src="${document}" alt="Image" class="md:h-20 h-10 w-20 rounded-full" style="margin: 10px;" />`
-                        ) : (
-                            `<a href="${document}" target="_blank" rel="noopener noreferrer" style="display: block; margin: 10px;">
-                                <button type="button" class="px-4 py-2 bg-green-500 text-white rounded">
-                                    View Document ${index + 1}
-                                </button>
-                            </a>`
-                        )
-                    )).join('')}
-                  </div>`,
-            confirmButtonText: 'Close',
-            width: '600px',
-            padding: '20px',
-            showCloseButton: true,
-            showCancelButton: false,
-            focusConfirm: false,
-        });
-    };
-    
-    
+
 
     return (
         <>
@@ -294,10 +277,12 @@ const DropBoxList = () => {
                                 <tbody>
                                     {currentItems.map((report, index) => (
                                         <tr key={index} id={report.id}>
-                                            <td className="py-3 px-4 border-b border-r text-center border-l whitespace-nowrap">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
+                                            <td className="py-3 px-4 border-b border-r text-center border-l whitespace-nowrap">
+                                                {index + 1 + (currentPage - 1) * itemsPerPage}
+                                            </td>
+
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.photo ? (
-                                                    // Check if the file is an image
                                                     report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                         <img
                                                             src={`${report.photo}`}
@@ -305,19 +290,14 @@ const DropBoxList = () => {
                                                             className="md:h-20 h-10 w-20 rounded-full"
                                                         />
                                                     ) : (
-                                                        // If it's a document (pdf, doc, etc.), show a button
-                                                        <a
-                                                            href={`${report.photo}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
+                                                        <a href={`${report.photo}`} target="_blank" rel="noopener noreferrer">
+                                                            <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
                                                                 View Document
                                                             </button>
                                                         </a>
                                                     )
                                                 ) : (
-                                                    '----'
+                                                    'No Image Found'
                                                 )}
                                             </td>
 
@@ -329,123 +309,151 @@ const DropBoxList = () => {
                                                 {new Date(report.created_at).getFullYear()}
                                             </td>
 
-
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.location || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.batch_number || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.sub_client || 'NIL'}</td>
 
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                                {(() => {
-                                                    const documents = report.attach_documents ? report.attach_documents.split(', ') : [];
-
-                                                    if (documents.length > 0) {
-                                                        return (
-                                                            <>
-                                                                {documents[0].match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                                                    <img
-                                                                        src={documents[0]}
-                                                                        alt="Image"
-                                                                        className="md:h-20 h-10 w-20 rounded-full"
-                                                                    />
-                                                                ) : (
-                                                                    <a
-                                                                        href={documents[0]}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                    >
-                                                                        <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
-                                                                            View Document
-                                                                        </button>
-                                                                    </a>
-                                                                )}
-
-                                                                {/* View More button to show the rest of the documents in a popup */}
-                                                                {documents.length > 1 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleViewMoreDoc(documents.slice(1))}
-                                                                        className="mt-2 px-4 py-2 ms-2 bg-blue-500 text-white rounded"
-                                                                    >
-                                                                        View More
-                                                                    </button>
-                                                                )}
-                                                            </>
-                                                        );
-                                                    } else {
-                                                        return '----';
-                                                    }
-                                                })()}
+                                                {report.attach_documents ? (
+                                                    <>
+                                                        {report.attach_documents.split(', ').map((doc, index) => {
+                                                            if (index === 0) {
+                                                                return (
+                                                                    <div key={index} className="mb-4">
+                                                                        {doc.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                                            <img
+                                                                                src={doc}
+                                                                                alt={`Document ${index + 1}`}
+                                                                                className="md:h-20 h-10 w-20 rounded-full"
+                                                                            />
+                                                                        ) : (
+                                                                            <a href={doc} target="_blank" rel="noopener noreferrer">
+                                                                                <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                                    View Document 1
+                                                                                </button>
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        })}
+                                                        <button
+                                                            onClick={() => openModal(report.id)} // Open modal for clicked report
+                                                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+                                                        >
+                                                            View All Documents
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    'No Image Found'
+                                                )}
                                             </td>
 
+                                            {/* Modal for viewing all documents */}
+                                            {activeReportId === report.id && ( // Show modal only for the active report
+                                                <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                                                    <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+                                                        <h2 className="text-xl font-semibold mb-4">All Documents</h2>
 
-
-                                            <td className="border p-2  md:px-4 py-2 text-left">
-                                                <div className='flex whitespace-nowrap'>
-                                                    {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
-                                                        report.serviceNames.length === 1 ? (
-
-                                                            <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
-                                                                {typeof report.serviceNames[0] === "string"
-                                                                    ? report.serviceNames[0]
-                                                                    : report.serviceNames[0].join(", ")}
-                                                            </span>
-                                                        ) : (
-
-                                                            <>
-                                                                {typeof report.serviceNames[0] === "string" ? (
-                                                                    <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
-                                                                        {report.serviceNames[0]}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
-                                                                        {report.serviceNames[0].join(", ")}
-                                                                    </span>
-                                                                )}
-                                                                <button
-                                                                    className="text-green-500 ml-2"
-                                                                    onClick={() => handleViewMore(report.serviceNames)}
-                                                                >
-                                                                    View More
-                                                                </button>
-                                                            </>
-                                                        )
-                                                    ) : (
-                                                        // No services or serviceNames is not an array
-                                                        <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
-                                                            You have no services
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            {isModalOpen && (
-                                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
-                                                        <div className="flex justify-between items-center">
-                                                            <h2 className="text-lg font-bold">Services</h2>
-                                                            <button
-                                                                className="text-red-500 text-2xl"
-                                                                onClick={handleCloseModal}
-                                                            >
-                                                                &times;
-                                                            </button>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                            {report.attach_documents.split(', ').map((doc, index) => (
+                                                                <div key={index} className="card border p-4 rounded-lg">
+                                                                    {doc.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                                        <img
+                                                                            src={doc}
+                                                                            alt={`Document ${index + 1}`}
+                                                                            className="w-full h-40 object-contain rounded-lg"
+                                                                        />
+                                                                    ) : (
+                                                                        <a href={doc} target="_blank" rel="noopener noreferrer">
+                                                                            <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                                View Document {index + 1}
+                                                                            </button>
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
-                                                            {modalServices.length > 0 ? (
-                                                                modalServices.map((service, idx) => (
-                                                                    <span
-                                                                        key={idx}
-                                                                        className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
-                                                                    >
-                                                                        {service}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-gray-500">No service available</span>
-                                                            )}
-                                                        </div>
+
+                                                        {/* Close button */}
+                                                        <button
+                                                            onClick={closeModal}
+                                                            className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+                                                        >
+                                                            Close
+                                                        </button>
                                                     </div>
                                                 </div>
                                             )}
+
+                                            <td className="border p-2  md:px-4 py-2 text-left">
+                                            <div className='flex whitespace-nowrap'>
+                                                {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
+                                                    report.serviceNames.length === 1 ? (
+
+                                                        <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                            {typeof report.serviceNames[0] === "string"
+                                                                ? report.serviceNames[0]
+                                                                : report.serviceNames[0].join(", ")}
+                                                        </span>
+                                                    ) : (
+
+                                                        <>
+                                                            {typeof report.serviceNames[0] === "string" ? (
+                                                                <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
+                                                                    {report.serviceNames[0]}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                                    {report.serviceNames[0].join(", ")}
+                                                                </span>
+                                                            )}
+                                                            <button
+                                                                className="text-green-500 ml-2"
+                                                                onClick={() => handleViewMore(report.serviceNames)}
+                                                            >
+                                                                View More
+                                                            </button>
+                                                        </>
+                                                    )
+                                                ) : (
+                                                    // No services or serviceNames is not an array
+                                                    <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
+                                                        You have no services
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        {isModalOpen && (
+                                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                                <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
+                                                    <div className="flex justify-between items-center">
+                                                        <h2 className="text-lg font-bold">Services</h2>
+                                                        <button
+                                                            className="text-red-500 text-2xl"
+                                                            onClick={handleCloseModal}
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
+                                                    <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
+                                                        {modalServices.length > 0 ? (
+                                                            modalServices.map((service, idx) => (
+                                                                <span
+                                                                    key={idx}
+                                                                    className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
+                                                                >
+                                                                    {service}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-gray-500">No service available</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{report.single_point_of_contact || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>
                                             <td className="py-3 px-4 border-b whitespace-nowrap border-r">
