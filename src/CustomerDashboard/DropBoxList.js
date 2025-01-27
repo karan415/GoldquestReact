@@ -162,7 +162,6 @@ const DropBoxList = () => {
                                     icon: "warning",
                                     confirmButtonText: "Ok",
                                 }).then(() => {
-                                    // Redirect to admin login page
                                     window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
                                 });
                             }
@@ -282,7 +281,7 @@ const DropBoxList = () => {
                                             </td>
 
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                                {report.photo ? (
+                                               <div className='flex gap-3'> {report.photo ? (
                                                     report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                         <img
                                                             src={`${report.photo}`}
@@ -298,7 +297,7 @@ const DropBoxList = () => {
                                                     )
                                                 ) : (
                                                     'No Image Found'
-                                                )}
+                                                )}</div>
                                             </td>
 
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">{report.application_id || 'NIL'}</td>
@@ -349,14 +348,13 @@ const DropBoxList = () => {
                                                 )}
                                             </td>
 
-                                            {/* Modal for viewing all documents */}
-                                            {activeReportId === report.id && ( // Show modal only for the active report
+                                            {activeReportId === report.id && (
                                                 <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center">
                                                     <div className="bg-white rounded-lg p-6 max-w-lg w-full">
                                                         <h2 className="text-xl font-semibold mb-4">All Documents</h2>
 
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                            {report.attach_documents.split(', ').map((doc, index) => (
+                                                            {report.attach_documents.split(',').map((doc, index) => (
                                                                 <div key={index} className="card border p-4 rounded-lg">
                                                                     {doc.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                                         <img
@@ -375,7 +373,7 @@ const DropBoxList = () => {
                                                             ))}
                                                         </div>
 
-                                                        {/* Close button */}
+                                                      
                                                         <button
                                                             onClick={closeModal}
                                                             className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
