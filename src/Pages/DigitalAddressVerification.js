@@ -499,7 +499,7 @@ const DigitalAddressVerification = () => {
                 ) : (
                     <>
 
-                        <h3 className="text-center py-3 font-bold text-2xl">Digital Address Verification</h3>
+                        <h3 className="text-center py-3 font-bold text-2xl mb-7">Digital Address Verification</h3>
 
                         <div className="border md:w-7/12 m-auto p-4 ">
                             <div className="md:grid grid-cols-1 md:grid-cols-3 mb-2 gap-4">
@@ -565,7 +565,7 @@ const DigitalAddressVerification = () => {
                                 <button type="button" className="mt-3 bg-green-500 text-white font-bold py-2 px-4 rounded" onClick={getLocation}>Get Geo Coordinates <i className="fa fa-map-marker"></i></button>
                             </div>
                             <div className="col-span-2 mt-5 mb-2">
-                                <h4 className="text-center text-lg font-semibold">Personal Information</h4>
+                                <h4 className="text-center text-xl font-semibold">Personal Information</h4>
                             </div>
 
 
@@ -648,7 +648,7 @@ const DigitalAddressVerification = () => {
                             </div>
 
                             <div className="col-span-2">
-                                <p className="text-sm font-medium text-gray-700">Period of Stay:</p>
+                                <p className="text-xl text-center my-5 font-medium text-gray-700">Period of Stay:</p>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label>From Date:</label>

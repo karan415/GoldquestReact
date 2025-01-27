@@ -744,7 +744,7 @@ const BackgroundForm = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-1 bg-white shadow-md gap-4 mb-6 border rounded-md  p-4">
                                 <div className="form-group col-span-2">
-                                    <label>Applicant’s CV: <span className="text-red-500">*</span></label>
+                                    <label className='text-sm'>Applicant’s CV: <span className="text-red-500 text-lg">*</span></label>
                                     <input
                                         type="file"
                                         accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
@@ -756,13 +756,13 @@ const BackgroundForm = () => {
                                         ref={(el) => (refs.current["resume_file"] = el)} // Attach ref here
 
                                     />
-                                    {errors.resume_file && <p className="text-red-500">{errors.resume_file}</p>}
+                                    {errors.resume_file && <p className="text-red-500 text-lg">{errors.resume_file}</p>}
                                     <p className="text-gray-500 text-sm mt-2">
                                         Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                     </p>
                                 </div>
                                 <div className="form-group col-span-2">
-                                    <label>Attach Govt. ID Proof: <span className="text-red-500">*</span></label>
+                                    <label className='text-sm'>Attach Govt. ID Proof: <span className="text-red-500 text-lg">*</span></label>
                                     <input
                                         type="file"
                                         accept=".jpg,.jpeg,.png" // Restrict to image files
@@ -772,7 +772,7 @@ const BackgroundForm = () => {
                                         multiple // Allow multiple file selection
                                         ref={(el) => (refs.current["applications_govt_id"] = el)} // Attach ref here
                                     />
-                                    {errors.govt_id && <p className="text-red-500">{errors.govt_id}</p>}
+                                    {errors.govt_id && <p className="text-red-500 text-lg">{errors.govt_id}</p>}
                                     <p className="text-gray-500 text-sm mt-2">
                                         Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                     </p>
@@ -782,7 +782,7 @@ const BackgroundForm = () => {
                                 {status === 1 && (
                                     <>
                                         <div className="form-group col-span-2">
-                                            <label>Passport size photograph  - (mandatory with white Background) <span className="text-red-500">*</span></label>
+                                            <label className='text-sm'>Passport size photograph  - (mandatory with white Background) <span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 type="file"
                                                 accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
@@ -794,7 +794,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["passport_photo"] = el)} // Attach ref here
 
                                             />
-                                            {errors.passport_photo && <p className="text-red-500">{errors.passport_photo}</p>}
+                                            {errors.passport_photo && <p className="text-red-500 text-lg">{errors.passport_photo}</p>}
                                             <p className="text-gray-500 text-sm mt-2">
                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                             </p>
@@ -805,11 +805,11 @@ const BackgroundForm = () => {
                             </div>
 
                             <div className='border bg-white shadow-md  p-4 rounded-md'>
-                                <h4 className="md:text-center text-start md:text-2xl text-sm my-6 font-bold ">Personal Information</h4>
+                                <h4 className="md:text-start text-start md:text-2xl text-sm my-6 font-bold ">Personal Information</h4>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 ">
                                     <div className="form-group">
-                                        <label htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.full_name}
@@ -820,10 +820,10 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["full_name"] = el)}
 
                                         />
-                                        {errors.full_name && <p className="text-red-500">{errors.full_name}</p>}
+                                        {errors.full_name && <p className="text-red-500 text-lg">{errors.full_name}</p>}
                                     </div>
                                     <div className="form-group">
-                                        <label htmlFor="former_name">Former Name/ Maiden Name (if applicable)<span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="former_name">Former Name/ Maiden Name (if applicable)<span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.former_name}
@@ -833,10 +833,10 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["former_name"] = el)} // Attach ref here
                                             name="former_name"
                                         />
-                                        {errors.former_name && <p className="text-red-500">{errors.former_name}</p>}
+                                        {errors.former_name && <p className="text-red-500 text-lg">{errors.former_name}</p>}
                                     </div>
                                     <div className="form-group">
-                                        <label htmlFor="mob_no">Mobile Number: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="mob_no">Mobile Number: <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.mb_no}
@@ -849,13 +849,13 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["mob_no"] = el)} // Attach ref here
 
                                         />
-                                        {errors.mb_no && <p className="text-red-500">{errors.mb_no}</p>}
+                                        {errors.mb_no && <p className="text-red-500 text-lg">{errors.mb_no}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                                     <div className="form-group">
-                                        <label htmlFor="father_name">Father's Name: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="father_name">Father's Name: <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.father_name}
@@ -866,10 +866,10 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["father_name"] = el)} // Attach ref here
 
                                         />
-                                        {errors.father_name && <p className="text-red-500">{errors.father_name}</p>}
+                                        {errors.father_name && <p className="text-red-500 text-lg">{errors.father_name}</p>}
                                     </div>
                                     <div className="form-group">
-                                        <label htmlFor="husband_name">Spouse's Name</label>
+                                        <label className='text-sm' htmlFor="husband_name">Spouse's Name</label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.husband_name}
@@ -882,7 +882,7 @@ const BackgroundForm = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="dob">DOB: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="dob">DOB: <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.dob}
@@ -893,14 +893,14 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["dob"] = el)} // Attach ref here
 
                                         />
-                                        {errors.dob && <p className="text-red-500">{errors.dob}</p>}
+                                        {errors.dob && <p className="text-red-500 text-lg">{errors.dob}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
 
                                     <div className="form-group my-4">
-                                        <label htmlFor="gender">
-                                            Gender: <span className="text-red-500">*</span>
+                                        <label className='text-sm' htmlFor="gender">
+                                            Gender: <span className="text-red-500 text-lg">*</span>
                                         </label>
                                         <select
                                             onChange={handleChange}
@@ -917,13 +917,13 @@ const BackgroundForm = () => {
                                             <option value="female">Female</option>
                                             <option value="other">Other</option>
                                         </select>
-                                        {errors.gender && <p className="text-red-500">{errors.gender}</p>}
+                                        {errors.gender && <p className="text-red-500 text-lg">{errors.gender}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                                     <div className='form-group'>
-                                        <label>Aadhar card No</label>
+                                        <label className='text-sm'>Aadhar card No</label>
                                         <input
                                             type="text"
                                             name="aadhar_card_number"
@@ -937,7 +937,7 @@ const BackgroundForm = () => {
                                     {status === 1 && (
                                         <>
                                             <div className='form-group'>
-                                                <label>Name as per Aadhar card<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Name as per Aadhar card<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="aadhar_card_name"
@@ -947,11 +947,11 @@ const BackgroundForm = () => {
 
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.aadhar_card_name && <p className="text-red-500">{errors.aadhar_card_name}</p>}
+                                                {errors.aadhar_card_name && <p className="text-red-500 text-lg">{errors.aadhar_card_name}</p>}
 
                                             </div>
                                             <div className='form-group'>
-                                                <label>Aadhar Card Image<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Aadhar Card Image<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="file"
                                                     accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
@@ -963,7 +963,7 @@ const BackgroundForm = () => {
 
 
                                                 />
-                                                {errors.aadhar_card_image && <p className="text-red-500">{errors.aadhar_card_image}</p>}
+                                                {errors.aadhar_card_image && <p className="text-red-500 text-lg">{errors.aadhar_card_image}</p>}
                                                 <p className="text-gray-500 text-sm mt-2">
                                                     Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                                 </p>
@@ -972,7 +972,7 @@ const BackgroundForm = () => {
                                         </>
                                     )}
                                     <div className='form-group'>
-                                        <label>Pan card No</label>
+                                        <label className='text-sm'>Pan card No</label>
                                         <input
                                             type="text"
                                             name="pan_card_number"
@@ -988,7 +988,7 @@ const BackgroundForm = () => {
                                         <>
 
                                             <div className='form-group'>
-                                                <label>Name as per Pan Card<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Name as per Pan Card<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="pan_card_name"
@@ -998,13 +998,13 @@ const BackgroundForm = () => {
 
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.pan_card_name && <p className="text-red-500">{errors.pan_card_name}</p>}
+                                                {errors.pan_card_name && <p className="text-red-500 text-lg">{errors.pan_card_name}</p>}
                                             </div>
                                         </>
                                     )}
                                     {status === 1 && (
                                         <div className='form-group'>
-                                            <label>Pan Card Image<span className='text-red-500'>*</span></label>
+                                            <label className='text-sm'>Pan Card Image<span className='text-red-500 text-lg'>*</span></label>
                                             <input
                                                 type="file"
                                                 accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
@@ -1016,7 +1016,7 @@ const BackgroundForm = () => {
 
 
                                             />
-                                            {errors.pan_card_image && <p className="text-red-500">{errors.pan_card_image}</p>}
+                                            {errors.pan_card_image && <p className="text-red-500 text-lg">{errors.pan_card_image}</p>}
                                             <p className="text-gray-500 text-sm mt-2">
                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                             </p>
@@ -1025,7 +1025,7 @@ const BackgroundForm = () => {
 
                                     {status == 0 && (
                                         <div className="form-group">
-                                            <label>Social Security Number(if applicable):</label>
+                                            <label className='text-sm'>Social Security Number(if applicable):</label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.ssn_number}
@@ -1039,7 +1039,7 @@ const BackgroundForm = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="form-group">
-                                        <label htmlFor="nationality">Nationality: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="nationality">Nationality: <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.nationality}
@@ -1050,10 +1050,10 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["nationality"] = el)} // Attach ref here
 
                                         />
-                                        {errors.nationality && <p className="text-red-500">{errors.nationality}</p>}
+                                        {errors.nationality && <p className="text-red-500 text-lg">{errors.nationality}</p>}
                                     </div>
                                     <div className="form-group">
-                                        <label htmlFor="marital_status">Marital Status: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm' htmlFor="marital_status">Marital Status: <span className="text-red-500 text-lg">*</span></label>
                                         <select
                                             ref={(el) => (refs.current["marital_status"] = el)}
                                             className="form-control border rounded w-full p-2 mt-2"
@@ -1070,16 +1070,16 @@ const BackgroundForm = () => {
                                             <option value="Divorced">Divorced</option>
                                             <option value="Separated">Separated</option>
                                         </select>
-                                        {errors.marital_status && <p className="text-red-500">{errors.marital_status}</p>}
+                                        {errors.marital_status && <p className="text-red-500 text-lg">{errors.marital_status}</p>}
                                     </div>
                                 </div>
-                                <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
+                                <div className='border bg-white border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
 
-                                    <h3 className='md:text-center text-start md:text-2xl text-sm font-bold my-5'>Current Address </h3>
+                                    <h3 className='md:text-start md:mb-2 text-start md:text-2xl text-sm font-bold my-5'>Current Address </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                         <div className="form-group">
-                                            <label htmlFor="full_name">Permanenet Address<span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="full_name">Permanenet Address<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.full_address}
@@ -1090,10 +1090,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["full_address"] = el)} // Attach ref here
 
                                             />
-                                            {errors.full_address && <p className="text-red-500">{errors.full_address}</p>}
+                                            {errors.full_address && <p className="text-red-500 text-lg">{errors.full_address}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="full_name">Current Address <span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="full_name">Current Address <span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address}
@@ -1104,10 +1104,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address && <p className="text-red-500">{errors.current_address}</p>}
+                                            {errors.current_address && <p className="text-red-500 text-lg">{errors.current_address}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="pin_code">Pin Code <span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="pin_code">Pin Code <span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.pin_code}
@@ -1118,10 +1118,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["pin_code"] = el)} // Attach ref here
 
                                             />
-                                            {errors.pin_code && <p className="text-red-500">{errors.pin_code}</p>}
+                                            {errors.pin_code && <p className="text-red-500 text-lg">{errors.pin_code}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="current_address_landline_number">Mobile Number<span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="current_address_landline_number">Mobile Number<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address_landline_number}
@@ -1132,10 +1132,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_landline_number"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_landline_number && <p className="text-red-500">{errors.current_address_landline_number}</p>}
+                                            {errors.current_address_landline_number && <p className="text-red-500 text-lg">{errors.current_address_landline_number}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="current_address_state">Current State <span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="current_address_state">Current State <span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address_state}
@@ -1146,10 +1146,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_state"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_state && <p className="text-red-500">{errors.current_address_state}</p>}
+                                            {errors.current_address_state && <p className="text-red-500 text-lg">{errors.current_address_state}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="current_prominent_landmark">Current Landmark<span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="current_prominent_landmark">Current Landmark<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_prominent_landmark}
@@ -1160,10 +1160,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_prominent_landmark"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_prominent_landmark && <p className="text-red-500">{errors.current_prominent_landmark}</p>}
+                                            {errors.current_prominent_landmark && <p className="text-red-500 text-lg">{errors.current_prominent_landmark}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="current_address_stay_to">Current Address Stay No.<span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="current_address_stay_to">Current Address Stay No.<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address_stay_to}
@@ -1174,10 +1174,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_stay_to"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_stay_to && <p className="text-red-500">{errors.current_address_stay_to}</p>}
+                                            {errors.current_address_stay_to && <p className="text-red-500 text-lg">{errors.current_address_stay_to}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="nearest_police_station">Nearest Police Station.<span className="text-red-500">*</span></label>
+                                            <label className='text-sm' htmlFor="nearest_police_station">Nearest Police Station.<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.nearest_police_station}
@@ -1188,7 +1188,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["nearest_police_station"] = el)} // Attach ref here
 
                                             />
-                                            {errors.nearest_police_station && <p className="text-red-500">{errors.nearest_police_station}</p>}
+                                            {errors.nearest_police_station && <p className="text-red-500 text-lg">{errors.nearest_police_station}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -1201,7 +1201,7 @@ const BackgroundForm = () => {
                                 <>
                                     <div className='border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
 
-                                        <label>Blood Group</label>
+                                        <label className='text-sm'>Blood Group</label>
                                         <div className='form-group'>
                                             <input
                                                 type="text"
@@ -1216,7 +1216,7 @@ const BackgroundForm = () => {
 
 
                                         <div className='form-group'>
-                                            <label>Declaration Date<span className='text-red-500'>*</span></label>
+                                            <label className='text-sm'>Declaration Date<span className='text-red-500 text-lg'>*</span></label>
                                             <input
                                                 type="date"
                                                 name="declaration_date"
@@ -1225,14 +1225,14 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["declaration_date"] = el)}
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
-                                            {errors.declaration_date && <p className="text-red-500">{errors.declaration_date}</p>}
+                                            {errors.declaration_date && <p className="text-red-500 text-lg">{errors.declaration_date}</p>}
                                         </div>
 
                                         <div className='border rounded-md p-3 my-5 '>
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Add Emergency Contact Details</h3>
                                             <div className='md:grid grid-cols-3 gap-3 '>
                                                 <div className='form-group'>
-                                                    <label>Name<span className='text-red-500'>*</span></label>
+                                                    <label className='text-sm'>Name<span className='text-red-500 text-lg'>*</span></label>
                                                     <input
                                                         type="text"
                                                         name="emergency_details_name"
@@ -1242,10 +1242,10 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_name && <p className="text-red-500">{errors.emergency_details_name}</p>}
+                                                    {errors.emergency_details_name && <p className="text-red-500 text-lg">{errors.emergency_details_name}</p>}
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Relation<span className='text-red-500'>*</span></label>
+                                                    <label className='text-sm'>Relation<span className='text-red-500 text-lg'>*</span></label>
                                                     <input
                                                         type="text"
                                                         name="emergency_details_relation"
@@ -1255,10 +1255,10 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_relation && <p className="text-red-500">{errors.emergency_details_relation}</p>}
+                                                    {errors.emergency_details_relation && <p className="text-red-500 text-lg">{errors.emergency_details_relation}</p>}
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Contact Number<span className='text-red-500'>*</span></label>
+                                                    <label className='text-sm'>Contact Number<span className='text-red-500 text-lg'>*</span></label>
                                                     <input
                                                         type="text"
                                                         name="emergency_details_contact_number"
@@ -1268,7 +1268,7 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_contact_number && <p className="text-red-500">{errors.emergency_details_contact_number}</p>}
+                                                    {errors.emergency_details_contact_number && <p className="text-red-500 text-lg">{errors.emergency_details_contact_number}</p>}
                                                 </div>
                                             </div>
                                         </div>
@@ -1276,7 +1276,7 @@ const BackgroundForm = () => {
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Add PF Details</h3>
                                             <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group'>
-                                                    <label>PF Number</label>
+                                                    <label className='text-sm'>PF Number</label>
                                                     <input
                                                         type="text"
                                                         name="pf_details_pf_number"
@@ -1286,7 +1286,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>PF Type</label>
+                                                    <label className='text-sm'>PF Type</label>
                                                     <input
                                                         type="text"
                                                         name="pf_details_pf_type"
@@ -1296,7 +1296,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>PF Nominee</label>
+                                                    <label className='text-sm'>PF Nominee</label>
                                                     <input
                                                         type="text"
                                                         name="pf_details_pg_nominee"
@@ -1311,7 +1311,7 @@ const BackgroundForm = () => {
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-4'>Do you have an NPS Account? If yes</h3>
                                             <div className='md:grid grid-cols-3 gap-3'>
                                                 <div className='form-group '>
-                                                    <label>PRAN (Permanent Retirement Account Number).</label>
+                                                    <label className='text-sm'>PRAN (Permanent Retirement Account Number).</label>
                                                     <input
                                                         type="text"
                                                         name="nps_details_details_pran_number"
@@ -1321,7 +1321,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Enter Nominee Details of NPS. </label>
+                                                    <label className='text-sm'>Enter Nominee Details of NPS. </label>
                                                     <input
                                                         type="text"
                                                         name="nps_details_details_nominee_details"
@@ -1331,7 +1331,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Enter your contribution details of NPS</label>
+                                                    <label className='text-sm'>Enter your contribution details of NPS</label>
                                                     <input
                                                         type="text"
                                                         name="nps_details_details_nps_contribution"
@@ -1342,7 +1342,7 @@ const BackgroundForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <label className='mt-5 block'>Do you have an ICICI Bank A/c<span className='text-red-500'>*</span></label>
+                                        <label  className='mt-5 block text-sm'>Do you have an ICICI Bank A/c<span className='text-red-500 text-lg'>*</span></label>
 
                                         <div className='flex gap-6 mb-4  '>
                                             <div className='form-group pt-2 flex  gap-2'>
@@ -1354,7 +1354,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded p-2 "
                                                 />
-                                                <label>Yes</label>
+                                                <label className='text-sm'>Yes</label>
                                             </div>
                                             <div className='form-group pt-2 flex  gap-2'>
                                                 <input
@@ -1364,17 +1364,17 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded p-2 "
                                                 />
-                                                <label>No</label>
+                                                <label className='text-sm'>No</label>
                                             </div>
 
                                         </div>
-                                        {errors.icc_bank_acc && <p className="text-red-500">{errors.icc_bank_acc}</p>}
+                                        {errors.icc_bank_acc && <p className="text-red-500 text-lg">{errors.icc_bank_acc}</p>}
 
                                         <div className='border rounded-md p-3 my-6  '>
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'>Banking Details: </h3>
                                             <span className='text-sm md:text-center text-start block'> Note: If you have an ICICI Bank account, please provide those details. If not, feel free to share your banking information from any other bank.</span>
                                             <div className='form-group mt-4'>
-                                                <label>Bank Account Number<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Bank Account Number<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="bank_details_account_number"
@@ -1382,10 +1382,10 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_account_number && <p className="text-red-500">{errors.bank_details_account_number}</p>}
+                                                {errors.bank_details_account_number && <p className="text-red-500 text-lg">{errors.bank_details_account_number}</p>}
                                             </div>
                                             <div className='form-group'>
-                                                <label>Bank Name<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Bank Name<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="bank_details_bank_name"
@@ -1393,10 +1393,10 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_bank_name && <p className="text-red-500">{errors.bank_details_bank_name}</p>}
+                                                {errors.bank_details_bank_name && <p className="text-red-500 text-lg">{errors.bank_details_bank_name}</p>}
                                             </div>
                                             <div className='form-group'>
-                                                <label>Bank Branch Name<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>Bank Branch Name<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="bank_details_branch_name"
@@ -1404,10 +1404,10 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_branch_name && <p className="text-red-500">{errors.bank_details_branch_name}</p>}
+                                                {errors.bank_details_branch_name && <p className="text-red-500 text-lg">{errors.bank_details_branch_name}</p>}
                                             </div>
                                             <div className='form-group'>
-                                                <label>IFSC Code<span className='text-red-500'>*</span></label>
+                                                <label className='text-sm'>IFSC Code<span className='text-red-500 text-lg'>*</span></label>
                                                 <input
                                                     type="text"
                                                     name="bank_details_ifsc_code"
@@ -1415,7 +1415,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_ifsc_code && <p className="text-red-500">{errors.bank_details_ifsc_code}</p>}
+                                                {errors.bank_details_ifsc_code && <p className="text-red-500 text-lg">{errors.bank_details_ifsc_code}</p>}
                                             </div>
                                         </div>
 
@@ -1423,7 +1423,7 @@ const BackgroundForm = () => {
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'> Insurance Nomination Details:- (A set of parent either Parents or Parents in Law, 1 child, Spouse Nominee details) </h3>
                                             <div className='md:grid grid-cols-2 gap-3'>
                                                 <div className='form-group'>
-                                                    <label>Name(s)
+                                                    <label className='text-sm'>Name(s)
                                                     </label>
                                                     <input
                                                         type="text"
@@ -1434,7 +1434,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Nominee Relationship
+                                                    <label className='text-sm'>Nominee Relationship
                                                     </label>
                                                     <input
                                                         type="text"
@@ -1456,7 +1456,7 @@ const BackgroundForm = () => {
                                                     />
                                                 </div>
                                                 <div className='form-group'>
-                                                    <label>Contact No.
+                                                    <label className='text-sm'>Contact No.
                                                     </label>
                                                     <input
                                                         type="text"
@@ -1468,7 +1468,7 @@ const BackgroundForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <label className='mt-5 block'>Do you want to opt for a Food Coupon?<span className='text-red-500'>*</span></label>
+                                        <label  className='text-sm mt-5 block'>Do you want to opt for a Food Coupon?<span className='text-red-500 text-lg'>*</span></label>
 
                                         <div className='flex gap-6 mb-4  '>
                                             <div className='form-group pt-2 flex gap-2'>
@@ -1479,7 +1479,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded p-2"
                                                 />
-                                                <label>Yes</label>
+                                                <label className='text-sm'>Yes</label>
                                             </div>
                                             <div className='form-group pt-2 flex gap-2'>
                                                 <input
@@ -1489,10 +1489,10 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded p-2"
                                                 />
-                                                <label>No</label>
+                                                <label className='text-sm'>No</label>
                                             </div>
                                         </div>
-                                        {errors.food_coupon && <p className="text-red-500">{errors.food_coupon}</p>}
+                                        {errors.food_coupon && <p className="text-red-500 text-lg">{errors.food_coupon}</p>}
 
 
                                         <p className='text-left '>Food coupons are vouchers or digital meal cards given to employees to purchase food and non-alcoholic beverages. Specific amount as per your requirement would get deducted from your Basic Pay. These are tax free, considered as a non-monetary benefit and are exempt from tax up to a specified limit.</p>
@@ -1507,10 +1507,10 @@ const BackgroundForm = () => {
                                             key={serviceIndex}
                                             className="border bg-white shadow-md border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300"
                                         >
-                                            <h2 className="md:text-center text-start py-4 md:text-2xl text-sm font-bold mb-6 text-black">
+                                            <h2 className="md:text-start text-start py-4 md:text-2xl text-sm font-bold mb-6 text-black">
                                                 {service.heading}
                                             </h2>
-                                            <div className="space-y-6">
+                                            <div className="space-y-6" id="servicesForm">
                                                 {service.rows.map((row, rowIndex) => {
                                                     if (hiddenRows[`${serviceIndex}-${rowIndex}`]) {
                                                         return null;
@@ -1519,7 +1519,7 @@ const BackgroundForm = () => {
                                                     return (
                                                         <div key={rowIndex}>
                                                             {row.row_heading && (
-                                                                <h3 className="text-lg font-semibold mb-4">{row.row_heading}</h3>
+                                                                <h3 className="text-sm text-start font-semibold mb-4">{row.row_heading}</h3>
                                                             )}
 
                                                             {row.inputs && row.inputs.length > 0 ? (
@@ -1550,9 +1550,11 @@ const BackgroundForm = () => {
                                                                                     key={inputIndex}
                                                                                     className={`flex flex-col space-y-2 ${row.inputs.length === 1 ? 'col-span-1' : row.inputs.length === 2 ? 'col-span-1' : ''}`}
                                                                                 >
-                                                                                    <label className="block text-sm font-medium mb-2 text-gray-700 capitalize">
+                                                                                    <label  className="text-sm block font-medium mb-2 text-gray-700 capitalize">
                                                                                         {input.label.replace(/[\/\\]/g, '')}
+                                                                                        {input.required && <span className="text-red-500 text-lg">*</span>} {/* Add the red color to the asterisk if required */}
                                                                                     </label>
+
 
                                                                                     {/* Input types (text, textarea, datepicker, etc.) */}
                                                                                     {input.type === 'input' && (
@@ -1575,7 +1577,7 @@ const BackgroundForm = () => {
                                                                                         <input
                                                                                             type="date"
                                                                                             name={input.name}
-                                                                                            className="mt-1 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                                            className="mt-3 p-2 border w-full border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                                             onChange={(e) => handleServiceChange(service.db_table, input.name, e.target.value)}
                                                                                         />
                                                                                     )}
@@ -1620,7 +1622,7 @@ const BackgroundForm = () => {
                                                                                                     handleFileChange(service.db_table + '_' + input.name, input.name, e)
                                                                                                 }
                                                                                             />
-                                                                                            {errors[input.name] && <p className="text-red-500">{errors[input.name]}</p>}
+                                                                                            {errors[input.name] && <p className="text-red-500 text-lg">{errors[input.name]}</p>}
                                                                                             <p className="text-gray-500 text-sm mt-2">
                                                                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                                                                             </p>
@@ -1662,7 +1664,7 @@ const BackgroundForm = () => {
                             )}
 
                             <div className='mb-6  p-4 rounded-md border shadow-md bg-white mt-8'>
-                                <h4 className="md:text-center text-start md:text-xl text-sm my-6 font-bold">Declaration and Authorization</h4>
+                                <h4 className="md:text-start text-start md:text-xl text-sm my-6 font-bold">Declaration and Authorization</h4>
                                 <div className="mb-6">
                                     <p className='text-sm'>
                                         I hereby authorize GoldQuest Global HR Services Private Limited and its representative to verify information provided in my application for employment and this employee background verification form, and to conduct enquiries as may be necessary, at the company’s discretion. I authorize all persons who may have information relevant to this enquiry to disclose it to GoldQuest Global HR Services Pvt Ltd or its representative. I release all persons from liability on account of such disclosure.
@@ -1672,18 +1674,18 @@ const BackgroundForm = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-6">
                                     <div className="form-group">
-                                        <label>Attach signature: <span className="text-red-500">*</span></label>
+                                        <label className='text-sm'>Attach signature: <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={(e) => handleFileChange("applications_signature", "signature", e)}
                                             type="file"
                                             accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
 
-                                            className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
+                                            className="form-control border rounded w-full p-1 mt-2 bg-white mb-0"
                                             name="signature"
                                             id="signature"
 
                                         />
-                                        {errors.signature && <p className="text-red-500">{errors.signature}</p>}
+                                        {errors.signature && <p className="text-red-500 text-lg">{errors.signature}</p>}
                                         <p className="text-gray-500 text-sm mt-2">
                                             Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                         </p>
@@ -1691,7 +1693,7 @@ const BackgroundForm = () => {
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Name</label>
+                                        <label className='text-sm'>Name</label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.name_declaration}
@@ -1704,7 +1706,7 @@ const BackgroundForm = () => {
 
 
                                     <div className="form-group">
-                                        <label>Date</label>
+                                        <label className='text-sm'>Date</label>
                                         <input
 
                                             onChange={handleChange}
@@ -1718,7 +1720,7 @@ const BackgroundForm = () => {
                                 </div>
                             </div>
 
-                            <h5 className="md:text-center text-start text-lg my-6 font-bold">Documents  (Mandatory)</h5>
+                            <h5 className="md:text-start text-start text-lg my-6 font-bold">Documents  (Mandatory)</h5>
 
                             <div className="grid grid-cols-1 bg-white shadow-md  md:grid-cols-3 gap-4 pt-4  md:p-4 p-1 rounded-md border">
                                 <div className="p-4">
@@ -1747,7 +1749,7 @@ const BackgroundForm = () => {
                             </div>
 
 
-                            <p className='md:text-center text-start text-sm mt-4'>
+                            <p className='md:text-start text-start text-sm mt-4'>
                                 NOTE: If you experience any issues or difficulties with submitting the form, please take screenshots of all pages, including attachments and error messages, and email them to <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> . Additionally, you can reach out to us at <a href="mailto:onboarding@goldquestglobal.in">onboarding@goldquestglobal.in</a> .
                             </p>
 

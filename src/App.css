@@ -323,3 +323,16 @@ input,select{
   margin: 10px 0;
 }
 }
+#servicesForm input[type="date"] {
+  margin-top: 15px !important;
+}
+#servicesForm label {
+  line-height: 27px;
+}
+#servicesForm input {
+  padding: 8px;
+}
+#servicesForm input[type="file"] {
+  margin-top: 5px !important;
+  padding: 5px;
+}

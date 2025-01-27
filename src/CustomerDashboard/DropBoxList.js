@@ -316,7 +316,7 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 {report.attach_documents ? (
                                                     <>
-                                                        {report.attach_documents.split(', ').map((doc, index) => {
+                                                        {report.attach_documents.split(',').map((doc, index) => {
                                                             if (index === 0) {
                                                                 return (
                                                                     <div key={index} className="mb-4">
