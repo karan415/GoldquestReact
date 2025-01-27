@@ -478,7 +478,7 @@ const ClientForm = () => {
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="photo">Upload photo<span className="text-red-500">*</span></label>
+                                <label htmlFor="photo">Upload photo</label>
                                 <input type="file" name="photo" id="upPhoto" className="border w-full capitalize rounded-md p-2 mt-2 outline-none" accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx" // Restrict to specific file types
                                     onChange={(e) => handleFileChange('photo', e)} />
                                 {inputError.photo && <p className='text-red-500'>{inputError.photo}</p>}
@@ -507,7 +507,6 @@ const ClientForm = () => {
                                                         onChange={handleChange}
                                                         checked={clientInput.services.includes(String(item.serviceId))} // Match ID type
                                                     />
-
                                                     <div className='font-bold'>{item.serviceTitle}</div>
                                                 </li>
                                             ))}
