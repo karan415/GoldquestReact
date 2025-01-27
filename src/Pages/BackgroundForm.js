@@ -134,7 +134,7 @@ const BackgroundForm = () => {
 
         if (status === 1) {
             const additionalFields = [
-                "name_declaration", "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number", "aadhar_card_name", "pan_card_name", "food_coupon"
+                "emergency_details_name", "emergency_details_relation", "emergency_details_contact_number", "aadhar_card_name", "pan_card_name", "food_coupon"
             ];
 
             // Concatenate the requiredFields array with additionalFields
