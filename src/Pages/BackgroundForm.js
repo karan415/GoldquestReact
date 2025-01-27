@@ -756,7 +756,7 @@ const BackgroundForm = () => {
                                         ref={(el) => (refs.current["resume_file"] = el)} // Attach ref here
 
                                     />
-                                    {errors.resume_file && <p className="text-red-500 text-lg">{errors.resume_file}</p>}
+                                    {errors.resume_file && <p className="text-red-500 text-sm">{errors.resume_file}</p>}
                                     <p className="text-gray-500 text-sm mt-2">
                                         Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                     </p>
@@ -772,7 +772,7 @@ const BackgroundForm = () => {
                                         multiple // Allow multiple file selection
                                         ref={(el) => (refs.current["applications_govt_id"] = el)} // Attach ref here
                                     />
-                                    {errors.govt_id && <p className="text-red-500 text-lg">{errors.govt_id}</p>}
+                                    {errors.govt_id && <p className="text-red-500 text-sm">{errors.govt_id}</p>}
                                     <p className="text-gray-500 text-sm mt-2">
                                         Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                     </p>
@@ -794,7 +794,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["passport_photo"] = el)} // Attach ref here
 
                                             />
-                                            {errors.passport_photo && <p className="text-red-500 text-lg">{errors.passport_photo}</p>}
+                                            {errors.passport_photo && <p className="text-red-500 text-sm">{errors.passport_photo}</p>}
                                             <p className="text-gray-500 text-sm mt-2">
                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                             </p>
@@ -809,7 +809,7 @@ const BackgroundForm = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 ">
                                     <div className="form-group">
-                                        <label className='text-sm' htmlFor="full_name">Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500 text-lg">*</span></label>
+                                        <label className='text-sm'>Full Name as per Govt ID Proof (first, middle, last): <span className="text-red-500 text-lg">*</span></label>
                                         <input
                                             onChange={handleChange}
                                             value={formData.personal_information.full_name}
@@ -820,7 +820,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["full_name"] = el)}
 
                                         />
-                                        {errors.full_name && <p className="text-red-500 text-lg">{errors.full_name}</p>}
+                                        {errors.full_name && <p className="text-red-500 text-sm">{errors.full_name}</p>}
                                     </div>
                                     <div className="form-group">
                                         <label className='text-sm' htmlFor="former_name">Former Name/ Maiden Name (if applicable)<span className="text-red-500 text-lg">*</span></label>
@@ -833,7 +833,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["former_name"] = el)} // Attach ref here
                                             name="former_name"
                                         />
-                                        {errors.former_name && <p className="text-red-500 text-lg">{errors.former_name}</p>}
+                                        {errors.former_name && <p className="text-red-500 text-sm">{errors.former_name}</p>}
                                     </div>
                                     <div className="form-group">
                                         <label className='text-sm' htmlFor="mob_no">Mobile Number: <span className="text-red-500 text-lg">*</span></label>
@@ -849,7 +849,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["mob_no"] = el)} // Attach ref here
 
                                         />
-                                        {errors.mb_no && <p className="text-red-500 text-lg">{errors.mb_no}</p>}
+                                        {errors.mb_no && <p className="text-red-500 text-sm">{errors.mb_no}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -866,7 +866,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["father_name"] = el)} // Attach ref here
 
                                         />
-                                        {errors.father_name && <p className="text-red-500 text-lg">{errors.father_name}</p>}
+                                        {errors.father_name && <p className="text-red-500 text-sm">{errors.father_name}</p>}
                                     </div>
                                     <div className="form-group">
                                         <label className='text-sm' htmlFor="husband_name">Spouse's Name</label>
@@ -893,7 +893,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["dob"] = el)} // Attach ref here
 
                                         />
-                                        {errors.dob && <p className="text-red-500 text-lg">{errors.dob}</p>}
+                                        {errors.dob && <p className="text-red-500 text-sm">{errors.dob}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -917,7 +917,7 @@ const BackgroundForm = () => {
                                             <option value="female">Female</option>
                                             <option value="other">Other</option>
                                         </select>
-                                        {errors.gender && <p className="text-red-500 text-lg">{errors.gender}</p>}
+                                        {errors.gender && <p className="text-red-500 text-sm">{errors.gender}</p>}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -947,7 +947,7 @@ const BackgroundForm = () => {
 
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.aadhar_card_name && <p className="text-red-500 text-lg">{errors.aadhar_card_name}</p>}
+                                                {errors.aadhar_card_name && <p className="text-red-500 text-sm">{errors.aadhar_card_name}</p>}
 
                                             </div>
                                             <div className='form-group'>
@@ -963,7 +963,7 @@ const BackgroundForm = () => {
 
 
                                                 />
-                                                {errors.aadhar_card_image && <p className="text-red-500 text-lg">{errors.aadhar_card_image}</p>}
+                                                {errors.aadhar_card_image && <p className="text-red-500 text-sm">{errors.aadhar_card_image}</p>}
                                                 <p className="text-gray-500 text-sm mt-2">
                                                     Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                                 </p>
@@ -998,7 +998,7 @@ const BackgroundForm = () => {
 
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.pan_card_name && <p className="text-red-500 text-lg">{errors.pan_card_name}</p>}
+                                                {errors.pan_card_name && <p className="text-red-500 text-sm">{errors.pan_card_name}</p>}
                                             </div>
                                         </>
                                     )}
@@ -1016,7 +1016,7 @@ const BackgroundForm = () => {
 
 
                                             />
-                                            {errors.pan_card_image && <p className="text-red-500 text-lg">{errors.pan_card_image}</p>}
+                                            {errors.pan_card_image && <p className="text-red-500 text-sm">{errors.pan_card_image}</p>}
                                             <p className="text-gray-500 text-sm mt-2">
                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                             </p>
@@ -1050,7 +1050,7 @@ const BackgroundForm = () => {
                                             ref={(el) => (refs.current["nationality"] = el)} // Attach ref here
 
                                         />
-                                        {errors.nationality && <p className="text-red-500 text-lg">{errors.nationality}</p>}
+                                        {errors.nationality && <p className="text-red-500 text-sm">{errors.nationality}</p>}
                                     </div>
                                     <div className="form-group">
                                         <label className='text-sm' htmlFor="marital_status">Marital Status: <span className="text-red-500 text-lg">*</span></label>
@@ -1070,7 +1070,7 @@ const BackgroundForm = () => {
                                             <option value="Divorced">Divorced</option>
                                             <option value="Separated">Separated</option>
                                         </select>
-                                        {errors.marital_status && <p className="text-red-500 text-lg">{errors.marital_status}</p>}
+                                        {errors.marital_status && <p className="text-red-500 text-sm">{errors.marital_status}</p>}
                                     </div>
                                 </div>
                                 <div className='border bg-white border-gray-300 p-6 rounded-md mt-5 hover:transition-shadow duration-300'>
@@ -1079,7 +1079,7 @@ const BackgroundForm = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                         <div className="form-group">
-                                            <label className='text-sm' htmlFor="full_name">Permanenet Address<span className="text-red-500 text-lg">*</span></label>
+                                            <label className='text-sm' htmlFor="full_address">permanent Address<span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.full_address}
@@ -1090,10 +1090,10 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["full_address"] = el)} // Attach ref here
 
                                             />
-                                            {errors.full_address && <p className="text-red-500 text-lg">{errors.full_address}</p>}
+                                            {errors.full_address && <p className="text-red-500 text-sm">{errors.full_address}</p>}
                                         </div>
                                         <div className="form-group">
-                                            <label className='text-sm' htmlFor="full_name">Current Address <span className="text-red-500 text-lg">*</span></label>
+                                            <label className='text-sm'>Current Address <span className="text-red-500 text-lg">*</span></label>
                                             <input
                                                 onChange={handleChange}
                                                 value={formData.personal_information.current_address}
@@ -1104,7 +1104,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address && <p className="text-red-500 text-lg">{errors.current_address}</p>}
+                                            {errors.current_address && <p className="text-red-500 text-sm">{errors.current_address}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="pin_code">Pin Code <span className="text-red-500 text-lg">*</span></label>
@@ -1118,7 +1118,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["pin_code"] = el)} // Attach ref here
 
                                             />
-                                            {errors.pin_code && <p className="text-red-500 text-lg">{errors.pin_code}</p>}
+                                            {errors.pin_code && <p className="text-red-500 text-sm">{errors.pin_code}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="current_address_landline_number">Mobile Number<span className="text-red-500 text-lg">*</span></label>
@@ -1132,7 +1132,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_landline_number"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_landline_number && <p className="text-red-500 text-lg">{errors.current_address_landline_number}</p>}
+                                            {errors.current_address_landline_number && <p className="text-red-500 text-sm">{errors.current_address_landline_number}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="current_address_state">Current State <span className="text-red-500 text-lg">*</span></label>
@@ -1146,7 +1146,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_state"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_state && <p className="text-red-500 text-lg">{errors.current_address_state}</p>}
+                                            {errors.current_address_state && <p className="text-red-500 text-sm">{errors.current_address_state}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="current_prominent_landmark">Current Landmark<span className="text-red-500 text-lg">*</span></label>
@@ -1160,7 +1160,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_prominent_landmark"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_prominent_landmark && <p className="text-red-500 text-lg">{errors.current_prominent_landmark}</p>}
+                                            {errors.current_prominent_landmark && <p className="text-red-500 text-sm">{errors.current_prominent_landmark}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="current_address_stay_to">Current Address Stay No.<span className="text-red-500 text-lg">*</span></label>
@@ -1174,7 +1174,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["current_address_stay_to"] = el)} // Attach ref here
 
                                             />
-                                            {errors.current_address_stay_to && <p className="text-red-500 text-lg">{errors.current_address_stay_to}</p>}
+                                            {errors.current_address_stay_to && <p className="text-red-500 text-sm">{errors.current_address_stay_to}</p>}
                                         </div>
                                         <div className="form-group">
                                             <label className='text-sm' htmlFor="nearest_police_station">Nearest Police Station.<span className="text-red-500 text-lg">*</span></label>
@@ -1188,7 +1188,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["nearest_police_station"] = el)} // Attach ref here
 
                                             />
-                                            {errors.nearest_police_station && <p className="text-red-500 text-lg">{errors.nearest_police_station}</p>}
+                                            {errors.nearest_police_station && <p className="text-red-500 text-sm">{errors.nearest_police_station}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -1225,7 +1225,7 @@ const BackgroundForm = () => {
                                                 ref={(el) => (refs.current["declaration_date"] = el)}
                                                 className="form-control border rounded w-full p-2 mt-2"
                                             />
-                                            {errors.declaration_date && <p className="text-red-500 text-lg">{errors.declaration_date}</p>}
+                                            {errors.declaration_date && <p className="text-red-500 text-sm">{errors.declaration_date}</p>}
                                         </div>
 
                                         <div className='border rounded-md p-3 my-5 '>
@@ -1242,7 +1242,7 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_name && <p className="text-red-500 text-lg">{errors.emergency_details_name}</p>}
+                                                    {errors.emergency_details_name && <p className="text-red-500 text-sm">{errors.emergency_details_name}</p>}
                                                 </div>
                                                 <div className='form-group'>
                                                     <label className='text-sm'>Relation<span className='text-red-500 text-lg'>*</span></label>
@@ -1255,7 +1255,7 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_relation && <p className="text-red-500 text-lg">{errors.emergency_details_relation}</p>}
+                                                    {errors.emergency_details_relation && <p className="text-red-500 text-sm">{errors.emergency_details_relation}</p>}
                                                 </div>
                                                 <div className='form-group'>
                                                     <label className='text-sm'>Contact Number<span className='text-red-500 text-lg'>*</span></label>
@@ -1268,7 +1268,7 @@ const BackgroundForm = () => {
 
                                                         className="form-control border rounded w-full p-2 mt-2"
                                                     />
-                                                    {errors.emergency_details_contact_number && <p className="text-red-500 text-lg">{errors.emergency_details_contact_number}</p>}
+                                                    {errors.emergency_details_contact_number && <p className="text-red-500 text-sm">{errors.emergency_details_contact_number}</p>}
                                                 </div>
                                             </div>
                                         </div>
@@ -1368,7 +1368,7 @@ const BackgroundForm = () => {
                                             </div>
 
                                         </div>
-                                        {errors.icc_bank_acc && <p className="text-red-500 text-lg">{errors.icc_bank_acc}</p>}
+                                        {errors.icc_bank_acc && <p className="text-red-500 text-sm">{errors.icc_bank_acc}</p>}
 
                                         <div className='border rounded-md p-3 my-6  '>
                                             <h3 className='md:text-center text-start md:text-xl text-sm font-bold pb-2'>Banking Details: </h3>
@@ -1382,7 +1382,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_account_number && <p className="text-red-500 text-lg">{errors.bank_details_account_number}</p>}
+                                                {errors.bank_details_account_number && <p className="text-red-500 text-sm">{errors.bank_details_account_number}</p>}
                                             </div>
                                             <div className='form-group'>
                                                 <label className='text-sm'>Bank Name<span className='text-red-500 text-lg'>*</span></label>
@@ -1393,7 +1393,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_bank_name && <p className="text-red-500 text-lg">{errors.bank_details_bank_name}</p>}
+                                                {errors.bank_details_bank_name && <p className="text-red-500 text-sm">{errors.bank_details_bank_name}</p>}
                                             </div>
                                             <div className='form-group'>
                                                 <label className='text-sm'>Bank Branch Name<span className='text-red-500 text-lg'>*</span></label>
@@ -1404,7 +1404,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_branch_name && <p className="text-red-500 text-lg">{errors.bank_details_branch_name}</p>}
+                                                {errors.bank_details_branch_name && <p className="text-red-500 text-sm">{errors.bank_details_branch_name}</p>}
                                             </div>
                                             <div className='form-group'>
                                                 <label className='text-sm'>IFSC Code<span className='text-red-500 text-lg'>*</span></label>
@@ -1415,7 +1415,7 @@ const BackgroundForm = () => {
                                                     onChange={handleChange}
                                                     className="form-control border rounded w-full p-2 mt-2"
                                                 />
-                                                {errors.bank_details_ifsc_code && <p className="text-red-500 text-lg">{errors.bank_details_ifsc_code}</p>}
+                                                {errors.bank_details_ifsc_code && <p className="text-red-500 text-sm">{errors.bank_details_ifsc_code}</p>}
                                             </div>
                                         </div>
 
@@ -1492,7 +1492,7 @@ const BackgroundForm = () => {
                                                 <label className='text-sm'>No</label>
                                             </div>
                                         </div>
-                                        {errors.food_coupon && <p className="text-red-500 text-lg">{errors.food_coupon}</p>}
+                                        {errors.food_coupon && <p className="text-red-500 text-sm">{errors.food_coupon}</p>}
 
 
                                         <p className='text-left '>Food coupons are vouchers or digital meal cards given to employees to purchase food and non-alcoholic beverages. Specific amount as per your requirement would get deducted from your Basic Pay. These are tax free, considered as a non-monetary benefit and are exempt from tax up to a specified limit.</p>
@@ -1622,7 +1622,7 @@ const BackgroundForm = () => {
                                                                                                     handleFileChange(service.db_table + '_' + input.name, input.name, e)
                                                                                                 }
                                                                                             />
-                                                                                            {errors[input.name] && <p className="text-red-500 text-lg">{errors[input.name]}</p>}
+                                                                                            {errors[input.name] && <p className="text-red-500 text-sm">{errors[input.name]}</p>}
                                                                                             <p className="text-gray-500 text-sm mt-2">
                                                                                                 Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                                                                             </p>
@@ -1685,7 +1685,7 @@ const BackgroundForm = () => {
                                             id="signature"
 
                                         />
-                                        {errors.signature && <p className="text-red-500 text-lg">{errors.signature}</p>}
+                                        {errors.signature && <p className="text-red-500 text-sm">{errors.signature}</p>}
                                         <p className="text-gray-500 text-sm mt-2">
                                             Only JPG, PNG, PDF, DOCX, and XLSX files are allowed. Max file size: 2MB.
                                         </p>
