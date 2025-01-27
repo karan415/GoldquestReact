@@ -989,6 +989,7 @@ const CandidateBGV = () => {
                                         <input
                                             value={cefData?.name_declaration}
                                             type="text"
+                                            disabled
                                             className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
                                             name="name_declaration"
 
@@ -1001,6 +1002,7 @@ const CandidateBGV = () => {
                                         <input
                                             value={cefData?.declaration_date}
                                             type="date"
+                                            disabled
                                             className="form-control border rounded w-full p-2 mt-2 bg-white mb-0"
                                             name="declaration_date"
 
