@@ -349,33 +349,33 @@ const AdminChekin = () => {
 
     const fetchImageToBase = async (imageUrls) => {
         try {
-      
-          const headers = {
-            "Content-Type": "application/json",
-          };
-      
-          const raw = {
-            image_urls: imageUrls,
-          };
-      
-          // Send the POST request to the API
-          const response = await axios.post(
-            "https://api.goldquestglobal.in/test/image-to-base",
-            raw,
-            { headers }
-          );
-      
-          // Return the images from the response
-          return response.data.images;
+
+            const headers = {
+                "Content-Type": "application/json",
+            };
+
+            const raw = {
+                image_urls: imageUrls,
+            };
+
+            // Send the POST request to the API
+            const response = await axios.post(
+                "https://api.goldquestglobal.in/test/image-to-base",
+                raw,
+                { headers }
+            );
+
+            // Return the images from the response
+            return response.data.images;
         } catch (error) {
-          console.error("Error fetching images:", error);
-          if (error.response) {
-            console.error("Response error:", error.response.data);
-          }
+            console.error("Error fetching images:", error);
+            if (error.response) {
+                console.error("Response error:", error.response.data);
+            }
         }
         return null; // Return null in case of an error
-      };
-      
+    };
+
 
 
     const generatePDF = async (index, reportDownloadFlag) => {
@@ -811,23 +811,23 @@ const AdminChekin = () => {
                                 console.error(`Invalid base64 data for image ${index + 1}`);
                                 return;
                             }
-                    
+
                             const { width, height } = scaleImageForPDF(image.width, image.height, doc.internal.pageSize.width - 20, 80);
                             if (yPosition + height > doc.internal.pageSize.height - 20) {
                                 doc.addPage();
                                 yPosition = 10;
                             }
-                    
+
                             const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
                             const textWidth = doc.getTextWidth(annexureText);
                             const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-                    
+
                             doc.setFont("helvetica", "bold");
                             doc.setFontSize(10);
                             doc.setTextColor(0, 0, 0);
                             doc.text(annexureText, centerX, yPosition + 10);
                             yPosition += 15;
-                    
+
                             const centerXImage = (doc.internal.pageSize.width - width) / 2;
                             try {
                                 // Ensure that the base64 data and type are correctly passed
@@ -838,7 +838,7 @@ const AdminChekin = () => {
                             }
                         });
                     }
-                    
+
                     /*
                     for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
                         const imageUrlFull = `${imageUrl.trim()}`;
@@ -1139,23 +1139,36 @@ const AdminChekin = () => {
             const headingsAndStatuses = [];
 
             servicesData.forEach((service) => {
-                const heading = JSON.parse(service.reportFormJson.json).heading;
-                let status = service.annexureData?.status || "NIL";
-                if (status.length < 4) {
-                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
-                } else {
-                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ")
-                        .toLowerCase()
-                        .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL';
+                // Check if reportFormJson exists and contains heading
+                if (service.reportFormJson && service.reportFormJson.json) {
+                    const heading = JSON.parse(service.reportFormJson.json).heading;
+
+                    // If there's a valid heading, process it
+                    if (heading) {
+                        let status = service.annexureData?.status || "NIL";
+                        if (status.length < 4) {
+                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
+                        } else {
+                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ")
+                                .toLowerCase()
+                                .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL';
+                        }
+
+                        headingsAndStatuses.push({ heading, status });
+                    }
                 }
-
-                headingsAndStatuses.push({ heading, status });
             });
 
-            setExpandedRow({
-                index: index,
-                headingsAndStatuses: headingsAndStatuses,
-            });
+            // Only expand the row if at least one valid heading is found
+            if (headingsAndStatuses.length > 0) {
+                setExpandedRow({
+                    index: index,
+                    headingsAndStatuses: headingsAndStatuses,
+                });
+            } else {
+                // If no valid heading found, collapse the row
+                setExpandedRow(null);
+            }
 
             setServicesLoading((prev) => ({ ...prev, [index]: false }));
 
@@ -1171,6 +1184,8 @@ const AdminChekin = () => {
             setServicesLoading((prev) => ({ ...prev, [index]: false }));
         }
     };
+
+
 
 
 
@@ -1450,19 +1465,20 @@ const AdminChekin = () => {
                                                                     <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
                                                                 </tr>
 
-
-                                                                {expandedRow.headingsAndStatuses &&
-                                                                    expandedRow.headingsAndStatuses.map((item, idx) => (
-                                                                        <tr key={`row-${idx}`}>
-                                                                            <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                                                {sanitizeText(item.heading)}
-                                                                            </td>
-                                                                            <td className="text-left p-2 border border-black capitalize">
-                                                                                {sanitizeText(item.status || 'NIL')}
-                                                                            </td>
-                                                                        </tr>
-                                                                    ))
-                                                                }
+                                                                <tbody style={{ maxHeight: '200px', overflowY: 'auto', display: 'block' }}>
+                                                                    {expandedRow.headingsAndStatuses &&
+                                                                        expandedRow.headingsAndStatuses.map((item, idx) => (
+                                                                            <tr key={`row-${idx}`}>
+                                                                                <td className="text-left p-2 border border-black capitalize bg-gray-200">
+                                                                                    {sanitizeText(item.heading)}
+                                                                                </td>
+                                                                                <td className="text-left p-2 border border-black capitalize">
+                                                                                    {sanitizeText(item.status || 'NIL')}
+                                                                                </td>
+                                                                            </tr>
+                                                                        ))
+                                                                    }
+                                                                </tbody>
 
                                                             </tbody>
                                                         </table>

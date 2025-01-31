@@ -16,7 +16,7 @@ export const ClientEditProvider = ({ children }) => {
     const [clientData, setClientData] = useState();
     const [custom_bgv, setCustom_Bgv] = useState(0);
 
-console.log('errors,',errors)
+    console.log('clientData,', clientData)
 
     const uploadCustomerLogo = async (admin_id, storedToken, customerInsertId,) => {
         const fileCount = Object.keys(files).length;
@@ -166,8 +166,6 @@ console.log('errors,',errors)
             }
         });
 
-
-
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
 
@@ -219,20 +217,20 @@ console.log('errors,',errors)
             }
 
             if (!response.ok) {
-                const errorMessage = contentType && contentType.includes("application/json")
-                    ? (await response.json()).message
-                    : await response.text();
-
-                Swal.fire('Error!', `An error occurred: ${errorMessage}`, 'error');
+                const errorMessage = data.message || 'An error occurred'; // Show API message if present
+                Swal.fire('Error!', errorMessage, 'error');
                 return;
             }
 
             const customerInsertId = clientData.customer_id;
 
+            // Show the success message from API (if available)
+            const successMessage = data.message || 'Client Updated Successfully.'; // API response message if any
+
             if (fileCount === 0) {
                 Swal.fire({
                     title: "Success",
-                    text: `Client Updated Successfully.`,
+                    text: successMessage,
                     icon: "success",
                     confirmButtonText: "Ok",
                 });
@@ -242,7 +240,7 @@ console.log('errors,',errors)
 
                 Swal.fire({
                     title: "Success",
-                    text: `Client Updated Successfully.`,
+                    text: successMessage,
                     icon: "success",
                     confirmButtonText: "Ok",
                 });
@@ -259,8 +257,9 @@ console.log('errors,',errors)
 
 
 
+
     return (
-        <ClientEditContext.Provider value={{ loading,admins, setAdmins, clientData, errors, setErrors, setClientData, setCustom_Bgv, refs, custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
+        <ClientEditContext.Provider value={{ loading, admins, setAdmins, clientData, errors, setErrors, setClientData, setCustom_Bgv, refs, custom_bgv, handleClientChange, handleClientSubmit, setFiles, files, loading }}>
             {children}
         </ClientEditContext.Provider>
     );

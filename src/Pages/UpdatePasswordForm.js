@@ -22,11 +22,20 @@ const UpdatePasswordForm = () => {
 
     const validate = () => {
         const NewErr = {};
+    
+        // Check if the new password is provided and its length is between 8 and 10 characters
         if (!newPass.newpass) NewErr.newpass = 'This is required';
+        else if (newPass.newpass.length < 8 || newPass.newpass.length > 10) 
+            NewErr.newpass = 'Password must be between 8 and 10 characters long';
+    
+        // Check if the confirmation password is provided
         if (!newPass.c_newpass) NewErr.c_newpass = 'This is required';
-        else if (newPass.c_newpass !== newPass.newpass) NewErr.c_newpass = 'Passwords do not match';
+        else if (newPass.c_newpass !== newPass.newpass) 
+            NewErr.c_newpass = 'Passwords do not match';
+    
         return NewErr;
     };
+    
 
     const handleSubmit = (e) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;

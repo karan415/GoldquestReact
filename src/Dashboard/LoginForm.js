@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useApi } from "../ApiContext";
@@ -11,14 +11,29 @@ const LoginForm = () => {
     username: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showOtpModal, setShowOtpModal] = useState(false); // State for OTP modal
-  const [isOtpLoading, setIsOtpLoading] = useState(false); // State for OTP button
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
   const API_URL = useApi();
   const [error, setError] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
+
+  // On component mount, check localStorage for saved login credentials
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("username");
+    const savedPassword = localStorage.getItem("password");
+
+    if (savedUsername && savedPassword) {
+      setInput({
+        username: savedUsername,
+        password: savedPassword,
+      });
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -28,37 +43,33 @@ const LoginForm = () => {
     }));
   };
 
-  const validateError = () => {
-    const newErrors = {};
-    if (!input.username) newErrors.username = "This is Required";
-    if (!input.password) newErrors.password = "This is Required";
-    return newErrors;
+  const handleRememberMeChange = () => {
+    setRememberMe((prev) => !prev);
   };
 
-  const handleSubmit = (event) => {
-    const checkConnection = async () => {
-      try {
-        const requestOptions = {
-          method: "GET",
-          redirect: "follow",
-        };
-        const response = await fetch(
-          `${API_URL}/test/connection`,
-          requestOptions
-        );
-        const result = await response.text();
-        console.log(result); // Handle the response
-      } catch (error) {
-        console.error("Connection error:", error); // Handle connection errors
-      }
-    };
+  const validateError = () => {
+    const newErrors = {};
 
-    checkConnection();
+    if (!input.username) {
+        newErrors.username = "This is Required";
+    }
+
+    if (!input.password) {
+        newErrors.password = "This is Required";
+    } else if (input.password.length < 8 | input.password.length > 10) {
+        newErrors.password = "Password must be between 8 and 10 characters long";
+    }
+
+    return newErrors;
+};
+
+
+  const handleSubmit = (event) => {
     event.preventDefault();
     const errors = validateError();
 
     if (Object.keys(errors).length === 0) {
-      setLoading(true); // Show loading indicator
+      setLoading(true);
 
       const loginData = {
         username: input.username,
@@ -67,12 +78,12 @@ const LoginForm = () => {
 
       const swalInstance = Swal.fire({
         title: "Processing...",
-        text: "Please wait while we have Loged you in",
+        text: "Please wait while we log you in.",
         didOpen: () => {
-          Swal.showLoading(); // This starts the loading spinner
+          Swal.showLoading();
         },
-        allowOutsideClick: false, // Prevent closing Swal while processing
-        showConfirmButton: false, // Hide the confirm button
+        allowOutsideClick: false,
+        showConfirmButton: false,
       });
 
       axios
@@ -80,7 +91,6 @@ const LoginForm = () => {
         .then((response) => {
           const result = response.data;
 
-          // Handle the API message
           if (!result.status) {
             Swal.fire({
               title: "Error!",
@@ -89,7 +99,6 @@ const LoginForm = () => {
               confirmButtonText: "Ok",
             });
           } else {
-            // Handle success cases
             if (result.message === "OTP sent successfully.") {
               Swal.fire({
                 title: "OTP Sent!",
@@ -97,7 +106,7 @@ const LoginForm = () => {
                 icon: "info",
                 confirmButtonText: "Ok",
               }).then(() => {
-                setShowOtpModal(true); // Show OTP modal
+                setShowOtpModal(true);
               });
             } else {
               handleLoginSuccess(result);
@@ -110,25 +119,16 @@ const LoginForm = () => {
             localStorage.setItem("_token", newToken);
           }
 
-          // Handle session expiration
-          if (
-            result.message &&
-            result.message.toLowerCase().includes("invalid") &&
-            result.message.toLowerCase().includes("token")
-          ) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
-            });
+          // Store credentials if 'Remember me' is checked
+          if (rememberMe) {
+            localStorage.setItem("username", input.username);
+            localStorage.setItem("password", input.password);
+          } else {
+            localStorage.removeItem("username");
+            localStorage.removeItem("password");
           }
         })
         .catch((error) => {
-          // Display API or Network error message
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
@@ -142,10 +142,10 @@ const LoginForm = () => {
         })
         .finally(() => {
           swalInstance.close();
-          setLoading(false); // Stop loading indicator
+          setLoading(false);
         });
     } else {
-      setError(errors); // Display validation errors
+      setError(errors);
     }
   };
 
@@ -184,8 +184,8 @@ const LoginForm = () => {
             confirmButtonText: "Ok",
           });
         } else {
-          setShowOtpModal(false); // Hide OTP modal
-          handleLoginSuccess(result); // Handle success response
+          setShowOtpModal(false);
+          handleLoginSuccess(result);
         }
       })
       .catch((error) => {
@@ -207,13 +207,13 @@ const LoginForm = () => {
 
   return (
     <>
-      <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center">
-        <div className="flex wrap lg:flex-nowrap flex-col-reverse lg:flex-row   bg-white lg:w-10/12 p-3 m-auto rounded-md">
+      <div className="md:bg-[#f9f9f9] h-screen flex items-end justify-center" id="login_form">
+        <div className="flex wrap lg:flex-nowrap flex-col-reverse lg:flex-row bg-white lg:w-10/12 p-3 m-auto rounded-md">
           <div className="md:w-10/12 lg:w-7/12 w-full m-auto">
             <img src={bg_img} alt="Logo" className="" />
           </div>
 
-          <div className="lg:w-5/12 flex mb-10 md:mb-0 justify-center  md:mt-0 mt-10">
+          <div className="lg:w-5/12 flex mb-10 md:mb-0 justify-center md:mt-0 mt-10">
             <div className="w-full lg:max-w-xl md:p-8">
               <div className="flex flex-col items-center mb-3 md:mb-12">
                 <img
@@ -260,7 +260,12 @@ const LoginForm = () => {
                 </div>
                 <div className="flex items-center justify-between mb-6">
                   <label className="flex items-center">
-                    <input type="checkbox" className="mr-2 " />
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={handleRememberMeChange}
+                      className="mr-2"
+                    />
                     Remember me
                   </label>
                   <div onClick={goToForgotPassword}>

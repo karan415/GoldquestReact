@@ -10,7 +10,9 @@ const CustomerForgotPassword = () => {
     email: '',
   });
 
-
+  const [loading, setLoading] = useState(false); // Track loading state
+  const [emailSent, setEmailSent] = useState(false); // Track if the email has been sent
+  const [isBlocked, setIsBlocked] = useState(false); // Track if the account is blocked
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,6 +23,12 @@ const CustomerForgotPassword = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent default form submission
+
+    if (emailSent) return; // Prevent submission if email has already been sent
+
+    setLoading(true); // Set loading to true when the request starts
+    setEmailSent(false); // Reset emailSent state
+    setIsBlocked(false); // Reset blocked state
 
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -37,31 +45,59 @@ const CustomerForgotPassword = () => {
     };
 
     fetch("https://api.goldquestglobal.in/branch/forgot-password-request", requestOptions)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+      .then((response) => response.json())  // Parse the response as JSON
       .then((result) => {
-        Swal.fire({
-          title: 'Success',
-          text: result.message,
-          icon: 'success',
-          confirmButtonText: 'OK',
-        }).then(() => {
-          // Navigate to the customer login page after clicking OK
-          navigate('/customer-login');
-        });
+        if (result.status) {  // Check if the status is true
+          Swal.fire({
+            title: 'Success',
+            text: result.message || 'Password reset email has been sent.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+          }).then(() => {
+            setEmailSent(true); // Set emailSent to true when the email is successfully sent
+            navigate('/customer-login'); // Navigate to the customer login page after clicking OK
+          });
+        } else if (result.message === "Too many reset requests. Your account is temporarily blocked. Please try again tomorrow.") {
+          // Blocked message - disable the form and show a blocked message
+          setIsBlocked(true); // Set the blocked state
+          Swal.fire(
+            'Blocked!',
+            result.message || 'Your account is temporarily blocked. Please try again tomorrow.',
+            'error'
+          );
+        } else {
+          // If the status is false, show an error message
+          Swal.fire(
+            'Error!',
+            result.message || 'An error occurred while processing your request.',
+            'error'
+          );
+        }
       })
-      .catch((error) => console.error('Error:', error));
+      .catch((error) => {
+        console.error('Error:', error);
+        Swal.fire(
+          'Error!',
+          'There was an issue with the request.',
+          'error'
+        );
+      })
+      .finally(() => {
+        setLoading(false); // Reset loading state when request is done
+      });
+  };
+
+  const handleResendEmail = () => {
+    handleSubmit(); // Trigger the form submit function to resend the email
   };
 
   return (
     <div className="bg-white md:w-5/12 m-auto shadow-md rounded-sm p-5 translate-y-2/4">
       <h2 className='md:text-4xl text-2xl font-bold pb-8 md:pb-4'>Forgot Password?</h2>
       <p>We'll Send You Reset Instructions.</p>
-      <form onSubmit={handleSubmit} className='mt-9 mb-9'>
+
+      {/* Forgot Password Form */}
+      <form onSubmit={handleSubmit} className={`mt-9 mb-9 ${isBlocked ? 'form-blocked' : ''}`}>
         <div className="mb-4">
           <label htmlFor="email" className='d-block'>Email:</label>
           <input
@@ -72,15 +108,43 @@ const CustomerForgotPassword = () => {
             value={formData.email}
             onChange={handleChange}
             required
+            disabled={emailSent || isBlocked} // Disable the input field after email is sent or if blocked
           />
         </div>
-        <button type='submit' className='bg-green-400 text-white hover:bg-green-200 p-3 rounded-md w-full inline-block text-center'>
-          Reset Password
+
+        <button
+          type="submit"
+          className={`bg-green-400 text-white hover:bg-green-200 p-3 rounded-md w-full inline-block text-center
+            ${loading || emailSent || isBlocked ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-400 hover:bg-green-200'}`}
+          disabled={loading || emailSent || isBlocked} // Disable the button if loading, email has been sent or account is blocked
+        >
+          {loading ? "Submitting..." : emailSent ? "Email Sent" : "Reset Password"}
         </button>
       </form>
+
+      {/* Resend Email Section */}
+      {emailSent && !loading && !isBlocked && (
+        <div className="mt-4">
+          <button
+            onClick={handleResendEmail}
+            className="bg-blue-400 text-white hover:bg-blue-200 p-3 rounded-md w-full inline-block text-center"
+            disabled={loading} // Disable the resend button if loading
+          >
+            Resend Email
+          </button>
+        </div>
+      )}
+
+      {/* Blocked Message */}
+      {isBlocked && (
+        <div className="mt-4 text-center text-red-500">
+          <p>Your account is temporarily blocked. Please try again tomorrow.</p>
+        </div>
+      )}
+
       <span className='flex justify-center items-center gap-4 text-blue-400'>
         <FaArrowLeft />
-        <Link to='/customerlogin'>Back to Login</Link>
+        <Link to='/customer-login'>Back to Login</Link>
       </span>
     </div>
   );

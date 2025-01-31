@@ -65,7 +65,7 @@ const InternalLoginForm = () => {
 
     const Validate = () => {
         const errors = {};
-
+    
         // Validate employee_id: no spaces allowed
         if (!formData.employee_id) {
             errors.employee_id = 'This field is required';
@@ -74,9 +74,7 @@ const InternalLoginForm = () => {
         } else if (/[^a-zA-Z0-9-]/.test(formData.employee_id)) {
             errors.employee_id = 'Employee ID should only contain letters, numbers, and hyphens';
         }
-        
-        
-
+    
         // Validate mobile: no spaces and exactly 10 digits
         if (!formData.mobile) {
             errors.mobile = 'This field is required';
@@ -85,15 +83,24 @@ const InternalLoginForm = () => {
         } else if (!/^\d{10}$/.test(formData.mobile)) {
             errors.mobile = 'Mobile number must be exactly 10 digits';
         }
-
+    
         // Validate other fields
         if (!formData.name) errors.name = 'This field is required';
         if (!formData.email) errors.email = 'This field is required';
-        if (!formData.password) errors.password = 'This field is required';
+    
+        // Validate password length
+        if (!formData.password) {
+            errors.password = 'This field is required';
+        } else if (formData.password.length < 8 || formData.password.length > 10) {
+            errors.password = 'Password must be between 8 and 10 characters long';
+        }
+        
+    
         if (!formData.role) errors.role = 'This field is required';
-
+    
         return errors;
     };
+    
 
 
 

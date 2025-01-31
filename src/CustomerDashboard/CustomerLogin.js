@@ -27,9 +27,9 @@ const CustomerLogin = () => {
   }, [location, navigate])
   return (
     <>
-      <div className="bg-cover h-screen md:h-lvh bg-center flex items-center justify-center p-4 md:p-14" style={{ backgroundImage: `url(${active_client})` }}>
-        <div className="md:flex flex-col gap-10 md:flex-row items-center w-full md:w-7/12 bg-slate-50 opacity-90 md:p-6 md:px-16 rounded-lg shadow-lg">
-          <div className="w-full md:w-7/10 flex flex-col md:p-4">
+      <div className="bg-cover h-screen md:h-lvh bg-center flex md:items-center justify-center p-4 md:p-10" style={{ backgroundImage: `url(${active_client})` }}>
+        <div className="md:flex  h-auto flex-col gap-10 md:flex-row items-center w-full md:w-7/12 bg-slate-50 opacity-90 lg:p-6 xl:px-16 rounded-lg shadow-lg">
+          <div className="w-full md:w-7/10 flex flex-col lg:p-4">
             <CustomerLoginForm />
           </div>
           <div className="w-full md:w-3/10 hidden  md:flex items-center mt-5 md:mt-0 justify-center">

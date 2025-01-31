@@ -4,7 +4,7 @@ import { BiSolidPackage } from "react-icons/bi";
 import { HomeIcon, UserIcon } from "@heroicons/react/24/outline";
 import { IoMdPersonAdd } from "react-icons/io";
 import { RiAiGenerate } from "react-icons/ri";
-import { FaFileInvoiceDollar, FaEye, FaEyeSlash,FaFileAlt } from "react-icons/fa";
+import { FaFileInvoiceDollar, FaEye, FaEyeSlash, FaFileAlt } from "react-icons/fa";
 import { FaSquarePollHorizontal, FaTicketSimple } from "react-icons/fa6";
 import { TiCloudStorage } from "react-icons/ti";
 import { TbReportSearch } from "react-icons/tb";
@@ -71,10 +71,10 @@ const Sidebar = () => {
         onClick={handleToggle}
         aria-label="Toggle Sidebar"
       >
-      <div className='flex justify-between items-center'>  <div><span className="block w-8 h-1 bg-white mb-1"></span>
+        <div className='flex justify-between items-center'>  <div><span className="block w-8 h-1 bg-white mb-1"></span>
           <span className="block w-8 h-1 bg-white mb-1"></span>
           <span className="block w-8 h-1 bg-white"></span></div>
-        <div>BGV</div></div>
+          <div>BGV</div></div>
 
       </button>
       {/* Sidebar */}
@@ -82,7 +82,7 @@ const Sidebar = () => {
         className={`w-full  bg-white border-e fixed md:relative top-0 left-0  z-40 transition-transform transform ${toggle ? 'translate-x-0' : '-translate-x-full'
           } md:translate-x-0`}
       >
-        <div className="px-3 py-4 mt-10 md:mt-0 h-[500px] md:h-auto overflow-auto">
+        <div className="px-3 py-4 mt-10 md:mt-0 overflow-auto h-[500px]"  id='menuitem'>
           <ul>
             {Object.keys(tabNames).map((tab) => {
               const tabContent = tabNames[tab];
@@ -126,6 +126,7 @@ const Sidebar = () => {
           </ul>
           <Logout />
         </div>
+
       </div>
     </div>
   );

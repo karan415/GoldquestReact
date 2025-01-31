@@ -264,7 +264,7 @@ const CustomerLoginForm = () => {
     };
     
     return (
-        <div className="w-full md:max-w-7xl mx-auto p-4">
+        <div className="w-full md:max-w-7xl md:mx-auto xl:p-4">
             <form onSubmit={handleSubmitForm} aria-live="polite">
                 <div className="mb-3">
                     <label htmlFor="email" className='d-block'>Enter Your Email:</label>

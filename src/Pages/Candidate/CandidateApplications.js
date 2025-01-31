@@ -752,7 +752,7 @@ const GenerateReport = () => {
             });
 
             // Prepare request payload
-           
+
             const raw = JSON.stringify({
                 admin_id: adminData?.id || "",
                 _token: token || "",
@@ -1471,10 +1471,11 @@ const GenerateReport = () => {
                                         value={formData.updated_json.insuffDetails.final_verification_status}
                                         onChange={handleChange}
                                         id="" className="border w-full rounded-md p-2 mt-2 uppercase">
-                                        <option value="insuff">insuff</option>
-                                        <option value="inititated">inititated</option>
-                                        <option value="wip" >wip</option>
-                                        <option value="hold">hold</option>
+                                        <option value="green">green</option>
+                                        <option value="red">red</option>
+                                        <option value="yellow" >yellow</option>
+                                        <option value="pink">pink</option>
+                                        <option value="orange">orange</option>
                                     </select>
 
 
@@ -1514,8 +1515,9 @@ const GenerateReport = () => {
                                         value={formData.updated_json.insuffDetails.insuff_address}
                                         onChange={handleChange}
                                         id="" className="border w-full rounded-md p-2 mt-2 uppercase">
-                                        <option value="yes">yes</option>
-                                        <option value="no">no</option>
+                                        {adminNames.map((spoc, index) => (
+                                            <option key={index} value={spoc.id}>{spoc.name}</option>
+                                        ))}
                                     </select>
 
                                 </div>
@@ -1525,9 +1527,9 @@ const GenerateReport = () => {
                                         value={formData.updated_json.insuffDetails.basic_entry}
                                         onChange={handleChange}
                                         id="" className="border w-full rounded-md p-2 mt-2 uppercase">
-                                        <option value="yes">yes</option>
-                                        <option value="no">no</option>
-                                    </select>
+                                        {adminNames.map((spoc, index) => (
+                                            <option key={index} value={spoc.id}>{spoc.name}</option>
+                                        ))}                                    </select>
 
                                 </div>
                             </div>
@@ -1538,9 +1540,9 @@ const GenerateReport = () => {
                                         value={formData.updated_json.insuffDetails.education}
                                         onChange={handleChange}
                                         className="border w-full rounded-md p-2 mt-2 uppercase">
-                                        <option value="yes">yes</option>
-                                        <option value="no">no</option>
-                                    </select>
+  {adminNames.map((spoc, index) => (
+                                        <option key={index} value={spoc.id}>{spoc.name}</option>
+                                    ))}                                    </select>
 
                                 </div>
 

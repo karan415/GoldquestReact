@@ -336,3 +336,43 @@ input,select{
   margin-top: 5px !important;
   padding: 5px;
 }
+@media(min-width:1024px) and (max-width:1370px){
+  #login_form .logo_img {
+    height: 90px !important;
+}
+
+#login_form .flex.flex-col.items-center.mb-3.md\:mb-12 {
+    margin-bottom: 10px;
+}
+#login_form h2.text-\[18px\].text-center.font-bold.text-\[\#24245a\] {
+  font-size: 13px;
+}
+#login_form h2.text-\[18px\].text-center.font-bold.text-\[\#24245a\] {
+  font-size: 13px;
+}
+
+#login_form h2.text-xl.font-semibold.text-center.text-\[\#24245a\].mb-6.md\:text-2xl {
+  font-size: 18px;
+}
+
+#login_form form.mt-8 {margin-top: 10px;}
+
+#login_form input {
+  padding: 10px;
+  font-size: 12px;
+}
+
+#login_form button.w-full {
+  padding: 7px;
+  font-size: 15px;
+}
+}
+.form-blocked {
+  background-color: #f3f4f6; /* Light gray background */
+  opacity: 0.6; /* Make the form appear disabled */
+}
+@media(min-width:992px){
+  #menuitem{
+    height: calc(100vh - 20%);
+  }
+}
