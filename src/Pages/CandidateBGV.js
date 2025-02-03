@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
-import LogoBgv from '../Images/LogoBgv.jpg'
+import LogoBgv from '../Images/LogoBgv.jpg';
+import Swal from 'sweetalert2';
 const CandidateBGV = () => {
     const [error, setError] = useState(null);
     const [customBgv, setCustomBgv] = useState('');
@@ -9,7 +10,6 @@ const CandidateBGV = () => {
     const [companyName, setCompanyName] = useState('');
     const [serviceData, setServiceData] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [serviceValueData, setServiceValueData] = useState([]);
 
     const location = useLocation();
@@ -20,80 +20,65 @@ const CandidateBGV = () => {
     // Extract the branch_id and applicationId
     const branchId = queryParams.get('branch_id');
     const applicationId = queryParams.get('applicationId');
-    const getValuesFromUrl = (currentURL) => {
-        const result = {};
-        const keys = [
-            "YXBwX2lk",
-            "YnJhbmNoX2lk",
-            "Y3VzdG9tZXJfaWQ="
-        ];
+ 
 
-        keys.forEach(key => {
-            const regex = new RegExp(`${key}=([^&]*)`);
-            const match = currentURL.match(regex);
-            result[key] = match && match[1] ? match[1] : null;
-        });
-
-        const isValidBase64 = (str) => {
-            const base64Pattern = /^[A-Za-z0-9+/]+={0,2}$/;
-            return base64Pattern.test(str) && (str.length % 4 === 0);
-        };
-
-        const decodeKeyValuePairs = (obj) => {
-            return Object.entries(obj).reduce((acc, [key, value]) => {
-                const decodedKey = isValidBase64(key) ? atob(key) : key;
-                const decodedValue = value && isValidBase64(value) ? atob(value) : null;
-                acc[decodedKey] = decodedValue;
-                return acc;
-            }, {});
-        };
-
-        return decodeKeyValuePairs(result);
-    };
-
-    const decodedValues = getValuesFromUrl(currentURL);
 
     const fetchData = useCallback(() => {
         setLoading(true); // Start loading
-
+    
         const MyToken = localStorage.getItem('_token');
         const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
         const admin_id = adminData?.id;
-
+    
         if (!MyToken || !admin_id || !applicationId || !branchId) {
             setError('Missing required parameters or authentication token.');
-            setLoading(false);
+            setLoading(false); // Stop loading if required params are missing
             return;
         }
-
+    
         const requestOptions = {
             method: "GET",
             redirect: "follow",
         };
-
+    
         fetch(
             `https://api.goldquestglobal.in/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
         )
             .then(res => {
-                if (!res.ok) {
-                    throw new Error(`Error fetching data: ${res.statusText}`);
-                }
-                return res.json();
-            })
-            .then(data => {
-                setCompanyName(data.application?.customer_name || 'N/A');
-                setCefData(data.CEFData || {});
-
-                // Handle service data safely
-                const serviceDataa = data.serviceData || {};
-                const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData) || [];
-                const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data) || [];
-
-                setServiceData(jsonDataArray);
-                setServiceValueData(serviceValueDataArray);
-
-                setCustomBgv(data.customerInfo?.is_custom_bgv || '');
+                return res.json().then(data => {
+                    if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+                        // Session expired, redirect to login
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            window.location.href = "/admin-login"; // Redirect to login page
+                        });
+                        return; // Stop further execution after session expiry
+                    }
+    
+                    // Handle non-OK responses
+                    if (!res.ok) {
+                        throw new Error(`Error fetching data: ${res.statusText}`);
+                    }
+    
+                    // Process the data if the response is OK
+                    setCompanyName(data.application?.customer_name || 'N/A');
+                    setCefData(data.CEFData || {});
+    
+                    // Handle service data safely
+                    const serviceDataa = data.serviceData || {};
+                    const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData) || [];
+                    const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data) || [];
+    
+                    setServiceData(jsonDataArray);
+                    setServiceValueData(serviceValueDataArray);
+    
+                    setCustomBgv(data.customerInfo?.is_custom_bgv || '');
+                });
             })
             .catch(err => {
                 setError(err.message || 'An unexpected error occurred.');
@@ -102,7 +87,8 @@ const CandidateBGV = () => {
                 setLoading(false); // End loading
             });
     }, [applicationId, branchId]);
-
+    
+    
 
 
     useEffect(() => {

@@ -22,24 +22,25 @@ export const ServiceProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-
+    
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
             const storedToken = localStorage.getItem("_token");
-
+    
             const queryParams = new URLSearchParams({
                 admin_id: admin_id || '',
                 _token: storedToken || '',
             }).toString();
-
+    
             const res = await fetch(`${API_URL}/service/list?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
-
+    
             const result = await res.json();
-
+    
+            // Check if response is OK
             if (!res.ok || !result.status) {
                 const errorMessage = result.message || 'An error occurred';
                 Swal.fire({
@@ -51,12 +52,8 @@ export const ServiceProvider = ({ children }) => {
                 setError(errorMessage);
                 return;
             }
-
-            // Handle new token
-            const newToken = result._token || result.token;
-            if (newToken) {
-                localStorage.setItem('_token', newToken);
-            }
+    
+            // Check for invalid token and handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
                     title: "Session Expired",
@@ -65,10 +62,18 @@ export const ServiceProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
+                    localStorage.clear(); // Clear localStorage to log the user out
                     window.location.href = "/admin-login"; // Replace with your login route
                 });
+                return; // Exit early after redirect
             }
-
+    
+            // Handle new token (if available)
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem('_token', newToken);
+            }
+    
             // Process and set data
             const processedData = (result.services || []).map((item, index) => ({
                 ...item,
@@ -80,7 +85,7 @@ export const ServiceProvider = ({ children }) => {
                 short_code: item.short_code,
                 id: item.id,
             }));
-
+    
             setData(processedData);
         } catch (error) {
             // Show an alert for network or unexpected errors
@@ -96,6 +101,8 @@ export const ServiceProvider = ({ children }) => {
             setLoading(false);
         }
     }, []);
+    
+    
 
 
     return (

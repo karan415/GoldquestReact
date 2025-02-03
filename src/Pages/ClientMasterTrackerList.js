@@ -26,77 +26,83 @@ const ClientMasterTrackerList = () => {
         const storedToken = localStorage.getItem("_token");
         setLoading(true);
         setError(null);
+      
         let queryParams;
-
+      
         if (selected) {
-            queryParams = new URLSearchParams({
-                admin_id: admin_id || '',
-                _token: storedToken || '',
-                filter_status: selected || '',
-            }).toString();
+          queryParams = new URLSearchParams({
+            admin_id: admin_id || '',
+            _token: storedToken || '',
+            filter_status: selected || '',
+          }).toString();
         } else {
-            queryParams = new URLSearchParams({
-                admin_id: admin_id || '',
-                _token: storedToken || ''
-            }).toString();
+          queryParams = new URLSearchParams({
+            admin_id: admin_id || '',
+            _token: storedToken || ''
+          }).toString();
         }
-
+      
         fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
-            .then(response => {
-                return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                                Swal.fire({
-                                  title: "Session Expired",
-                                  text: "Your session has expired. Please log in again.",
-                                  icon: "warning",
-                                  confirmButtonText: "Ok",
-                                }).then(() => {
-                                  // Redirect to admin login page
-                                  window.location.href = "/admin-login"; // Replace with your login route
-                                });
-                              }
-                    if (!response.ok) {
-                        // Show SweetAlert if response is not OK
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message || 'Failed to load data',
-                        });
-                        throw new Error(result.message || 'Failed to load data');
-                    }
-                    return result;
+          .then(response => {
+            return response.json().then(result => {
+              // Check for invalid or expired token
+              if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                Swal.fire({
+                  title: "Session Expired",
+                  text: "Your session has expired. Please log in again.",
+                  icon: "warning",
+                  confirmButtonText: "Ok",
+                }).then(() => {
+                  // Redirect to admin login page
+                  window.location.href = "/admin-login"; // Replace with your login route
                 });
-            })
-            .then((result) => {
-                setData(result.data.customers || []);
-                setOptions(result.data.filterOptions);
-            })
-            .catch((error) => {
-                // Show the API error message or a default message in case of error
-                setError(error.message || 'Failed to load data');
-            })
-            .finally(() => setLoading(false));
-    }, [setData, API_URL]);
+                throw new Error("Session expired"); // Exit early to prevent further execution
+              }
+      
+              // Handle non-OK response
+              if (!response.ok) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: result.message || 'Failed to load data',
+                });
+                throw new Error(result.message || 'Failed to load data');
+              }
+      
+              // Optionally update token if available
+              const newToken = result._token || result.token;
+              if (newToken) {
+                localStorage.setItem("_token", newToken);
+              }
+              return result;
+            });
+          })
+          .then((result) => {
+            // Set data after successful response
+            setData(result.data.customers || []);
+            setOptions(result.data.filterOptions);
+          })
+          .catch((error) => {
+            // Handle any errors during the fetch
+            setError(error.message || 'Failed to load data');
+          })
+          .finally(() => setLoading(false)); // Ensure loading is stopped
+      }, [setData, API_URL]);
+      
 
-
-
-    const handleBranches = useCallback((id) => {
+      const handleBranches = useCallback((id) => {
         setBranchLoading(true);
         setError(null);
         setExpandedClient(prev => (prev === id ? null : id)); // Toggle branches visibility
-
+    
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+    
         fetch(`${API_URL}/client-master-tracker/branch-list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
             method: 'GET',
             headers: {
@@ -105,23 +111,36 @@ const ClientMasterTrackerList = () => {
         })
             .then(response => {
                 return response.json().then(result => {
+                    // Check if new token is available and update local storage
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                                Swal.fire({
-                                  title: "Session Expired",
-                                  text: "Your session has expired. Please log in again.",
-                                  icon: "warning",
-                                  confirmButtonText: "Ok",
-                                }).then(() => {
-                                  // Redirect to admin login page
-                                  window.location.href = "/admin-login"; // Replace with your login route
-                                });
-                              }
+    
+                    // Check for session expiration
+                    if (result.message) {
+                        const message = result.message.toLowerCase();
+                        if (
+                            message.includes("invalid token") ||
+                            message.includes("expired") ||
+                            message.includes("invalid or expired token")
+                        ) {
+                            // Show session expired message
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to admin login page
+                                window.location.href = "/admin-login"; // Replace with your login route
+                            });
+                            throw new Error("Session expired"); // Stop further processing
+                        }
+                    }
+    
+                    // Check if response is not OK and show error message
                     if (!response.ok) {
-                        // Show SweetAlert if response is not OK
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -129,22 +148,24 @@ const ClientMasterTrackerList = () => {
                         });
                         throw new Error(result.message || 'Failed to load data');
                     }
-                    return result;
+    
+                    return result; // Return result if response is okay
                 });
             })
             .then((data) => {
+                // Handle success data and update branches state
                 const newToken = data._token || data.token;
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
                 setBranches(prev => ({ ...prev, [id]: data.customers || [] }));
-
             })
             .catch((error) => {
                 setError('Failed to load data');
             })
-            .finally(() => setBranchLoading(false));
+            .finally(() => setBranchLoading(false)); // Stop loading after the operation
     }, []);
+    
 
     const tableRef = useRef(null); // Ref for the table container
 

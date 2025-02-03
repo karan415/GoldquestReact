@@ -22,40 +22,24 @@ export const HolidayManagementProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-
+    
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
             const storedToken = localStorage.getItem("_token");
             const queryParams = new URLSearchParams({
                 admin_id: admin_id || '',
                 _token: storedToken || ''
             }).toString();
-
+    
             const res = await fetch(`${API_URL}/holiday/list?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             const result = await res.json();
-
-            if (!res.ok || !result.status) {
-                // Display the error message only once
-                Swal.fire({
-                    title: 'Error!',
-                    text: result.message || 'An error occurred',
-                    icon: 'error',
-                    confirmButtonText: 'Ok'
-                });
-                setError(result.message || 'An error occurred');
-                return;
-            }
-
-            const newToken = result._token || result.token;
-            if (newToken) {
-                localStorage.setItem('_token', newToken);
-            }
-
+    
+            // Check for session expiration or invalid token
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
                     title: "Session Expired",
@@ -66,7 +50,28 @@ export const HolidayManagementProvider = ({ children }) => {
                     // Redirect to admin login page
                     window.location.href = "/admin-login"; // Replace with your login route
                 });
+                return; // Exit further processing after showing session expired message
             }
+    
+            // Handle response errors
+            if (!res.ok || !result.status) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: result.message || 'An error occurred',
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+                setError(result.message || 'An error occurred');
+                return;
+            }
+    
+            // Check for new token in response and store it
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem('_token', newToken);
+            }
+    
+            // Process data if the response is successful
             const processedData = (result.holidays || []).map((item, index) => ({
                 ...item,
                 index: index + 1,
@@ -74,7 +79,7 @@ export const HolidayManagementProvider = ({ children }) => {
                 date: item.date,
                 id: item.id,
             }));
-
+    
             setData(processedData);
         } catch (error) {
             console.error('Fetch error:', error);
@@ -83,6 +88,7 @@ export const HolidayManagementProvider = ({ children }) => {
             setLoading(false);
         }
     }, []);
+    
 
     return (
         <HolidayManagementContext.Provider value={{ selectedService, editService, ServiceList, updateServiceList, fetchData, loading, setData, data, error, setError }}>

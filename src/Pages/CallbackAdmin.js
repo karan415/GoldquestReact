@@ -87,13 +87,9 @@ const CallbackAdmin = () => {
 
     try {
       const response = await fetch(`https://api.goldquestglobal.in/admin/callback/list?admin_id=${admin_id}&_token=${storedToken}`);
-      const result = await response.json();
-      const newToken = result._token || result.token;
+      const result = await response.json(); // Parse the JSON response
 
-      // Update token if necessary
-      if (newToken) {
-        localStorage.setItem("_token", newToken);
-      }
+      // Check for session expiration by looking for token issues in the message
       if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
         Swal.fire({
           title: "Session Expired",
@@ -104,25 +100,33 @@ const CallbackAdmin = () => {
           // Redirect to admin login page
           window.location.href = "/admin-login"; // Replace with your login route
         });
+        return; // Stop further processing if the session has expired
       }
 
-      // Handle response errors
+      // Update token if the response contains a new token
+      const newToken = result._token || result.token;
+      if (newToken) {
+        localStorage.setItem("_token", newToken);
+      }
+
+      // Handle response errors (if status is not OK)
       if (!response.ok) {
-        const errorData = await response.json();
-        Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+        Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
         return;
       }
 
+      // Successfully fetched data
       const customers = result.callbackRequests || [];
       setData(customers); // Update the customers data
 
-
     } catch (error) {
       console.error('Fetch error:', error);
+      Swal.fire('Error!', 'An unexpected error occurred while fetching data.', 'error');
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false); // Stop loading regardless of success or error
     }
-  }, []);
+}, []);
+
 
 
 

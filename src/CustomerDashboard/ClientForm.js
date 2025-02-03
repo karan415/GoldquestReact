@@ -40,9 +40,11 @@ const ClientForm = () => {
                 const selectedFiles = files[fileName]; // Get the files for this field
                 let fileErrors = [];
     
-                // If no files are selected for 'attach_documents', add an error
+                // Check if it's a new submission or the field is required
                 if (fileName === 'attach_documents' && (!selectedFiles || selectedFiles.length === 0)) {
-                    fileErrors.push('Attach documents are required.');
+                    if (isEditClient !== true) { // If it's not an edit, file is required
+                        fileErrors.push('Attach documents are required.');
+                    }
                 }
     
                 if (selectedFiles && selectedFiles.length > 0) {
@@ -85,6 +87,7 @@ const ClientForm = () => {
     
         return newErrors;
     };
+    
     
     
     

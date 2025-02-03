@@ -19,6 +19,7 @@ export const DataProvider = ({ children }) => {
     const fetchData = useCallback(() => {
         setLoading(true);
         setError(null);
+    
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
     
@@ -34,46 +35,42 @@ export const DataProvider = ({ children }) => {
             }
         })
         .then((response) => {
-              if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                      Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                      }).then(() => {
-                        // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
-                      });
-                    }
+            // Check for invalid token directly after the response
             if (!response.ok) {
                 return response.json().then((result) => {
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page after SweetAlert is dismissed
+                            setTimeout(() => {
+                                window.location.href = "/admin-login"; // Replace with your login route
+                            }, 100); // Short delay to ensure SweetAlert finishes
+                        });
+                        return; // Exit early to prevent further processing
+                    }
+    
+                    // If it's not related to invalid token, show the normal error message
                     Swal.fire({
                         title: 'Error!',
                         text: result.message || `An error occurred: ${response.statusText}`,
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
-                    throw new Error(result.message || response.statusText);
+                    throw new Error(result.message || response.statusText); // Throw error to handle in catch
                 });
             }
             return response.json();
         })
         .then((result) => {
+            // Process the result if token is valid
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-              if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                      Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                      }).then(() => {
-                        // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
-                      });
-                    }
     
             // Extract customers
             const customers = result?.customers || [];
@@ -99,6 +96,8 @@ export const DataProvider = ({ children }) => {
         })
         .finally(() => setLoading(false));
     }, []);
+    
+    
     
     
     

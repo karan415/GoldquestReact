@@ -96,25 +96,47 @@ const TatDelay = () => {
       redirect: "follow", // You can keep this if you need to follow redirects
     })
       .then(response => {
-        const result = response.json();
-        const newToken = result._token || result.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-        if (!response.ok) {
-          return response.text().then(text => {
-            const errorData = JSON.parse(text);
+        return response.json().then(result => {
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+
+          // Check for "invalid token" in response message
+          if (!response.ok) {
+            const errorMessage = result.message || "Unknown error occurred";
+            if (
+              errorMessage.toLowerCase().includes("invalid") ||
+              errorMessage.toLowerCase().includes("expired") ||
+              errorMessage.toLowerCase().includes("invalid or expired token")
+            ) {
+              // Show session expired message
+              Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+              }).then(() => {
+                // Redirect to login page after session expired message
+                localStorage.clear(); // Clear localStorage
+                window.location.href = "/admin-login"; // Redirect to login page
+              });
+              throw new Error("Session expired"); // Stop further processing
+            }
+
+            // If not session expiration, show general error message
             Swal.fire(
               'Error!',
-              `An error occurred: ${errorData.message}`,
+              `An error occurred: ${errorMessage}`,
               'error'
             );
-            throw new Error(text);
-          });
-        }
-        return result;
+            throw new Error(errorMessage); // Throw error to prevent further processing
+          }
+          return result; // Continue if response is ok
+        });
       })
       .then((result) => {
+        // Process result if response is successful
         const applications = result.tatDelays.applicationHierarchy.flatMap(customer =>
           customer.branches.flatMap(branch =>
             branch.applications.map(application => ({
@@ -132,14 +154,16 @@ const TatDelay = () => {
             }))
           )
         );
-        setTatData(applications)
-
+        setTatData(applications); // Set the application data to the state
       })
-      .catch((error) => console.error('Fetch error:', error)).finally(() => {
-        setLoading(false);
-
+      .catch((error) => {
+        console.error('Fetch error:', error);
+      })
+      .finally(() => {
+        setLoading(false); // Stop loading once the fetch is completed
       });
   }, []);
+
 
   useEffect(() => {
     fetchTat();
@@ -190,59 +214,60 @@ const TatDelay = () => {
           </div>
 
         </div>
-        
 
 
-          <div className="overflow-x-auto py-6 px-4 bg-white shadow-md p-4 rounded-md">
-        {loading ? (
-          <div className='flex justify-center items-center py-6 h-full'>
-            <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
 
-          </div>
-        ) : currentItems.length > 0 ? (
-          <table className="min-w-full table-auto">
-          <thead>
-            <tr className='bg-green-500'>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">SL</th>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Tat Days</th>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Initiation Date</th>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Application Id</th>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Employee Name</th>
-              <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white ">Exceed Days</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems && currentItems.length > 0 ? (
-              currentItems.map((item, index) => (
-                <tr key={index}>
-                  <td className="py-3 px-4 border-b border-l whitespace-nowrap text-center border-r">{index + 1}</td>
-                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.tat_days}</td>
-                  <td className=" p-3 border-b border-r  text-center cursor-pointer">
+        <div className="overflow-x-auto py-6 px-4 bg-white shadow-md p-4 rounded-md">
+          {loading ? (
+            <div className='flex justify-center items-center py-6 h-full'>
+              <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
+
+            </div>
+          ) : currentItems.length > 0 ? (
+            <table className="min-w-full table-auto">
+              <thead>
+                <tr className='bg-green-500'>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">SL</th>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Tat Days</th>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Initiation Date</th>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Application Id</th>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white border-r">Employee Name</th>
+                  <th className="py-3 px-4 border-b text-left uppercase whitespace-nowrap text-white ">Exceed Days</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems && currentItems.length > 0 ? (
+                  currentItems.map((item, index) => (
+                    <tr key={index}>
+                      <td className="py-3 px-4 border-b border-l whitespace-nowrap text-center border-r">                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                      </td>
+                      <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.tat_days}</td>
+                      <td className=" p-3 border-b border-r  text-center cursor-pointer">
                         {new Date(item.application_created_at).getDate()}-
                         {new Date(item.application_created_at).getMonth() + 1}-
                         {new Date(item.application_created_at).getFullYear()}
                       </td>
-                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_id}</td>
-                  <td className="py-3 px-4 border-b whitespace-nowrap text-left border-r">{item.application_name}</td>
-                  <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.days_out_of_tat}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="py-3 px-4 border-b text-center text-gray-500">No TAT Delay Applications Available</td>
-              </tr>
-            )}
-          </tbody>
+                      <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.application_id}</td>
+                      <td className="py-3 px-4 border-b whitespace-nowrap text-left border-r">{item.application_name}</td>
+                      <td className="py-3 px-4 border-b whitespace-nowrap text-center border-r">{item.days_out_of_tat}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="py-3 px-4 border-b text-center text-gray-500">No TAT Delay Applications Available</td>
+                  </tr>
+                )}
+              </tbody>
 
-        </table>
-        ) : (
-          <div className="text-center py-6">
-            <p>No Data Found</p>
-          </div>
-        )}
+            </table>
+          ) : (
+            <div className="text-center py-6">
+              <p>No Data Found</p>
+            </div>
+          )}
 
 
-      </div>
+        </div>
         <div className="flex items-center justify-end rounded-md  px-4 py-3 sm:px-6 md:m-4 mt-2">
           <button
             type='button'

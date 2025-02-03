@@ -71,8 +71,9 @@ const HolidayManagementForm = () => {
                     Swal.showLoading();
                 }
             });
+
             const requestOptions = {
-                method: isEdit ? "PUT" : "POST",
+                method: isEdit ? "PUT" : "POST", // Set method to PUT for editing
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -91,11 +92,15 @@ const HolidayManagementForm = () => {
 
             fetch(url, requestOptions)
                 .then(response => {
-                    const result = response.json();
+                    return response.json();  // Parse the JSON response
+                })
+                .then((result) => {
                     const newToken = result._token || result.token;
                     if (newToken) {
-                        localStorage.setItem("_token", newToken);
+                        localStorage.setItem("_token", newToken); // Store the new token if available
                     }
+
+                    // Check for session expiration (invalid token)
                     if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                         Swal.fire({
                             title: "Session Expired",
@@ -106,21 +111,10 @@ const HolidayManagementForm = () => {
                             // Redirect to admin login page
                             window.location.href = "/admin-login"; // Replace with your login route
                         });
+                        return; // Exit further processing if session expired
                     }
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            const errorData = JSON.parse(text);
-                            Swal.fire(
-                                'Error!',
-                                `An error occurred: ${errorData.message}`,
-                                'error'
-                            );
-                            throw new Error(text);
-                        });
-                    }
-                    return result;
-                })
-                .then((result) => {
+
+                    // Success handling: clear errors and show success message
                     setError({});
                     Swal.fire({
                         title: "Success",
@@ -129,25 +123,39 @@ const HolidayManagementForm = () => {
                         confirmButtonText: "Ok"
                     });
 
+                    // Update the service list based on the edit or create action
                     if (isEdit) {
                         updateServiceList(prevList => prevList.map(service => service.id === result.id ? result : service));
                     } else {
                         updateServiceList(prevList => [...prevList, result]);
                     }
-                    fetchData();
+
+                    fetchData();  // Refresh data after success
                     setDateInput({ name: "", date: "" });
-                    setIsEdit(false);
+                    setIsEdit(false); // Reset the edit flag
                 })
                 .catch((error) => {
+                    // Catch and log the error
                     console.error(error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'An error occurred while processing your request.',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
                 })
                 .finally(() => {
                     setLoading(false); // Stop loading
                 });
         } else {
-            setError(validateError);
+            setError(validateError); // Set validation errors if validation fails
         }
     };
+
+
+
+
+
 
     return (
         <form onSubmit={handleSubmit} className='border rounded-md p-5'>

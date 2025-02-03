@@ -25,6 +25,7 @@ const Tickets = () => {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
 
+            // Fetch the ticket details
             const response = await fetch(`https://api.goldquestglobal.in/ticket/view?ticket_number=${ticket_number}&admin_id=${admin_id}&_token=${storedToken}`);
 
             // Check if the response status is not OK (2xx)
@@ -32,44 +33,48 @@ const Tickets = () => {
                 const result = await response.json();
 
                 // Check if the response indicates an invalid token
-                if (result.message && result.message.includes("invalid token")) {
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    // Session expired, update token if available and redirect to login
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
-                    // Redirect to the dashboard
+
                     Swal.fire({
                         title: 'Session Expired',
                         text: 'Your session has expired. Redirecting to the dashboard.',
                         icon: 'warning',
                         confirmButtonText: 'OK',
                     }).then(() => {
-                        window.location.href = "/"; // Redirect after alert
+                        window.location.href = "/admin-login"; // Redirect to login page
                     });
+
+                    return; // Stop further processing if session expired
                 } else {
-                    // Show error message if not invalid token
+                    // Handle other errors
                     Swal.fire({
                         title: 'Error',
                         text: result.message || 'An unexpected error occurred. Please try again.',
                         icon: 'error',
                         confirmButtonText: 'OK',
                     });
+                    throw new Error(result.message || 'Error fetching ticket data');
                 }
-                throw new Error(result.message || 'Error fetching tickets');
             }
 
+            // Parse the response as JSON
             const result = await response.json();
 
-            // Set conversations with the API response
+            // Set the conversation based on the response
             setConversation(result.branches.conversations);
 
-
+            // If a new token is returned, save it in localStorage
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
 
-            // Trigger scroll after the state update
+            // Trigger scroll after updating the conversation
             setTimeout(() => {
                 if (messageEndRef.current) {
                     messageEndRef.current.scrollIntoView({
@@ -78,19 +83,27 @@ const Tickets = () => {
                         inline: "nearest"
                     });
 
-                    // Add an offset of 40 pixels
+                    // Add an offset of 40 pixels to scroll smoothly
                     window.scrollBy(0, 40);
                 }
-            }, 0); // Use a small timeout to ensure DOM updates
+            }, 0); // Use a small timeout to ensure the DOM updates before scrolling
+
         } catch (error) {
             console.error(error);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred while fetching the ticket details. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
         }
     };
+
 
     const handleSend = () => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
         const storedToken = localStorage.getItem("_token") || '';
-    
+
         // Check if there's user input
         if (userInput.trim()) {
             const userMessage = { sender: "user", text: userInput };
@@ -98,49 +111,50 @@ const Tickets = () => {
             setMessages([...messages, userMessage, botReply]);
             setUserInput("");
         }
-    
+
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-    
+
         const raw = JSON.stringify({
             "ticket_number": ticket,
             "message": userInput,
             "admin_id": admin_id,
             "_token": storedToken
         });
-    
+
         const requestOptions = {
             method: "POST",
             headers: myHeaders,
             body: raw,
             redirect: "follow"
         };
-    
+
         // Set loading state to true when starting the request
         setFormLoading(true);
-    
+
         fetch("https://api.goldquestglobal.in/ticket/chat", requestOptions)
             .then((response) => {
-                // Check if the response is not OK
                 if (!response.ok) {
                     return response.json().then((result) => {
                         if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                            // Session expired, redirect to login page
                             Swal.fire({
                                 title: "Session Expired",
                                 text: "Your session has expired. Please log in again.",
                                 icon: "warning",
                                 confirmButtonText: "Ok",
                             }).then(() => {
-                                // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
+                                window.location.href = "/admin-login"; // Redirect to admin login page
                             });
                         }
-    
+
+                        // Update token if a new one is provided in the response
                         const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("_token", newToken);
                         }
-    
+
+                        // If no session expired error, throw a general error
                         throw new Error(result.message || 'Error sending message');
                     });
                 }
@@ -149,14 +163,15 @@ const Tickets = () => {
             .then((result) => {
                 const newToken = result._token || result.token;
                 if (newToken) {
-                    localStorage.setItem("_token", newToken);
+                    localStorage.setItem("_token", newToken); // Update the token if available
                 }
-    
-                // Handle invalid token or errors in the response
+
+                // Check if the result indicates an invalid token or other error
                 if (result.message && result.message.includes("invalid token")) {
-                    window.location.href = "/";  // Redirect to dashboard if invalid token is found
+                    window.location.href = "/";  // Redirect to the dashboard if invalid token is found
                 } else {
                     if (result.error) {
+                        // Show error message if any
                         Swal.fire({
                             title: 'Error',
                             text: result.message || 'An error occurred while sending the message. Please try again later.',
@@ -164,7 +179,8 @@ const Tickets = () => {
                             confirmButtonText: 'OK'
                         });
                     } else {
-                        replyTickets(ticket);  // If no error, call replyTickets to refresh the chat
+                        // If no errors, refresh the chat (this could be a function to update the chat UI)
+                        replyTickets(ticket);
                     }
                 }
             })
@@ -181,7 +197,8 @@ const Tickets = () => {
                 setFormLoading(false);  // Stop loading state once the process is done
             });
     };
-    
+
+
 
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
@@ -276,28 +293,32 @@ const Tickets = () => {
             method: "GET",
             redirect: "follow"
         };
-        
+
         setLoading(true);
-    
+
         fetch(`https://api.goldquestglobal.in/ticket/list?admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
             .then((response) => {
                 // Check if the response status is not OK (2xx)
                 if (!response.ok) {
                     return response.json().then((result) => {
                         // Check for invalid token and redirect if necessary
-                        if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                             const newToken = result._token || result.token;
                             if (newToken) {
-                                localStorage.setItem("_token", newToken);
+                                localStorage.setItem("_token", newToken);  // Update the token if available
                             }
+
+                            // Session expired logic
                             Swal.fire({
                                 title: 'Session Expired',
-                                text: 'Your session has expired. Redirecting to the dashboard.',
+                                text: 'Your session has expired. Redirecting to the login page.',
                                 icon: 'warning',
                                 confirmButtonText: 'OK',
                             }).then(() => {
-                                window.location.href = "/";  // Redirect after alert
+                                window.location.href = "/admin-login";  // Redirect to the login page
                             });
+
+                            return; // Stop further execution if session expired
                         } else {
                             // Show error message if not invalid token
                             Swal.fire({
@@ -310,13 +331,15 @@ const Tickets = () => {
                         throw new Error(result.message || 'Error fetching tickets');
                     });
                 }
-                return response.json();
+                return response.json();  // Parse the response as JSON if the status is OK
             })
             .then((result) => {
                 console.log(result);
                 // Extract tickets from the branches array
                 const tickets = result.branches?.map(branch => branch.branches?.map(b => b.tickets)).flat(2);
                 setData(tickets); // Set the data if the request was successful
+
+                // Check if the result contains a new token and update it
                 const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("_token", newToken);  // Update token if available
@@ -336,7 +359,8 @@ const Tickets = () => {
                 setLoading(false); // Stop loading state
             });
     };
-    
+
+
 
     useEffect(() => {
 
@@ -347,13 +371,13 @@ const Tickets = () => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
         const storedToken = localStorage.getItem("_token") || '';
         const formdata = new FormData();
-    
+
         const requestOptions = {
             method: "DELETE",
             body: formdata,
             redirect: "follow"
         };
-    
+
         // Show confirmation Swal
         Swal.fire({
             title: "Are you sure?",
@@ -370,19 +394,18 @@ const Tickets = () => {
                     .then((response) => {
                         if (!response.ok) {
                             return response.json().then((result) => {
-                                const errorMessage = result.message || '';
-                                if (errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
+                                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                                    // Session expired, redirect to login page
                                     Swal.fire({
                                         title: "Session Expired",
                                         text: "Your session has expired. Please log in again.",
                                         icon: "warning",
                                         confirmButtonText: "Ok",
                                     }).then(() => {
-                                        // Redirect to admin login page
-                                        window.location.href = "/admin-login"; // Replace with your login route
+                                        window.location.href = "/admin-login";  // Redirect to login page
                                     });
                                 } else {
-                                    // Show error message
+                                    // Show error message for other issues
                                     Swal.fire({
                                         title: 'Error',
                                         text: result.message || 'An unexpected error occurred. Please try again.',
@@ -393,7 +416,7 @@ const Tickets = () => {
                                 throw new Error(result.message || 'Error deleting ticket');
                             });
                         }
-                        return response.json(); // Parse response as JSON
+                        return response.json();  // Parse response as JSON
                     })
                     .then((result) => {
                         if (result.error) {
@@ -405,17 +428,19 @@ const Tickets = () => {
                                 confirmButtonText: 'OK',
                             });
                         } else {
+                            // Show success message and refresh ticket list
                             Swal.fire({
                                 title: "Deleted!",
                                 text: "The ticket has been successfully deleted.",
                                 icon: "success",
                                 confirmButtonText: "OK"
                             });
-                            fetchTickets(); // Refresh the tickets list
-    
+                            fetchTickets();  // Refresh the tickets list
+
+                            // Update the token if a new one is provided in the response
                             const newToken = result._token || result.token;
                             if (newToken) {
-                                localStorage.setItem("_token", newToken); // Update token if available
+                                localStorage.setItem("_token", newToken);  // Update token if available
                             }
                         }
                     })
@@ -431,7 +456,7 @@ const Tickets = () => {
             }
         });
     };
-    
+
 
     // Usage Example
 
@@ -607,9 +632,9 @@ const Tickets = () => {
                                 onChange={(e) => setUserInput(e.target.value)}
                                 placeholder="Type your message..."
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter") {  
-                                        e.preventDefault();    
-                                        handleSend();          
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleSend();
                                     }
                                 }}
                                 className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-300"
@@ -620,7 +645,7 @@ const Tickets = () => {
                                 disabled={userInput.length === 0}
                                 className="ml-3 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
                             >
-                                {formLoading?'Sending.....':"Send"}
+                                {formLoading ? 'Sending.....' : "Send"}
                             </button>
                         </div>
                     </div>

@@ -48,23 +48,29 @@ const CandidateMasterTrackerList = () => {
         })
             .then(response => {
                 return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
+                    // Check for session expiry (invalid token)
                     if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        // Handle session expiry (expired token)
                         Swal.fire({
                             title: "Session Expired",
                             text: "Your session has expired. Please log in again.",
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            // Redirect to admin login page
+                            // Redirect to login page after the alert
                             window.location.href = "/admin-login"; // Replace with your login route
                         });
+                        return; // Stop further execution if session has expired
                     }
+
+                    // Handle new token if available
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+
+                    // Handle other errors if response is not OK
                     if (!response.ok) {
-                        // Show SweetAlert if response is not OK
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -72,14 +78,16 @@ const CandidateMasterTrackerList = () => {
                         });
                         throw new Error(result.message || 'Failed to load data');
                     }
+
                     return result;
                 });
             })
             .then((result) => {
+                // Update data state with the result
                 setData(result.data.customers || []);
             })
             .catch((error) => {
-                // Show the API error message or a default message in case of error
+                // Show error message if there's any issue with the fetch
                 setError(error.message || 'Failed to load data');
             })
             .finally(() => setLoading(false));
@@ -101,27 +109,30 @@ const CandidateMasterTrackerList = () => {
                 'Content-Type': 'application/json'
             }
         })
-
             .then(response => {
                 return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
+                    // Check if the response contains an invalid or expired token message
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to login page after the alert
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                        return; // Exit early if token expired
                     }
 
+                    // Handle new token if available
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken); // Update the token in localStorage
+                    }
+
+                    // If the response is not OK, show error message
                     if (!response.ok) {
-                        if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                            Swal.fire({
-                                title: "Session Expired",
-                                text: "Your session has expired. Please log in again.",
-                                icon: "warning",
-                                confirmButtonText: "Ok",
-                            }).then(() => {
-                                // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
-                            });
-                        }
-                        // Show SweetAlert if response is not OK
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -130,23 +141,20 @@ const CandidateMasterTrackerList = () => {
                         throw new Error(result.message || 'Failed to load data');
                     }
 
-
                     return result;
                 });
             })
             .then((data) => {
-                const newToken = data._token || data.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken);
-                }
-                setBranches(prev => ({ ...prev, [id]: data.customers || [] }));
-
+                // Set branches data if successful
+                setBranches(prev => ({ ...prev, [id]: data?.customers || [] }));
             })
             .catch((error) => {
+                // Handle error fetching branches
                 setError('Failed to load data');
             })
             .finally(() => setBranchLoading(false));
     }, []);
+
 
     const tableRef = useRef(null); // Ref for the table container
 

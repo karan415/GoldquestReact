@@ -40,10 +40,10 @@ const CreateInvoice = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true); // Show loader
-
+  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
@@ -51,11 +51,12 @@ const CreateInvoice = () => {
       month: formData.month,
       year: formData.year,
     }).toString();
-
+  
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
+  
     const swalInstance = Swal.fire({
       title: 'Processing...',
       text: 'Please wait while we Generate Your Invoice',
@@ -65,29 +66,19 @@ const CreateInvoice = () => {
       allowOutsideClick: false, // Prevent closing Swal while processing
       showConfirmButton: false, // Hide the confirm button
     });
-
+  
     fetch(`https://api.goldquestglobal.in/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
-
-
         if (!response.ok) {
           return response.json().then((errorData) => {
             throw new Error(errorData.message || "Network response was not ok");
           });
         }
-        return response.json();
+        return response.json(); // Parse the response body to JSON
       })
       .then((data) => {
-        // Check if 'data' is valid
-        if (!data) {
-          throw new Error("No data returned from API.");
-        }
-
-        const newToken = data._token || data.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+        // Check if the response contains invalid token message
+        if (data.status === false && data.message.toLowerCase().includes("invalid token")) {
           Swal.fire({
             title: "Session Expired",
             text: "Your session has expired. Please log in again.",
@@ -97,15 +88,27 @@ const CreateInvoice = () => {
             // Redirect to admin login page
             window.location.href = "/admin-login"; // Replace with your login route
           });
+          return; // Stop further execution if session has expired
         }
-
+  
+        // Check if 'data' is valid
+        if (!data) {
+          throw new Error("No data returned from API.");
+        }
+  
+        // Handle new token if it exists in the response
+        const newToken = data._token || data.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken); // Update the token in localStorage
+        }
+  
         let applications = [];
         if (data && Array.isArray(data.applications)) {
           applications = data.applications;
         } else {
           applications = [];
         }
-
+  
         const serviceNames = data?.serviceNames || [];
         const customer = data?.customer || [];
         const companyInfo = data?.companyInfo || [];
@@ -113,7 +116,7 @@ const CreateInvoice = () => {
           costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
           serviceInfo = [],
         } = data?.finalArr || {};
-
+  
         if (applications.length > 0) {
           generatePdf(
             serviceNames,
@@ -127,7 +130,7 @@ const CreateInvoice = () => {
             serviceInfo,
             sgst
           );
-
+  
           Swal.fire({
             title: "Success!",
             text: "PDF generated successfully.",
@@ -141,9 +144,7 @@ const CreateInvoice = () => {
             icon: 'warning',
             confirmButtonText: 'OK'
           });
-
         }
-
       })
       .catch((error) => {
         Swal.fire({
@@ -154,10 +155,13 @@ const CreateInvoice = () => {
         });
       })
       .finally(() => {
-        swalInstance.close()
+        swalInstance.close(); // Close the processing Swal
         setIsLoading(false); // Hide loader
       });
   };
+  
+  
+
 
 
   function getTotalAdditionalFeeByService(serviceId, applications) {
@@ -498,24 +502,12 @@ const CreateInvoice = () => {
     doc.setDrawColor(0, 0, 0); // Set border color to black
     doc.setLineWidth(0.5); // Set border thickness
     doc.rect(leftX, invoiceYPosition - 3, contentWidth, 12); // Draw border (width: 80% of page, height: fixed)
-
-    // Add label with padding (4 units) to avoid overlap with the border
-    doc.text("Invoice Amount in Words:", leftX + 2, invoiceYPosition + 5); // 4 units padding from the left
-
-    // Amount in words
     doc.setFont("helvetica", "normal");
     const words = wordify(parseInt(newOverallServiceAmount + cgstTax + sgstTax));
+    // Add label with padding (4 units) to avoid overlap with the border
+    doc.text("Invoice Amount in Words:" + words + ' Rupees Only', leftX + 2, invoiceYPosition + 5); // 4 units padding from the left
 
-    // Calculate the position for the amount text
-    const wordsWidth = doc.getTextWidth(words + ' Rupees Only');
-    const wordsXPosition = leftX + labelWidth + 16; // Position it after the label with extra padding
-
-    // Center the amount text within the remaining width of the border
-    const centerX = leftX + (contentWidth - labelWidth - wordsWidth + 2) / 2; // Center-align amount text
-
-    // Place the amount in words centered within the border
-    doc.text(words + ' Rupees Only', centerX, invoiceYPosition + 5); // Adjusted Y position for the text
-
+    
 
     // Application Details Table
     doc.addPage();

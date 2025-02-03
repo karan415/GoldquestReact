@@ -55,7 +55,6 @@ const CustomerForgotPassword = () => {
             confirmButtonText: 'OK',
           }).then(() => {
             setEmailSent(true); // Set emailSent to true when the email is successfully sent
-            navigate('/customer-login'); // Navigate to the customer login page after clicking OK
           });
         } else if (result.message === "Too many reset requests. Your account is temporarily blocked. Please try again tomorrow.") {
           // Blocked message - disable the form and show a blocked message
@@ -65,6 +64,7 @@ const CustomerForgotPassword = () => {
             result.message || 'Your account is temporarily blocked. Please try again tomorrow.',
             'error'
           );
+          navigate('/customer-login')
         } else {
           // If the status is false, show an error message
           Swal.fire(
@@ -87,9 +87,13 @@ const CustomerForgotPassword = () => {
       });
   };
 
-  const handleResendEmail = () => {
-    handleSubmit(); // Trigger the form submit function to resend the email
+  const handleResendEmail = (e) => {
+    e.preventDefault(); // Prevent default form submission
+    setEmailSent(false); // Reset emailSent state to allow submission again
+    handleSubmit(e); // Pass the event object to handleSubmit
   };
+  
+  
 
   return (
     <div className="bg-white md:w-5/12 m-auto shadow-md rounded-sm p-5 translate-y-2/4">
@@ -124,15 +128,14 @@ const CustomerForgotPassword = () => {
 
       {/* Resend Email Section */}
       {emailSent && !loading && !isBlocked && (
-        <div className="mt-4">
-          <button
-            onClick={handleResendEmail}
-            className="bg-blue-400 text-white hover:bg-blue-200 p-3 rounded-md w-full inline-block text-center"
-            disabled={loading} // Disable the resend button if loading
-          >
-            Resend Email
-          </button>
-        </div>
+        <button
+          onClick={(e) => handleResendEmail(e)} // Pass event to handleResendEmail
+          className="bg-blue-400 text-white hover:bg-blue-200 p-3 rounded-md w-full inline-block text-center"
+          disabled={loading} // Disable the resend button if loading
+        >
+          Resend Email
+        </button>
+
       )}
 
       {/* Blocked Message */}

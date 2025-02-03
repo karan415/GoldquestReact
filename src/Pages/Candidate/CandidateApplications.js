@@ -74,11 +74,7 @@ const GenerateReport = () => {
             },
         },
     });
-
-
     const [selectedStatuses, setSelectedStatuses] = useState([]);
-
-
     useEffect(() => {
         if (servicesDataInfo && servicesDataInfo.length > 0) {
 
@@ -98,10 +94,11 @@ const GenerateReport = () => {
         setSelectedStatuses(updatedStatuses);
     };
 
-    // Check if all statuses are 'completed' (as per your original logic)
-    const allCompleted = selectedStatuses.every(status =>
-        status && status.includes('completed')
-    );
+    // Check if all statuses (ignoring empty ones) are 'completed'
+    const allCompleted = selectedStatuses
+        .filter(status => status !== "") // Filter out empty statuses
+        .every(status => status.includes('completed')); // Check if the rest are 'completed'
+
 
     const handleFileChange = (index, dbTable, fileName, e) => {
 
@@ -236,29 +233,60 @@ const GenerateReport = () => {
         };
 
         fetch(`https://api.goldquestglobal.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
-            .then((response) => response.json())
+            .then((response) => {
+              return  response.json()
+            })
             .then((result) => {
+                console.log("API Response:", result); // Log the response to check its structure
 
+                // Check for error message in response
+                if (result.message && result.message.toLowerCase().startsWith("message")) {
+                    Swal.fire({
+                        title: "Error",
+                        text: result.message || "An unknown error occurred.",
+                        icon: "error",
+                        confirmButtonText: "Ok",
+                    }).finally(() => {
+                        setLoading(false);
+                    });
+                    return; // Exit early if there's an error
+                }
+
+                // Check if a new token is present in the response
                 const newToken = result.token || result._token || '';
                 if (newToken) {
-                    localStorage.setItem("_token", newToken);
+                    localStorage.setItem("_token", newToken); // Save the new token in localStorage
                 }
+
+                // Handle token expiration check if "token expired" is in the message
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        window.location.href = "/admin-login"; // Redirect to admin login page
+                    });
+                    return; // Stop further execution if token expired
+                }
+                // If no token expired error, proceed with data
                 const applicationData = result.application;
                 const cmtData = result.CMTData || [];
                 const services = applicationData.services;
-                fetchServicesJson(services);
-                setServicesForm(services);
-                setServicesData(result);
-                setBranchInfo(result.branchInfo);
-                setCustomerInfo(result.customerInfo);
-                setApplicationRefID(applicationData.application_id);
-                setAdminNames(result.admins)
+                fetchServicesJson(services); // Fetch services JSON
+                setServicesForm(services); // Set services form
+                setServicesData(result); // Set services data
+                setBranchInfo(result.branchInfo); // Set branch info
+                setCustomerInfo(result.customerInfo); // Set customer info
+                setApplicationRefID(applicationData.application_id); // Set application ref ID
+                setAdminNames(result.admins); // Set admin names
 
+                // Set the form data
                 setFormData(prevFormData => ({
                     ...prevFormData,
                     updated_json: {
                         month_year: cmtData.month_year || applicationData.month_year || prevFormData.updated_json.month_year || '',
-
                         organization_name: applicationData.customer_name || prevFormData.updated_json.organization_name || '',
                         verification_purpose: cmtData.verification_purpose || prevFormData.updated_json.verification_purpose || '',
                         employee_id: applicationData.employee_id || prevFormData.updated_json.employee_id || '',
@@ -279,6 +307,7 @@ const GenerateReport = () => {
                             : (prevFormData.updated_json.insuffDetails.dob
                                 ? new Date(prevFormData.updated_json.insuffDetails.dob).toISOString().split('T')[0]
                                 : ''),
+
                         marital_status: cmtData.marital_status || prevFormData.updated_json.marital_status || '',
                         nationality: cmtData.nationality || prevFormData.updated_json.nationality || '',
                         insuff: cmtData.insuff || prevFormData.updated_json.insuff || '',
@@ -309,8 +338,6 @@ const GenerateReport = () => {
                                 : (prevFormData.updated_json.insuffDetails.first_insuff_reopened_date
                                     ? parseAndConvertDate(prevFormData.updated_json.insuffDetails.first_insuff_reopened_date)
                                     : ''),
-
-
 
                             second_insufficiency_marks: cmtData.second_insufficiency_marks || prevFormData.updated_json.insuffDetails.second_insufficiency_marks || '',
                             second_insuff_date: (cmtData.second_insuff_date && !isNaN(new Date(cmtData.second_insuff_date).getTime()))
@@ -364,16 +391,15 @@ const GenerateReport = () => {
                             qc_done_by: cmtData.qc_done_by || prevFormData.updated_json.insuffDetails.qc_done_by || '',
                             delay_reason: cmtData.delay_reason || prevFormData.updated_json.insuffDetails.delay_reason || '',
                         },
-
                     }
                 }));
             })
             .catch((error) => {
-                console.log('error', error)
+                console.log('error', error);
             }).finally(() => {
-                setLoading(false);
+                setLoading(false); // End loading
+            });
 
-            })
     }, [applicationId, branchid, fetchServicesJson, setServicesForm, setServicesData, setBranchInfo, setCustomerInfo, setFormData]);
 
     useEffect(() => {
@@ -526,6 +552,7 @@ const GenerateReport = () => {
             }
         }
     };
+    console.log('selectedsttaus', selectedStatuses)
 
 
     const handleInputChange = useCallback((e, index) => {
@@ -1540,9 +1567,9 @@ const GenerateReport = () => {
                                         value={formData.updated_json.insuffDetails.education}
                                         onChange={handleChange}
                                         className="border w-full rounded-md p-2 mt-2 uppercase">
-  {adminNames.map((spoc, index) => (
-                                        <option key={index} value={spoc.id}>{spoc.name}</option>
-                                    ))}                                    </select>
+                                        {adminNames.map((spoc, index) => (
+                                            <option key={index} value={spoc.id}>{spoc.name}</option>
+                                        ))}                                    </select>
 
                                 </div>
 

@@ -141,16 +141,17 @@ const ReportCaseTable = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredOptions.slice(indexOfFirstItem, indexOfLastItem);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
   const showPrev = () => {
     if (currentPage > 1) handlePageChange(currentPage - 1);
   };
 
   const showNext = () => {
     if (currentPage < totalPages) handlePageChange(currentPage + 1);
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setExpandedRow(null); // Reset expanded row when page changes
   };
 
   const renderPagination = () => {
@@ -164,21 +165,17 @@ const ReportCaseTable = () => {
       pageNumbers.push(1);
 
       if (currentPage > 3) {
-        pageNumbers.push("...");
+        pageNumbers.push('...');
       }
 
-      for (
-        let i = Math.max(2, currentPage - 1);
-        i <= Math.min(totalPages - 1, currentPage + 1);
-        i++
-      ) {
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
         if (!pageNumbers.includes(i)) {
           pageNumbers.push(i);
         }
       }
 
       if (currentPage < totalPages - 2) {
-        pageNumbers.push("...");
+        pageNumbers.push('...');
       }
 
       if (!pageNumbers.includes(totalPages)) {
@@ -186,26 +183,20 @@ const ReportCaseTable = () => {
       }
     }
 
-    return pageNumbers.map((number, index) =>
-      number === "..." ? (
-        <span key={`ellipsis-${index}`} className="px-3 py-1">
-          ...
-        </span>
+    return pageNumbers.map((number, index) => (
+      number === '...' ? (
+        <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
       ) : (
         <button
           type="button"
           key={`page-${number}`} // Unique key for page buttons
           onClick={() => handlePageChange(number)}
-          className={`px-3 py-1 rounded-0 ${
-            currentPage === number
-              ? "bg-green-500 text-white"
-              : "bg-green-300 text-black border"
-          }`}
+          className={`px-3 py-1 rounded-0 ${currentPage === number ? 'bg-green-500 text-white' : 'bg-green-300 text-black border'}`}
         >
           {number}
         </button>
       )
-    );
+    ));
   };
 
   const fetchServicesData = async (applicationId, servicesList) => {
@@ -270,82 +261,57 @@ const ReportCaseTable = () => {
   }, [clientId]);
 
   const handleViewMore = async (index) => {
-    setServicesLoading((prev) => ({ ...prev, [index]: true }));
+    const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
+    console.log('Current Page Index:', index);
+    console.log('Global Index:', globalIndex);
 
-    if (expandedRow && expandedRow.index === index) {
-      setExpandedRow(null);
-      setServicesLoading((prev) => ({ ...prev, [index]: false }));
-      return;
+    // Set loading for this row
+    setServicesLoading((prev) => ({ ...prev, [globalIndex]: true }));
+
+    // Check if the row is already expanded
+    if (expandedRow && expandedRow.index === globalIndex) {
+        setExpandedRow(null); // Collapse the row
+        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+        return;
     }
 
+    // Fetch service data for the globalIndex
     try {
-      const applicationInfo = data[index];
-      const servicesData = await fetchServicesData(
-        applicationInfo.main_id,
-        applicationInfo.services
-      );
-      const headingsAndStatuses = [];
+        const applicationInfo = currentItems[index]; // Data for the current page
+        const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
+        const headingsAndStatuses = [];
 
-      servicesData.forEach((service) => {
-        // Ensure `reportFormJson` and its `json` property are defined
-        if (!service?.reportFormJson?.json) {
-          console.warn("Missing or invalid reportFormJson data:", service);
-          headingsAndStatuses.push({
-            heading: "Unknown Heading",
-            status: "NIL",
-          });
-          return;
-        }
-
-        let heading;
-        try {
-          heading = JSON.parse(service.reportFormJson.json).heading;
-        } catch (error) {
-          console.error(
-            "Failed to parse JSON:",
-            service.reportFormJson.json,
-            error
-          );
-          heading = "Invalid Heading";
-        }
-
-        let status = service.annexureData?.status || "NIL";
-        if (status.length < 4) {
-          status =
-            status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || "NIL";
-        } else {
-          status =
-            status
-              .replace(/[^a-zA-Z0-9\s]/g, " ")
-              .toLowerCase()
-              .replace(/\b\w/g, (char) => char.toUpperCase()) || "NIL";
-        }
-
-        headingsAndStatuses.push({ heading, status });
-      });
-
-      setExpandedRow({
-        index: index,
-        headingsAndStatuses: headingsAndStatuses,
-      });
-
-      setServicesLoading((prev) => ({ ...prev, [index]: false }));
-
-      // Scroll to the expanded row after it is updated
-      const expandedRowElement = document.getElementById(
-        `expanded-row-${index}`
-      );
-      if (expandedRowElement) {
-        expandedRowElement.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
+        servicesData.forEach((service) => {
+            if (service.reportFormJson && service.reportFormJson.json) {
+                const heading = JSON.parse(service.reportFormJson.json).heading;
+                if (heading) {
+                    let status = service.annexureData?.status || "NIL";
+                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
+                    headingsAndStatuses.push({ heading, status });
+                }
+            }
         });
-      }
+
+        if (headingsAndStatuses.length > 0) {
+            setExpandedRow({
+                index: globalIndex, // Use the global index
+                headingsAndStatuses: headingsAndStatuses,
+            });
+        } else {
+            setExpandedRow(null); // Collapse if no valid heading found
+        }
+
+        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+
+        const expandedRowElement = document.getElementById(`expanded-row-${globalIndex}`);
+        if (expandedRowElement) {
+            expandedRowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     } catch (error) {
-      console.error("Error fetching or processing service data:", error);
-      setServicesLoading((prev) => ({ ...prev, [index]: false }));
+        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
     }
-  };
+};
+
 
   const handleSelectChange = (e) => {
     const selectedValue = e.target.value;
@@ -604,10 +570,10 @@ const ReportCaseTable = () => {
     const secondTableData = servicesData.map((item) => {
       const sourceKey = item.annexureData
         ? Object.keys(item.annexureData).find(
-            (key) =>
-              key.startsWith("info_source") ||
-              key.startsWith("information_source")
-          )
+          (key) =>
+            key.startsWith("info_source") ||
+            key.startsWith("information_source")
+        )
         : undefined;
       const dateKey =
         item.annexureData &&
@@ -620,8 +586,8 @@ const ReportCaseTable = () => {
         source: sourceKey ? item.annexureData[sourceKey] : "NIL",
         completedDate:
           dateKey &&
-          item.annexureData[dateKey] &&
-          !isNaN(new Date(item.annexureData[dateKey]).getTime())
+            item.annexureData[dateKey] &&
+            !isNaN(new Date(item.annexureData[dateKey]).getTime())
             ? new Date(item.annexureData[dateKey]).toLocaleDateString()
             : "NIL",
         status:
@@ -834,13 +800,13 @@ const ReportCaseTable = () => {
           if (service.annexureData) {
             const value =
               service.annexureData[inputName] !== undefined &&
-              service.annexureData[inputName] !== null
+                service.annexureData[inputName] !== null
                 ? service.annexureData[inputName]
                 : "";
 
             const reportDetailsValue =
               service.annexureData[reportDetailsInputName] !== undefined &&
-              service.annexureData[reportDetailsInputName] !== null
+                service.annexureData[reportDetailsInputName] !== null
                 ? service.annexureData[reportDetailsInputName]
                 : "";
 
@@ -1323,7 +1289,7 @@ const ReportCaseTable = () => {
     doc.textWithLink(
       anchorText,
       10 +
-        doc.getTextWidth(disclaimerLinesPart1[disclaimerLinesPart1.length - 1]),
+      doc.getTextWidth(disclaimerLinesPart1[disclaimerLinesPart1.length - 1]),
       currentY - lineHeight,
       {
         url: "mailto:compliance@screeningstar.com",
@@ -1517,389 +1483,192 @@ const ReportCaseTable = () => {
                   </tr>
                 ) : (
                   <>
-                    {currentItems.map((data, index) => (
-                      <React.Fragment key={data.id}>
-                        <tr className="text-center">
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {index + 1}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {adminTAT || "NIL"}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.location || "NIL"}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.name || "NIL"}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.application_id || "NIL"}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            <button
-                              onClick={() => {
-                                const reportDownloadFlag =
-                                  data.overall_status === "completed" &&
-                                  data.is_verify === "yes"
-                                    ? 1
-                                    : 0;
-                                console.log(
-                                  `reportDownloadFlag: ${reportDownloadFlag}, index: ${index}`
-                                );
+                    {currentItems.map((data, index) => {
+                      const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
 
-                                // Set the button to loading
-                                setLoadingStates((prevState) => ({
-                                  ...prevState,
-                                  [index]: true,
-                                }));
+                      return (
+                        <React.Fragment key={data.id}>
+                          <tr className="text-center">
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {index + 1 + (currentPage - 1) * itemsPerPage}
+                            </td>
 
-                                // Directly call generatePDF
-                                generatePDF(index, reportDownloadFlag).finally(
-                                  () => {
-                                    // After PDF generation, reset loading state for the clicked button
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {adminTAT || "NIL"}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.location || "NIL"}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.name || "NIL"}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.application_id || "NIL"}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              <button
+                                onClick={() => {
+                                  const reportDownloadFlag =
+                                    data.overall_status === "completed" && data.is_verify === "yes" ? 1 : 0;
+                                  console.log(`reportDownloadFlag: ${reportDownloadFlag}, index: ${index}`);
+
+                                  // Set the button to loading
+                                  setLoadingStates((prevState) => ({
+                                    ...prevState,
+                                    [globalIndex]: true,
+                                  }));
+
+                                  // Directly call generatePDF
+                                  generatePDF(globalIndex, reportDownloadFlag).finally(() => {
                                     setLoadingStates((prevState) => ({
                                       ...prevState,
-                                      [index]: false,
+                                      [globalIndex]: false,
                                     }));
-                                  }
-                                );
-                              }}
-                              className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${
-                                data.overall_status !== "completed" ||
-                                data.is_verify !== "yes"
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              disabled={
-                                data.overall_status !== "completed" ||
-                                data.is_verify !== "yes" ||
-                                loadingStates[index]
-                              } // Disable button while loading
-                            >
-                              {loadingStates[index]
-                                ? "Please Wait, Your PDF is Generating"
-                                : data.overall_status === "completed"
-                                ? data.is_verify === "yes"
-                                  ? "DOWNLOAD"
-                                  : data.is_verify === "no"
-                                  ? "QC PENDING"
-                                  : "NOT READY"
-                                : data.overall_status === "wip"
-                                ? "WIP"
-                                : data.overall_status === "insuff"
-                                ? "INSUFF"
-                                : "NOT READY"}
-                            </button>
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.photo ? (
-                              // Check if the file is an image
-                              data.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                <img
-                                  src={`${data.photo}`}
-                                  alt="Image"
-                                  className="md:h-20 h-10 w-20 rounded-full"
-                                />
+                                  });
+                                }}
+                                className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== "completed" || data.is_verify !== "yes" ? "opacity-50 cursor-not-allowed" : ""}`}
+                                disabled={data.overall_status !== "completed" || data.is_verify !== "yes" || loadingStates[globalIndex]}
+                              >
+                                {loadingStates[globalIndex] ? "Please Wait, Your PDF is Generating" : data.overall_status === "completed" ? data.is_verify === "yes" ? "DOWNLOAD" : "QC PENDING" : "NOT READY"}
+                              </button>
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.photo ? (
+                                data.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                  <img src={data.photo} alt="Image" className="md:h-20 h-10 w-20 rounded-full" />
+                                ) : (
+                                  <a href={data.photo} target="_blank" rel="noopener noreferrer">
+                                    <button type="button" className="px-4 py-2 bg-green-500 text-white rounded">
+                                      View Document
+                                    </button>
+                                  </a>
+                                )
                               ) : (
-                                // If it's a document (pdf, doc, etc.), show a button
-                                <a
-                                  href={`${data.photo}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <button
-                                    type="button"
-                                    className="px-4 py-2 bg-green-500 text-white rounded"
-                                  >
-                                    View Document
-                                  </button>
-                                </a>
-                              )
-                            ) : (
-                              "----"
-                            )}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.employee_id || "NIL"}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {new Date(data.created_at).getDate()}-
-                            {new Date(data.created_at).getMonth() + 1}-
-                            {new Date(data.created_at).getFullYear()}
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {" "}
-                            {new Date(data.updated_at).getDate()}-
-                            {new Date(data.updated_at).getMonth() + 1}-
-                            {new Date(data.updated_at).getFullYear()}
-                          </td>
+                                "----"
+                              )}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.employee_id || "NIL"}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {new Date(data.created_at).getDate()}-{new Date(data.created_at).getMonth() + 1}-{new Date(data.created_at).getFullYear()}
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {new Date(data.updated_at).getDate()}-{new Date(data.updated_at).getMonth() + 1}-{new Date(data.updated_at).getFullYear()}
+                            </td>
 
-                          <td className="border px-4  py-2">
-                            <button
-                              className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
-                              onClick={() => handleViewMore(index)}
-                            >
-                              {expandedRow && expandedRow.index === index
-                                ? " Less"
-                                : "View "}
-                            </button>
-                          </td>
-                          <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                            {data.overall_status || "WIP"}
-                          </td>
-                        </tr>
-
-                        {servicesLoading[index] ? (
-                          <tr>
-                            <td
-                              colSpan={12}
-                              className="py-4 text-center text-gray-500"
-                            >
-                              <div className="flex justify-center">
-                                <PulseLoader
-                                  color="#36D7B7"
-                                  loading={servicesLoading[index]}
-                                  size={15}
-                                  aria-label="Loading Spinner"
-                                />
-                              </div>
+                            <td className="border px-4  py-2">
+                              <button
+                                className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
+                                onClick={() => handleViewMore(index)} // Use globalIndex here
+                              >
+                                {expandedRow && expandedRow.index === globalIndex ? 'Less' : 'View'}
+                              </button>
+                            </td>
+                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                              {data.overall_status || "WIP"}
                             </td>
                           </tr>
-                        ) : (
-                          expandedRow &&
-                          expandedRow.index === index && (
-                            <tr
-                              id={`expanded-row-${index}`}
-                              className="expanded-row"
-                            >
-                              <td
-                                colSpan="100%"
-                                className="text-center p-4 bg-gray-100"
-                              >
-                                {/* Table structure to display headings in the first column and statuses in the second column */}
-                                <div
-                                  ref={tableRef}
-                                  className="relative w-full max-w-full overflow-hidden"
-                                >
+
+                          {servicesLoading[globalIndex] && (
+                            <tr>
+                              <td colSpan={12} className="py-4 text-center text-gray-500">
+                                <div className="flex justify-center">
+                                  <PulseLoader color="#36D7B7" loading={servicesLoading[globalIndex]} size={15} aria-label="Loading Spinner" />
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+
+                          {expandedRow && expandedRow.index === globalIndex && (
+                            <tr id={`expanded-row-${globalIndex}`} className="expanded-row">
+                              <td colSpan="100%" className="text-center p-4 bg-gray-100">
+                                <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
                                   <table className="w-full table-auto">
-                                    <tbody className="h-[320px] overflow-scroll block">
+                                    <tbody className="min-h-[260px] overflow-y-auto block">
                                       <tr>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Report Type
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Report Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Report Generated By
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          QC Done By
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          First Level Insuff
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          First Level Insuff Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          First Level Insuff Reopen Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Second Level Insuff
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Second Level Insuff Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Third Level Insuff Marks
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Third Level Insuff Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Third Level Insuff Reopen Date
-                                        </th>
-                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">
-                                          Reason For Delay
-                                        </th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
+                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
                                       </tr>
                                       <tr>
+                                        <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
+
                                         <td className="text-left p-2 border border-black capitalize">
-                                          {data.report_type || "NIL"}
+                                          {data.report_date && !isNaN(new Date(data.report_date))
+                                            ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
+                                            : 'NIL'}
+                                        </td>
+
+                                        <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
+                                        <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
+                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
+
+                                        <td className="text-left p-2 border border-black capitalize">
+                                          {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
+                                            ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
+                                            : 'NIL'}
                                         </td>
 
                                         <td className="text-left p-2 border border-black capitalize">
-                                          {data.report_date &&
-                                          !isNaN(new Date(data.report_date))
-                                            ? `${String(
-                                                new Date(
-                                                  data.report_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.report_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.report_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
+                                          {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
+                                            ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
+                                            : 'NIL'}
+                                        </td>
+
+                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
+
+                                        <td className="text-left p-2 border border-black capitalize">
+                                          {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
+                                            ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
+                                            : 'NIL'}
+                                        </td>
+
+                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
+
+                                        <td className="text-left p-2 border border-black capitalize">
+                                          {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
+                                            ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
+                                            : 'NIL'}
                                         </td>
 
                                         <td className="text-left p-2 border border-black capitalize">
-                                          {data.report_generated_by_name ||
-                                            "NIL"}
-                                        </td>
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.qc_done_by_name || "NIL"}
-                                        </td>
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {sanitizeText(
-                                            data.first_insufficiency_marks
-                                          ) || "NIL"}
+                                          {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
+                                            ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
+                                            : 'NIL'}
                                         </td>
 
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.first_insuff_date &&
-                                          !isNaN(
-                                            new Date(data.first_insuff_date)
-                                          )
-                                            ? `${String(
-                                                new Date(
-                                                  data.first_insuff_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.first_insuff_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.first_insuff_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.first_insuff_reopened_date &&
-                                          !isNaN(
-                                            new Date(
-                                              data.first_insuff_reopened_date
-                                            )
-                                          )
-                                            ? `${String(
-                                                new Date(
-                                                  data.first_insuff_reopened_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.first_insuff_reopened_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.first_insuff_reopened_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {sanitizeText(
-                                            data.second_insufficiency_marks
-                                          ) || "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.second_insuff_date &&
-                                          !isNaN(
-                                            new Date(data.second_insuff_date)
-                                          )
-                                            ? `${String(
-                                                new Date(
-                                                  data.second_insuff_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.second_insuff_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.second_insuff_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {sanitizeText(
-                                            data.third_insufficiency_marks
-                                          ) || "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.third_insuff_date &&
-                                          !isNaN(
-                                            new Date(data.third_insuff_date)
-                                          )
-                                            ? `${String(
-                                                new Date(
-                                                  data.third_insuff_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.third_insuff_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.third_insuff_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {data.third_insuff_reopened_date &&
-                                          !isNaN(
-                                            new Date(
-                                              data.third_insuff_reopened_date
-                                            )
-                                          )
-                                            ? `${String(
-                                                new Date(
-                                                  data.third_insuff_reopened_date
-                                                ).getDate()
-                                              ).padStart(2, "0")}-${String(
-                                                new Date(
-                                                  data.third_insuff_reopened_date
-                                                ).getMonth() + 1
-                                              ).padStart(2, "0")}-${new Date(
-                                                data.third_insuff_reopened_date
-                                              ).getFullYear()}`
-                                            : "NIL"}
-                                        </td>
-
-                                        <td className="text-left p-2 border border-black capitalize">
-                                          {sanitizeText(data.delay_reason) ||
-                                            "NIL"}
-                                        </td>
+                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
                                       </tr>
-
-                                      {expandedRow.headingsAndStatuses &&
-                                        expandedRow.headingsAndStatuses.map(
-                                          (item, idx) => (
+                                      <tbody style={{ maxHeight: '200px', overflowY: 'auto', display: 'block' }}>
+                                        {expandedRow.headingsAndStatuses &&
+                                          expandedRow.headingsAndStatuses.map((item, idx) => (
                                             <tr key={`row-${idx}`}>
-                                              <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                {sanitizeText(item.heading)}
-                                              </td>
-                                              <td className="text-left p-2 border border-black capitalize">
-                                                {sanitizeText(
-                                                  item.status || "NIL"
-                                                )}
-                                              </td>
+                                              <td className="text-left p-2 border border-black capitalize bg-gray-200">{item.heading}</td>
+                                              <td className="text-left p-2 border border-black capitalize">{item.status || 'NIL'}</td>
                                             </tr>
-                                          )
-                                        )}
+                                          ))}
+                                      </tbody>
                                     </tbody>
                                   </table>
                                 </div>
                               </td>
                             </tr>
-                          )
-                        )}
-                      </React.Fragment>
-                    ))}
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+
                   </>
                 )}
               </tbody>

@@ -114,51 +114,55 @@ const HolidayManagement = () => {
             if (result.isConfirmed) {
                 const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
                 const storedToken = localStorage.getItem("_token");
-
+    
                 if (!admin_id || !storedToken) {
                     console.error("Admin ID or token is missing.");
                     return;
                 }
-
+    
                 const requestOptions = {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     }
                 };
-
+    
                 fetch(`${API_URL}/holiday/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then(response => {
-                        const result = response.json();
+                        return response.json();  // Parse the response as JSON
+                    })
+                    .then(result => {
+                        // Check for session expiration (invalid token)
                         const newToken = result._token || result.token;
                         if (newToken) {
-                            localStorage.setItem("_token", newToken);
+                            localStorage.setItem("_token", newToken); // Save new token if available
                         }
+    
                         if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                            // Session expired, redirect to login
                             Swal.fire({
                                 title: "Session Expired",
                                 text: "Your session has expired. Please log in again.",
                                 icon: "warning",
                                 confirmButtonText: "Ok",
                             }).then(() => {
-                                // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
+                                window.location.href = "/admin-login"; // Redirect to login page
                             });
+                            return; // Stop further execution
                         }
-                        if (!response.ok) {
-                            return response.text().then(text => {
-                                const errorData = JSON.parse(text);
-                                Swal.fire(
-                                    'Error!',
-                                    `An error occurred: ${errorData.message}`,
-                                    'error'
-                                );
-                                throw new Error(text);
+    
+                        if (!result.ok) {
+                            // Handle other errors
+                            Swal.fire({
+                                title: 'Error!',
+                                text: result.message || 'An error occurred',
+                                icon: 'error',
+                                confirmButtonText: 'Ok'
                             });
+                            throw new Error(result.message || 'An error occurred');
                         }
-                        return result;
-                    })
-                    .then(result => {
+    
+                        // If everything goes well, refresh the data
                         fetchData();
                         Swal.fire(
                             'Deleted!',
@@ -168,10 +172,18 @@ const HolidayManagement = () => {
                     })
                     .catch(error => {
                         console.error('Fetch error:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to delete the holiday. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'Ok'
+                        });
                     });
             }
         });
     };
+    
+    
 
     return (
         <>
@@ -236,7 +248,8 @@ const HolidayManagement = () => {
                                     {currentItems.length > 0 ?
                                         (currentItems.map((item, index) => (
                                             <tr key={item.index}>
-                                                <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">{item.index}</td>
+                                                <td className="py-2 px-4 border-l border-r border-b whitespace-nowrap">                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                                                </td>
                                                 <td className="py-2 px-4 border-r border-b whitespace-nowrap">{item.title}</td>
                                                 <td className="py-2 px-4 border-r border-b ">{new Date(item.date).toLocaleDateString()}</td>
 

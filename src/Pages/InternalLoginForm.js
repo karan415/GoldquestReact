@@ -5,7 +5,7 @@ import LoginContext from './InternalLoginContext';
 import SelectSearch from 'react-select-search';
 import 'react-select-search/style.css';
 const InternalLoginForm = () => {
-    const { formData, fetchData,setEditAdmin, setFormData, editAdmin, } = useContext(LoginContext)
+    const { formData, fetchData, setEditAdmin, setFormData, editAdmin, } = useContext(LoginContext)
 
     const [error, setError] = useState({});
     const [roles, setRoles] = useState([]);
@@ -14,24 +14,45 @@ const InternalLoginForm = () => {
 
     const handleChange = (event) => {
         const { name, value } = event.target;
-        
+
         // Remove spaces from employee_id and convert to uppercase
         const updatedValue = name === 'employee_id' ? value.replace(/\s+/g, '').toUpperCase() : value;
-    
+
         setFormData((prev) => ({
             ...prev,
             [name]: updatedValue,
         }));
     };
-    
-    
-    console.log('formData', formData)
+
+
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
     useEffect(() => {
         setLoading(true);
+    
         const fetchAdminOptions = async () => {
             try {
+                const storedAdminData = localStorage.getItem("admin");
+                const storedToken = localStorage.getItem("_token");
+    
+                // Check if necessary data is available
+                if (!storedAdminData || !storedToken) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page after closing the Swal alert
+                        window.location.href = "/admin-login"; // Replace with your login route
+                    });
+                    return; // Exit if no valid data
+                }
+    
+                const adminData = JSON.parse(storedAdminData);
+                const admin_id = adminData?.id;
+    
+                // Fetch admin roles and permissions using axios
                 const response = await axios.get(
                     `https://api.goldquestglobal.in/admin/permission/roles`,
                     {
@@ -41,31 +62,91 @@ const InternalLoginForm = () => {
                         },
                     }
                 );
-
-                console.log(response.data);
+    
+                // Check for invalid or expired token in the response
+                const message = response.data?.message?.toLowerCase() || '';
+                if (
+                    message.includes("invalid token") ||
+                    message.includes("expired") ||
+                    message.includes("invalid token provided") ||
+                    message.includes("invalid or expired token")
+                ) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page after closing the Swal alert
+                        window.location.href = "/admin-login"; // Replace with your login route
+                    });
+                    return; // Stop further execution if token is invalid or expired
+                }
+    
+                // Handle valid response
                 const adminRoles = response.data.data;
-
+    
                 setRoles(adminRoles.roles || []); // Ensure roles is an array
                 setGroup(adminRoles.groups?.filter(Boolean) || []); // Remove any blank entries
+    
+                // Optionally, handle token refresh logic here
+                const newToken = response.data?._token || response.data?.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken); // Replace the old token with the new one
+                }
+    
             } catch (error) {
-                Swal.fire({
-                    title: 'Error!',
-                    text: error.response?.data?.message || 'An error occurred while fetching data.',
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                });
+                console.error("Error fetching data:", error);
+    
+                // Handle specific error responses, e.g., network failure or server error
+                if (error.response) {
+                    // Check if the error status code indicates session expiration or unauthorized access
+                    if (error.response.status === 401 || error.response.data.message?.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                    } else if (error.response.status === 500) {
+                        // Handle server errors
+                        Swal.fire({
+                            title: "Server Error",
+                            text: "Something went wrong with the server. Please try again later.",
+                            icon: "error",
+                            confirmButtonText: "Ok",
+                        });
+                    } else {
+                        // Handle other errors (e.g., 404, etc.)
+                        Swal.fire({
+                            title: "Error",
+                            text: error.response?.data?.message || "An error occurred. Please try again.",
+                            icon: "error",
+                            confirmButtonText: "Ok",
+                        });
+                    }
+                } else {
+                    // Handle network or other unknown errors
+                    Swal.fire({
+                        title: "Network Error",
+                        text: "There was an issue with the network. Please check your connection and try again.",
+                        icon: "error",
+                        confirmButtonText: "Ok",
+                    });
+                }
+            } finally {
+                setLoading(false); // Always stop the loading indicator when done
             }
-            setLoading(false);
         };
-
+    
         fetchAdminOptions();
-    }, []); // Dependency array ensures this runs only once
-
-
-
+    }, []); // Empty dependency array ensures this runs only once when the component is mounted
+    
     const Validate = () => {
         const errors = {};
-    
+
         // Validate employee_id: no spaces allowed
         if (!formData.employee_id) {
             errors.employee_id = 'This field is required';
@@ -74,7 +155,7 @@ const InternalLoginForm = () => {
         } else if (/[^a-zA-Z0-9-]/.test(formData.employee_id)) {
             errors.employee_id = 'Employee ID should only contain letters, numbers, and hyphens';
         }
-    
+
         // Validate mobile: no spaces and exactly 10 digits
         if (!formData.mobile) {
             errors.mobile = 'This field is required';
@@ -83,24 +164,24 @@ const InternalLoginForm = () => {
         } else if (!/^\d{10}$/.test(formData.mobile)) {
             errors.mobile = 'Mobile number must be exactly 10 digits';
         }
-    
+
         // Validate other fields
         if (!formData.name) errors.name = 'This field is required';
         if (!formData.email) errors.email = 'This field is required';
-    
+
         // Validate password length
         if (!formData.password) {
             errors.password = 'This field is required';
         } else if (formData.password.length < 8 || formData.password.length > 10) {
             errors.password = 'Password must be between 8 and 10 characters long';
         }
-        
-    
+
+
         if (!formData.role) errors.role = 'This field is required';
-    
+
         return errors;
     };
-    
+
 
 
 
@@ -189,7 +270,7 @@ const InternalLoginForm = () => {
                         role: '',
                         id: '',
                         status: '',
-                        service_groups:[],
+                        service_groups: [],
                     });
 
                     fetchData(); // Call to fetch data after success
@@ -229,8 +310,8 @@ const InternalLoginForm = () => {
             status: '',
             service_groups: [],
         });
-    setError({});
-    setEditAdmin(false);
+        setError({});
+        setEditAdmin(false);
     }
     const options = [
         { value: 'select_all', name: 'Select All / Deselect All' }, // Add the "Select All" option
@@ -252,7 +333,7 @@ const InternalLoginForm = () => {
             setFormData((prev) => ({ ...prev, service_groups: selected }));
         }
     };
-    console.log('employee_id',formData.employee_id)
+    console.log('employee_id', formData.employee_id)
 
 
     return (
@@ -268,7 +349,7 @@ const InternalLoginForm = () => {
                         onChange={handleChange}
                         value={formData.employee_id.toUpperCase()}
                         disabled={editAdmin}
-                        />
+                    />
                     {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                 </div>
                 <div className="mb-4">
@@ -292,7 +373,7 @@ const InternalLoginForm = () => {
                         className="border w-full rounded-md p-2 mt-2"
                         onChange={handleChange}
                         value={formData.mobile}
-                        
+
                     />
                     {error.mobile && <p className='text-red-500'>{error.mobile}</p>}
                 </div>
@@ -309,18 +390,18 @@ const InternalLoginForm = () => {
                     {error.email && <p className='text-red-500'>{error.email}</p>}
                 </div>
                 {!editAdmin && (
-                <div className="mb-4">
-                    <label className="text-gray-500" htmlFor="password">Password: <span className='text-red-500'>*</span></label>
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        className="border w-full rounded-md p-2 mt-2"
-                        onChange={handleChange}
-                        value={formData.password}
-                    />
-                    {error.password && <p className='text-red-500'>{error.password}</p>}
-                </div>
+                    <div className="mb-4">
+                        <label className="text-gray-500" htmlFor="password">Password: <span className='text-red-500'>*</span></label>
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            className="border w-full rounded-md p-2 mt-2"
+                            onChange={handleChange}
+                            value={formData.password}
+                        />
+                        {error.password && <p className='text-red-500'>{error.password}</p>}
+                    </div>
                 )}
                 {editAdmin && (
                     <div className="mb-4">
@@ -387,27 +468,27 @@ const InternalLoginForm = () => {
                 </div>
 
                 {formData.role !== 'admin' && (
-                <div className="mb-4 relative">
-                    <label htmlFor="service_group" className="block mb-2">Service Group</label>
-                    <SelectSearch
-                        multiple
-                        options={options}
-                        value={formData.service_groups}
-                        name="service_groups"
-                        placeholder="Select Group"
-                        onChange={(value) => {
-                            handleServiceGroupChange(value);
-                        }}
-                        search
-                        disabled={loading}
-                    />
-                    {loading && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                            <div className="loader border-t-transparent border-gray-400 border-2 w-5 h-5 rounded-full z-50 animate-spin"></div>
-                        </div>
-                    )}
-                </div>
-            )}
+                    <div className="mb-4 relative">
+                        <label htmlFor="service_group" className="block mb-2">Service Group</label>
+                        <SelectSearch
+                            multiple
+                            options={options}
+                            value={formData.service_groups}
+                            name="service_groups"
+                            placeholder="Select Group"
+                            onChange={(value) => {
+                                handleServiceGroupChange(value);
+                            }}
+                            search
+                            disabled={loading}
+                        />
+                        {loading && (
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <div className="loader border-t-transparent border-gray-400 border-2 w-5 h-5 rounded-full z-50 animate-spin"></div>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-full'>Send</button>
                 <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 mt-5 rounded-md w-full'>Reset Form</button>
             </form>

@@ -22,85 +22,90 @@ const GenerateReportList = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || "";
     const storedToken = localStorage.getItem("_token") || "";
     const requestOptions = {
-      method: "GET",
-      redirect: "follow",
+        method: "GET",
+        redirect: "follow",
     };
 
     setLoading(true);
 
     fetch(
-      `https://api.goldquestglobal.in/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
-      requestOptions
+        `https://api.goldquestglobal.in/report-summary/report-generation?admin_id=${admin_id}&_token=${storedToken}`,
+        requestOptions
     )
-      .then((response) => {
-        const result = response.json();
-        const newToken = result._token || result.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-          Swal.fire({
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again.",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          }).then(() => {
-            // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
-          });
-        }
-        if (!response.ok) {
-          return response.text().then(text => {
-            const errorData = JSON.parse(text);
-            Swal.fire(
-              'Error!',
-              `An error occurred: ${errorData.message}`,
-              'error'
-            );
-            throw new Error(text);
-          });
-        }
-        return result;
-      })
-      .then((result) => {
-        if (result.status) {
-          // Flatten the data to match the table structure
-          const flattenedReports = result.result.flatMap((customer) =>
-            customer.branches.flatMap((branch) =>
-              branch.applications.map((app) => ({
-                applicationId: app.application_id,
-                applicantName: app.application_name,
-                status: app.overall_status,
-                services: app.services_status,
-              }))
-            )
-          );
-          setData(flattenedReports); // Set the flattened data
-        } else {
-          setData([]); // Handle cases with no data
-          // Show error message from API if available
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: result.message || "No data available.",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        // Show the API response message or a fallback error message
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: error.message || "Failed to fetch data. Please try again later.",
-          footer: `<small>${error.message}</small>`,
-        });
-      })
-      .finally(() => {
-        setLoading(false); // Stop loading after fetch completes
-      });
+        .then((response) => {
+            return response.json().then((result) => {
+                // Check for new token in response and update localStorage
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken);
+                }
 
-  }, []);
+                // Check if the response indicates an invalid or expired token
+                if (
+                    result.message &&
+                    result.message.toLowerCase().includes("invalid") &&
+                    result.message.toLowerCase().includes("token")
+                ) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        window.location.href = "/admin-login"; // Redirect to login page
+                    });
+                }
+
+                // Handle errors with non-200 status codes
+                if (!response.ok) {
+                    return Promise.reject(new Error(result.message || "An error occurred"));
+                }
+
+                return result; // Return the result if everything is okay
+            });
+        })
+        .then((result) => {
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken); // Update the token in localStorage
+          }
+            if (result.status) {
+                // Flatten the data to match the table structure
+                const flattenedReports = result.result.flatMap((customer) =>
+                    customer.branches.flatMap((branch) =>
+                        branch.applications.map((app) => ({
+                            applicationId: app.application_id,
+                            applicantName: app.application_name,
+                            status: app.overall_status,
+                            services: app.services_status,
+                        }))
+                    )
+                );
+                setData(flattenedReports); // Set the flattened data
+            } else {
+                setData([]); // Handle cases with no data
+                // Show error message from API if available
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: result.message || "No data available.",
+                });
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+            // Show the error message from the API or a fallback error message
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: error.message || "Failed to fetch data. Please try again later.",
+            });
+        })
+        .finally(() => {
+            setLoading(false); // Stop loading after fetch completes
+        });
+}, []); // Empty dependency array to run this effect only once on mount
+
   const filteredItems = data.filter(item => {
     return (
       item.applicationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -1,6 +1,6 @@
 import { React, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa6';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 const ForgotPassword = () => {
@@ -8,6 +8,8 @@ const ForgotPassword = () => {
   const [formData, setFormData] = useState({
     email: '',
   });
+  const navigate = useNavigate();
+
 
   const [loading, setLoading] = useState(false); // Track loading state
   const [emailSent, setEmailSent] = useState(false); // Track if the email has been sent
@@ -61,6 +63,7 @@ const ForgotPassword = () => {
             result.message || 'Your account is temporarily blocked. Please try again tomorrow.',
             'error'
           );
+          navigate('/admin-login')
         } else {
           // If the status is false, show an error message
           Swal.fire(

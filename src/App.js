@@ -1,4 +1,4 @@
-import React, { useEffect ,useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, useLocation, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Render from './Pages/Render';
@@ -7,6 +7,8 @@ import CustomerLogin from './CustomerDashboard/CustomerLogin';
 import SetNewPassword from './Pages/SetNewPassword';
 import Login from './Dashboard/Login';
 import CustomerDashboard from './CustomerDashboard/CustomerDashboard';
+import CustomerForgotPassword from './CustomerDashboard/CustomerForgotPassword';
+import CustomerResetPassword from './CustomerDashboard/CustomerResetPassword';
 import ExelTrackerData from './Pages/ExelTrackerData';
 import Admin from './Middleware/Admin';
 import Customer from './Middleware/Customer';
@@ -24,6 +26,7 @@ import { TabProvider } from './Pages/TabContext';
 import { BranchProviderExel } from './Pages/BranchContextExel';
 import CandidateMain from './Pages/Candidate/CandidateMain';
 import CandidateBGV from './Pages/CandidateBGV';
+import DemoBgForm from './Pages/DemoBgForm';
 
 
 import CandidateGenerateReport from './Pages/Candidate/CandidateGenerateReport';
@@ -43,8 +46,8 @@ import { AiOutlineArrowUp } from "react-icons/ai";
 
 
 const App = () => {
-    const [showGoToTop, setShowGoToTop] = useState(false);
-  
+  const [showGoToTop, setShowGoToTop] = useState(false);
+
   const handleScroll = () => {
     if (window.scrollY > 60) {
       setShowGoToTop(true);
@@ -92,7 +95,8 @@ const App = () => {
                                       {/* Customer Routes */}
                                       <Route path="/customer-login" element={<CustomerLogin />} />
                                       <Route path="/customer-dashboard" element={<Customer><CustomerDashboard /></Customer>} />
-
+                                      <Route path='customer-login/customer-reset-password' element={<CustomerResetPassword />} />
+                                      <Route path='customer-login/customer-forgotpassword' element={<CustomerForgotPassword />} />
                                       {/* Admin Routes */}
                                       <Route path="/admin-login" element={<Login />} />
                                       <Route path="/forgotpassword" element={<ForgotPassword />} />
@@ -106,6 +110,7 @@ const App = () => {
 
                                       {/* Other Routes */}
                                       <Route path="/background-form" element={<BackgroundForm />} />
+                                      <Route path="/background-form-demo" element={<DemoBgForm />} />
                                       <Route path="/digital-form" element={<DigitalAddressVerification />} />
 
                                       {/* Client Bulk Upload */}

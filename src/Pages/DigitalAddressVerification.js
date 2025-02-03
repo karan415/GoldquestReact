@@ -157,12 +157,12 @@ const DigitalAddressVerification = () => {
     const validate = () => {
         const newErrors = {}; // Object to hold validation errors
         console.log('Validating form fields...'); // Log validation start
-    
+
         // Required Fields to check (for form inputs)
         const requiredFields = [
             "candidate_address", // Add more fields as required
         ];
-    
+
         // Validate mapLocation (latitude and longitude)
         if (!mapLocation.latitude) {
             newErrors.latitude = 'Latitude is required';
@@ -170,31 +170,31 @@ const DigitalAddressVerification = () => {
         if (!mapLocation.longitude) {
             newErrors.longitude = 'Longitude is required';
         }
-    
+
         const maxSize = 2 * 1024 * 1024; // 2MB size limit for files
         const allowedTypes = [
             "image/jpeg", "image/png", "application/pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ]; // Allowed file types
-    
+
         // Function to validate file uploads
         const validateFile = (fileName) => {
             let fileErrors = [];
             const selectedFiles = files[fileName]; // Dynamically fetch the files by fileName
-    
+
             console.log(`Validating files for field: ${fileName}`); // Log current field being validated
-    
+
             if (selectedFiles && selectedFiles.length > 0) {
                 selectedFiles.forEach((file) => {
                     console.log('Validating file:', file.name); // Log current file being validated
-    
+
                     // Check file size
                     if (file.size > maxSize) {
                         fileErrors.push(`${file.name}: File size must be less than 2MB.`);
                         console.log('File size error:', file.name); // Log size error
                     }
-    
+
                     // Check file type
                     if (!allowedTypes.includes(file.type)) {
                         fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
@@ -206,10 +206,10 @@ const DigitalAddressVerification = () => {
                 fileErrors.push(`${fileName} is required.`);
                 console.log(`No files selected for ${fileName}. Marking as required.`);
             }
-    
+
             return fileErrors;
         };
-    
+
         // Validate files dynamically (for each file input field)
         const fileFields = ['identity_proof', 'home_photo', 'locality']; // Define dynamic file fields
         fileFields.forEach((fileName) => {
@@ -220,11 +220,11 @@ const DigitalAddressVerification = () => {
                 newErrors[fileName] = fileErrors;
             }
         });
-    
+
         // Validate required fields for text-based fields
         requiredFields.forEach((field) => {
             console.log(`Checking required field: ${field}`); // Log each required field being checked
-    
+
             if (
                 !formData.personal_information[field] ||
                 formData.personal_information[field].trim() === ""
@@ -233,16 +233,10 @@ const DigitalAddressVerification = () => {
                 newErrors[field] = "This field is required*";
             }
         });
-    
+
         console.log('Validation errors found:', newErrors); // Log final validation errors
         return newErrors;
     };
-    
-
-
-
-
-
 
 
 
@@ -379,17 +373,22 @@ const DigitalAddressVerification = () => {
 
 
     const uploadCustomerLogo = async (candidate_application_id, branch_id, customer_id) => {
-        for (const [key, value] of Object.entries(files)) {
+        for (const [index, [key, value]] of Object.entries(files).entries()) {
             const customerLogoFormData = new FormData();
+            const fileCount = Object.keys(files).length;
+
             customerLogoFormData.append("branch_id", branch_id);
             customerLogoFormData.append("customer_id", customer_id);
             customerLogoFormData.append("application_id", candidate_application_id);
+            if (fileCount === (index + 1)) {
+                customerLogoFormData.append('send_mail', 1);
+            }
+
             for (const file of value) {
                 customerLogoFormData.append("images", file);
             }
             customerLogoFormData.append("upload_category", key);
 
-            customerLogoFormData.append("send_mail", 1);
 
             try {
                 const response = await axios.post(`https://api.goldquestglobal.in/branch/candidate-application/digital-address-verification/upload`, customerLogoFormData, {
@@ -404,7 +403,7 @@ const DigitalAddressVerification = () => {
     const handleSubmitForm = async (e) => {
         e.preventDefault();
         setLoading(true); // Start loading
-
+    
         // Validate form before submission
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -413,35 +412,35 @@ const DigitalAddressVerification = () => {
             setErrors(validationErrors);
             return; // Stop submission if validation errors are found
         }
-
+    
         // If validation passes, proceed with the submission
         const fileCount = Object.keys(files).length;
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
         const form = document.getElementById('bg-form');
         const personal_information = formData.personal_information;
-
+    
         const raw = JSON.stringify({
             branch_id: decodedValues.branch_id,
             customer_id: decodedValues.customer_id,
             application_id: decodedValues.app_id,
             personal_information,
         });
-
+    
         const requestOptions = {
             method: "PUT",
             headers: myHeaders,
             body: raw,
             redirect: "follow"
         };
-
+    
         try {
             const response = await fetch(
                 "https://api.goldquestglobal.in/branch/candidate-application/digital-address-verification/submit",
                 requestOptions
             );
             const result = await response.json();
-
+    
             if (result.status) {
                 if (fileCount === 0) {
                     Swal.fire({
@@ -449,6 +448,9 @@ const DigitalAddressVerification = () => {
                         text: `Client Created Successfully.`,
                         icon: "success",
                         confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Run isApplicationExists() when the OK button is clicked
+                        isApplicationExists();
                     });
                 } else if (fileCount > 0) {
                     await uploadCustomerLogo(
@@ -461,6 +463,9 @@ const DigitalAddressVerification = () => {
                         text: `Client Created Successfully.`,
                         icon: "success",
                         confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Run isApplicationExists() when the OK button is clicked
+                        isApplicationExists();
                     });
                 }
             } else {
@@ -482,6 +487,7 @@ const DigitalAddressVerification = () => {
             setLoading(false); // Stop loading after operations complete
         }
     };
+    
 
     return (
         <>

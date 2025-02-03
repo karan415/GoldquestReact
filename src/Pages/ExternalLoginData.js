@@ -16,59 +16,78 @@ const ExternalLoginData = () => {
   const API_URL = useApi();
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
+  
   const toggleAccordion = useCallback((id) => {
+    // Reset branches and prepare the state for loading
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
     setError(null);
-
+  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
+    if (!admin_id || !storedToken) {
+      Swal.fire({
+        title: "Session Expired",
+        text: "Admin ID or token is missing. Please log in again.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      }).then(() => {
+        window.location.href = "/admin-login"; // Redirect to login page if missing session data
+      });
+      return;
+    }
+  
     fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     })
-      .then((response) => {
-        return response.json().then(result => {
-          const newToken = result._token || result.token;
-          if (newToken) {
-            localStorage.setItem("_token", newToken);
-          }
-          if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
-            });
-          }
-          if (!response.ok) {
-            Swal.fire({
-              title: 'Error!',
-              text: `An error occurred: ${result.message}`,
-              icon: 'error',
-              confirmButtonText: 'Ok'
-            });
-            throw new Error('Network response was not ok');
-          }
-          return result;
-        });
-      })
+      .then((response) => response.json().then(result => {
+        // Handle token expiration check
+        const newToken = result._token || result.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken); // Update token in localStorage
+        }
+  
+        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            window.location.href = "/admin-login"; // Redirect to login page on token expiration
+          });
+          return; // Stop further processing if token expired
+        }
+  
+        if (!response.ok) {
+          Swal.fire({
+            title: 'Error!',
+            text: `An error occurred: ${result.message}`,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+          });
+          throw new Error('Network response was not ok');
+        }
+  
+        return result; // Return the successful result if no errors
+      }))
       .then((data) => {
-        setBranches(data.branches || []);
+        if (data) {
+          setBranches(data.branches || []); // Set the branches if the response was successful
+        }
       })
       .catch((error) => {
         console.error('Fetch error:', error);
-        setError('Failed to load data');
+        setError('Failed to load data'); // Set error state in case of failure
       })
-      .finally(() => setBranchLoading(false));
+      .finally(() => {
+        setBranchLoading(false); // Stop loading when fetch is done
+      });
   }, [API_URL]);
-
-
+  
   const tableRef = useRef(null); // Ref for the table container
 
   // Function to reset expanded rows

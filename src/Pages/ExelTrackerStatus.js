@@ -190,10 +190,6 @@ const AdminChekin = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredOptions.slice(indexOfFirstItem, indexOfLastItem);
 
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
     const showPrev = () => {
         if (currentPage > 1) handlePageChange(currentPage - 1);
     };
@@ -202,6 +198,10 @@ const AdminChekin = () => {
         if (currentPage < totalPages) handlePageChange(currentPage + 1);
     };
 
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        setExpandedRow(null); // Reset expanded row when page changes
+    };
 
     const renderPagination = () => {
         const pageNumbers = [];
@@ -227,13 +227,10 @@ const AdminChekin = () => {
                 pageNumbers.push('...');
             }
 
-
             if (!pageNumbers.includes(totalPages)) {
                 pageNumbers.push(totalPages);
             }
         }
-
-
 
         return pageNumbers.map((number, index) => (
             number === '...' ? (
@@ -250,6 +247,7 @@ const AdminChekin = () => {
             )
         ));
     };
+
 
     const fetchServicesData = async (applicationId, servicesList, reportDownload = 0) => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -460,6 +458,7 @@ const AdminChekin = () => {
         });
 
         addFooter(doc);
+        console.log('servicesData', servicesData)
         const secondTableData = servicesData.map(item => {
             const sourceKey = item.annexureData
                 ? Object.keys(item.annexureData).find(key => key.startsWith('info_source') || key.startsWith('information_source'))
@@ -476,17 +475,22 @@ const AdminChekin = () => {
             };
         });
 
+        // Filter out rows with empty values
+        const filteredSecondTableData = secondTableData.filter(row =>
+            row.component !== 'NIL' && row.source !== 'NIL' && row.completedDate !== 'NIL' && row.status !== 'NIL'
+        );
+
         // Generate the Second Table
         doc.autoTable({
             head: [
                 [
-                    { content: 'REPORT COMPONENT', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'INFORMATION SOURCE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'COMPLETED DATE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
-                    { content: 'COMPONENT STATUS', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'REPORT COMPONENT', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'INFORMATION SOURCE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPLETED DATE', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
+                    { content: 'COMPONENT STATUS', styles: { halign: 'center', fillColor: "#6495ed", lineColor: [61, 117, 166], textColor: [0, 0, 0], fontStyle: 'bold' } },
                 ]
             ],
-            body: secondTableData.map(row => [
+            body: filteredSecondTableData.map(row => [
                 row.component,
                 row.source,
                 row.completedDate, // Show completedDate in its own column
@@ -505,6 +509,8 @@ const AdminChekin = () => {
                 fillColor: [61, 117, 166], // Color for the header background
                 textColor: [0, 0, 0], // Text color for the header
                 fontStyle: 'bold',
+                lineColor: [61, 117, 166], // Border color for the body
+
             },
             bodyStyles: {
                 lineWidth: 0.5, // Border for the body rows
@@ -519,10 +525,11 @@ const AdminChekin = () => {
         });
 
 
-        addFooter(doc);
 
+        addFooter(doc);
+        doc.addPage();
         const tableStartX = 15; // Adjusted X position for full-width table
-        const tableStartY = doc.previousAutoTable.finalY + 20; // Y position of the table
+        const tableStartY = 40; // Y position of the table
         const totalTableWidth = pageWidth - 2 * tableStartX; // Total table width
         const legendColumnWidth = 15; // Smaller width for the "Legend" column
         const remainingTableWidth = totalTableWidth - legendColumnWidth; // Remaining space for other columns
@@ -546,6 +553,7 @@ const AdminChekin = () => {
         // Set the border color
         doc.setDrawColor("#3e76a5");
 
+       
         // Draw table border
         doc.setLineWidth(0.5);
         doc.rect(tableStartX, tableStartY, totalTableWidth, tableHeight);
@@ -605,17 +613,41 @@ const AdminChekin = () => {
         yPosition = 20;
         let annexureIndex = 1;
         for (const service of servicesData) {
+            let reportFormJson;
+            let rows = [];
+
+            // Attempt to parse the JSON string and only proceed if valid
+            try {
+                if (!service.reportFormJson || !service.reportFormJson.json) {
+                    // Skip this service if reportFormJson is not found or is empty
+                    console.warn('No reportFormJson found for this service');
+                    continue; // Skip the rest of the loop for this service
+                }
+
+                // Attempt to parse the JSON string
+                reportFormJson = JSON.parse(service.reportFormJson.json);
+
+                // Only process if rows are present
+                rows = reportFormJson && Array.isArray(reportFormJson.rows) ? reportFormJson.rows : [];
+            } catch (error) {
+                console.warn('Failed to parse reportFormJson:', error);
+                continue; // Skip this service if parsing fails
+            }
+
+            if (rows.length === 0) {
+                console.warn('No rows found in reportFormJson for this service');
+                continue; // Skip if there are no rows
+            }
+
+            // Start adding content for the page if data is valid
             doc.addPage();
             addFooter(doc);
 
             let yPosition = 20;
-
-            const reportFormJson = JSON.parse(service.reportFormJson.json);
-            const rows = reportFormJson.rows || [];
             const serviceData = [];
 
+            // Process the rows as needed
             rows.forEach((row) => {
-
                 const inputLabel = row.inputs.length > 0 ? row.inputs[0].label || "Unnamed Label" : "Unnamed Label";
 
                 const valuesObj = {};
@@ -638,13 +670,11 @@ const AdminChekin = () => {
                             ? service.annexureData[reportDetailsInputName]
                             : "";
 
-
                         valuesObj[inputName] = value;
                         valuesObj["isReportDetailsExist"] = !!reportDetailsValue;
                         if (reportDetailsValue) {
                             valuesObj[reportDetailsInputName] = reportDetailsValue;
                         }
-
 
                         valuesObj["name"] = inputName.replace("report_details_", "");
                     } else {
@@ -654,294 +684,245 @@ const AdminChekin = () => {
                     }
                 });
 
-
                 serviceData.push({
                     label: inputLabel,
                     values: valuesObj,
                 });
             });
 
+            const tableData = serviceData.map((data) => {
+                if (!data || !data.values) {
+                    return null;
+                }
 
+                const name = data.values.name;
 
+                if (!name || name.startsWith("annexure")) {
+                    return null;
+                }
 
-            const tableData = serviceData
-                .map((data) => {
+                const isReportDetailsExist = data.values.isReportDetailsExist;
+                const value = data.values[name];
+                const reportDetails = data.values[`report_details_${name}`];
 
-                    if (!data || !data.values) {
-                        return null;
-                    }
+                if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
+                    return null;
+                }
 
-                    const name = data.values.name;
+                if (isReportDetailsExist && reportDetails) {
+                    return [data.label, value, reportDetails];
+                } else {
+                    return [data.label, value];
+                }
+            }).filter(Boolean); // Remove null/undefined entries
 
-                    if (!name || name.startsWith("annexure")) {
-                        return null;
-                    }
+            // Skip table rendering if no valid tableData
+            if (tableData.length > 0) {
+                const pageWidth = doc.internal.pageSize.width;
 
-                    const isReportDetailsExist = data.values.isReportDetailsExist;
-                    const value = data.values[name];
-                    const reportDetails = data.values[`report_details_${name}`];
+                let headingText = '';
+                if (reportFormJson && reportFormJson.heading) {
+                    headingText = reportFormJson.heading.toUpperCase();
+                } else {
+                    console.warn('Heading is missing or invalid.');
+                }
 
+                const backgroundColor = "#f5f5f5";
+                const backgroundColorHeading = "#6495ed";
+                const borderColor = "#6495ed";
+                const xsPosition = 10;
+                const rectHeight = 10;
 
-                    if (value === undefined || value === "" || (isReportDetailsExist && !reportDetails)) {
-                        return null;
-                    }
+                doc.setFillColor(backgroundColorHeading);
+                doc.setDrawColor(borderColor);
+                doc.rect(xsPosition, yPosition, pageWidth - 20, rectHeight, "FD");
 
-                    if (isReportDetailsExist && reportDetails) {
-                        return [data.label, value, reportDetails];
-                    } else {
-                        return [data.label, value];
-                    }
-                })
-                .filter(Boolean);
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
 
+                const textHeight = doc.getTextDimensions(headingText).h;
+                const verticalCenter = yPosition + rectHeight / 2 + textHeight / 4;
 
-            const pageWidth = doc.internal.pageSize.width;
+                doc.setTextColor("#fff");
+                doc.text(headingText, pageWidth / 2, verticalCenter, { align: "center" });
 
-            const headingText = reportFormJson.heading.toUpperCase();
-            const backgroundColor = "#f5f5f5";
-            const backgroundColorHeading = "#6495ed";
-            const borderColor = "#6495ed";
-            const xsPosition = 10;
-            const rectHeight = 10;
+                yPosition += rectHeight;
 
-            doc.setFillColor(backgroundColorHeading);
-            doc.setDrawColor(borderColor);
-            doc.rect(xsPosition, yPosition, pageWidth - 20, rectHeight, "FD");
-
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "bold");
-
-            const textHeight = doc.getTextDimensions(headingText).h;
-            const verticalCenter = yPosition + rectHeight / 2 + textHeight / 4;
-
-            doc.setTextColor("#fff");
-            doc.text(headingText, pageWidth / 2, verticalCenter, { align: "center" });
-
-            yPosition += rectHeight;
-
-            doc.autoTable({
-                head: [
-                    [
-                        { content: "PARTICULARS", styles: { halign: "left" } },
-                        "APPLICATION DETAILS",
-                        "REPORT DETAILS",
+                // Check if tableData is not empty before generating the table
+                doc.autoTable({
+                    head: [
+                        [
+                            { content: "PARTICULARS", styles: { halign: "left" } },
+                            { content: "APPLICATION DETAILS", styles: { halign: "center" } },
+                            { content: "REPORT DETAILS", styles: { halign: "center" } },
+                        ]
                     ],
-                ],
-                body: tableData.map((row) => {
-                    if (row.length === 2) {
-                        return [
-                            { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
-                            { content: row[1], colSpan: 2, styles: { halign: "left" } },
-                        ];
+                    body: tableData.map((row) => {
+                        if (row.length === 2) {
+                            return [
+                                { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
+                                { content: row[1], colSpan: 2, styles: { halign: "left" } },
+                            ];
+                        } else {
+                            return [
+                                { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
+                                { content: row[1], styles: { halign: "left" } },
+                                { content: row[2], styles: { halign: "left" } },
+                            ];
+                        }
+                    }),
+                    startY: yPosition,
+                    styles: {
+                        fontSize: 9,
+                        cellPadding: 3,
+                        lineWidth: 0.3,
+                        lineColor: [62, 118, 165],
+                    },
+                    theme: "grid",
+                    headStyles: {
+                        fillColor: backgroundColor,
+                        textColor: [0, 0, 0],
+                        halign: "center",
+                        fontSize: 10,
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0],
+                        halign: "left",
+                    },
+                    tableLineColor: [62, 118, 165],
+                    tableLineWidth: 0.5,
+                    margin: { horizontal: 10 },
+                });
+
+                addFooter(doc);
+
+
+                yPosition = doc.lastAutoTable.finalY + 5;
+
+                const remarksData = serviceData.find((data) => data.label === "Remarks");
+                if (remarksData) {
+                    const remarks = service.annexureData[remarksData.values.name] || "No remarks available.";
+                    doc.setFont("helvetica", "italic");
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`Remarks: ${remarks}`, 10, yPosition);
+                    yPosition += 7;
+                }
+
+                const annexureData = service.annexureData || {}; // Ensure annexureData is an empty object if it's null or undefined
+
+                const annexureImagesKey = Object.keys(annexureData).find((key) =>
+                    key.toLowerCase().startsWith("annexure") && !key.includes("[") && !key.includes("]")
+                );
+
+                if (annexureImagesKey) {
+                    const annexureImagesStr = annexureData[annexureImagesKey];
+                    const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(",") : [];
+
+                    if (annexureImagesSplitArr.length === 0) {
+                        doc.setFont("helvetica", "italic");
+                        doc.setFontSize(10);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text("No annexure images available.", 10, yPosition);
+                        yPosition += 10;
                     } else {
-                        return [
-                            { content: row[0], styles: { halign: "left", fontStyle: 'bold' } },
-                            { content: row[1], styles: { halign: "left" } },
-                            { content: row[2], styles: { halign: "left" } },
-                        ];
+                        const imageBases = await fetchImageToBase(annexureImagesStr.trim());
+                        if (imageBases) {
+                            imageBases.forEach((image, index) => {
+                                /*
+                                console.log(`Image ${index + 1}:`);
+                                console.log(`URL: ${image.imageUrl}`);
+                                console.log(`Base64: ${image.base64}`);
+                                console.log(`Type: ${image.type}`);
+                                console.log(`Width: ${image.width}`);
+                                console.log(`Height: ${image.height}`);
+                                */
+
+                                // Ensure valid base64 string
+                                if (!image.base64 || !image.base64.startsWith('data:image/')) {
+                                    console.error(`Invalid base64 data for image ${index + 1}`);
+                                    return;
+                                }
+
+                                const { width, height } = scaleImageForPDF(image.width, image.height, doc.internal.pageSize.width - 20, 80);
+                                if (yPosition + height > doc.internal.pageSize.height - 20) {
+                                    doc.addPage();
+                                    yPosition = 10;
+                                }
+
+                                const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
+                                const textWidth = doc.getTextWidth(annexureText);
+                                const centerX = (doc.internal.pageSize.width - textWidth) / 2;
+
+                                doc.setFont("helvetica", "bold");
+                                doc.setFontSize(10);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text(annexureText, centerX, yPosition + 10);
+                                yPosition += 15;
+
+                                const centerXImage = (doc.internal.pageSize.width - width) / 2;
+                                try {
+                                    // Ensure that the base64 data and type are correctly passed
+                                    doc.addImage(image.base64, image.type, centerXImage, yPosition, width, height);
+                                    yPosition += height + 15;
+                                } catch (error) {
+                                    console.error(`Error adding image ${index + 1}:`, error);
+                                }
+                            });
+                        }
+
+                        /*
+                        for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
+                            const imageUrlFull = `${imageUrl.trim()}`;
+                            const imageFormat = getImageFormat(imageUrlFull);
+                            console.log('imageUrlFull', imageUrlFull);
+    
+                            if (!(await checkImageExists(imageUrlFull))) continue;
+    
+                            const imgBlob = await validateImage(imageUrlFull);
+                            if (!imgBlob) continue;
+    
+                            try {
+                                const img = await createImageFromBlob(imgBlob);
+                                const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
+                                if (yPosition + height > doc.internal.pageSize.height - 20) {
+                                    doc.addPage();
+                                    yPosition = 10;
+                                }
+    
+                                const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
+                                const textWidth = doc.getTextWidth(annexureText);
+                                const centerX = (doc.internal.pageSize.width - textWidth) / 2;
+    
+                                doc.setFont("helvetica", "bold");
+                                doc.setFontSize(10);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text(annexureText, centerX, yPosition + 10);
+                                yPosition += 15;
+    
+                                const centerXImage = (doc.internal.pageSize.width - width) / 2;
+                                doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
+                                yPosition += height + 15;
+    
+                            } catch (error) {
+                                console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
+                            }
+                        }
+                        */
+
                     }
-                }),
-                startY: yPosition,
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 3,
-                    lineWidth: 0.3,
-                    lineColor: [62, 118, 165],
-                },
-                theme: "grid",
-                headStyles: {
-                    fillColor: backgroundColor,
-                    textColor: [0, 0, 0],
-                    halign: "center",
-                    fontSize: 10,
-                },
-                bodyStyles: {
-                    textColor: [0, 0, 0],
-                    halign: "left",
-                },
-                tableLineColor: [62, 118, 165],
-                tableLineWidth: 0.5,
-                margin: { horizontal: 10 },
-            });
-            addFooter(doc);
-
-            yPosition = doc.lastAutoTable.finalY + 5;
-
-            const remarksData = serviceData.find((data) => data.label === "Remarks");
-            if (remarksData) {
-                const remarks = service.annexureData[remarksData.values.name] || "No remarks available.";
-                doc.setFont("helvetica", "italic");
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Remarks: ${remarks}`, 10, yPosition);
-                yPosition += 7;
-            }
-
-            const annexureData = service.annexureData || {}; // Ensure annexureData is an empty object if it's null or undefined
-
-            const annexureImagesKey = Object.keys(annexureData).find((key) =>
-                key.toLowerCase().startsWith("annexure") && !key.includes("[") && !key.includes("]")
-            );
-
-            if (annexureImagesKey) {
-                const annexureImagesStr = annexureData[annexureImagesKey];
-                const annexureImagesSplitArr = annexureImagesStr ? annexureImagesStr.split(",") : [];
-
-                if (annexureImagesSplitArr.length === 0) {
+                } else {
                     doc.setFont("helvetica", "italic");
                     doc.setFontSize(10);
                     doc.setTextColor(150, 150, 150);
                     doc.text("No annexure images available.", 10, yPosition);
-                    yPosition += 10;
-                } else {
-                    const imageBases = await fetchImageToBase(annexureImagesStr.trim());
-                    if (imageBases) {
-                        imageBases.forEach((image, index) => {
-                            /*
-                            console.log(`Image ${index + 1}:`);
-                            console.log(`URL: ${image.imageUrl}`);
-                            console.log(`Base64: ${image.base64}`);
-                            console.log(`Type: ${image.type}`);
-                            console.log(`Width: ${image.width}`);
-                            console.log(`Height: ${image.height}`);
-                            */
-
-                            // Ensure valid base64 string
-                            if (!image.base64 || !image.base64.startsWith('data:image/')) {
-                                console.error(`Invalid base64 data for image ${index + 1}`);
-                                return;
-                            }
-
-                            const { width, height } = scaleImageForPDF(image.width, image.height, doc.internal.pageSize.width - 20, 80);
-                            if (yPosition + height > doc.internal.pageSize.height - 20) {
-                                doc.addPage();
-                                yPosition = 10;
-                            }
-
-                            const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
-                            const textWidth = doc.getTextWidth(annexureText);
-                            const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-
-                            doc.setFont("helvetica", "bold");
-                            doc.setFontSize(10);
-                            doc.setTextColor(0, 0, 0);
-                            doc.text(annexureText, centerX, yPosition + 10);
-                            yPosition += 15;
-
-                            const centerXImage = (doc.internal.pageSize.width - width) / 2;
-                            try {
-                                // Ensure that the base64 data and type are correctly passed
-                                doc.addImage(image.base64, image.type, centerXImage, yPosition, width, height);
-                                yPosition += height + 15;
-                            } catch (error) {
-                                console.error(`Error adding image ${index + 1}:`, error);
-                            }
-                        });
-                    }
-
-                    /*
-                    for (const [index, imageUrl] of annexureImagesSplitArr.entries()) {
-                        const imageUrlFull = `${imageUrl.trim()}`;
-                        const imageFormat = getImageFormat(imageUrlFull);
-                        console.log('imageUrlFull', imageUrlFull);
-
-                        if (!(await checkImageExists(imageUrlFull))) continue;
-
-                        const imgBlob = await validateImage(imageUrlFull);
-                        if (!imgBlob) continue;
-
-                        try {
-                            const img = await createImageFromBlob(imgBlob);
-                            const { width, height } = scaleImage(img, doc.internal.pageSize.width - 20, 80);
-                            if (yPosition + height > doc.internal.pageSize.height - 20) {
-                                doc.addPage();
-                                yPosition = 10;
-                            }
-
-                            const annexureText = `Annexure ${annexureIndex} (${String.fromCharCode(97 + index)})`;
-                            const textWidth = doc.getTextWidth(annexureText);
-                            const centerX = (doc.internal.pageSize.width - textWidth) / 2;
-
-                            doc.setFont("helvetica", "bold");
-                            doc.setFontSize(10);
-                            doc.setTextColor(0, 0, 0);
-                            doc.text(annexureText, centerX, yPosition + 10);
-                            yPosition += 15;
-
-                            const centerXImage = (doc.internal.pageSize.width - width) / 2;
-                            doc.addImage(img.src, imageFormat, centerXImage, yPosition, width, height);
-                            yPosition += height + 15;
-
-                        } catch (error) {
-                            console.error(`Failed to add image to PDF: ${imageUrlFull}`, error);
-                        }
-                    }
-                    */
-
+                    yPosition += 15;
                 }
-            } else {
-                doc.setFont("helvetica", "italic");
-                doc.setFontSize(10);
-                doc.setTextColor(150, 150, 150);
-                doc.text("No annexure images available.", 10, yPosition);
-                yPosition += 15;
+
+
+
             }
 
-            // Function to convert Blob to Image
-            async function createImageFromBlob(blob) {
-                const img = new Image();
-                const url = URL.createObjectURL(blob);
-                img.src = url;
-
-                return new Promise((resolve) => {
-                    img.onload = () => resolve(img);
-                });
-            }
-
-            async function checkImageExists(url) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => resolve(true);
-                    img.onerror = () => resolve(false);
-                    img.src = url;
-                });
-            }
-
-            async function validateImage(imageUrl) {
-                try {
-                    const response = await fetch(imageUrl);
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch image: ${response.statusText}`);
-                    }
-
-                    const arrayBuffer = await response.arrayBuffer();
-                    const uint8Array = new Uint8Array(arrayBuffer);
-
-                    // Check for PNG signature (first 8 bytes should be 89 50 4E 47 0D 0A 1A 0A)
-                    const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
-                    const isValidPNG = pngSignature.every((byte, index) => byte === uint8Array[index]);
-
-                    if (!isValidPNG) {
-                        throw new Error('Invalid PNG format');
-                    }
-
-                    // Return the image as a Blob for further use (e.g., rendering)
-                    return await response.blob();
-                } catch (error) {
-                    console.error(`Invalid image: ${imageUrl}`, error);
-                    return null;
-                }
-            }
-
-
-
-            function getImageFormat(url) {
-                const ext = url.split('.').pop().toLowerCase();
-                if (ext === 'png') return 'PNG';
-                if (ext === 'jpg' || ext === 'jpeg') return 'JPEG';
-                if (ext === 'webp') return 'WEBP';
-                return 'PNG'; // Default to PNG if the format is unrecognized
-            }
 
             function scaleImageForPDF(imageWidth, imageHeight, maxWidth, maxHeight) {
                 let width = imageWidth;
@@ -962,37 +943,15 @@ const AdminChekin = () => {
                 return { width, height };
             }
 
-            function scaleImage(img, maxWidth, maxHeight) {
-                const imgWidth = img.width;
-                const imgHeight = img.height;
-
-                let width = imgWidth;
-                let height = imgHeight;
-
-                // Scale the width if it exceeds maxWidth
-                if (imgWidth > maxWidth) {
-                    width = maxWidth;
-                    height = (imgHeight * maxWidth) / imgWidth;
-                }
-
-                // Scale the height if it exceeds maxHeight
-                if (height > maxHeight) {
-                    height = maxHeight;
-                    width = (imgWidth * maxHeight) / imgHeight;
-                }
-
-                return { width, height };
-            }
-
-
 
             addFooter(doc);
             annexureIndex++;
             yPosition += 20;
         }
 
-        doc.addPage();
+       
         addFooter(doc);
+        doc.addPage();
 
         const disclaimerButtonHeight = 10;
         const disclaimerButtonWidth = doc.internal.pageSize.width - 20;
@@ -1122,68 +1081,57 @@ const AdminChekin = () => {
 
 
     const handleViewMore = async (index) => {
-        setServicesLoading((prev) => ({ ...prev, [index]: true })); // Set loading for this row
+        const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
+        console.log('Current Page Index:', index);
+        console.log('Global Index:', globalIndex);
+
+        // Set loading for this row
+        setServicesLoading((prev) => ({ ...prev, [globalIndex]: true }));
 
         // Check if the row is already expanded
-        if (expandedRow && expandedRow.index === index) {
-            // Collapse the row if it's already expanded
-            setExpandedRow(null);
-            setServicesLoading((prev) => ({ ...prev, [index]: false }));
+        if (expandedRow && expandedRow.index === globalIndex) {
+            setExpandedRow(null); // Collapse the row
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
             return;
         }
 
-        // Fetch service data
+        // Fetch service data for the globalIndex
         try {
-            const applicationInfo = data[index];
+            const applicationInfo = currentItems[index]; // Data for the current page
             const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
             const headingsAndStatuses = [];
 
             servicesData.forEach((service) => {
-                // Check if reportFormJson exists and contains heading
                 if (service.reportFormJson && service.reportFormJson.json) {
                     const heading = JSON.parse(service.reportFormJson.json).heading;
-
-                    // If there's a valid heading, process it
                     if (heading) {
                         let status = service.annexureData?.status || "NIL";
-                        if (status.length < 4) {
-                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
-                        } else {
-                            status = status.replace(/[^a-zA-Z0-9\s]/g, " ")
-                                .toLowerCase()
-                                .replace(/\b\w/g, (char) => char.toUpperCase()) || 'NIL';
-                        }
-
+                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
                         headingsAndStatuses.push({ heading, status });
                     }
                 }
             });
 
-            // Only expand the row if at least one valid heading is found
             if (headingsAndStatuses.length > 0) {
                 setExpandedRow({
-                    index: index,
+                    index: globalIndex, // Use the global index
                     headingsAndStatuses: headingsAndStatuses,
                 });
             } else {
-                // If no valid heading found, collapse the row
-                setExpandedRow(null);
+                setExpandedRow(null); // Collapse if no valid heading found
             }
 
-            setServicesLoading((prev) => ({ ...prev, [index]: false }));
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
 
-            // Scroll to the expanded row after it is updated
-            const expandedRowElement = document.getElementById(`expanded-row-${index}`);
+            const expandedRowElement = document.getElementById(`expanded-row-${globalIndex}`);
             if (expandedRowElement) {
-                expandedRowElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                });
+                expandedRowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         } catch (error) {
-            setServicesLoading((prev) => ({ ...prev, [index]: false }));
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
         }
     };
+
 
 
 
@@ -1287,208 +1235,213 @@ const AdminChekin = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {currentItems.map((data, index) => (
-                                    <React.Fragment key={data.id}>
-                                        <tr className="text-center">
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{index + 1}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{adminTAT || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.location || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                {data.photo ? (
-                                                    data.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                                        <img
-                                                            src={`${data.photo}`}
-                                                            alt="Image"
-                                                            className="md:h-20 h-10 w-20 rounded-full"
-                                                        />
+                                {currentItems.map((data, index) => {
+                                    const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
+
+                                    return (
+                                        <React.Fragment key={data.id}>
+                                            <tr className="text-center">
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize"> {index + 1 + (currentPage - 1) * itemsPerPage}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{adminTAT || 'NIL'}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.location || 'NIL'}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.name || 'NIL'}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.application_id || 'NIL'}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    {data.photo ? (
+                                                        data.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                            <img
+                                                                src={`${data.photo}`}
+                                                                alt="Image"
+                                                                className="md:h-20 h-10 w-20 rounded-full"
+                                                            />
+                                                        ) : (
+                                                            <a
+                                                                href={`${data.photo}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                            >
+                                                                <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
+                                                                    View Document
+                                                                </button>
+                                                            </a>
+                                                        )
                                                     ) : (
-                                                        <a
-                                                            href={`${data.photo}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <button type='button' className="px-4 py-2 bg-green-500 text-white rounded">
-                                                                View Document
-                                                            </button>
-                                                        </a>
-                                                    )
-                                                ) : (
-                                                    "No Image Found"
-                                                )}
-                                            </td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                {data.created_at && !isNaN(new Date(data.created_at))
-                                                    ? `${String(new Date(data.created_at).getDate()).padStart(2, '0')}- 
-                                                ${String(new Date(data.created_at).getMonth() + 1).padStart(2, '0')}- 
-                                                ${new Date(data.created_at).getFullYear()}`
-                                                    : "NIL"}
-                                            </td>
+                                                        "No Image Found"
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.employee_id || 'NIL'}</td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    {data.created_at && !isNaN(new Date(data.created_at))
+                                                        ? `${String(new Date(data.created_at).getDate()).padStart(2, '0')}- 
+                            ${String(new Date(data.created_at).getMonth() + 1).padStart(2, '0')}- 
+                            ${new Date(data.created_at).getFullYear()}`
+                                                        : "NIL"}
+                                                </td>
 
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                {data.updated_at && !isNaN(new Date(data.updated_at))
-                                                    ? `${String(new Date(data.updated_at).getDate()).padStart(2, '0')}- 
-                                                            ${String(new Date(data.updated_at).getMonth() + 1).padStart(2, '0')}- 
-                                                            ${new Date(data.updated_at).getFullYear()}`
-                                                    : "NIL"}
-                                            </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    {data.updated_at && !isNaN(new Date(data.updated_at))
+                                                        ? `${String(new Date(data.updated_at).getDate()).padStart(2, '0')}- 
+                                    ${String(new Date(data.updated_at).getMonth() + 1).padStart(2, '0')}- 
+                                    ${new Date(data.updated_at).getFullYear()}`
+                                                        : "NIL"}
+                                                </td>
 
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
-                                                <button
-                                                    className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
-                                                    onClick={() => handleUpload(data.id, data.branch_id)}
-                                                >
-                                                    Generate Report
-                                                </button>
-                                            </td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
+                                                    <button
+                                                        className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
+                                                        onClick={() => handleUpload(data.id, data.branch_id)}
+                                                    >
+                                                        Generate Report
+                                                    </button>
+                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
 
-                                                <button
-                                                    onClick={() => {
-                                                        const reportDownloadFlag = (data.overall_status === 'completed' && data.is_verify === 'yes') ? 1 : 0;
+                                                    <button
+                                                        onClick={() => {
+                                                            const reportDownloadFlag = (data.overall_status === 'completed' && data.is_verify === 'yes') ? 1 : 0;
 
-                                                        // Set the button to loading
-                                                        setLoadingStates(prevState => ({
-                                                            ...prevState,
-                                                            [index]: true
-                                                        }));
-
-                                                        // Directly call generatePDF
-                                                        generatePDF(index, reportDownloadFlag).finally(() => {
-                                                            // After PDF generation, reset loading state for the clicked button
+                                                            // Set the button to loading
                                                             setLoadingStates(prevState => ({
                                                                 ...prevState,
-                                                                [index]: false
+                                                                [index]: true
                                                             }));
-                                                        });
-                                                    }}
-                                                    className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== 'completed' || data.is_verify !== 'yes' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                    disabled={data.overall_status !== 'completed' || data.is_verify !== 'yes' || loadingStates[index]} // Disable button while loading
-                                                >
-                                                    {loadingStates[index] ? 'Please Wait, Your PDF is Generating' : data.overall_status === 'completed' ? (
-                                                        data.is_verify === 'yes' ? 'DOWNLOAD' : data.is_verify === 'no' ? 'QC PENDING' : 'NOT READY'
-                                                    ) : data.overall_status === 'wip' ? 'WIP' : data.overall_status === 'insuff' ? 'INSUFF' : 'NOT READY'}
-                                                </button>
 
-
-                                            </td>
-                                            <td className="border px-4 py-2">
-                                                <button
-                                                    className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
-                                                    onClick={() => handleViewMore(index)}
-                                                >
-                                                    {expandedRow && expandedRow.index === index ? 'Less' : 'View'}
-                                                </button>
-                                            </td>
-                                            <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
-                                        </tr>
-                                        {servicesLoading[index] ? (
-                                            <tr>
-                                                <td colSpan={12} className="py-4 text-center text-gray-500">
-                                                    <div className='flex justify-center'>
-                                                        <PulseLoader color="#36D7B7" loading={servicesLoading[index]} size={15} aria-label="Loading Spinner" />
-                                                    </div>
+                                                            // Directly call generatePDF
+                                                            generatePDF(index, reportDownloadFlag).finally(() => {
+                                                                // After PDF generation, reset loading state for the clicked button
+                                                                setLoadingStates(prevState => ({
+                                                                    ...prevState,
+                                                                    [index]: false
+                                                                }));
+                                                            });
+                                                        }}
+                                                        className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== 'completed' || data.is_verify !== 'yes' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        disabled={data.overall_status !== 'completed' || data.is_verify !== 'yes' || loadingStates[index]} // Disable button while loading
+                                                    >
+                                                        {loadingStates[index] ? 'Please Wait, Your PDF is Generating' : data.overall_status === 'completed' ? (
+                                                            data.is_verify === 'yes' ? 'DOWNLOAD' : data.is_verify === 'no' ? 'QC PENDING' : 'NOT READY'
+                                                        ) : data.overall_status === 'wip' ? 'WIP' : data.overall_status === 'insuff' ? 'INSUFF' : 'NOT READY'}
+                                                    </button>
                                                 </td>
+                                                <td className="border px-4 py-2">
+                                                    <button
+                                                        className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
+                                                        onClick={() => handleViewMore(index)} // Pass page-relative index here
+                                                    >
+                                                        {expandedRow && expandedRow.index === globalIndex ? 'Less' : 'View'}
+                                                    </button>
+                                                </td>
+                                                <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
                                             </tr>
-                                        ) : (expandedRow && expandedRow.index === index && (
-                                            <tr id={`expanded-row-${index}`} className="expanded-row">
-                                                <td colSpan="100%" className="text-center p-4 bg-gray-100">
 
-                                                    {/* Table structure to display headings in the first column and statuses in the second column */}
-                                                    <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
-                                                        <table className="w-full table-auto">
-                                                            <tbody className='min-h-[260px] overflow-y-auto block'>
-                                                                <tr>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
-                                                                    <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
+                                            {/* Show loading state */}
+                                            {servicesLoading[globalIndex] && (
+                                                <tr>
+                                                    <td colSpan={12} className="py-4 text-center text-gray-500">
+                                                        <div className='flex justify-center'>
+                                                            <PulseLoader color="#36D7B7" loading={servicesLoading[globalIndex]} size={15} aria-label="Loading Spinner" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {expandedRow && expandedRow.index === globalIndex && (
+                                                <tr id={`expanded-row-${globalIndex}`} className="expanded-row">
+                                                    <td colSpan="100%" className="text-center p-4 bg-gray-100">
+                                                        {/* Render the expanded content */}
+                                                        <div ref={tableRef} className="relative w-full max-w-full overflow-hidden">
+                                                            <table className="w-full table-auto">
+                                                                <tbody className='min-h-[260px] overflow-y-auto block'>
+                                                                    <tr>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Type</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Report Generated By</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">QC Done By</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">First Level Insuff Reopen Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Second Level Insuff Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Marks</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Third Level Insuff Reopen Date</th>
+                                                                        <th className="text-left p-2 border border-black uppercase font-normal bg-gray-200">Reason For Delay</th>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td className="text-left p-2 border border-black capitalize">{data.report_type || 'NIL'}</td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.report_date && !isNaN(new Date(data.report_date))
-                                                                            ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.report_date && !isNaN(new Date(data.report_date))
+                                                                                ? `${String(new Date(data.report_date).getDate()).padStart(2, '0')}-${String(new Date(data.report_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.report_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
+                                                                        <td className="text-left p-2 border border-black capitalize">{data.report_generated_by_name || 'NIL'}</td>
+                                                                        <td className="text-left p-2 border border-black capitalize">{data.qc_done_by_name || 'NIL'}</td>
+                                                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.first_insufficiency_marks) || 'NIL'}</td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
-                                                                            ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.first_insuff_date && !isNaN(new Date(data.first_insuff_date))
+                                                                                ? `${String(new Date(data.first_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
-                                                                            ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.first_insuff_reopened_date && !isNaN(new Date(data.first_insuff_reopened_date))
+                                                                                ? `${String(new Date(data.first_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.first_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.first_insuff_reopened_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
+                                                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.second_insufficiency_marks) || 'NIL'}</td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
-                                                                            ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.second_insuff_date && !isNaN(new Date(data.second_insuff_date))
+                                                                                ? `${String(new Date(data.second_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.second_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.second_insuff_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
+                                                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.third_insufficiency_marks) || 'NIL'}</td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
-                                                                            ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.third_insuff_date && !isNaN(new Date(data.third_insuff_date))
+                                                                                ? `${String(new Date(data.third_insuff_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">
-                                                                        {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
-                                                                            ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
-                                                                            : 'NIL'}
-                                                                    </td>
+                                                                        <td className="text-left p-2 border border-black capitalize">
+                                                                            {data.third_insuff_reopened_date && !isNaN(new Date(data.third_insuff_reopened_date))
+                                                                                ? `${String(new Date(data.third_insuff_reopened_date).getDate()).padStart(2, '0')}-${String(new Date(data.third_insuff_reopened_date).getMonth() + 1).padStart(2, '0')}-${new Date(data.third_insuff_reopened_date).getFullYear()}`
+                                                                                : 'NIL'}
+                                                                        </td>
 
-                                                                    <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
-                                                                </tr>
+                                                                        <td className="text-left p-2 border border-black capitalize">{sanitizeText(data.delay_reason) || 'NIL'}</td>
+                                                                    </tr>
 
-                                                                <tbody style={{ maxHeight: '200px', overflowY: 'auto', display: 'block' }}>
-                                                                    {expandedRow.headingsAndStatuses &&
-                                                                        expandedRow.headingsAndStatuses.map((item, idx) => (
-                                                                            <tr key={`row-${idx}`}>
-                                                                                <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                                                    {sanitizeText(item.heading)}
-                                                                                </td>
-                                                                                <td className="text-left p-2 border border-black capitalize">
-                                                                                    {sanitizeText(item.status || 'NIL')}
-                                                                                </td>
-                                                                            </tr>
-                                                                        ))
-                                                                    }
+                                                                    <tbody style={{ maxHeight: '200px', overflowY: 'auto', display: 'block' }}>
+                                                                        {expandedRow.headingsAndStatuses &&
+                                                                            expandedRow.headingsAndStatuses.map((item, idx) => (
+                                                                                <tr key={`row-${idx}`}>
+                                                                                    <td className="text-left p-2 border border-black capitalize bg-gray-200">
+                                                                                        {sanitizeText(item.heading)}
+                                                                                    </td>
+                                                                                    <td className="text-left p-2 border border-black capitalize">
+                                                                                        {sanitizeText(item.status || 'NIL')}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))
+                                                                        }
+                                                                    </tbody>
+
                                                                 </tbody>
-
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </React.Fragment>
-                                ))}
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </tbody>
+
                         </table>
                     ) : (
                         <div className="text-center py-6">

@@ -683,11 +683,11 @@ const ClientManagementList = () => {
                       {/* Popup */}
                       {showPopup === item.main_id && (
                         <div
-                          className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center p-5 justify-center z-50"
+                          className="popup-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center p-5  justify-center z-50"
                           onClick={() => setShowPopup(null)} // Close the popup when clicking outside
                         >
                           <div
-                            className="popup-content bg-white rounded-lg shadow-lg md:w-6/12 p-6"
+                            className="popup-content bg-white h-[calc(100vh-20%)] max-h-[80vh] overflow-y-auto rounded-lg shadow-lg md:w-6/12 p-6"
                             onClick={(e) => e.stopPropagation()} // Prevent popup close when clicking inside
                           >
                             <button

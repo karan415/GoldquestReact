@@ -12,32 +12,39 @@ const Acknowledgement = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const fetchEmails = useCallback(() => {
-    setLoading(true); // Start loading
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
+    setLoading(true); // Start loading
+
     fetch(`https://api.goldquestglobal.in/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
       .then(response => response.json())
       .then(data => {
+        // Check if the response contains a new token and update it
         const newToken = data._token || data.token;
         if (newToken) {
           localStorage.setItem("_token", newToken);
         }
-        else if (data.status && data.customers && Array.isArray(data.customers.data)) {
+
+        // Check for session expiration or invalid token
+        if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to admin login page after the user clicks "Ok"
+            window.location.href = "/admin-login"; // Replace with your actual login route
+          });
+          return; // Exit further processing
+        }
+
+        // If the response format is as expected, set the emails data
+        if (data.status && data.customers && Array.isArray(data.customers.data)) {
           setEmailsData(data.customers.data);
         } else {
           // Handle unexpected response format
-          if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your login route
-            });
-          }
           Swal.fire({
             title: "Error",
             text: data.message || "An unexpected error occurred while fetching emails.",
@@ -48,7 +55,7 @@ const Acknowledgement = () => {
         }
       })
       .catch(error => {
-       
+        // Catch any other errors (network or otherwise)
         Swal.fire({
           title: "Error",
           text: error.message || "An error occurred while fetching emails. Please try again.",
@@ -57,9 +64,13 @@ const Acknowledgement = () => {
         });
         console.error(error);
       })
-      .finally(() => setLoading(false)); // Stop loading
+      .finally(() => {
+        setLoading(false); // Stop loading after fetch completes
+      });
   }, [setEmailsData]);
-  
+
+
+
 
   const sendApproval = (id) => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -82,43 +93,54 @@ const Acknowledgement = () => {
 
     fetch("https://api.goldquestglobal.in/acknowledgement/send-notification", requestOptions)
       .then(response => {
-        const result = response.json();
-        const newToken = result._token || result.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-          Swal.fire({
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again.",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          }).then(() => {
-            // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
-          });
-        }
-        if (!response.ok) {
-          return response.text().then(text => {
-            const errorData = JSON.parse(text);
+        return response.json().then(result => {
+          // Check for session expiration or invalid token
+          if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+            Swal.fire({
+              title: "Session Expired",
+              text: "Your session has expired. Please log in again.",
+              icon: "warning",
+              confirmButtonText: "Ok",
+            }).then(() => {
+              // Redirect to admin login page
+              window.location.href = "/admin-login"; // Replace with your actual login route
+            });
+            return; // Exit further processing after showing session expired message
+          }
+
+          // Handle new token if present in the response
+          const newToken = result._token || result.token;
+          if (newToken) {
+            localStorage.setItem("_token", newToken);
+          }
+
+          // Handle errors if the response is not okay
+          if (!response.ok) {
             Swal.fire(
               'Error!',
-              `An error occurred: ${errorData.message}`,
+              `An error occurred: ${result.message || 'Unknown error'}`,
               'error'
             );
-            throw new Error(text);
-          });
-        }
-        return result;
-      }).then((result) => {
+            throw new Error(result.message || 'Unknown error');
+          }
+
+          return result; // Continue if response is okay
+        });
+      })
+      .then((result) => {
+        // After successful approval, refresh emails or perform any other action
         const newToken = result._token || result.token;
         if (newToken) {
           localStorage.setItem("_token", newToken);
         }
-        fetchEmails();
+        fetchEmails(); // Fetch emails or take further action after approval
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        // Catch and log any unexpected errors
+        console.error(error);
+      });
   };
+
 
   const filteredItems = emailsData.filter(item => {
     return (
@@ -259,7 +281,8 @@ const Acknowledgement = () => {
             <tbody>
               {currentItems.map((email, index) => (
                 <tr key={index}>
-                  <td className="py-3 px-4 border-b-2 text-center border-r-2 border-l-2 whitespace-nowrap">{index + 1}</td>
+                  <td className="py-3 px-4 border-b-2 text-center border-r-2 border-l-2 whitespace-nowrap">                        {index + 1 + (currentPage - 1) * itemsPerPage}
+                  </td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.client_unique_id}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.name.trim()}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>

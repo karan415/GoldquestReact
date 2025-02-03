@@ -52,32 +52,44 @@ export const LoginProvider = ({ children }) => {
 
     const fetchData = async () => {
         const adminData = localStorage.getItem("admin");
-        const admin_id = adminData ? JSON.parse(adminData)?.id : null;
         const storedToken = localStorage.getItem("_token");
-
-        if (!admin_id || !storedToken) {
-            console.error("Admin ID or token is missing!");
-            return; // Exit if required data is missing
+    
+        // If admin data or token is missing, show session expired message and stop execution
+        if (!adminData || !storedToken) {
+            Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+            }).then(() => {
+                // Redirect to admin login page
+                window.location.href = "/admin-login"; // Replace with your login route
+            });
+            return; // Exit early if no session
         }
-
-        setLoading(true);
-
+    
+        const admin_id = JSON.parse(adminData)?.id;
+    
+        // If admin ID is missing, log the error and exit
+        if (!admin_id) {
+            console.error("Admin ID is missing!");
+            return;
+        }
+    
+        setLoading(true); // Start loading spinner
+    
         try {
             const response = await axios.get("https://api.goldquestglobal.in/admin/list", {
                 params: {
-                    admin_id: admin_id,
+                    admin_id,
                     _token: storedToken,
                 },
             });
-
+    
             console.log("API Response:", response.data);
-
-            const newToken = response.data?._token || response.data?.token;
-            if (newToken) {
-                localStorage.setItem("branch_token", newToken);
-            }
-
-            if (response.data?.message?.toLowerCase().includes("invalid token")) {
+    
+            // Check for invalid or expired token in the response
+            if (response.data.status === false && response.data.message.toLowerCase().includes("invalid token")) {
                 Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
@@ -85,24 +97,39 @@ export const LoginProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to admin login page
-                    window.location.href = "//admin-login"; // Replace with your login route
+                    window.location.href = "/admin-login"; // Replace with your login route
                 });
-                return; // Stop further processing
+                return; // Stop further processing if token is invalid or expired
             }
-
+    
+            // Update token if a new one is received in the response
+            const newToken = response.data._token || response.data.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken); // Replace the old token with the new one
+            }
+    
             // Parse service_groups for each admin
             const parsedGroups = response.data?.admins?.map((admin) =>
                 JSON.parse(admin.service_groups || "[]")
             ) || [];
-
+    
+            // Set state with the parsed data
             setParsedServiceGroups(parsedGroups);
-            setData(response.data?.admins || []);
+            setData(response.data?.admins || []); // Set the admin data
         } catch (error) {
             console.error("Error fetching data:", error.message);
+            Swal.fire({
+                title: "Error!",
+                text: error.message || "Something went wrong while fetching data.",
+                icon: "error",
+                confirmButtonText: "Ok",
+            });
         } finally {
-            setLoading(false);
+            setLoading(false); // Stop the loading spinner
         }
     };
+    
+    
 
 
 

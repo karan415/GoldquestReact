@@ -96,39 +96,76 @@ const ClientManagementData = () => {
     const fetchServicesAndPackages = useCallback(async () => {
         setLoading(true);
         setError(null);
+    
         try {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || '';
             const storedToken = localStorage.getItem("_token") || '';
+    
+            if (!admin_id || !storedToken) {
+                Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
+                return;
+            }
+    
+            // Making the request directly without confirmation prompt
             const res = await fetch(`${API_URL}/customer/add-customer-listings?admin_id=${admin_id}&_token=${storedToken}`);
-
+    
             if (!res.ok) {
                 const errorResponse = await res.json();
+                // Check for invalid token in the error response
+                if (errorResponse.message && errorResponse.message.toLowerCase().includes("invalid") && errorResponse.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page after SweetAlert is dismissed
+                        setTimeout(() => {
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        }, 100); // Short delay to ensure SweetAlert finishes
+                    });
+                    return; // Exit early after redirect
+                }
                 const errorMessage = errorResponse.message || `Network response was not ok: ${res.status}`;
                 throw new Error(errorMessage);
             }
-
+    
+            // Parse the response JSON
             const result = await res.json();
+    
+            // Handle token refresh if available in the response
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
+    
+            console.log('Response:', result); // Log full response for debugging
+    
+            // If invalid token message is in the result after parsing
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                console.log('Invalid token, redirecting...');
                 Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
                     icon: "warning",
                     confirmButtonText: "Ok",
                 }).then(() => {
-                    // Redirect to admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    setTimeout(() => {
+                        console.log('Redirecting now...');
+                        window.location.href = "/admin-login"; // Redirect to the login page
+                    }, 100);
                 });
+                return; // Exit early after redirect
             }
-
+    
+            // Process the services and packages
             if (!result || !result.data || !Array.isArray(result.data.services)) {
                 throw new Error('Invalid response format: Missing or invalid services data');
             }
+    
             const admins = result.data.admins || [];
-            setAdmins(admins)
+            setAdmins(admins);
+    
             const processedServices = result.data.services.map(item => ({
                 ...item,
                 service_id: item.id,
@@ -137,32 +174,34 @@ const ClientManagementData = () => {
                 selectedPackages: [] // Assuming this is still required
             }));
             setService(processedServices);
-
+    
             if (!Array.isArray(result.data.packages)) {
                 throw new Error('Invalid response format: Missing or invalid packages data');
             }
-
+    
             const processedPackages = result.data.packages.map(item => ({
                 ...item,
                 service_id: item.id
             }));
             setPackageList(processedPackages);
-
+    
         } catch (error) {
-
-            // Show the error message in a Swal alert
+            console.error('Error fetching data:', error);
             Swal.fire({
                 title: 'Error!',
                 text: error.message, // Display the error message from the catch block
                 icon: 'error',
                 confirmButtonText: 'Ok'
             });
-
+    
             setError(error.message); // Set the error state with the message
         } finally {
             setLoading(false);
         }
     }, [API_URL]);
+    
+    
+
 
 
     useEffect(() => {

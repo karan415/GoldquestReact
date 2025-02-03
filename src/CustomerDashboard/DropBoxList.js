@@ -12,13 +12,13 @@ const DropBoxList = () => {
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
     const [activeReportId, setActiveReportId] = useState(null); // Track which report's modal is active
 
-  const openModal = (reportId) => {
-    setActiveReportId(reportId); // Set the active report ID to open its modal
-  };
+    const openModal = (reportId) => {
+        setActiveReportId(reportId); // Set the active report ID to open its modal
+    };
 
-  const closeModal = () => {
-    setActiveReportId(null); // Reset active report ID to close the modal
-  };
+    const closeModal = () => {
+        setActiveReportId(null); // Reset active report ID to close the modal
+    };
     const [searchTerm, setSearchTerm] = useState('');
     const [itemsPerPage, setItemPerPage] = useState(10)
     const API_URL = useApi();
@@ -281,7 +281,7 @@ const DropBoxList = () => {
                                             </td>
 
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
-                                               <div className='flex gap-3'> {report.photo ? (
+                                                <div className='flex gap-3'> {report.photo ? (
                                                     report.photo.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                                         <img
                                                             src={`${report.photo}`}
@@ -336,17 +336,20 @@ const DropBoxList = () => {
                                                                 );
                                                             }
                                                         })}
-                                                        <button
-                                                            onClick={() => openModal(report.id)} // Open modal for clicked report
-                                                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-                                                        >
-                                                            View All Documents
-                                                        </button>
+                                                        {report.attach_documents.split(',').length > 1 ? (
+                                                            <button
+                                                                onClick={() => openModal(report.id)} // Open modal for clicked report
+                                                                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+                                                            >
+                                                                View All Documents
+                                                            </button>
+                                                        ) : null}
                                                     </>
                                                 ) : (
                                                     'No Image Found'
                                                 )}
                                             </td>
+
 
                                             {activeReportId === report.id && (
                                                 <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center">
@@ -373,7 +376,7 @@ const DropBoxList = () => {
                                                             ))}
                                                         </div>
 
-                                                      
+
                                                         <button
                                                             onClick={closeModal}
                                                             className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
@@ -385,72 +388,69 @@ const DropBoxList = () => {
                                             )}
 
                                             <td className="border p-2  md:px-4 py-2 text-left">
-                                            <div className='flex whitespace-nowrap'>
-                                                {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
-                                                    report.serviceNames.length === 1 ? (
+                                                <div className='flex whitespace-nowrap'>
+                                                    {Array.isArray(report.serviceNames) && report.serviceNames.length > 0 ? (
+                                                        report.serviceNames.length === 1 ? (
 
-                                                        <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
-                                                            {typeof report.serviceNames[0] === "string"
-                                                                ? report.serviceNames[0]
-                                                                : report.serviceNames[0].join(", ")}
-                                                        </span>
-                                                    ) : (
-
-                                                        <>
-                                                            {typeof report.serviceNames[0] === "string" ? (
-                                                                <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
-                                                                    {report.serviceNames[0]}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
-                                                                    {report.serviceNames[0].join(", ")}
-                                                                </span>
-                                                            )}
-                                                            <button
-                                                                className="text-green-500 ml-2"
-                                                                onClick={() => handleViewMore(report.serviceNames)}
-                                                            >
-                                                                View More
-                                                            </button>
-                                                        </>
-                                                    )
-                                                ) : (
-                                                    // No services or serviceNames is not an array
-                                                    <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
-                                                        You have no services
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        {isModalOpen && (
-                                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                                <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
-                                                    <div className="flex justify-between items-center">
-                                                        <h2 className="text-lg font-bold">Services</h2>
-                                                        <button
-                                                            className="text-red-500 text-2xl"
-                                                            onClick={handleCloseModal}
-                                                        >
-                                                            &times;
-                                                        </button>
-                                                    </div>
-                                                    <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
-                                                        {modalServices.length > 0 ? (
-                                                            modalServices.map((service, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
-                                                                >
-                                                                    {service}
-                                                                </span>
-                                                            ))
+                                                            <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                                {typeof report.serviceNames[0] === "string"
+                                                                    ? report.serviceNames[0]
+                                                                    : report.serviceNames[0].join(", ")}
+                                                            </span>
                                                         ) : (
-                                                            <span className="text-gray-500">No service available</span>
-                                                        )}
+
+                                                            <>
+                                                                {typeof report.serviceNames[0] === "string" ? (
+                                                                    <span className="md:px-4 py-2 bg-green-100 p-2 border border-green-500 rounded-lg text-xs md:text-sm">
+                                                                        {report.serviceNames[0]}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="md:px-4 py-2  bg-green-100 border  border-green-500 rounded-lg text-sm">
+                                                                        {report.serviceNames[0].join(", ")}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    className="text-green-500 ml-2"
+                                                                    onClick={() => handleViewMore(report.serviceNames)}
+                                                                >
+                                                                    View More
+                                                                </button>
+                                                            </>
+                                                        )
+                                                    ) : (
+                                                        // No services or serviceNames is not an array
+                                                        <span className="md:px-4 py-2 bg-red-100 border border-red-500 rounded-lg">
+                                                            You have no services
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            {isModalOpen && (
+                                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3 h-[calc(100vh-20%)] max-h-[80vh] overflow-y-auto">
+                                                        <div className="flex justify-between items-center">
+                                                            <h2 className="text-lg font-bold">Services</h2>
+                                                            <button className="text-red-500 text-2xl" onClick={handleCloseModal}>
+                                                                &times;
+                                                            </button>
+                                                        </div>
+                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto">
+                                                            {modalServices.length > 0 ? (
+                                                                modalServices.map((service, idx) => (
+                                                                    <span
+                                                                        key={idx}
+                                                                        className="md:px-4 py-2 bg-green-100 border border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
+                                                                    >
+                                                                        {service}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-gray-500">No service available</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">{report.single_point_of_contact || 'NIL'}</td>
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>

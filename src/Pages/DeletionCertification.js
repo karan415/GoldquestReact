@@ -379,7 +379,8 @@ const DeletionCertification = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
+        // Show the loading spinner while the request is being processed
+        const loadingSwal = Swal.fire({
           title: 'Processing...',
           text: 'Deleting, please wait.',
           timer: 6000,
@@ -389,25 +390,26 @@ const DeletionCertification = () => {
             Swal.showLoading();
           },
         });
-
+  
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
+  
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.close();
           return;
         }
-
+  
         const requestOptions = {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
           }
         };
-
+  
         let url;
         let successMessage;
-
+  
         if (type === 'client') {
           url = `${API_URL}/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`;
           successMessage = 'Your client has been deleted.';
@@ -415,7 +417,7 @@ const DeletionCertification = () => {
           Swal.close();
           return;
         }
-
+  
         fetch(url, requestOptions)
           .then(response => {
             return response.json().then(result => {
@@ -425,15 +427,18 @@ const DeletionCertification = () => {
                   result.message.toLowerCase().includes("invalid") &&
                   result.message.toLowerCase().includes("token")
                 ) {
+                  // Token expired or invalid, redirect to login
                   Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
                     icon: "warning",
                     confirmButtonText: "Ok",
                   }).then(() => {
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "/admin-login"; // Redirect to login page
                   });
+                  return; // Stop further execution
                 } else {
+                  // Handle other errors
                   Swal.fire(
                     'Error!',
                     `An error occurred: ${result.message}`,
@@ -450,14 +455,16 @@ const DeletionCertification = () => {
             if (newToken) {
               localStorage.setItem("_token", newToken);
             }
+  
             Swal.fire(
               'Deleted!',
               successMessage,
               'success'
             );
+  
             const setBranchData = result.data.branches;
             generatePDF(setBranchData);
-
+  
             fetchData();
           })
           .catch(error => {
@@ -467,11 +474,14 @@ const DeletionCertification = () => {
               'An unexpected error occurred.',
               'error'
             );
+          })
+          .finally(() => {
+            loadingSwal.close(); // Close the loading spinner once the process is finished
           });
       }
     });
   };
-
+  
 
 
 

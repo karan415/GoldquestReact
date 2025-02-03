@@ -266,12 +266,13 @@ const DigitalAddressVerification = () => {
             customerLogoFormData.append("branch_id", branch_id);
             customerLogoFormData.append("customer_id", customer_id);
             customerLogoFormData.append("application_id", candidate_application_id);
+            customerLogoFormData.append("send_mail", 1);
             for (const file of value) {
                 customerLogoFormData.append("images", file);
                 customerLogoFormData.append("upload_category", key);
             }
 
-            customerLogoFormData.append("send_mail", 1);
+          
 
             try {
                 const response = await axios.post(`https://api.goldquestglobal.in/branch/candidate-application/digital-address-verification/upload`, customerLogoFormData, {
@@ -299,53 +300,55 @@ const DigitalAddressVerification = () => {
         myHeaders.append("Content-Type", "application/json");
         const form = document.getElementById('bg-form');
         const personal_information = formData.personal_information;
-
+    
         const raw = JSON.stringify({
             branch_id: decodedValues.branch_id,
             customer_id: decodedValues.customer_id,
             application_id: decodedValues.app_id,
             personal_information,
         });
-
+    
         const requestOptions = {
             method: "PUT",
             headers: myHeaders,
             body: raw,
             redirect: "follow"
         };
-
+    
         try {
             const response = await fetch(
                 "https://api.goldquestglobal.in/branch/candidate-application/digital-address-verification/submit",
                 requestOptions
             );
             const result = await response.json();
-
+    
             if (result.status) {
-                if (fileCount === 0) {
-                    Swal.fire({
-                        title: "Success",
-                        text: `Client Created Successfully.`,
-                        icon: "success",
-                        confirmButtonText: "Ok",
-                    });
-                } else if (fileCount > 0) {
+                // Show success message
+                Swal.fire({
+                    title: "Success",
+                    text: `Application Created Successfully.`,
+                    icon: "success",
+                    confirmButtonText: "Ok",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Call isApplicationExists only on success (after clicking OK)
+                        isApplicationExists();
+                    }
+                });
+    
+                // If there are files, upload customer logo
+                if (fileCount > 0) {
                     await uploadCustomerLogo(
                         decodedValues.app_id,
                         decodedValues.branch_id,
                         decodedValues.customer_id
                     );
-                    Swal.fire({
-                        title: "Success",
-                        text: `Client Created Successfully.`,
-                        icon: "success",
-                        confirmButtonText: "Ok",
-                    });
                 }
             } else {
+                // Show error message from API response
                 Swal.fire({
                     title: 'Error',
-                    text: result.message,
+                    text: result.message || 'Something went wrong during the request.',
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
@@ -361,6 +364,7 @@ const DigitalAddressVerification = () => {
             setLoading(false); // Stop loading after operations complete
         }
     };
+    
 
 
     console.log('data', data)

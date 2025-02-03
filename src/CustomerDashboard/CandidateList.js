@@ -344,33 +344,31 @@ const CandidateList = () => {
                                                 </div>
                                             </td>
                                             {isModalOpen && (
-                                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3">
-                                                        <div className="flex justify-between items-center">
-                                                            <h2 className="text-lg font-bold">Services</h2>
-                                                            <button
-                                                                className="text-red-500 text-2xl"
-                                                                onClick={handleCloseModal}
-                                                            >
-                                                                &times;
-                                                            </button>
-                                                        </div>
-                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto ">
-                                                            {modalServices.length > 0 ? (
-                                                                modalServices.map((service, idx) => (
-                                                                    <span
-                                                                        key={idx}
-                                                                        className="md:px-4 py-2 bg-green-100 border  border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
-                                                                    >
-                                                                        {service}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-gray-500">No service available</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                               <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3 h-[calc(100vh-20%)] max-h-[80vh] overflow-y-auto">
+                                                 <div className="flex justify-between items-center">
+                                                   <h2 className="text-lg font-bold">Services</h2>
+                                                   <button className="text-red-500 text-2xl" onClick={handleCloseModal}>
+                                                     &times;
+                                                   </button>
+                                                 </div>
+                                                 <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto">
+                                                   {modalServices.length > 0 ? (
+                                                     modalServices.map((service, idx) => (
+                                                       <span
+                                                         key={idx}
+                                                         className="md:px-4 py-2 bg-green-100 border border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
+                                                       >
+                                                         {service}
+                                                       </span>
+                                                     ))
+                                                   ) : (
+                                                     <span className="text-gray-500">No service available</span>
+                                                   )}
+                                                 </div>
+                                               </div>
+                                             </div>
+                                             
                                             )}
 
 

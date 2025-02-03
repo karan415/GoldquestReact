@@ -27,27 +27,25 @@ export const PackageProvider = ({ children }) => {
     const fetchData = useCallback(() => {
         setLoading(true);
         setError(null);
-
+    
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+    
         const queryParams = new URLSearchParams({
             admin_id: admin_id || '',
             _token: storedToken || ''
         }).toString();
-
+    
         fetch(`${API_URL}/package/list?${queryParams}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         })
-            .then((response) => {
-                const result = response.json();
-                const newToken = result._token || result.token; // Use result.token if result._token is not available
-                if (newToken) {
-                    localStorage.setItem("_token", newToken); // Replace the old token with the new one
-                }
+            .then(async (response) => {
+                const result = await response.json(); // Parse JSON from the response
+    
+                // Check for invalid token in the response
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                     Swal.fire({
                         title: "Session Expired",
@@ -58,20 +56,29 @@ export const PackageProvider = ({ children }) => {
                         // Redirect to admin login page
                         window.location.href = "/admin-login"; // Replace with your login route
                     });
+                    return; // Exit early after redirect
                 }
+    
+                const newToken = result._token || result.token; // Use result.token if result._token is not available
+                if (newToken) {
+                    localStorage.setItem("_token", newToken); // Replace the old token with the new one
+                }
+    
+                // Handle unsuccessful response status
                 if (!response.ok) {
                     Swal.fire({
                         title: 'Error!',
-                        text: `An error occurred: ${response.message}`,
+                        text: `An error occurred: ${result.message || response.statusText}`,
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
                     throw new Error('Network response was not ok');
                 }
-                return result;
+    
+                return result; // Proceed with result
             })
             .then((data) => {
-
+                // If token is valid, proceed to set data
                 setData(data.packages || []);
             })
             .catch((error) => {
@@ -80,6 +87,7 @@ export const PackageProvider = ({ children }) => {
             })
             .finally(() => setLoading(false));
     }, [API_URL]);
+    
 
     return (
         <PackageContext.Provider

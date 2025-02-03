@@ -160,6 +160,17 @@ const InternalLoginList = () => {
 
                         // Check if the deletion was successful
                         if (result.status) {
+                            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                                Swal.fire({
+                                    title: "Session Expired",
+                                    text: "Your session has expired. Please log in again.",
+                                    icon: "warning",
+                                    confirmButtonText: "Ok",
+                                }).then(() => {
+                                    // Redirect to admin login page
+                                    window.location.href = "/admin-login"; // Replace with your login route
+                                });
+                            }
                             Swal.fire({
                                 title: 'Deleted!',
                                 text: 'Admin has been deleted successfully.',

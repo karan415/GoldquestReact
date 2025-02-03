@@ -23,19 +23,32 @@ const CustomerLoginForm = () => {
         password: '',
     });
     const [error, setError] = useState({});
+    const [rememberMe, setRememberMe] = useState(false);
 
     useEffect(() => {
         setInput(prev => ({
             ...prev,
             email: emailFromQuery,
         }));
+
+        // Check if email and password are in localStorage
+        const savedEmail = localStorage.getItem('email');
+        const savedPassword = localStorage.getItem('password');
+        const savedRememberMe = JSON.parse(localStorage.getItem('rememberMe'));
+
+        if (savedEmail && savedPassword && savedRememberMe) {
+            setInput({
+                email: savedEmail,
+                password: savedPassword,
+            });
+            setRememberMe(true);
+        }
     }, [emailFromQuery]);
 
     const getPassword = async (email) => {
         const adminData = localStorage.getItem('admin');
         const storedToken = localStorage.getItem('_token');
     
-        // Validate necessary data before proceeding
         if (!adminData || !storedToken) {
             console.error('Missing admin data or token');
             return;
@@ -53,7 +66,6 @@ const CustomerLoginForm = () => {
             const result = await response.json();
     
             if (!response.ok) {
-                // Extract and show dynamic error message from API response
                 const errorMessage = result?.message || "An unexpected error occurred.";
                 Swal.fire({
                     title: "Error!",
@@ -79,7 +91,6 @@ const CustomerLoginForm = () => {
             }
         } catch (error) {
             console.error('Error fetching password:', error);
-            // Show dynamic error message if present in the response
             Swal.fire({
                 title: "Error!",
                 text: error.message || "An unexpected error occurred while fetching the password.",
@@ -90,14 +101,12 @@ const CustomerLoginForm = () => {
             setLoadingPassword(false);
         }
     };
-    
-
 
     useEffect(() => {
         if (input.email) {
             getPassword(input.email);
         }
-    }, []);
+    }, [input.email]);
 
     const validations = () => {
         const newErrors = {};
@@ -122,7 +131,6 @@ const CustomerLoginForm = () => {
         const adminNewToken = localStorage.getItem('adminNewToken');
 
         if (Object.keys(validateError).length === 0) {
-            // Set loading to true when the request is about to be made
             setLoading(true);
 
             const myHeaders = new Headers();
@@ -152,7 +160,6 @@ const CustomerLoginForm = () => {
                 });
                 const result = await response.json();
 
-                // Set loading to false when the response is received
                 setLoading(false);
 
                 if (!result.status) {
@@ -171,21 +178,31 @@ const CustomerLoginForm = () => {
 
                     Swal.fire({
                         title: "Success",
-                        text: 'OTP SEND SUCCESSFULLY',
+                        text: 'OTP SENT SUCCESSFULLY',
                         icon: "success",
                         confirmButtonText: "Ok"
                     });
 
                     if (result.message === "OTP sent successfully.") {
-                        setShowOtpModal(true); // Show OTP modal
+                        setShowOtpModal(true);
                     } else {
                         handleLoginSuccess(result);
                     }
 
                     setError({});
+
+                    // If "Remember Me" is checked, store the email and password in localStorage
+                    if (rememberMe) {
+                        localStorage.setItem('email', input.email);
+                        localStorage.setItem('password', input.password);
+                        localStorage.setItem('rememberMe', true);
+                    } else {
+                        localStorage.removeItem('email');
+                        localStorage.removeItem('password');
+                        localStorage.setItem('rememberMe', false);
+                    }
                 }
             } catch (error) {
-                // Set loading to false in case of an error
                 setLoading(false);
 
                 Swal.fire({
@@ -200,7 +217,6 @@ const CustomerLoginForm = () => {
             setError(validateError);
         }
     };
-
 
     const handleLoginSuccess = (result) => {
         const branchData = result.branchData;
@@ -220,7 +236,7 @@ const CustomerLoginForm = () => {
     };
 
     const handleOtpSubmit = () => {
-        if (!isOtpLoading) {  // Ensure OTP message is only shown once
+        if (!isOtpLoading) {
             Swal.fire({
                 title: 'OTP Sent!',
                 text: 'Please check your email for the OTP before proceeding.',
@@ -262,7 +278,7 @@ const CustomerLoginForm = () => {
             });
         }
     };
-    
+
     return (
         <div className="w-full md:max-w-7xl md:mx-auto xl:p-4">
             <form onSubmit={handleSubmitForm} aria-live="polite">
@@ -287,7 +303,7 @@ const CustomerLoginForm = () => {
                             onChange={handleChange}
                             value={input.password}
                             className="outline-none p-3 border mt-3 w-full rounded-md"
-                            disabled={loadingPassword} // Disable input during loading
+                            disabled={loadingPassword}
                         />
                         {loadingPassword && (
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -309,12 +325,16 @@ const CustomerLoginForm = () => {
                 </div>
                 <div className="flex items-center justify-between mb-4">
                     <label className="block text-gray-700 text-sm font-bold">
-                        <input className="mr-2 leading-tight" type="checkbox" />
-                        <span className="text-sm">Remember me</span>
+                        <input
+                            type="checkbox"
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            checked={rememberMe}
+                            className="form-checkbox" />
+                        <span className="text-sm ml-2">Remember me</span>
                     </label>
-                    <a href="#" className="inline-block align-baseline font-bold text-sm text-red-500 hover:text-blue-800">
+                    <span onClick={() => navigate('customer-forgotpassword')} className="inline-block align-baseline font-bold cursor-pointer text-sm text-red-500 hover:text-blue-800">
                         Forgot Password?
-                    </a>
+                    </span>
                 </div>
                 <div className="flex items-center justify-between">
                     <button disabled={loading} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
@@ -325,9 +345,8 @@ const CustomerLoginForm = () => {
             {showOtpModal && (
                 <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-6 w-96 relative">
-
                         <button
-                        type='button'
+                            type='button'
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
                             onClick={() => setShowOtpModal(false)} // Set showOtpModal to false
                         >
@@ -354,7 +373,7 @@ const CustomerLoginForm = () => {
                         <button
                             type="submit"
                             className={ `cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                }` }
                             onClick={handleOtpSubmit}
                             disabled={isOtpLoading}
                         >
@@ -362,11 +381,8 @@ const CustomerLoginForm = () => {
                         </button>
                     </div>
                 </div>
-
             )}
-
         </div>
-
     );
 };
 

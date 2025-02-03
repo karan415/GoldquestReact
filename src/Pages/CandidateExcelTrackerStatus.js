@@ -36,22 +36,19 @@ const CandidateExcelTrackerStatus = () => {
     const fetchData = useCallback(() => {
         if (!branch_id || !adminId || !token) {
             return;
-        }
-        else {
+        } else {
             setLoading(true);
         }
+    
         const requestOptions = {
             method: "GET",
             redirect: "follow"
         };
-
+    
         fetch(`${API_URL}/candidate-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
                 return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
+                    // Check for invalid token message early
                     if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                         Swal.fire({
                             title: "Session Expired",
@@ -62,9 +59,17 @@ const CandidateExcelTrackerStatus = () => {
                             // Redirect to admin login page
                             window.location.href = "/admin-login"; // Replace with your login route
                         });
+                        return; // Stop further execution if token is invalid
                     }
+    
+                    // Handle new token if available
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken); // Update the token in localStorage
+                    }
+    
+                    // If response is not OK, show error message
                     if (!response.ok) {
-                        // Show SweetAlert if response is not OK
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
@@ -72,32 +77,30 @@ const CandidateExcelTrackerStatus = () => {
                         });
                         throw new Error(result.message || 'Failed to load data');
                     }
+    
                     return result;
                 });
-            }).then((result) => {
+            })
+            .then((result) => {
                 setLoading(false);
                 setData(result.data.applications || []);
-                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                    Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                    }).then(() => {
-                        // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
-                    });
-                }
-
             })
             .catch((error) => {
                 console.error('Fetch error:', error);
-            }).finally(() => {
-                setLoading(false);
+                // Optionally, show a generic error message
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while fetching data. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            })
+            .finally(() => {
+                setLoading(false); // Always stop loading when the request is complete
             });
-
+    
     }, [branch_id, adminId, token, setData]);
-
+    
 
     const goBack = () => {
         handleTabChange('candidate_master');
@@ -226,7 +229,7 @@ const CandidateExcelTrackerStatus = () => {
         // Retrieve admin ID and token from localStorage
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
-
+    
         // Check if adminId or token is missing
         if (!adminId || !token) {
             Swal.fire({
@@ -236,54 +239,49 @@ const CandidateExcelTrackerStatus = () => {
             });
             return;
         }
-        setLoadingRow(rowId); // Set the loading row ID
+    
+    
         // Construct the URL dynamically with query parameters
         const url = `${API_URL}/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
-
+    
         const requestOptions = {
             method: "GET",
             redirect: "follow", // No body required for GET requests
         };
-
+    
         fetch(url, requestOptions)
             .then((response) => response.json()) // Assuming the response is JSON
             .then((result) => {
+                // Check for invalid token
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        // Redirect to admin login page
+                        window.location.href = "/admin-login"; // Replace with your login route
+                    });
+                    return; // Exit the function after session expiry handling
+                }
+    
+                // Handle successful response
                 if (result.status) {
-                    // Show success alert with message
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
                         text: result.message,
                         footer: `DAV Mail Sent: ${result.details.davMailSent} | BGV Mail Sent: ${result.details.cefMailSent}`,
                     });
-
-                    // Optionally log the detailed mail sent status
-                    console.log("Mail Sent Details:", result.details);
                 } else {
-                    // Show error alert with message
+                    // Handle error in response
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: result.message,
                         footer: result.details ? `DAV Errors: ${result.details.davErrors} | CEF Errors: ${result.details.cefErrors}` : '',
                     });
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                    }
-
-                    // Optionally log error details if available
-                    if (result.details) {
-                        console.log("DAV Errors:", result.details.davErrors);
-                        console.log("BGV Errors:", result.details.cefErrors);
-                    }
                 }
             })
             .catch((error) => {
@@ -295,16 +293,9 @@ const CandidateExcelTrackerStatus = () => {
                     text: 'Something went wrong. Please try again later.',
                 });
             })
-            .finally(() => setLoadingRow(null));
     };
+    
 
-
-
-
-
-
-
-    console.log('currentItems', currentItems);
 
     return (
         <div className="bg-[#c1dff2]">
