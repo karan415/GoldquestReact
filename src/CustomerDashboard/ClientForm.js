@@ -258,7 +258,7 @@ const ClientForm = () => {
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
+                            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
                         });
                     }
     

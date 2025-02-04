@@ -429,3 +429,32 @@ input,select{
   from { transform: rotate(0deg); }
   from { transform: rotate(360deg); }
 }
+
+.filter-menu {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  margin-bottom: 20px;
+}
+
+.filter-menu::-webkit-scrollbar {
+  height: 3px;
+}
+
+.filter-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.filter-menu::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 10px;
+}
+
+.filter-menu::-webkit-scrollbar-thumb:hover {
+  background: #22c55e;
+}

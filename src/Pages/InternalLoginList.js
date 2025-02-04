@@ -108,97 +108,81 @@ const InternalLoginList = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-    const deleteAdmin = (id) => {
-        // Show confirmation dialog before proceeding with deletion
+     const deleteAdmin = (id) => {
         Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this action!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'No, cancel!',
         }).then((result) => {
-            if (result.isConfirmed) {
-
-                // Start loading or show spinner if necessary
-                Swal.fire({
-                    title: 'Deleting...',
-                    text: 'Please wait while we delete the admin.',
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Make the delete API request using axios
-                axios
-                    .delete(`https://api.goldquestglobal.in/admin/delete`, {
-                        params: {
-                            id,
-                            admin_id,
-                            _token: storedToken,
-                        },
-                    })
-                    .then((response) => {
-                        const result = response.data;
-
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("branch_token", newToken);
-                        }
-                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                            Swal.fire({
-                                title: "Session Expired",
-                                text: "Your session has expired. Please log in again.",
-                                icon: "warning",
-                                confirmButtonText: "Ok",
-                            }).then(() => {
-                                // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
-                            });
-                        }
-
-
-                        // Check if the deletion was successful
-                        if (result.status) {
-                            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                                Swal.fire({
-                                    title: "Session Expired",
-                                    text: "Your session has expired. Please log in again.",
-                                    icon: "warning",
-                                    confirmButtonText: "Ok",
-                                }).then(() => {
-                                    // Redirect to admin login page
-                                    window.location.href = "/admin-login"; // Replace with your login route
-                                });
-                            }
-                            Swal.fire({
-                                title: 'Deleted!',
-                                text: 'Admin has been deleted successfully.',
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: result.message || 'Failed to delete admin.',
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            });
-                        }
-                        fetchData();
-                    })
-
-                    .catch((error) => {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: `Error: ${error.response?.data?.message || error.message}`,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        });
-                    });
+          if (result.isConfirmed) {
+            const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+            const storedToken = localStorage.getItem("_token");
+      
+            if (!admin_id || !storedToken) {
+              console.error("Admin ID or token is missing.");
+              return;
             }
+      
+            const requestOptions = {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            };
+      
+            // Make the DELETE request
+            fetch(`https://api.goldquestglobal.in/admin/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+              .then((response) => response.json()) // Parse the response as JSON
+              .then((result) => {
+                Swal.fire(
+                  'Deleted!',
+                  'Admin has been deleted successfully.',
+                  'success'
+                );
+                fetchData();
+                // Handle token expiration (if the message contains "invalid token")
+                if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                  Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                  }).then(() => {
+                    // Redirect to the admin login page
+                    window.location.href = "/admin-login"; // Replace with your login route
+                  });
+                  return; // Stop further execution if session has expired
+                }
+      
+                // If not OK or there's an error, handle it
+                if (!result.ok) {
+                  return result.text().then(text => {
+                    const errorData = JSON.parse(text);
+                    Swal.fire(
+                      'Error!',
+                      `An error occurred: ${errorData.message}`,
+                      'error'
+                    );
+                    throw new Error(errorData.message); // Handle the error
+                  });
+                }
+      
+                // If the deletion is successful, show success message
+                
+                // Refresh the data
+               
+              })
+              .catch((error) => {
+                console.error('Fetch error:', error);
+                
+              });
+          }
         });
-    };
+      };
+  
     const editAdmin = (item) => {
         handleEditAdmin(item)
     }

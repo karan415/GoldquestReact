@@ -188,10 +188,8 @@ const CandidateForm = () => {
                                 confirmButtonText: "Ok",
                             }).then(() => {
                                 // Redirect to customer login page
-                                window.open(
-                                    `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
+                                window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`;
 
-                                );
                             });
                         } else {
                             Swal.fire("Error!", errorMessage, "error");

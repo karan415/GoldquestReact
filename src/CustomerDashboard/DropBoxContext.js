@@ -17,8 +17,10 @@ export const DropBoxProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
     const [isEditCandidate, setIsEditCandidate] = useState(false);
-    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
+    const branchData = localStorage.getItem("branch");
 
+ 
+    
     const [clientInput, setClientInput] = useState({
         name: '',
         employee_id: '',
@@ -182,29 +184,34 @@ export const DropBoxProvider = ({ children }) => {
     }, [API_URL]);
 
     const fetchClient = useCallback(async () => {
+        const branchData = JSON.parse(localStorage.getItem("branch")) || {};
+        const branchEmail = branchData?.email;
         setCandidateLoading(true);
         const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
         const customerId = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const token = localStorage.getItem("branch_token");
-
+    
         if (!branchId || !token) {
             setCandidateLoading(false);
             return;
         }
-
+    
         try {
             const response = await fetch(`${API_URL}/branch/candidate-application/list?customer_id=${customerId}&branch_id=${branchId}&_token=${token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-
+    
             const result = await response.json();
-
+    
+            // Update token if it's present in the response
             const newToken = result?._token || result?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
+    
+            // Check if the session has expired (invalid token)
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
                     title: "Session Expired",
@@ -212,23 +219,14 @@ export const DropBoxProvider = ({ children }) => {
                     icon: "warning",
                     confirmButtonText: "Ok",
                 }).then(() => {
-                    // Redirect to admin login page
-                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
+                    // Redirect to customer login page in the current tab
+                    window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
                 });
+                return;  // Exit the function after redirection
             }
-
+    
+            // Handle unsuccessful response (non-OK response)
             if (!response.ok) {
-                if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                    Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                    }).then(() => {
-                        // Redirect to admin login page
-                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
-                    });
-                }
                 const errorMessage = result?.message || 'Something went wrong. Please try again later.';
                 Swal.fire({
                     title: 'Error!',
@@ -236,29 +234,31 @@ export const DropBoxProvider = ({ children }) => {
                     icon: 'error',
                     confirmButtonText: 'OK',
                 });
-            } else {
-                setCandidateListData(result.data?.candidateApplications || []);
-                if (result.data?.customerInfo) {
-                    const customer = result.data.customerInfo;
-                    const customerCode = customer.client_unique_id;
-                    localStorage.setItem('customer_code', customerCode);
-                    const services = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
-                    setServices(services);
-
-                    const uniquePackages = [];
-                    const packageSet = new Set();
-                    services.forEach(service => {
-                        if (service.packages) {
-                            Object.keys(service.packages).forEach(packageId => {
-                                if (!packageSet.has(packageId)) {
-                                    packageSet.add(packageId);
-                                    uniquePackages.push({ id: packageId, name: service.packages[packageId] });
-                                }
-                            });
-                        }
-                    });
-                    setUniquePackages(uniquePackages);
-                }
+                return;  // Exit the function if the response is not OK
+            }
+    
+            // Set data on success
+            setCandidateListData(result.data?.candidateApplications || []);
+            if (result.data?.customerInfo) {
+                const customer = result.data.customerInfo;
+                const customerCode = customer.client_unique_id;
+                localStorage.setItem('customer_code', customerCode);
+                const services = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
+                setServices(services);
+    
+                const uniquePackages = [];
+                const packageSet = new Set();
+                services.forEach(service => {
+                    if (service.packages) {
+                        Object.keys(service.packages).forEach(packageId => {
+                            if (!packageSet.has(packageId)) {
+                                packageSet.add(packageId);
+                                uniquePackages.push({ id: packageId, name: service.packages[packageId] });
+                            }
+                        });
+                    }
+                });
+                setUniquePackages(uniquePackages);
             }
         } catch (error) {
             console.error('Fetch error:', error);
@@ -267,12 +267,13 @@ export const DropBoxProvider = ({ children }) => {
             setCandidateLoading(false);
         }
     }, [API_URL, setCandidateLoading, setToken, setCandidateListData, setServices, setUniquePackages]);
-
-
+    
 
 
     const fetchClientDrop = useCallback(async () => {
         setLoading(true);
+        const branchData = JSON.parse(localStorage.getItem("branch")) || {};
+        const branchEmail = branchData?.email;
         const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
         const customer_id = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const _token = localStorage.getItem("branch_token");
@@ -305,7 +306,7 @@ export const DropBoxProvider = ({ children }) => {
                     confirmButtonText: "Ok",
                 }).then(() => {
                     // Redirect to customer login page with email parameter if session expired
-                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
+                    window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
                 });
                 return; // Stop further processing after session expiration
             }
@@ -365,6 +366,7 @@ export const DropBoxProvider = ({ children }) => {
             setClientInput,
             fetchClient,
             fetchClientDrop,
+
             uniquePackages,
             handleEditDrop,
             handleEditCandidate,

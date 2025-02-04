@@ -40,10 +40,10 @@ const CreateInvoice = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true); // Show loader
-  
+    
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+    
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
@@ -51,7 +51,7 @@ const CreateInvoice = () => {
       month: formData.month,
       year: formData.year,
     }).toString();
-  
+    
     const requestOptions = {
       method: "GET",
       redirect: "follow",
@@ -59,7 +59,7 @@ const CreateInvoice = () => {
   
     const swalInstance = Swal.fire({
       title: 'Processing...',
-      text: 'Please wait while we Generate Your Invoice',
+      text: 'Please wait while we generate your invoice',
       didOpen: () => {
         Swal.showLoading(); // This starts the loading spinner
       },
@@ -67,18 +67,39 @@ const CreateInvoice = () => {
       showConfirmButton: false, // Hide the confirm button
     });
   
+    // Make the fetch call to generate the invoice
     fetch(`https://api.goldquestglobal.in/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
-          return response.json().then((errorData) => {
-            throw new Error(errorData.message || "Network response was not ok");
+          // If response is not OK, handle the error
+          return response.json().then((result) => {
+            const errorMessage = result?.message || "An unknown error occurred";
+  
+            // Check if the error message contains "invalid token" (case-insensitive)
+            if (result?.message && result.message.toLowerCase().includes("invalid token")) {
+              Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+              }).then(() => {
+                // Redirect to the login page
+                window.location.href = "/admin-login"; // Replace with your login route
+              });
+              return; // Prevent further execution if session has expired
+            }
+  
+        
+            throw new Error(errorMessage); // Throw error to skip further code execution
           });
         }
-        return response.json(); // Parse the response body to JSON
+  
+        // If response is OK, parse the JSON body and proceed
+        return response.json();
       })
       .then((data) => {
-        // Check if the response contains invalid token message
-        if (data.status === false && data.message.toLowerCase().includes("invalid token")) {
+        // **Check for token expiration again if it's not handled earlier**
+        if (data.message && data.message.toLowerCase().includes("invalid token")) {
           Swal.fire({
             title: "Session Expired",
             text: "Your session has expired. Please log in again.",
@@ -91,11 +112,6 @@ const CreateInvoice = () => {
           return; // Stop further execution if session has expired
         }
   
-        // Check if 'data' is valid
-        if (!data) {
-          throw new Error("No data returned from API.");
-        }
-  
         // Handle new token if it exists in the response
         const newToken = data._token || data.token;
         if (newToken) {
@@ -103,10 +119,8 @@ const CreateInvoice = () => {
         }
   
         let applications = [];
-        if (data && Array.isArray(data.applications)) {
-          applications = data.applications;
-        } else {
-          applications = [];
+        if (Array.isArray(data.applications)) {
+          applications = data.applications; // Set applications from response if valid
         }
   
         const serviceNames = data?.serviceNames || [];
@@ -115,8 +129,9 @@ const CreateInvoice = () => {
         const {
           costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
           serviceInfo = [],
-        } = data?.finalArr || {};
+        } = data?.finalArr || {}; // Destructure costInfo and serviceInfo from finalArr
   
+        // If there are applications, generate the PDF
         if (applications.length > 0) {
           generatePdf(
             serviceNames,
@@ -138,32 +153,26 @@ const CreateInvoice = () => {
             confirmButtonText: "Ok",
           });
         } else {
+          // No applications found
           Swal.fire({
             title: 'No Application Found',
             text: 'There are no applications available to generate an invoice.',
             icon: 'warning',
-            confirmButtonText: 'OK'
+            confirmButtonText: 'OK',
           });
         }
       })
       .catch((error) => {
-        Swal.fire({
-          title: "Error!",
-          text: error.message || "An error occurred while fetching the data.",
-          icon: "error",
-          confirmButtonText: "Ok",
-        });
+       
       })
       .finally(() => {
         swalInstance.close(); // Close the processing Swal
-        setIsLoading(false); // Hide loader
+        setIsLoading(false); // Hide loader after process is complete
       });
   };
   
   
-
-
-
+  
   function getTotalAdditionalFeeByService(serviceId, applications) {
     let totalFee = 0;
 

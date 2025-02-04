@@ -351,6 +351,12 @@ const CaseLog = () => {
         const branchData = JSON.parse(localStorage.getItem("branch"));
         const branch_id = branchData?.id;
         const branch_token = localStorage.getItem("branch_token");
+
+        if (!branch_id || !branch_token) {
+            console.error("Branch ID or token is missing.");
+            return;
+        }
+
         const requestOptions = {
             method: "GET",
             redirect: "follow"
@@ -359,60 +365,58 @@ const CaseLog = () => {
         setLoading(true); // Set loading state to true
 
         fetch(`https://api.goldquestglobal.in/branch/ticket/list?branch_id=${branch_id}&_token=${branch_token}`, requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    return response.json().then((result) => {
-                        const errorMessage = result.message || "An unexpected error occurred.";
-                        // Handle session expiration
-                        if (
-                            errorMessage.toLowerCase().includes("invalid") &&
-                            errorMessage.toLowerCase().includes("token")
-                        ) {
-                            Swal.fire({
-                                title: "Session Expired",
-                                text: "Your session has expired. Please log in again.",
-                                icon: "warning",
-                                confirmButtonText: "OK",
-                            }).then(() => {
-                                // Redirect to customer login page
-                                window.open(
-                                    `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`,
-                                    "_self"
-                                );
-                            });
-                        }
-
-                        // Show error message for other issues
-                        Swal.fire({
-                            title: 'Error',
-                            text: errorMessage,
-                            icon: 'error',
-                            confirmButtonText: 'OK',
-                        });
-
-                        throw new Error(errorMessage);
-                    });
-                }
-                return response.json();
-            })
+            .then((response) => response.json())  // Always parse response as JSON
             .then((result) => {
-                console.log(result);
-                setData(result.branches); // Set the data to the state if the request was successful
+                // Check if the result has a message indicating session expiry or error
+                const errorMessage = result.message || "An unexpected error occurred.";
 
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem("branch_token", newToken); // Update the token if returned by API
+                if (result.status === false && errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                    }).then(() => {
+                        // Redirect to the login page in the current tab
+                        window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`;
+                    });
+                    return;  // Exit if token is invalid
+                }
+
+                // Handle success scenario
+                if (result.status === true) {
+                    setData(result.branches || []); // Set the data to the state if the request was successful
+
+                    // Handle token refresh if a new token is provided in the response
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken); // Update the token in localStorage
+                    }
+                } else {
+                    // Handle other errors
+                    Swal.fire({
+                        title: 'Error',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                    });
                 }
             })
             .catch((error) => {
                 console.error(error);
-                // Handle other types of errors (e.g., network issues)
-
+                // Handle network errors
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while fetching the tickets. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             })
             .finally(() => {
                 setLoading(false); // Reset loading state after the operation
             });
     };
+
 
     useEffect(() => {
 
@@ -424,83 +428,120 @@ const CaseLog = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('passerror', passError);
-
+    
         const branchData = JSON.parse(localStorage.getItem("branch"));
         const branch_id = branchData?.id;
         const branch_token = localStorage.getItem("branch_token");
-
+    
         // Validate form data
         const formError = validate();
         if (Object.keys(formError).length > 0) {
             setPassError(formError); // Set the validation errors
             return; // Prevent the form submission if there are validation errors
         }
-
+    
         console.log('start');
-
-        const myHeaders = {
-            "Content-Type": "application/json",
-        };
-
+    
         const requestBody = {
             "title": formData.title,
             "description": formData.description,
             "branch_id": branch_id,
             "_token": branch_token,
         };
+    
         const swalInstance = Swal.fire({
             title: 'Processing...',
-            text: 'Please wait while we create Your Ticket',
+            text: 'Please wait while we create your Ticket',
             didOpen: () => {
                 Swal.showLoading(); // This starts the loading spinner
             },
             allowOutsideClick: false, // Prevent closing Swal while processing
             showConfirmButton: false, // Hide the confirm button
         });
-
-        axios.post("https://api.goldquestglobal.in/branch/ticket/create", requestBody, { headers: myHeaders })
-            .then((response) => {
-                console.log(response.data); // Log the API response
-
-                // Check for API-specific errors (if any)
-                if (response.data && response.data.errors) {
-                    // Show error message from API in SweetAlert
-                    Swal.fire({
-                        title: "Error",
-                        text: response.data.errors.join(", "), // Assuming `errors` is an array of messages
-                        icon: "error",
-                        confirmButtonText: "OK",
-                    });
-                } else {
-                    // Show success message
-                    Swal.fire({
-                        title: "Success",
-                        text: "Ticket created successfully!",
-                        icon: "success",
-                        confirmButtonText: "OK",
-                    });
-                    const newToken = response._token || response.token;
-
-                    if (newToken) {
-                        localStorage.setItem("branch_token", newToken);
-                    }
-                    setFormData({
-                        title: '',
-                        description: '',
-                    });
-                    fetchTickets();
+    
+        fetch("https://api.goldquestglobal.in/branch/ticket/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+        })
+        .then((response) => response.json()) // Convert response to JSON
+        .then((data) => {
+            console.log('Response:', data); // Log the API response
+    
+            // Check if the response indicates invalid token
+            if (data.status === false && data.message === "Invalid token provided") {
+                Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "OK",
+                }).then(() => {
+                    console.log("Redirecting to login...");
+                    window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email)}`;
+                });
+                return; // Stop further execution after redirecting
+            }
+    
+            // Handle API-specific errors (if any)
+            if (data.errors) {
+                // Show error message from API in SweetAlert
+                Swal.fire({
+                    title: "Error",
+                    text: data.errors.join(", "), // Assuming `errors` is an array of messages
+                    icon: "error",
+                    confirmButtonText: "OK",
+                });
+            } else if (data.status === false) {
+                // If status is false, show the error message from API
+                Swal.fire({
+                    title: "Error",
+                    text: data.message || "An unexpected error occurred.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                });
+            } else {
+                // Show success message
+                Swal.fire({
+                    title: "Success",
+                    text: "Ticket created successfully!",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                });
+    
+                const newToken = data._token || data.token;
+    
+                if (newToken) {
+                    localStorage.setItem("branch_token", newToken); // Update token
                 }
-            })
-            .catch((error) => {
-                console.error(error); // Handle the error
-
-                // Show generic error message if an error occurs in the API request
-
-            }).finally(() => {
-                swalInstance.close();
+    
+                // Clear form data after successful creation
+                setFormData({
+                    title: '',
+                    description: '',
+                });
+    
+                fetchTickets(); // Reload tickets
+            }
+        })
+        .catch((error) => {
+            console.error(error); // Handle the error
+    
+            // Show a generic error message if an error occurs in the API request
+            Swal.fire({
+                title: "Error",
+                text: error.message || "An error occurred while creating the ticket. Please try again.",
+                icon: "error",
+                confirmButtonText: "OK",
             });
+        })
+        .finally(() => {
+            swalInstance.close(); // Close the Swal loading spinner
+        });
     };
-
+    
+    
 
 
     const deleteTicket = async (ticket_number) => {

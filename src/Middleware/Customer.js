@@ -7,21 +7,20 @@ import { useApi } from '../ApiContext';
 import Swal from 'sweetalert2';
 const Customer = ({ children }) => {
   const { loading, setLoading } = useContext(LoaderContext);
-  const API_URL=useApi();
+  const API_URL = useApi();
   const navigate = useNavigate();
   const location = useLocation();
   const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
-console.log('branchEmail',branchEmail)
   useEffect(() => {
     const checkAuthentication = async () => {
       const storedAdminData = localStorage.getItem("branch");
       const storedToken = localStorage.getItem("branch_token");
-  
+
       if (!storedAdminData || !storedToken) {
         redirectToLogin();
         return;
       }
-  
+
       let adminData;
       try {
         adminData = JSON.parse(storedAdminData);
@@ -30,13 +29,13 @@ console.log('branchEmail',branchEmail)
         redirectToLogin();
         return;
       }
-  
+
       try {
         const response = await axios.post(`${API_URL}/branch/verify-branch-login`, {
           branch_id: adminData.id,
           _token: storedToken,
         });
-  
+
         if (response.data.status) {
           setLoading(false);
         } else {
@@ -44,21 +43,21 @@ console.log('branchEmail',branchEmail)
           if (response.data.message && response.data.message.toLowerCase().includes("invalid") && response.data.message.toLowerCase().includes("token")) {
             handleSessionExpired();
           } else {
-            localStorage.clear();
-            redirectToLogin();
+            localStorage.removeItem("branch");
+            localStorage.removeItem("branch_token"); redirectToLogin();
           }
         }
       } catch (error) {
         console.error('Error validating login:', error);
-        localStorage.clear();
-        redirectToLogin();
+        localStorage.removeItem("branch");
+        localStorage.removeItem("branch_token"); redirectToLogin();
       }
     };
-  
+
     const redirectToLogin = () => {
       navigate(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
     };
-  
+
     const handleSessionExpired = () => {
       Swal.fire({
         title: "Session Expired",
@@ -70,10 +69,10 @@ console.log('branchEmail',branchEmail)
         window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
       });
     };
-  
+
     checkAuthentication();
   }, [navigate, setLoading, location]);
-  
+
 
   if (loading) {
     return (

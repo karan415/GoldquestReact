@@ -44,62 +44,84 @@ const ReportsList = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-
   useEffect(() => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id || "";
     const storedToken = localStorage.getItem("_token") || "";
+
+    console.log("Admin ID:", admin_id); // Log admin_id
+    console.log("Stored Token:", storedToken); // Log stored token
+
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-  
+
     setLoading(true); // Start loading before the fetch request
-  
+    console.log("Fetching data...");
+
     fetch(
       `https://api.goldquestglobal.in/report-summary/report-tracker?admin_id=${admin_id}&_token=${storedToken}`,
       requestOptions
     )
-      .then((response) =>
-        response.json().then((result) => {
-          // Handle new token if it exists in the response
-          const newToken = result._token || result.token;
-          if (newToken) {
-            localStorage.setItem("_token", newToken); // Update the token in localStorage
-          }
-  
-          // Check for invalid or expired token message
-          if (result.message) {
-            const message = result.message.toLowerCase();
-            if (
-              message.includes("invalid token") ||
-              message.includes("expired") ||
-              message.includes("invalid or expired token")
-            ) {
-              // Show session expired message and redirect to login
-              Swal.fire({
-                title: "Session Expired",
-                text: "Your session has expired. Please log in again.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-              }).then(() => {
-                window.location.href = "/admin-login"; // Redirect to login page
-              });
-              throw new Error("Session expired"); // Stop further processing after session expired message
-            }
-          }
-  
-          // If response is not ok, show the error message from the API
-          if (!response.ok || result.status === false) {
-            const errorMessage = result.message || "Unknown error occurred";
-            Swal.fire("Error!", errorMessage, "error");
-            throw new Error(errorMessage); // Stop further processing if there's an error
-          }
-  
-          return result; // Continue processing if response is okay
-        })
-      )
+      .then((response) => response.json().then(result => {
+        // Handle token expiration check
+        const newToken = result._token || result.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken); // Update token in localStorage
+        }
+
+        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            window.location.href = "/admin-login"; // Redirect to login page on token expiration
+          });
+          return; // Stop further processing if token expired
+        }
+
+        if (!response.ok) {
+          Swal.fire({
+            title: 'Error!',
+            text: `An error occurred: ${result.message}`,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+          });
+          throw new Error('Network response was not ok');
+        }
+
+        return result; // Return the successful result if no errors
+      }))
       .then((result) => {
+        console.log("Parsed result:", result); // Log parsed response data
+
+        // Handle new token if it exists in the response
+        const newToken = result._token || result.token;
+        if (newToken) {
+          console.log("New token found:", newToken); // Log new token
+          localStorage.setItem("_token", newToken); // Update the token in localStorage
+        }
+
+        // Check for "Invalid token provided" message
+        if (result.message && result.message.toLowerCase().includes("invalid token provided")) {
+          console.log("Invalid token detected, showing session expired alert"); // Log session expired detection
+          // Show session expired message and redirect to login
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            window.location.href = "/admin-login"; // Redirect to login page
+          });
+          throw new Error("Session expired"); // Stop further processing after session expired message
+        }
+
+        // If response is valid, proceed with further processing
         if (result.status) {
+          console.log("Result status is OK, processing data..."); // Log if status is OK
           // Flatten the data to match the table structure
           const flattenedReports = result.result.flatMap((customer) =>
             customer.branches.flatMap((branch) =>
@@ -115,32 +137,41 @@ const ReportsList = () => {
               }))
             )
           );
-  
+
+          console.log("Flattened reports:", flattenedReports); // Log the flattened reports
+
           setData(flattenedReports); // Set the fetched data
-  
+
           // Extract unique QC Status and Report Generated By
           const qcStatuses = new Set(flattenedReports.map((report) => report.qcStatus));
           const generatedBy = new Set(flattenedReports.map((report) => report.generatedBy));
-  
+
           setUniqueQcStatuses([...qcStatuses]); // Convert Set to Array
           setUniqueGeneratedBy([...generatedBy]); // Convert Set to Array
+          console.log("Unique QC Statuses:", [...qcStatuses]); // Log unique QC statuses
+          console.log("Unique Generated By:", [...generatedBy]); // Log unique generated by statuses
         } else {
+          console.log("Result status is not OK, handling error..."); // Log when result status is not OK
           setData([]); // Clear data if status is not okay
+          Swal.fire({
+            title: "Error!",
+            text: result.message || "Failed to fetch data.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
         }
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: error.message || "Failed to fetch data. Please try again later.",
-        });
+        console.error("Error fetching data:", error); // Log network or fetch error
+        
       })
       .finally(() => {
         setLoading(false); // Stop loading after fetch completes
+        console.log("Fetch complete, loading stopped."); // Log when loading is stopped
       });
-  }, []); // Empty dependency array to run effect on mount
-  
+  }, []);
+
+
   const filtered = data.filter((item) => {
     const matchesQcStatus = filters.qc_status
       ? item.qcStatus?.toLowerCase().includes(filters.qc_status.toLowerCase())

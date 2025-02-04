@@ -75,10 +75,11 @@ const ServiceForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const validateError = validate();
-
+  
     if (Object.keys(validateError).length === 0) {
-      setError({})
+      setError({});
       setLoading(true); // Start loading
+  
       const requestOptions = {
         method: isEdit ? "PUT" : "POST",
         headers: {
@@ -95,56 +96,56 @@ const ServiceForm = () => {
           _token: storedToken,
         }),
       };
-
+  
       const url = isEdit
         ? `${API_URL}/service/update`
         : `${API_URL}/service/create`;
-
+  
       fetch(url, requestOptions)
         .then((response) => {
-          return response.json().then((result) => {
-            // Check if response is not OK
-            if (!response.ok) {
-              if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          if (!response.ok) {
+            // If response is not OK, handle the error
+            return response.json().then((result) => {
+              const errorMessage = result?.message || "An unknown error occurred";
+  
+              // Check if the error message contains "invalid token" (case-insensitive)
+              if (result?.message && result.message.toLowerCase().includes("invalid token")) {
                 Swal.fire({
                   title: "Session Expired",
                   text: "Your session has expired. Please log in again.",
                   icon: "warning",
                   confirmButtonText: "Ok",
                 }).then(() => {
-                  // Redirect to admin login page
-                  window.location.href = "/admin-login"; // Replace with your login route
+                  // Redirect to the login page
+                  window.location.href = "/admin-login";  // Replace with your login route
+                });
+              } else {
+                // Otherwise, show the error message from the API
+                Swal.fire({
+                  title: "Error!",
+                  text: errorMessage,
+                  icon: "error",
+                  confirmButtonText: "Ok",
                 });
               }
-              const errorMessage = result.message || "An unknown error occurred";
-              Swal.fire({
-                title: "Error!",
-                text: errorMessage,
-                icon: "error",
-                confirmButtonText: "Ok",
-              });
-              throw new Error(errorMessage);
-            }
-
-            // Success: Show API message or fallback
-            Swal.fire({
-              title: "Success!",
-              text: result.message || (isEdit ? "Service updated successfully" : "Service added successfully"),
-              icon: "success",
-              confirmButtonText: "Ok",
+              throw new Error(errorMessage); // Throw error to skip further code execution
             });
-
-            // Handle the token (if provided)
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
-           
-
-            return result;
-          });
+          }
+  
+          // If response is OK, parse the JSON body and proceed
+          return response.json();
         })
         .then((result) => {
+          // Success: Handle the response data
+          const successMessage = result?.message || (isEdit ? "Service updated successfully" : "Service added successfully");
+          Swal.fire({
+            title: "Success!",
+            text: successMessage,
+            icon: "success",
+            confirmButtonText: "Ok",
+          });
+  
+          // Now, handle the result (e.g., update the service list)
           setError({});
           if (isEdit) {
             // Update the service list for editing
@@ -154,9 +155,9 @@ const ServiceForm = () => {
           } else {
             updateServiceList((prevList) => [...prevList, result]);
           }
-
+  
           fetchData(); // Refresh data
-          setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "" ,group:""});
+          setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "", group: "" });
           setIsEdit(false);
         })
         .catch((error) => {
@@ -169,11 +170,14 @@ const ServiceForm = () => {
       setError(validateError);
     }
   };
+  
+  
+  
 
   const resetForm=()=>{
     setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "" ,group:""});
     setError({});
-    setSelectedService({name: "", d_name: "", sac_code: "", short_code: "" ,group:""})
+    setIsEdit(null)
 
   }
 

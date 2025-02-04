@@ -49,7 +49,7 @@ const CandidateList = () => {
             item.application_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.employee_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.email?.toLowerCase().includes(searchTerm.toLowerCase()) 
+            item.email?.toLowerCase().includes(searchTerm.toLowerCase())
 
 
         );
@@ -137,101 +137,93 @@ const CandidateList = () => {
         handleEditCandidate(client);
     };
 
+    const branchData = JSON.parse(localStorage.getItem("branch"));
+    const branchId = branchData?.id;
+    const branchEmail = branchData?.email;
+    const branch_token = localStorage.getItem("branch_token");
+
     const handleDelete = (id) => {
         Swal.fire({
-            title: "Are you sure?",
+            title: 'Are you sure?',
             text: "You won't be able to revert this!",
-            icon: "warning",
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: "Yes, delete it!",
-            cancelButtonText: "No, cancel!",
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
         }).then((result) => {
             if (result.isConfirmed) {
-                const branchData = JSON.parse(localStorage.getItem("branch"));
-                const branchId = branchData?.id;
-                const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
-                const branch_token = localStorage.getItem("branch_token");
+                const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+                const _token = localStorage.getItem("branch_token");
 
-                if (!branchId || !branch_token) {
+                if (!branch_id || !_token) {
                     console.error("Branch ID or token is missing.");
-                    Swal.fire({
-                        title: "Error",
-                        text: "Session not found. Please log in again.",
-                        icon: "error",
-                        confirmButtonText: "Ok",
-                    }).then(() => {
-                        navigate(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
-                    });
                     return;
                 }
 
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
-                        "Content-Type": "application/json",
-                    },
+                        'Content-Type': 'application/json'
+                    }
                 };
 
-                fetch(
-                    `${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`,
-                    requestOptions
-                )
-                    .then(async (response) => {
-                        const result = await response.json();
-                        const newToken = result._token || result.token;
+                fetch(`${API_URL}/branch/candidate-application/delete?id=${id}&branch_id=${branchId}&_token=${branch_token}`, requestOptions)
+                    .then(response => response.json()) // Parse the JSON response
+                    .then(result => {
+                        // Check if the result contains a message about invalid token (session expired)
+                        if (
+                            result.message &&
+                            result.message.toLowerCase().includes("invalid") &&
+                            result.message.toLowerCase().includes("token")
+                        ) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+                            });
+                            return; // Exit after showing the session expired message
+                        }
 
+                        // Handle token update if provided in the response
+                        const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
 
-                        if (!response.ok) {
-                            const errorMessage = result.message || "An error occurred";
-
-                            if (
-                                errorMessage.toLowerCase().includes("invalid") &&
-                                errorMessage.toLowerCase().includes("token")
-                            ) {
-                                Swal.fire({
-                                    title: "Session Expired",
-                                    text: "Your session has expired. Please log in again.",
-                                    icon: "warning",
-                                    confirmButtonText: "Ok",
-                                }).then(() => {
-                                    // Redirect to customer login page
-                                    window.open(
-                                        `/customer-login?email=${encodeURIComponent(branchEmail || "")}`
-
-                                    );
-                                });
-                            } else {
-                                Swal.fire("Error!", `An error occurred: ${errorMessage}`, "error");
-                            }
-
-                            throw new Error(errorMessage);
+                        // If there is a failure message in the result, show it
+                        if (result.status === false) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: result.message || 'An error occurred during the deletion.',
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            });
+                            return; // Exit if an error occurs during the deletion
                         }
 
-                        return result;
-                    })
-                    .then((result) => {
-                        fetchClient(); // Refresh the client list
+                        // Successfully deleted, now show success and refresh the data
+                        fetchClient();
                         Swal.fire(
-                            "Deleted!",
-                            "The candidate application has been deleted successfully.",
-                            "success"
+                            'Deleted!',
+                            'Your Candidate Application has been deleted.',
+                            'success'
                         );
                     })
-                    .catch((error) => {
-                        console.error("Fetch error:", error);
-                        Swal.fire({
-                            title: "Error",
-                            text: "An error occurred while deleting the application. Please try again.",
-                            icon: "error",
-                            confirmButtonText: "Ok",
-                        });
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'An unexpected error occurred while deleting.',
+                            'error'
+                        );
                     });
             }
         });
     };
+
 
 
 
@@ -344,31 +336,31 @@ const CandidateList = () => {
                                                 </div>
                                             </td>
                                             {isModalOpen && (
-                                               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                               <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3 h-[calc(100vh-20%)] max-h-[80vh] overflow-y-auto">
-                                                 <div className="flex justify-between items-center">
-                                                   <h2 className="text-lg font-bold">Services</h2>
-                                                   <button className="text-red-500 text-2xl" onClick={handleCloseModal}>
-                                                     &times;
-                                                   </button>
-                                                 </div>
-                                                 <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto">
-                                                   {modalServices.length > 0 ? (
-                                                     modalServices.map((service, idx) => (
-                                                       <span
-                                                         key={idx}
-                                                         className="md:px-4 py-2 bg-green-100 border border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
-                                                       >
-                                                         {service}
-                                                       </span>
-                                                     ))
-                                                   ) : (
-                                                     <span className="text-gray-500">No service available</span>
-                                                   )}
-                                                 </div>
-                                               </div>
-                                             </div>
-                                             
+                                                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                                                    <div className="bg-white rounded-lg shadow-lg md:p-4 p-2 w-11/12 md:w-1/3 h-[calc(100vh-20%)] max-h-[80vh] overflow-y-auto">
+                                                        <div className="flex justify-between items-center">
+                                                            <h2 className="text-lg font-bold">Services</h2>
+                                                            <button className="text-red-500 text-2xl" onClick={handleCloseModal}>
+                                                                &times;
+                                                            </button>
+                                                        </div>
+                                                        <div className="mt-4 flex flex-wrap gap-2 w-full m-auto h-auto">
+                                                            {modalServices.length > 0 ? (
+                                                                modalServices.map((service, idx) => (
+                                                                    <span
+                                                                        key={idx}
+                                                                        className="md:px-4 py-2 bg-green-100 border border-green-500 text-xs text-center p-2 rounded-lg md:text-sm"
+                                                                    >
+                                                                        {service}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-gray-500">No service available</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             )}
 
 

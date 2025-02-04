@@ -128,53 +128,54 @@ const HolidayManagement = () => {
                 };
     
                 fetch(`${API_URL}/holiday/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-                    .then(response => {
-                        return response.json();  // Parse the response as JSON
-                    })
+                    .then(response => response.json())
                     .then(result => {
-                        // Check for session expiration (invalid token)
+                        // Handle token renewal if provided
                         const newToken = result._token || result.token;
                         if (newToken) {
-                            localStorage.setItem("_token", newToken); // Save new token if available
+                            localStorage.setItem("_token", newToken);
                         }
     
+                        // Check for session expiration due to an invalid token
                         if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                            // Session expired, redirect to login
                             Swal.fire({
                                 title: "Session Expired",
                                 text: "Your session has expired. Please log in again.",
                                 icon: "warning",
                                 confirmButtonText: "Ok",
                             }).then(() => {
-                                window.location.href = "/admin-login"; // Redirect to login page
+                                window.location.href = "/admin-login";
                             });
-                            return; // Stop further execution
+                            return;
                         }
     
-                        if (!result.ok) {
-                            // Handle other errors
+                        // Check if deletion was successful
+                        if (result.status) {
+                            // Refresh data
+                            fetchData();
+    
+                            // Show success message with the response message
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: result.message || 'Holiday deleted successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'Ok'
+                            });
+                        } else {
+                            // If deletion failed, show error message
                             Swal.fire({
                                 title: 'Error!',
                                 text: result.message || 'An error occurred',
                                 icon: 'error',
                                 confirmButtonText: 'Ok'
                             });
-                            throw new Error(result.message || 'An error occurred');
                         }
-    
-                        // If everything goes well, refresh the data
-                        fetchData();
-                        Swal.fire(
-                            'Deleted!',
-                            'Your Holiday has been deleted.',
-                            'success'
-                        );
                     })
                     .catch(error => {
                         console.error('Fetch error:', error);
                         Swal.fire({
                             title: 'Error!',
-                            text: 'Failed to delete the holiday. Please try again.',
+                            text: 'Something went wrong. Please try again.',
                             icon: 'error',
                             confirmButtonText: 'Ok'
                         });
@@ -182,6 +183,8 @@ const HolidayManagement = () => {
             }
         });
     };
+    
+    
     
     
 

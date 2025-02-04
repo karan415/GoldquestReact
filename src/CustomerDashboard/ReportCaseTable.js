@@ -58,11 +58,13 @@ const ReportCaseTable = () => {
   const fetchData = useCallback(() => {
     const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
     const _token = localStorage.getItem("branch_token");
-    if (!branch_id) {
-      return;
+
+    if (!branch_id || !_token) {
+      return; // Exit if either branch_id or token is not available
     } else {
       setLoading(true);
     }
+
     const requestOptions = {
       method: "GET",
       redirect: "follow",
@@ -72,53 +74,51 @@ const ReportCaseTable = () => {
       `${API_URL}/branch/report-case-status/list?branch_id=${branch_id}&_token=${_token}`,
       requestOptions
     )
-      .then((response) => {
-        const result = response.json();
+      .then((response) => response.json()) // Use .json() and await the result
+      .then((result) => {
+        // Handle token refresh if a new token is provided in the response
         const newToken = result._token || result.token;
         if (newToken) {
-          localStorage.setItem("_token", newToken);
+          localStorage.setItem("branch_token", newToken); // Store the new token
         }
-        if (!response.ok) {
-          if (
-            response.message &&
-            response.message.toLowerCase().includes("invalid") &&
-            response.message.toLowerCase().includes("token")
-          ) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              // Redirect to admin login page
-              window.open(
-                `/customer-login?email=${encodeURIComponent(branchEmail)}`
-              );
-            });
-          }
-          return response.text().then((text) => {
-            const errorData = JSON.parse(text);
-            Swal.fire(
-              "Error!",
-              `An error occurred: ${errorData.message}`,
-              "error"
-            );
-            throw new Error(text);
+
+        // Check if the response indicates an invalid token (session expired)
+        if (
+          result.status === false &&
+          result.message?.status === false &&
+          result.message?.message?.toLowerCase().includes("invalid token")
+        ) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            // Redirect to the login page in the current tab
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
           });
+          return; // Stop further execution if session expired
         }
-        return result;
-      })
-      .then((result) => {
-        setLoading(false);
-        setData(result.customers || []);
+
+        // Handle other data (customers, etc.)
+        setData(result.customers || []); // Assuming 'customers' is in the response body
       })
       .catch((error) => {
         console.error("Fetch error:", error);
+
+        // Show a generic error alert
+        Swal.fire({
+          title: "Error!",
+          text: "An error occurred while fetching the data.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       })
       .finally(() => {
-        setLoading(false);
+        setLoading(false); // Always stop loading once the fetch is done
       });
   }, [setData]);
+
 
   const handleStatusChange = (event) => {
     setSelectedStatus(event.target.value);
@@ -198,15 +198,21 @@ const ReportCaseTable = () => {
       )
     ));
   };
-
   const fetchServicesData = async (applicationId, servicesList) => {
-    const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+    const branchData = localStorage.getItem("branch");
+    console.log("Branch data from localStorage:", branchData);
+    
+    const branchEmail = branchData ? JSON.parse(branchData)?.email : null;
+    const branch_id = JSON.parse(branchData)?.id;
     const _token = localStorage.getItem("branch_token");
+    console.log("Branch Email:", branchEmail, "Branch ID:", branch_id, "Token:", _token);
+  
     // Return an empty array if servicesList is empty or undefined
     if (!servicesList || servicesList.length === 0) {
+      console.log("Services list is empty or undefined. Returning empty array.");
       return [];
     }
-
+  
     try {
       const url = `${API_URL}/branch/report-case-status/services-annexure-data?service_ids=${encodeURIComponent(
         servicesList
@@ -215,47 +221,82 @@ const ReportCaseTable = () => {
       )}&branch_id=${encodeURIComponent(branch_id)}&_token=${encodeURIComponent(
         _token
       )}`;
-
+      console.log("Generated API URL:", url);
+  
       const response = await fetch(url, { method: "GET", redirect: "follow" });
-
+      console.log("API response received. Status:", response.status);
+  
       if (response.ok) {
         const result = await response.json();
-        if (
-          result.message &&
-          result.message.toLowerCase().includes("invalid") &&
-          result.message.toLowerCase().includes("token")
-        ) {
+        console.log("API result:", result);
+  
+        const newToken = result.token || result._token || "";
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
+          console.log("Updated token in localStorage:", newToken);
+        }
+  
+        // Check if the response contains an invalid token message
+        const message = result.message?.message?.toLowerCase() || '';
+        if (message.includes("invalid") || message.includes("expired") || message.includes("token")) {
+          console.log("Invalid or expired token detected. Redirecting to login...");
+  
           Swal.fire({
             title: "Session Expired",
             text: "Your session has expired. Please log in again.",
             icon: "warning",
             confirmButtonText: "Ok",
           }).then(() => {
-            // Redirect to admin login page
-            window.open(
-              `/customer-login?email=${encodeURIComponent(branchEmail)}`
-            );
+            console.log("Redirecting to login...");
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
           });
+          return; // Stop further execution if session expired
         }
-        // Update the token if a new one is provided
-        const newToken = result.token || result._token || "";
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
-
-        // Filter out null or invalid items
+  
+        // If no invalid token message, proceed with result filtering
         const filteredResults = result.results.filter((item) => item != null);
+        console.log("Filtered results:", filteredResults);
         return filteredResults;
       } else {
-        console.error("Failed to fetch service data:", response.statusText);
+        const result = await response.json(); // Get the result to show the error message from API
+        const errorMessage = result.message || response.statusText || 'Failed to fetch service data';
+        console.error("API error:", errorMessage);
+  
+        // Check if the error message contains 'invalid' or 'expired' and prompt the user to log in again
+        if (errorMessage.toLowerCase().includes("invalid") || errorMessage.toLowerCase().includes("expired")) {
+          Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+          }).then(() => {
+            console.log("Redirecting to login...");
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: errorMessage,
+          });
+        }
+  
         return [];
       }
     } catch (error) {
-      console.error("Error fetching service data:", error);
+      console.error("Error occurred:", error);
+  
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to fetch service data',
+      });
+  
       return [];
     }
   };
-
+  
+  
   useEffect(() => {
     fetchData();
   }, [clientId]);
@@ -270,47 +311,65 @@ const ReportCaseTable = () => {
 
     // Check if the row is already expanded
     if (expandedRow && expandedRow.index === globalIndex) {
-        setExpandedRow(null); // Collapse the row
-        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
-        return;
+      setExpandedRow(null); // Collapse the row
+      setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+      return;
     }
 
     // Fetch service data for the globalIndex
     try {
-        const applicationInfo = currentItems[index]; // Data for the current page
-        const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
-        const headingsAndStatuses = [];
+      const applicationInfo = currentItems[index]; // Data for the current page
+      const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
 
-        servicesData.forEach((service) => {
-            if (service.reportFormJson && service.reportFormJson.json) {
-                const heading = JSON.parse(service.reportFormJson.json).heading;
-                if (heading) {
-                    let status = service.annexureData?.status || "NIL";
-                    status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
-                    headingsAndStatuses.push({ heading, status });
-                }
-            }
+      const headingsAndStatuses = [];
+
+      servicesData.forEach((service) => {
+        if (service.reportFormJson && service.reportFormJson.json) {
+          const heading = JSON.parse(service.reportFormJson.json).heading;
+          if (heading) {
+            let status = service.annexureData?.status || "NIL";
+            status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || 'NIL';
+            headingsAndStatuses.push({ heading, status });
+          }
+        }
+      });
+
+      if (headingsAndStatuses.length > 0) {
+        setExpandedRow({
+          index: globalIndex, // Use the global index
+          headingsAndStatuses: headingsAndStatuses,
         });
+      } else {
+        setExpandedRow(null); // Collapse if no valid heading found
+      }
 
-        if (headingsAndStatuses.length > 0) {
-            setExpandedRow({
-                index: globalIndex, // Use the global index
-                headingsAndStatuses: headingsAndStatuses,
-            });
-        } else {
-            setExpandedRow(null); // Collapse if no valid heading found
-        }
+      setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
 
-        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
-
-        const expandedRowElement = document.getElementById(`expanded-row-${globalIndex}`);
-        if (expandedRowElement) {
-            expandedRowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+      const expandedRowElement = document.getElementById(`expanded-row-${globalIndex}`);
+      if (expandedRowElement) {
+        expandedRowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (error) {
-        setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+      setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+
+      // Check if the error is related to token expiration
+      if (error.message.toLowerCase().includes("invalid") && error.message.toLowerCase().includes("token")) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Your session has expired. Please log in again.",
+          icon: "warning",
+          confirmButtonText: "Ok",
+        }).then(() => {
+          // Redirect to the login page in the current tab
+          window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+        });
+      } else {
+        // Handle other errors here (e.g., network issues)
+        console.error("Error fetching service data:", error);
+      }
     }
-};
+  };
+
 
 
   const handleSelectChange = (e) => {

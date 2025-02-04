@@ -27,23 +27,19 @@ const ScopeOfServices = () => {
             setLoading(false);
             return;
         }
-
+    
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch.id}&branch_token=${branch_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-
-            const data = await response.json();
-
-            // Store new token if available
-            const newToken = data?._token || data?.token;
-            if (newToken) {
-                localStorage.setItem("branch_token", newToken);
-            }
-
+    
+            // Check if response is not ok (non-2xx status code)
             if (!response.ok) {
+                const data = await response.json();
+                
+                // Check for session expiration (invalid token)
                 if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
                     Swal.fire({
                         title: "Session Expired",
@@ -51,24 +47,32 @@ const ScopeOfServices = () => {
                         icon: "warning",
                         confirmButtonText: "Ok",
                     }).then(() => {
-                        // Redirect to admin login page
-                        window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
+                        // Redirect to customer login page in the current tab
+                        window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
                     });
+                    return; // Stop execution after redirect
                 }
+    
                 // Show error message from API response
                 const errorMessage = data?.message || 'Network response was not ok';
                 throw new Error(errorMessage);
             }
-
+    
+            // If response is OK, parse the response JSON
+            const data = await response.json();
+    
+            // Store new token if available
+            const newToken = data?._token || data?.token;
+            if (newToken) {
+                localStorage.setItem("branch_token", newToken);
+            }
+    
             if (data.customers) {
                 const customers = data.customers;
                 setCustomer(customers);
-                const newToken = data?._token || data?.token;
-                if (newToken) {
-                    localStorage.setItem("branch_token", newToken);
-                }
+    
                 const servicesData = data.customers.services;
-
+    
                 try {
                     const parsedServices = JSON.parse(servicesData);
                     setServices(parsedServices || []);
@@ -93,7 +97,7 @@ const ScopeOfServices = () => {
             setLoading(false);
         }
     }, [API_URL, customer_id, branch?.id, branch_token]);
-
+    
     useEffect(() => {
         fetchServicePackage();
     }, [fetchServicePackage]);

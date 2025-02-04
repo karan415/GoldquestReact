@@ -33,10 +33,10 @@ const ClientManagementList = () => {
 
   const handleEditBranch = async (e) => {
     e.preventDefault();
-
+  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
     // Validate required fields
     if (!editData.id || !editData.name || !editData.email) {
       Swal.fire(
@@ -46,7 +46,7 @@ const ClientManagementList = () => {
       );
       return;
     }
-
+  
     // Prepare the request payload
     const raw = JSON.stringify({
       id: editData.id,
@@ -55,68 +55,70 @@ const ClientManagementList = () => {
       admin_id,
       _token: storedToken,
     });
-
+  
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: raw,
     };
-
+  
     try {
       const response = await fetch(`${API_URL}/branch/update`, requestOptions);
       const result = await response.json();
       const newToken = result._token || result.token; // Update token if provided
+  
       if (newToken) {
         localStorage.setItem("_token", newToken);
       }
-     
+  
+      // Check for session expiration in the response
+      if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Your session has expired. Please log in again.",
+          icon: "warning",
+          confirmButtonText: "Ok",
+        }).then(() => {
+          window.location.href = "/admin-login"; // Redirect to admin login page
+        });
+        return; // Stop further processing after session expiration
+      }
+  
       if (!response.ok) {
         // Handle server errors gracefully
-        const errorData = await response.json();
-        if (errorData.message && errorData.message.toLowerCase().includes("invalid") && errorData.message.toLowerCase().includes("token")) {
-          Swal.fire({
-            title: "Session Expired",
-            text: "Your session has expired. Please log in again.",
-            icon: "warning",
-            confirmButtonText: "Ok",
-          }).then(() => {
-            // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
-          });
-        }
-        Swal.fire('Error!', `An error occurred: ${errorData.message || response.statusText}`, 'error');
+        Swal.fire('Error!', `An error occurred: ${result.message || response.statusText}`, 'error');
         return;
       }
-
+  
+      // Success case
       Swal.fire('Success!', 'Branch updated successfully.', 'success');
       toggleAccordion(); // Refresh UI or reload data
       setIsPopupOpen(false); // Close the popup
       closePopup();
-
+  
     } catch (error) {
       Swal.fire('Error!', 'There was a problem with the update operation.', 'error');
       console.error('Fetch error:', error);
     }
   };
-
+  
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
   const toggleAccordion = useCallback((id) => {
-
     const tdElement = document.getElementById('Branches');
     if (tdElement) {
       tdElement.focus();
     }
-
+  
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
     setIsOpen(null);
     setError(null);
-
+  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-
+  
     fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -127,9 +129,10 @@ const ClientManagementList = () => {
           if (newToken) {
             localStorage.setItem("_token", newToken);
           }
-          
+  
           if (!response.ok) {
-            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+            // If the response status isn't ok, check for session expiry or other errors
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
                 text: "Your session has expired. Please log in again.",
@@ -139,28 +142,35 @@ const ClientManagementList = () => {
                 // Redirect to admin login page
                 window.location.href = "/admin-login"; // Replace with your login route
               });
+              return; // Exit the function to prevent further execution
             }
+  
+            // Show a general error if no specific session issue is found
             Swal.fire({
               title: 'Error!',
-              text: `An error occurred: ${result.message}`,
+              text: `An error occurred: ${result.message || response.statusText}`,
               icon: 'error',
               confirmButtonText: 'Ok'
             });
             throw new Error('Network response was not ok');
           }
+  
+          // Only handle success when the response is ok
           return result;
         });
       })
       .then((data) => {
+        // Only set branches if the request was successful
         setBranches(data.branches || []);
       })
       .catch((error) => {
         console.error('Fetch error:', error);
-        setError('Failed to load data');
+        setError('Failed to load data'); // Set a more general error state if something goes wrong
       })
-      .finally(() => setBranchLoading(false));
+      .finally(() => setBranchLoading(false)); // Always stop loading
   }, [API_URL]);
-
+  
+  
   const closePopup = () => {
     setIsPopupOpen(false);
     setEditData({ id: null, name: '', email: '' });
@@ -278,17 +288,17 @@ const ClientManagementList = () => {
           console.error("Admin ID or token is missing.");
           return;
         }
-
+  
         const requestOptions = {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         };
-
+  
         let url;
         let successMessage;
-
+  
         if (type === 'client') {
           url = `${API_URL}/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`;
           successMessage = 'Your client has been deleted.';
@@ -299,53 +309,51 @@ const ClientManagementList = () => {
           console.error("Unknown delete type.");
           return;
         }
-
+  
         fetch(url, requestOptions)
-          .then(response => {
-            const result = response.json();
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
-           
-            if (!response.ok) {
-              if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                Swal.fire({
-                  title: "Session Expired",
-                  text: "Your session has expired. Please log in again.",
-                  icon: "warning",
-                  confirmButtonText: "Ok",
-                }).then(() => {
-                  // Redirect to admin login page
-                  window.location.href = "/admin-login"; // Replace with your login route
-                });
+          .then((response) => {
+            // Parse the response as JSON
+            return response.json().then((result) => {
+              const newToken = result._token || result.token;
+              if (newToken) {
+                localStorage.setItem("_token", newToken);
               }
-              return response.text().then(text => {
-                const errorData = JSON.parse(text);
-                Swal.fire(
-                  'Error!',
-                  `An error occurred: ${errorData.message}`,
-                  'error'
-                );
-                throw new Error(text);
-              });
-            }
-            return result;
+  
+              if (!response.ok) {
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                  Swal.fire({
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                  }).then(() => {
+                    window.location.href = "/admin-login"; // Replace with your login route
+                  });
+                } else {
+                  Swal.fire(
+                    'Error!',
+                    `An error occurred: ${result.message || 'Unknown error'}`,
+                    'error'
+                  );
+                }
+                throw new Error(result.message || 'Unknown error');
+              }
+  
+              fetchData();
+              Swal.fire(
+                'Deleted!',
+                successMessage,
+                'success'
+              );
+            });
           })
-          .then(result => {
-            fetchData();
-            Swal.fire(
-              'Deleted!',
-              successMessage,
-              'success'
-            );
-          })
-          .catch(error => {
+          .catch((error) => {
             console.error('Fetch error:', error);
           });
       }
     });
   };
+  
 
   const blockBranch = (id) => {
     Swal.fire({
@@ -359,25 +367,27 @@ const ClientManagementList = () => {
       if (result.isConfirmed) {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+  
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
           return;
         }
-
+  
         fetch(`https://api.goldquestglobal.in/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         })
-          .then((response) => {
-            const result = response.json();
+          .then((response) => response.json()) // Ensure response is in JSON format
+          .then((result) => {
             const newToken = result._token || result.token;
             if (newToken) {
               localStorage.setItem("_token", newToken);
             }
+  
+            // Handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
@@ -385,30 +395,32 @@ const ClientManagementList = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Redirect to admin login page
               });
+              throw new Error("Session Expired");
             }
-            if (!response.ok) {
-              return response.text().then((text) => {
-                const errorData = JSON.parse(text);
-                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                throw new Error(errorData.message);
-              });
+  
+            // Only show error message if there was a problem with the response
+            if (result.status !== true) {
+              Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
+              throw new Error(result.message || 'Unknown error');
             }
-            return result;
-          })
-          .then((result) => {
+  
+            // Success case: Show success message only if the operation was successful
             Swal.fire('Blocked!', 'Your Branch has been Blocked.', 'success');
-            toggleAccordion();
+            toggleAccordion(); // Optionally reload or refresh the UI after blocking
           })
           .catch((error) => {
             console.error('Fetch error:', error);
+            // Prevent further execution if the session expired or any other error occurs
+            if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Block the Branch: ${error.message}`, 'error');
           });
       }
     });
   };
+  
+  
 
   const unblockBranch = (id) => {
     Swal.fire({
@@ -422,25 +434,28 @@ const ClientManagementList = () => {
       if (result.isConfirmed) {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+  
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
           return;
         }
-
+  
         fetch(`https://api.goldquestglobal.in/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         })
-          .then((response) => {
-            const result = response.json();
+          .then((response) => response.json()) // Parse the response as JSON
+          .then((result) => {
+            // Handle token expiration and update the local token if needed
             const newToken = result._token || result.token;
             if (newToken) {
               localStorage.setItem("_token", newToken);
             }
+  
+            // Check for session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
@@ -448,41 +463,31 @@ const ClientManagementList = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Redirect to admin login page
               });
+              throw new Error("Session Expired");
             }
-            if (!response.ok) {
-              return response.text().then((text) => {
-                const errorData = JSON.parse(text);
-                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                throw new Error(errorData.message);
-              });
+  
+            // Only show error message if the response indicates failure
+            if (result.status !== true) {
+              Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
+              throw new Error(result.message || 'Unknown error');
             }
-            return result;
-          })
-          .then((result) => {
+  
+            // Success case: Show success message only if the operation was successful
             Swal.fire('Unblocked!', 'Your Branch has been Unblocked.', 'success');
-            toggleAccordion();
-            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-              Swal.fire({
-                title: "Session Expired",
-                text: "Your session has expired. Please log in again.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-              }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
-              });
-            }
+            toggleAccordion(); // Optionally reload or refresh the UI after unblocking
           })
           .catch((error) => {
             console.error('Fetch error:', error);
+            // Prevent further execution if the session expired or any other error occurs
+            if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Unblock the Branch: ${error.message}`, 'error');
           });
       }
     });
   };
+  
 
   const blockClient = (main_id) => {
     Swal.fire({
@@ -496,25 +501,28 @@ const ClientManagementList = () => {
       if (result.isConfirmed) {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+  
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
           return;
         }
-
+  
         fetch(`${API_URL}/customer/inactive?customer_id=${main_id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         })
-          .then((response) => {
-            const result = response.json();
+          .then((response) => response.json()) // Ensure we parse the response as JSON
+          .then((result) => {
+            // Handle token expiration and update the local token if needed
             const newToken = result._token || result.token;
             if (newToken) {
               localStorage.setItem("_token", newToken);
             }
+  
+            // Check for session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
@@ -522,41 +530,35 @@ const ClientManagementList = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
+                window.location.href = "/admin-login"; // Redirect to admin login page
               });
+              throw new Error("Session Expired");
             }
-            if (!response.ok) {
-              return response.text().then((text) => {
-                const errorData = JSON.parse(text);
-                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                throw new Error(errorData.message);
-              });
-            }
-            return result;
-          })
-          .then((result) => {
-            Swal.fire('Blocked!', 'Your Client has been Blocked.', 'success');
-            fetchData();
-            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-              Swal.fire({
-                title: "Session Expired",
-                text: "Your session has expired. Please log in again.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-              }).then(() => {
-                // Redirect to admin login page
-                window.location.href = "/admin-login"; // Replace with your login route
-              });
+  
+            // Check for success status
+            if (result.status === true) {
+              Swal.fire('Blocked!', 'Your Client has been Blocked.', 'success');
+              fetchData();  // Fetch updated data after the block operation
+            } else {
+              // Handle error based on response message
+              Swal.fire('Error!', result.message || 'Unknown error', 'error');
+              throw new Error(result.message || 'Unknown error');
             }
           })
           .catch((error) => {
             console.error('Fetch error:', error);
+            // Prevent further execution if the session expired or any other error occurs
+            if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Block the Client: ${error.message}`, 'error');
           });
       }
     });
   };
+  
+  
+  
+  
+  
 
   const handleEditForm = (item) => {
     // Change the tab to 'edit'

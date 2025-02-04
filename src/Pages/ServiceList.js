@@ -116,65 +116,70 @@ const ServiceList = () => {
       if (result.isConfirmed) {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-
+  
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           return;
         }
-
+  
         const requestOptions = {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         };
-
+  
+        // Make the DELETE request
         fetch(`${API_URL}/service/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-          .then(response => {
-            const result = response.json();
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
-            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+          .then((response) => response.json()) // Parse the response as JSON
+          .then((result) => {
+            Swal.fire(
+              'Deleted!',
+              'Your service has been deleted successfully.',
+              'success'
+            );
+  
+            // Handle token expiration (if the message contains "invalid token")
+            if (result.message && result.message.toLowerCase().includes("invalid token")) {
               Swal.fire({
                 title: "Session Expired",
                 text: "Your session has expired. Please log in again.",
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                // Redirect to admin login page
+                // Redirect to the admin login page
                 window.location.href = "/admin-login"; // Replace with your login route
               });
+              return; // Stop further execution if session has expired
             }
-            if (!response.ok) {
-              return response.text().then(text => {
+  
+            // If not OK or there's an error, handle it
+            if (!result.ok) {
+              return result.text().then(text => {
                 const errorData = JSON.parse(text);
                 Swal.fire(
                   'Error!',
                   `An error occurred: ${errorData.message}`,
                   'error'
                 );
-                throw new Error(text);
+                throw new Error(errorData.message); // Handle the error
               });
             }
-            return result;
-          })
-          .then(result => {
-
+  
+            // If the deletion is successful, show success message
+            
+            // Refresh the data
             fetchData();
-            Swal.fire(
-              'Deleted!',
-              'Your service has been deleted.',
-              'success'
-            );
           })
-          .catch(error => {
+          .catch((error) => {
             console.error('Fetch error:', error);
+            
           });
       }
     });
   };
+  
+  
 
   return (
     <div className='overflow-auto'>

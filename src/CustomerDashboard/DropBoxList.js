@@ -133,61 +133,61 @@ const DropBoxList = () => {
             if (result.isConfirmed) {
                 const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
                 const _token = localStorage.getItem("branch_token");
-
+    
                 if (!branch_id || !_token) {
                     console.error("Branch ID or token is missing.");
                     return;
                 }
-
+    
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 };
-
+    
                 fetch(`${API_URL}/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`, requestOptions)
-                    .then(response => {
-                        const result = response.json();
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("branch_token", newToken);
-                        }
-                        if (!response.ok) {
-
-                            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
-                                Swal.fire({
-                                    title: "Session Expired",
-                                    text: "Your session has expired. Please log in again.",
-                                    icon: "warning",
-                                    confirmButtonText: "Ok",
-                                }).then(() => {
-                                    window.open(`/customer-login?email=${encodeURIComponent(branchEmail)}`);
-                                });
-                            }
-                            return response.text().then(text => {
-                                const errorData = JSON.parse(text);
-                                Swal.fire(
-                                    'Error!',
-                                    `An error occurred: ${errorData.message}`,
-                                    'error'
-                                );
-                                throw new Error(text);
-                            });
-                        }
-                        return result;
-                    })
+                    .then(response => response.json()) // Parse the JSON response
                     .then(result => {
+                        // Check if the result contains a message about invalid token (session expired)
+                        if (
+                            result.message &&
+                            result.message.toLowerCase().includes("invalid") &&
+                            result.message.toLowerCase().includes("token")
+                        ) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+                            });
+                            return; // Exit after showing the session expired message
+                        }
+    
+                        // Handle token update if provided in the response
                         const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
-
-                        // Refresh the client drop data after deletion
+    
+                        // If there is a failure message in the result, show it
+                        if (result.status === false) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: result.message || 'An error occurred during the deletion.',
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            });
+                            return; // Exit if an error occurs during the deletion
+                        }
+    
+                        // Successfully deleted, now show success and refresh the data
                         fetchClientDrop();
                         Swal.fire(
                             'Deleted!',
-                            'Your service has been deleted.',
+                            'Your Client Application has been deleted.',
                             'success'
                         );
                     })
@@ -202,6 +202,8 @@ const DropBoxList = () => {
             }
         });
     };
+    
+    
 
 
     return (

@@ -117,8 +117,6 @@ const TatDelay = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                // Redirect to login page after session expired message
-                localStorage.clear(); // Clear localStorage
                 window.location.href = "/admin-login"; // Redirect to login page
               });
               throw new Error("Session expired"); // Stop further processing

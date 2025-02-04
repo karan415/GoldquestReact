@@ -2,42 +2,98 @@ import React from 'react'
 import Swal from 'sweetalert2';
 const Callback = () => {
     const runCallback = () => {
-        const branchData = JSON.parse(localStorage.getItem("branch"));
-        const branch_id = branchData?.id;
+        // Fetch branch data from localStorage and check if it's valid
+        const branchData = localStorage.getItem("branch");
+    
+        // Check if branch data exists and can be parsed correctly
+        if (!branchData) {
+            console.log("Error: Branch data is missing or corrupted.");
+            Swal.fire({
+                title: 'Error',
+                text: 'Branch data is missing. Please log in again.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+    
+        // Parse branch data and handle errors
+        let parsedBranchData;
+        try {
+            parsedBranchData = JSON.parse(branchData);
+        } catch (e) {
+            console.log("Error: Unable to parse branch data from localStorage", e);
+            Swal.fire({
+                title: 'Error',
+                text: 'There was an issue with your session data. Please log in again.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+    
+        const branch_id = parsedBranchData?.id;
         const branch_token = localStorage.getItem("branch_token");
+    
+        // Log branchData and token for debugging purposes
+        console.log("Branch Data:", parsedBranchData);
+        console.log("Branch ID:", branch_id);
+        console.log("Branch Token:", branch_token);
+    
+        // Ensure the required data is available before making the request
+        if (!branch_id || !branch_token) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Branch ID or Token is missing. Please log in again.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+    
+        // Prepare the headers and body for the request
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-
+    
         const raw = JSON.stringify({
             "branch_id": branch_id,
             "_token": branch_token,
         });
-
+    
         const requestOptions = {
             method: "POST",
             headers: myHeaders,
             body: raw,
             redirect: "follow"
         };
-
-        // Show loading Swal
+    
+        // Show loading Swal while processing
         Swal.fire({
             title: "Processing...",
             text: "Please wait while we process your request.",
             icon: "info",
             showConfirmButton: false,
             didOpen: () => {
-                Swal.showLoading();
+                Swal.showLoading(); // Display loading spinner
             }
         });
-
+    
+        // Start fetch request
+        console.log("Sending request to API...");
+    
         fetch("https://api.goldquestglobal.in/branch/callback-request", requestOptions)
             .then((response) => {
+                // Log the raw response for debugging
+                console.log("Raw API Response:", response);
+    
+                // If the response is not okay, process the error
                 if (!response.ok) {
+                    console.log("Response is not OK, handling error...");
                     return response.json().then((result) => {
                         const errorMessage = result.message || 'An unexpected error occurred.';
-
-                        // Check if the token has expired
+                        console.log("Error Response:", result); // Log error response
+    
+                        // Check for invalid token in the error message
                         if (
                             errorMessage.toLowerCase().includes("invalid") &&
                             errorMessage.toLowerCase().includes("token")
@@ -48,14 +104,10 @@ const Callback = () => {
                                 icon: "warning",
                                 confirmButtonText: "Ok",
                             }).then(() => {
-                                const branchEmail = branchData?.email || ""; // Extract branch email
-                                window.open(
-                                    `/customer-login?email=${encodeURIComponent(branchEmail)}`,
-                                    "_self" // Open in the same tab
-                                );
+                                window.location.href = `/customer-login?email=${encodeURIComponent(parsedBranchData?.email)}`;
                             });
                         } else {
-                            // Display error message from API
+                            // Display a generic error message from API
                             Swal.fire({
                                 title: 'Error',
                                 text: result.message || 'An unexpected error occurred. Please try again.',
@@ -63,20 +115,30 @@ const Callback = () => {
                                 confirmButtonText: 'OK',
                             });
                         }
-                        throw new Error(errorMessage); // Stop further processing in case of error
+                        throw new Error(errorMessage); // Stop further processing
                     });
                 }
-                return response.json(); // Return the successful response
-            }) // Assuming the response is in JSON format
+    
+                // Log the response if OK
+                console.log("API Response OK:", response);
+    
+                // Convert the response to JSON
+                return response.json();
+            })
             .then((result) => {
-                Swal.close();
-
-                // Check if the response contains a new token
+                // Log the parsed result
+                console.log("Parsed Result:", result);
+    
+                Swal.close(); // Close loading spinner
+    
+                // Check if the response contains a new token and store it
                 const newToken = result._token || result.token;
                 if (newToken) {
+                    console.log("New Token:", newToken);
                     localStorage.setItem("branch_token", newToken);
                 }
-
+    
+                // Show success message
                 Swal.fire({
                     title: "Success",
                     text: result.message || "Callback request was successful.",
@@ -85,18 +147,30 @@ const Callback = () => {
                 });
             })
             .catch((error) => {
-                console.error(error);
-                // Hide the loading Swal in case of an error
+                // Log any errors caught
+                console.error("Error caught in fetch:", error);
+    
+                // Close loading Swal and handle error
                 Swal.close();
-
-
+    
+                // Display a generic error message
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while processing your request. Please try again later.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             });
     };
+    
+
+
+
 
     return (
         <>
-                <button className='p-3 bg-white rounded-md text-green-green-500 ' onClick={runCallback}>Request Callback</button>
-            
+            <button className='p-3 bg-white rounded-md text-green-green-500 ' onClick={runCallback}>Request Callback</button>
+
         </>
     )
 }

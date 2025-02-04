@@ -32,64 +32,112 @@ const AdminChekin = () => {
     const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem('_token');
 
-    // Fetch data from the main API
+
     const fetchData = useCallback(() => {
         if (!branch_id || !adminId || !token) {
-            return;
+            console.log("Essential data is missing. Branch ID, Admin ID, or Token is required.");
+            return; // Prevent fetch if essential data is missing
+        } else {
+            setLoading(true); // Show loading indicator
         }
-        else {
-            setLoading(true);
-        }
+
         const requestOptions = {
             method: "GET",
-            redirect: "follow"
+            redirect: "follow",
         };
 
-        fetch(`${API_URL}/client-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
-            .then(response => {
-                return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+        const url = `${API_URL}/client-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`;
+        console.log(`Making request to: ${url}`); // Log the URL for debugging
+
+        fetch(url, requestOptions)
+            .then((response) => {
+                console.log("Response received:", response); // Log the response
+                if (!response.ok) {
+                    // Handle non-OK response (e.g., 500, 400 status)
+                    return response.json().then(result => {
+                        console.error("Error response result:", result); // Log the error details
+
+                        // Check if the error message contains "Invalid token"
+                        if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                            console.log("Invalid token detected. Redirecting to login...");
+
+                            // Show a session expired message
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to login page after the alert
+                                console.log("Redirecting to login page...");
+                                window.location.href = "/admin-login"; // Redirect to login page
+                            });
+
+                            return; // Stop further processing if token is invalid
+                        }
+
+                        // For other errors, show a general error message
                         Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
+                            title: "Error",
+                            text: result.message || "An unknown error occurred.",
+                            icon: "error",
                             confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
                         });
-                    }
-                    if (!response.ok) {
-                        // Show SweetAlert if response is not OK
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message || 'Failed to load data',
-                        });
-                        throw new Error(result.message || 'Failed to load data');
-                    }
-                    return result;
-                });
-            }).then((result) => {
-                setLoading(false);
-                setData(result.data.customers || []);
-                setOptions(result.data.filterOptions);
+
+                        throw new Error(result.message || "An unknown error occurred"); // Throw an error to stop further processing
+                    });
+                }
+                return response.json(); // Parse response if OK
+            })
+            .then((result) => {
+                console.log("Response data:", result); // Log the API response data
+
+                // Handle potential new token in the response and update localStorage
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    console.log("New token received:", newToken); // Log the new token (optional)
+                    localStorage.setItem("_token", newToken); // Update token in localStorage
+                }
+
+                // Set data to state only if result is valid
+                setData(result.data?.customers || []); // Set customers data
+                setOptions(result.data?.filterOptions || []); // Set filter options
+
             })
             .catch((error) => {
-            }).finally(() => {
-                setLoading(false);
+                console.error("Error fetching data:", error); // Log error in case of failure
+            })
+            .finally(() => {
+                setLoading(false); // Stop loading after fetch is done
+                console.log("Fetch completed, stopping loading..."); // Log when fetch is done
             });
 
-    }, [branch_id, adminId, token, setData]);
+    }, [branch_id, adminId, token, setData, setOptions]);
+
+
 
     const fetchAdminList = useCallback(() => {
-        setLoading(true);
+        console.log("Fetching admin list...");
+
+        setLoading(true); // Start loading before fetching data
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem('_token');
+
+        if (!adminId || !token) {
+            // If there's no adminId or token, stop execution and alert
+            console.log("No valid session found. Redirecting to login...");
+            Swal.fire({
+                title: "Session Expired",
+                text: "No valid session found. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+            }).then(() => {
+                console.log("Redirecting to login page...");
+                window.location.href = "/admin-login"; // Force redirect to login page
+            });
+            setLoading(false); // Stop loading
+            return;
+        }
 
         const requestOptions = {
             method: "GET",
@@ -99,48 +147,63 @@ const AdminChekin = () => {
             redirect: "follow"
         };
 
+        console.log(`Making request to: ${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`);
 
         fetch(`${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
-                return response.json().then(result => {
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                    }
-                    if (!response.ok) {
-                        // Show SweetAlert if response is not OK
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: result.message || 'Failed to load data',
-                        });
-                        throw new Error(result.message || 'Failed to load data');
-                    }
-                    return result;
-                });
-            }).then((result) => {
-                const newToken = result.token || result._token || '';
+                console.log("Response received:", response);
+                if (!response.ok) {
+                    return response.json().then(result => {
+                        console.log("Error result:", result);
+                        throw new Error(result.message || 'Failed to load data'); // Throw error if response is not OK
+                    });
+                }
+                return response.json(); // Parse the response JSON if the status is OK
+            })
+            .then((result) => {
+                console.log("Response JSON:", result);
+
+                // Check for invalid or expired token in the response message
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    console.log("Invalid token detected. Showing session expired alert...");
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        console.log("Redirecting to login page...");
+                        setTimeout(() => {
+                            window.location.href = "/admin-login"; // Force redirect after a short delay to ensure Swal completes
+                        }, 500); // Delay to allow Swal to process
+                    });
+                    throw new Error("Session expired"); // Stop further processing if token is invalid
+                }
+
+                // If a new token is received, update it in localStorage
+                const newToken = result._token || result.token;
                 if (newToken) {
+                    console.log("New token received:", newToken);
                     localStorage.setItem("_token", newToken);
                 }
+
+                // Process the list of customers and extract `tat_days`
                 const tat_days = result.customers.map(spoc => spoc.tat_days);
-                setAdminTAT(tat_days);  // Store the tat_days in state
+                console.log("TAT days extracted:", tat_days);
+
+                setAdminTAT(tat_days); // Store the `tat_days` in state
             })
-            .catch((error) => console.error(error)).finally(() => {
-                setLoading(false);
+            .catch((error) => {
+                console.error("Error fetching data:", error);
+
+            })
+            .finally(() => {
+                console.log("Fetch completed, stopping loading...");
+                setLoading(false); // Stop loading once the fetch is complete
             });
-    }, []);
+
+    }, []); // Empty dependency array to run on mount
+
     const goBack = () => {
         handleTabChange('client_master');
     }
@@ -269,34 +332,52 @@ const AdminChekin = () => {
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
+                const message = result.message?.message?.toLowerCase() || '';
+                if (message.includes("invalid") || message.includes("expired") || message.includes("token")) {
+                    console.log("Invalid or expired token detected. Redirecting to login...");
 
-                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                     Swal.fire({
                         title: "Session Expired",
                         text: "Your session has expired. Please log in again.",
                         icon: "warning",
                         confirmButtonText: "Ok",
                     }).then(() => {
-                        // Redirect to admin login page
-                        window.location.href = "/admin-login"; // Replace with your login route
+                        window.location.href = "/admin-login";
                     });
+                    return; // Stop further execution if session expired
                 }
+
+                // If no invalid token message, proceed with result filtering
                 const filteredResults = result.results.filter((item) => item != null);
+                console.log("Filtered results:", filteredResults);
                 return filteredResults;
             } else {
                 const result = await response.json(); // Get the result to show the error message from API
                 const errorMessage = result.message || response.statusText || 'Failed to fetch service data';
-                console.error(errorMessage);
+                console.error("API error:", errorMessage);
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMessage,
-                });
+                // Check if the error message contains 'invalid' or 'expired' and prompt the user to log in again
+                if (errorMessage.toLowerCase().includes("invalid") || errorMessage.toLowerCase().includes("expired")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        window.location.href = "/admin-login";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                    });
+                }
 
                 return [];
             }
         } catch (error) {
+            console.error("Error occurred:", error);
 
             Swal.fire({
                 icon: 'error',
@@ -553,7 +634,7 @@ const AdminChekin = () => {
         // Set the border color
         doc.setDrawColor("#3e76a5");
 
-       
+
         // Draw table border
         doc.setLineWidth(0.5);
         doc.rect(tableStartX, tableStartY, totalTableWidth, tableHeight);
@@ -949,7 +1030,7 @@ const AdminChekin = () => {
             yPosition += 20;
         }
 
-       
+
         addFooter(doc);
         doc.addPage();
 

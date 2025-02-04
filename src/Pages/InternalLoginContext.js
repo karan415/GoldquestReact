@@ -89,7 +89,8 @@ export const LoginProvider = ({ children }) => {
             console.log("API Response:", response.data);
     
             // Check for invalid or expired token in the response
-            if (response.data.status === false && response.data.message.toLowerCase().includes("invalid token")) {
+            if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) 
+                {
                 Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
@@ -103,7 +104,7 @@ export const LoginProvider = ({ children }) => {
             }
     
             // Update token if a new one is received in the response
-            const newToken = response.data._token || response.data.token;
+            const newToken = response.data?._token || response.data?.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken); // Replace the old token with the new one
             }
@@ -128,7 +129,6 @@ export const LoginProvider = ({ children }) => {
             setLoading(false); // Stop the loading spinner
         }
     };
-    
     
 
 

@@ -93,19 +93,33 @@ const PackageForm = ({ onSuccess }) => {
     const handlePackageFormSubmit = (e) => {
         e.preventDefault();
         setIsLoading(true); // Start loading
-
+    
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
-
+    
+        if (!token) {
+            // Handle the case where the token is missing
+            Swal.fire({
+                title: "Session Expired",
+                text: "Your session has expired. Please log in again.",
+                icon: "warning",
+                confirmButtonText: "Ok",
+            }).then(() => {
+                window.location.href = "/admin-login"; // Redirect to login if no token
+            });
+            return; // Exit early if no token
+        }
+    
         if (adminData) setAdminId(adminData.id);
-        if (token) setStoredToken(token);
-
+        setStoredToken(token);
+    
         const validationErrors = validateInputs();
         if (Object.keys(validationErrors).length === 0) {
-            setError({});
+            setError({}); // Clear previous errors
+    
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-
+    
             const raw = JSON.stringify({
                 id: selectedPackage?.id || "",
                 title: packageInput.name,
@@ -113,64 +127,54 @@ const PackageForm = ({ onSuccess }) => {
                 admin_id: adminId,
                 _token: token,
             });
-
+    
             const requestOptions = {
                 method: isEditMode ? "PUT" : "POST",
                 headers: myHeaders,
                 body: raw,
             };
-
+    
             const url = isEditMode
                 ? `${API_URL}/package/update`
                 : `${API_URL}/package/create`;
-
+    
             fetch(url, requestOptions)
-                .then(async (response) => {
-                    const result = await response.json();
-
-                    // Save new token if available
-                    const newToken = result._token || result.token;
-                    if (newToken) {
-                        localStorage.setItem("_token", newToken);
-                    }
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                    }
-
-                    // Handle API error response
+                .then((response) => {
                     if (!response.ok) {
-                        const errorMessage = result.message || "An error occurred";
-                        Swal.fire({
-                            title: "Error!",
-                            text: errorMessage,
-                            icon: "error",
-                            confirmButtonText: "Ok",
+                        return response.json().then((errorData) => {
+                            // Handle invalid token case
+                            if (errorData.message && errorData.message.toLowerCase().includes("invalid token")) {
+                                Swal.fire({
+                                    title: "Session Expired",
+                                    text: "Your session has expired. Please log in again.",
+                                    icon: "warning",
+                                    confirmButtonText: "Ok",
+                                }).then(() => {
+                                    window.location.href = "/admin-login"; // Redirect to login if session expired
+                                });
+                            } else {
+                                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                            }
+                            throw new Error(errorData.message); // Propagate the error
                         });
-                        throw new Error(errorMessage);
                     }
-
-                    // Return result if successful
-                    return result;
+                    return response.json(); // Parse the response if it's OK
                 })
                 .then((result) => {
+                    // Handle the result if the response is valid
+                    if (result.status === false) {
+                        Swal.fire('Error!', result.message, 'error');
+                        return; // Exit early if status is false
+                    }
+    
                     // Display success message
                     Swal.fire({
                         title: "Success!",
-                        text: isEditMode
-                            ? "Package Edited Successfully"
-                            : "Package Added Successfully",
+                        text: isEditMode ? "Package Edited Successfully" : "Package Added Successfully",
                         icon: "success",
                         confirmButtonText: "Ok",
                     });
-
+    
                     // Update the package list
                     setError({});
                     if (isEditMode) {
@@ -181,16 +185,13 @@ const PackageForm = ({ onSuccess }) => {
                     } else {
                         updatePackageList([...packageList, result]);
                     }
-
+    
                     // Reset form fields
-                    setPackageInput({
-                        name: "",
-                        message: "",
-                    });
+                    setPackageInput({ name: "", message: "" });
                     fetchData();
                     setIsEditMode(false);
-
-                    // Additional callbacks
+    
+                    // Callbacks
                     if (typeof clearSelectedPackage === "function") {
                         clearSelectedPackage();
                     }
@@ -200,12 +201,7 @@ const PackageForm = ({ onSuccess }) => {
                 })
                 .catch((error) => {
                     console.error("API Error:", error.message);
-                    Swal.fire({
-                        title: "Error!",
-                        text: error.message || "Failed to process the request",
-                        icon: "error",
-                        confirmButtonText: "Ok",
-                    });
+                   
                 })
                 .finally(() => {
                     setIsLoading(false); // Stop loading after submission
@@ -216,6 +212,8 @@ const PackageForm = ({ onSuccess }) => {
             setIsLoading(false); // Stop loading if there are validation errors
         }
     };
+    
+    
 
     const resetForm = () => {
         setPackageInput({

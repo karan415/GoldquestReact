@@ -390,26 +390,26 @@ const DeletionCertification = () => {
             Swal.showLoading();
           },
         });
-  
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-  
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.close();
           return;
         }
-  
+
         const requestOptions = {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
           }
         };
-  
+
         let url;
         let successMessage;
-  
+
         if (type === 'client') {
           url = `${API_URL}/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`;
           successMessage = 'Your client has been deleted.';
@@ -417,71 +417,58 @@ const DeletionCertification = () => {
           Swal.close();
           return;
         }
-  
         fetch(url, requestOptions)
-          .then(response => {
-            return response.json().then(result => {
+          .then((response) => {
+            // Parse the response as JSON
+            return response.json().then((result) => {
+              const newToken = result._token || result.token;
+              if (newToken) {
+                localStorage.setItem("_token", newToken);
+              }
+
               if (!response.ok) {
-                if (
-                  result.message &&
-                  result.message.toLowerCase().includes("invalid") &&
-                  result.message.toLowerCase().includes("token")
-                ) {
-                  // Token expired or invalid, redirect to login
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                   Swal.fire({
                     title: "Session Expired",
                     text: "Your session has expired. Please log in again.",
                     icon: "warning",
                     confirmButtonText: "Ok",
                   }).then(() => {
-                    window.location.href = "/admin-login"; // Redirect to login page
+                    window.location.href = "/admin-login"; // Replace with your login route
                   });
-                  return; // Stop further execution
                 } else {
-                  // Handle other errors
                   Swal.fire(
                     'Error!',
-                    `An error occurred: ${result.message}`,
+                    `An error occurred: ${result.message || 'Unknown error'}`,
                     'error'
                   );
                 }
-                throw new Error(result.message);
+                throw new Error(result.message || 'Unknown error');
               }
-              return result;
+              const setBranchData = result.data.branches;
+              generatePDF(setBranchData);
+
+              fetchData();
+
+              fetchData();
+              Swal.fire(
+                'Deleted!',
+                successMessage,
+                'success'
+              );
             });
           })
-          .then(result => {
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem("_token", newToken);
-            }
-  
-            Swal.fire(
-              'Deleted!',
-              successMessage,
-              'success'
-            );
-  
-            const setBranchData = result.data.branches;
-            generatePDF(setBranchData);
-  
-            fetchData();
-          })
-          .catch(error => {
+          .catch((error) => {
             console.error('Fetch error:', error);
-            Swal.fire(
-              'Error!',
-              'An unexpected error occurred.',
-              'error'
-            );
           })
           .finally(() => {
             loadingSwal.close(); // Close the loading spinner once the process is finished
           });
+
       }
     });
   };
-  
+
 
 
 

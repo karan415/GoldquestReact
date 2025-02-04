@@ -16,14 +16,15 @@ const Admin = ({ children }) => {
     const checkAuthentication = async () => {
       const storedAdminData = localStorage.getItem("admin");
       const storedToken = localStorage.getItem("_token");
-  
+
       // If no admin or token data in localStorage, clear session and redirect to login
       if (!storedAdminData || !storedToken) {
-        localStorage.clear();
+        localStorage.removeItem("admin");
+        localStorage.removeItem("_token");
         redirectToLogin("No active session found. Please log in again.");
         return;
       }
-  
+
       let adminData;
       try {
         adminData = JSON.parse(storedAdminData);
@@ -37,25 +38,25 @@ const Admin = ({ children }) => {
         }).then(() => redirectToLogin());
         return;
       }
-  
+
       try {
         // Send the verification request to the server
         const response = await axios.post(`${API_URL}/admin/verify-admin-login`, {
           admin_id: adminData.id,
           _token: storedToken,
         });
-  
+
         const responseData = response.data;
-  
+
         // If status is true, authentication is successful
         if (responseData.status) {
           setLoading(false);
         } else {
           const errorMessage = responseData.message || "An unknown error occurred";
-  
-       
-  
-            if (errorMessage && errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
+
+
+
+          if (errorMessage && errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
 
             // Custom session expired message and redirection to login
             Swal.fire({
@@ -68,7 +69,7 @@ const Admin = ({ children }) => {
             });
             return; // Stop further execution after handling session expiration
           }
-  
+
           // Handle other login verification errors
           Swal.fire({
             title: "Login Verification Failed",
@@ -88,17 +89,17 @@ const Admin = ({ children }) => {
         }).then(() => redirectToLogin(error.response?.data?.message || "Error validating login."));
       }
     };
-  
+
     // Redirect to login page and clear session data
     const redirectToLogin = (errorMessage = "Please log in again.") => {
-      localStorage.clear();
-      navigate("/admin-login", { state: { from: location, errorMessage }, replace: true });
+      localStorage.removeItem("admin");
+      localStorage.removeItem("_token"); navigate("/admin-login", { state: { from: location, errorMessage }, replace: true });
     };
-  
+
     checkAuthentication();
   }, [navigate, setLoading, location]);
-  
-  
+
+
 
   if (loading) {
     return (

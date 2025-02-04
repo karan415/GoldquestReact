@@ -23,12 +23,23 @@ export const ServiceProvider = ({ children }) => {
             setLoading(true);
             setError(null);
     
-            const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+            const adminData = JSON.parse(localStorage.getItem("admin"));
             const storedToken = localStorage.getItem("_token");
     
+            // Check if admin ID and token are available before proceeding
+            if (!adminData?.id || !storedToken) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Admin ID or token is missing.',
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                });
+                return;
+            }
+    
             const queryParams = new URLSearchParams({
-                admin_id: admin_id || '',
-                _token: storedToken || '',
+                admin_id: adminData.id,
+                _token: storedToken,
             }).toString();
     
             const res = await fetch(`${API_URL}/service/list?${queryParams}`, {
@@ -40,9 +51,23 @@ export const ServiceProvider = ({ children }) => {
     
             const result = await res.json();
     
-            // Check if response is OK
+            // Check if response is OK and if result status is truthy
             if (!res.ok || !result.status) {
                 const errorMessage = result.message || 'An error occurred';
+                if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                    // Handle invalid token
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        window.location.href = "/admin-login"; // Redirect to login page
+                    });
+                    return; // Exit early after redirect
+                }
+    
+                // For other error messages
                 Swal.fire({
                     title: 'Error!',
                     text: errorMessage,
@@ -53,57 +78,27 @@ export const ServiceProvider = ({ children }) => {
                 return;
             }
     
-            // Check for invalid token and handle session expiration
-            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                Swal.fire({
-                    title: "Session Expired",
-                    text: "Your session has expired. Please log in again.",
-                    icon: "warning",
-                    confirmButtonText: "Ok",
-                }).then(() => {
-                    // Redirect to admin login page
-                    localStorage.clear(); // Clear localStorage to log the user out
-                    window.location.href = "/admin-login"; // Replace with your login route
-                });
-                return; // Exit early after redirect
-            }
-    
             // Handle new token (if available)
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem('_token', newToken);
             }
     
-            // Process and set data
-            const processedData = (result.services || []).map((item, index) => ({
+            // Process and set data (simplified mapping function)
+            const processedData = result.services?.map((item, index) => ({
                 ...item,
                 index: index + 1,
-                title: item.title,
-                group: item.group,
-                description: item.description,
-                sac_code: item.sac_code,
-                short_code: item.short_code,
-                id: item.id,
-            }));
+            })) || [];
     
             setData(processedData);
         } catch (error) {
-            // Show an alert for network or unexpected errors
-            Swal.fire({
-                title: 'Error!',
-                text: error.message || 'Failed to load data',
-                icon: 'error',
-                confirmButtonText: 'Ok',
-            });
             console.error('Fetch error:', error);
-            setError('Failed to load data');
-        } finally {
+                  } finally {
             setLoading(false);
         }
     }, []);
     
     
-
 
     return (
         <ServiceContext.Provider value={{ selectedService,setSelectedService, editService, ServiceList, updateServiceList, fetchData, loading, setData, data, error, setError }}>

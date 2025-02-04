@@ -110,62 +110,61 @@ const PackageManagementList = () => {
             if (result.isConfirmed) {
                 const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
                 const storedToken = localStorage.getItem("_token");
-
+    
                 if (!admin_id || !storedToken) {
                     console.error("Admin ID or token is missing.");
                     Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
                     return;
                 }
-
+    
                 const requestOptions = {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 };
-
+    
                 fetch(`${API_URL}/package/delete?id=${packageId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => {
-                        const result = response.json();
-                        const newToken = result._token || result.token;
-                        if (newToken) {
-                            localStorage.setItem("_token", newToken);
-                        }
-                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                            Swal.fire({
-                                title: "Session Expired",
-                                text: "Your session has expired. Please log in again.",
-                                icon: "warning",
-                                confirmButtonText: "Ok",
-                            }).then(() => {
-                                // Redirect to admin login page
-                                window.location.href = "/admin-login"; // Replace with your login route
-                            });
-                        }
                         if (!response.ok) {
-                            return response.text().then((text) => {
-                                const errorData = JSON.parse(text);
-                                Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
-                                throw new Error(errorData.message);
+                            return response.json().then((errorData) => {
+                                // Handle the API error message for invalid token
+                                if (errorData.message && errorData.message.toLowerCase().includes("invalid token")) {
+                                    Swal.fire({
+                                        title: "Session Expired",
+                                        text: "Your session has expired. Please log in again.",
+                                        icon: "warning",
+                                        confirmButtonText: "Ok",
+                                    }).then(() => {
+                                        window.location.href = "/admin-login"; // Redirect to login if session expired
+                                    });
+                                } else {
+                                    Swal.fire('Error!', `An error occurred: ${errorData.message}`, 'error');
+                                }
+                                throw new Error(errorData.message); // Propagate the error
                             });
                         }
-                        return result;
+                        return response.json(); // Parse the response if it's OK
                     })
                     .then((result) => {
-
+                        // Handle successful deletion
+                        if (result.status === false) {
+                            Swal.fire('Error!', result.message, 'error');
+                            return; // Exit early if status is false
+                        }
+    
                         setError(null); // Reset error state
                         // Refresh data after deletion
                         Swal.fire('Deleted!', 'Your package has been deleted.', 'success');
-                        fetchData();
+                        fetchData(); // Fetch the latest data
                     })
                     .catch((error) => {
                         console.error('Fetch error:', error);
-                        Swal.fire('Error!', `Could not delete the package: ${error.message}`, 'error');
-                        setError('Failed to delete package.');
                     });
             }
         });
     };
+    
 
 
     return (

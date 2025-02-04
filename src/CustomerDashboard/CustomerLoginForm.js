@@ -51,6 +51,8 @@ const CustomerLoginForm = () => {
     
         if (!adminData || !storedToken) {
             console.error('Missing admin data or token');
+            window.location.href = "/admin-login"; // Replace with your actual login route
+
             return;
         }
     
@@ -65,17 +67,37 @@ const CustomerLoginForm = () => {
     
             const result = await response.json();
     
-            if (!response.ok) {
-                const errorMessage = result?.message || "An unexpected error occurred.";
+            // Check for session expiration or invalid token in the response
+            if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
-                    title: "Error!",
-                    text: `Failed to fetch password: ${errorMessage}`,
-                    icon: "error",
-                    confirmButtonText: "OK",
+                    title: "Session Expired",
+                    text: "Your session has expired. Please log in again.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                }).then(() => {
+                    // Redirect to admin login page
+                    window.location.href = "/admin-login"; // Replace with your actual login route
                 });
-                throw new Error(errorMessage);
+                return; // Exit further processing after showing session expired message
             }
     
+            // Handle new token if present in the response
+            const newToken = result._token || result.token;
+            if (newToken) {
+                localStorage.setItem("_token", newToken); // Update token
+            }
+    
+            // Handle errors if the response is not okay (non-200 status)
+            if (!response.ok) {
+                Swal.fire(
+                    'Error!',
+                    `An error occurred: ${result.message || 'Unknown error'}`,
+                    'error'
+                );
+                throw new Error(result.message || 'Unknown error');
+            }
+    
+            // Proceed if password is found in the result
             if (result?.password) {
                 setInput((prev) => ({
                     ...prev,
@@ -89,6 +111,7 @@ const CustomerLoginForm = () => {
                     confirmButtonText: "OK",
                 });
             }
+            
         } catch (error) {
             console.error('Error fetching password:', error);
             Swal.fire({
@@ -101,6 +124,7 @@ const CustomerLoginForm = () => {
             setLoadingPassword(false);
         }
     };
+    
 
     useEffect(() => {
         if (input.email) {

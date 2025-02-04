@@ -182,121 +182,117 @@ const InternalLoginForm = () => {
         return errors;
     };
 
-
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+      
         // Perform validation
         let validateError = {};
         if (!editAdmin) {
-            validateError = Validate(); // Only perform validation if not editing
+          validateError = Validate(); // Only perform validation if not editing
         }
-
+      
         // Check if there are any validation errors
         if (Object.keys(validateError).length === 0) {
-            setError({}); // Reset errors
-
-            const requestformData = {
-                admin_id: admin_id,
-                _token: storedToken,
-                ...formData,
-                send_mail: 1,
-                ...(editAdmin && { id: formData.id, status: formData.status }) // Add ID and status if editing
-            };
-
-            // Show processing alert while making the request
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Please wait while we create the admin.',
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            try {
-                const response = await axios({
-                    method: editAdmin ? 'PUT' : 'POST', // Dynamically set HTTP method based on editAdmin
-                    url: editAdmin
-                        ? 'https://api.goldquestglobal.in/admin/update'
-                        : 'https://api.goldquestglobal.in/admin/create',
-                    data: requestformData, // Pass request data
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                // Handle the response
-                const result = response.data;
-
-                // Handle token refresh
-                const newToken = result._token || result.token;
-                if (newToken) {
-                    localStorage.setItem('branch_token', newToken);
-                }
-
-                // Check for invalid token response
-                if (
-                    result.message &&
-                    result.message.toLowerCase().includes('invalid') &&
-                    result.message.toLowerCase().includes('token')
-                ) {
-                    Swal.fire({
-                        title: 'Session Expired',
-                        text: 'Your session has expired. Please log in again.',
-                        icon: 'warning',
-                        confirmButtonText: 'Ok',
-                    }).then(() => {
-                        // Redirect to admin login page
-                        window.location.href = '/admin-login'; // Replace with your login route
-                    });
-                } else if (result.status) {
-                    // Success
-                    Swal.fire({
-                        title: 'Success!',
-                        text: result.message || 'Admin created successfully.',
-                        icon: 'success',
-                        confirmButtonText: 'Ok',
-                    });
-
-                    // Reset form data
-                    setFormData({
-                        employee_id: '',
-                        name: '',
-                        mobile: '',
-                        email: '',
-                        password: '',
-                        role: '',
-                        id: '',
-                        status: '',
-                        service_groups: [],
-                    });
-
-                    fetchData(); // Call to fetch data after success
-                } else {
-                    // Failure
-                    Swal.fire({
-                        title: 'Error!',
-                        text: result.message || 'Failed to create admin.',
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    });
-                }
-            } catch (error) {
-                // Handle API or network errors
-                Swal.fire({
-                    title: 'Error!',
-                    text: `Error: ${error.response?.data?.message || error.message}`,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                });
+          setError({}); // Reset errors
+      
+          const requestformData = {
+            admin_id: admin_id,
+            _token: storedToken,
+            ...formData,
+            send_mail: 1,
+            ...(editAdmin && { id: formData.id, status: formData.status }) // Add ID and status if editing
+          };
+      
+          // Show processing alert while making the request
+          Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we create the admin.',
+            didOpen: () => {
+              Swal.showLoading();
             }
+          });
+      
+          try {
+            // Use fetch to make the request
+            const response = await fetch(editAdmin
+              ? 'https://api.goldquestglobal.in/admin/update'
+              : 'https://api.goldquestglobal.in/admin/create', {
+              method: editAdmin ? 'PUT' : 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestformData),
+            });
+      
+            const result = await response.json(); // Parse the response as JSON
+      
+            // Check if the API response contains 'Invalid token' message
+            if (result.message && result.message.toLowerCase().includes("invalid token")) {
+              // Show the session expired message
+              Swal.fire({
+                title: 'Session Expired',
+                text: 'Your session has expired. Please log in again.',
+                icon: 'warning',
+                confirmButtonText: 'Ok',
+              }).then(() => {
+                // Redirect to admin login page
+                window.location.href = '/admin-login'; // Replace with your login route
+              });
+              return; // Stop further code execution if token is invalid
+            }
+      
+            // Handle token refresh if the response contains a new token
+            const newToken = result._token || result.token;
+            if (newToken) {
+              localStorage.setItem('branch_token', newToken);
+            }
+      
+            // Check if the result status is successful
+            if (result.status) {
+              // Success
+              Swal.fire({
+                title: 'Success!',
+                text: result.message || 'Admin created successfully.',
+                icon: 'success',
+                confirmButtonText: 'Ok',
+              });
+      
+              // Reset form data
+              setFormData({
+                employee_id: '',
+                name: '',
+                mobile: '',
+                email: '',
+                password: '',
+                role: '',
+                id: '',
+                status: '',
+                service_groups: [],
+              });
+      
+              fetchData(); // Call to fetch data after success
+            } else {
+              // Failure
+              Swal.fire({
+                title: 'Error!',
+                text: result.message || 'Failed to create admin.',
+                icon: 'error',
+                confirmButtonText: 'Ok',
+              });
+            }
+          } catch (error) {
+            
+          }
         } else {
-            // Show validation errors if any
-            setError(validateError);
+          // Show validation errors if any
+          setError(validateError);
         }
-    };
+      };
+      
+    
+    
+    
+    
     const emptyForm = () => {
         setEditAdmin(false)
         setFormData({

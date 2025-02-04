@@ -88,12 +88,7 @@ const CandidateExcelTrackerStatus = () => {
             .catch((error) => {
                 console.error('Fetch error:', error);
                 // Optionally, show a generic error message
-                Swal.fire({
-                    title: 'Error',
-                    text: 'An error occurred while fetching data. Please try again later.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+              
             })
             .finally(() => {
                 setLoading(false); // Always stop loading when the request is complete
@@ -250,7 +245,37 @@ const CandidateExcelTrackerStatus = () => {
         };
     
         fetch(url, requestOptions)
-            .then((response) => response.json()) // Assuming the response is JSON
+          .then((response) => response.json().then(result => {
+                 // Handle token expiration check
+                 const newToken = result._token || result.token;
+                 if (newToken) {
+                   localStorage.setItem("_token", newToken); // Update token in localStorage
+                 }
+         
+                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                   Swal.fire({
+                     title: "Session Expired",
+                     text: "Your session has expired. Please log in again.",
+                     icon: "warning",
+                     confirmButtonText: "Ok",
+                   }).then(() => {
+                     window.location.href = "/admin-login"; // Redirect to login page on token expiration
+                   });
+                   return; // Stop further processing if token expired
+                 }
+         
+                 if (!response.ok) {
+                   Swal.fire({
+                     title: 'Error!',
+                     text: `An error occurred: ${result.message}`,
+                     icon: 'error',
+                     confirmButtonText: 'Ok'
+                   });
+                   throw new Error('Network response was not ok');
+                 }
+         
+                 return result; // Return the successful result if no errors
+               })) // Assuming the response is JSON
             .then((result) => {
                 // Check for invalid token
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
@@ -287,11 +312,7 @@ const CandidateExcelTrackerStatus = () => {
             .catch((error) => {
                 // Handle errors that occur during the fetch
                 console.error(error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Something went wrong. Please try again later.',
-                });
+               
             })
     };
     

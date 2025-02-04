@@ -174,15 +174,15 @@ const DemoBgForm = () => {
                         let fileErrors = [];
                         const mapping = serviceDataImageInputNames.find(entry => entry[fileName]);
                         const createdFileName = mapping ? mapping[fileName] : undefined;
-                        
+
                         // Check if createdFileName is valid and the structure exists in 'files'
                         const filesToCheck = createdFileName && files[createdFileName] ? files[createdFileName][fileName] : undefined;
-                        
+
                         // Log files and createdFileName for debugging
                         console.log('createdFileName:', createdFileName);
                         console.log('files structure:', files);
                         console.log('filesToCheck:', filesToCheck);
-                        
+
 
                         // If files exist for the input, perform file validation
                         if (filesToCheck && filesToCheck.length > 0) {
@@ -207,7 +207,7 @@ const DemoBgForm = () => {
 
                     // Validate files for all required file inputs
                     const fileInputKeys = row.inputs.filter(input => input.type === 'file').map(input => input.name);
-                    console.log('fileInputKeys',fileInputKeys)
+                    console.log('fileInputKeys', fileInputKeys)
 
                     fileInputKeys.forEach((fileField) => {
                         const fileErrors = validateFile(fileField);
@@ -546,7 +546,7 @@ const DemoBgForm = () => {
                     // Application exists and is valid
                     setServiceIds(result.data?.application?.services || '');
                     setStatus(result.data?.application?.is_custom_bgv || '');
-                    setCompanyName(result.data?.application?.company_name || '');
+                    setCompanyName(result.data?.application?.branch_name || '');
 
 
                 } else {
@@ -701,40 +701,41 @@ const DemoBgForm = () => {
 
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (custombgv, e) => {
         e.preventDefault(); // Prevent default form submission behavior
 
-        // Get file count and calculate progress
+        // Get file count and calculate progress if custombgv is 1
         const fileCount = Object.keys(files).length;
         const TotalApiCalls = fileCount + 1; // Include the API call for the form data
         const dataToSubmitting = 100 / TotalApiCalls;
 
-        // Validation
+        // Validation only if custombgv is 1
         let newErrors = {};
-        const validationError = validate2();
-        Object.keys(validationError).forEach((key) => {
-            if (validationError[key]) {
-                newErrors[key] = validationError[key];
-            }
-        });
+        if (custombgv === 1) {
+            const validationError = validate2();
+            Object.keys(validationError).forEach((key) => {
+                if (validationError[key]) {
+                    newErrors[key] = validationError[key];
+                }
+            });
 
-        // If there are errors, show them and focus on the first error field
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            const errorField = Object.keys(newErrors)[0];
-            if (refs.current[errorField]) {
-                refs.current[errorField].focus();
+            // If there are errors, show them and focus on the first error field
+            if (Object.keys(newErrors).length > 0) {
+                setErrors(newErrors);
+                const errorField = Object.keys(newErrors)[0];
+                if (refs.current[errorField]) {
+                    refs.current[errorField].focus();
+                }
+                return;
+            } else {
+                setErrors({});
             }
-            return;
-        } else {
-            setErrors({});
+
+            // Start loading indicator and open progress modal
+            setLoading(true);
+            setShowModal(true);
+            setProgress(0); // Reset progress before starting
         }
-
-
-        // Start loading indicator and open progress modal
-        setLoading(true);
-        setShowModal(true);
-        setProgress(0); // Reset progress before starting
 
         // Prepare request data
         const requestData = {
@@ -742,9 +743,10 @@ const DemoBgForm = () => {
             customer_id: decodedValues.customer_id,
             application_id: decodedValues.app_id,
             ...formData,
-            is_submitted:0,
+            is_submitted: 0,
             annexure: annexureData,
             send_mail: fileCount === 0 ? 1 : 0, // Send mail if no files are uploaded
+            is_custom_bgv: custombgv, // Use the passed value for is_custom_bgv
         };
 
         const myHeaders = new Headers();
@@ -770,81 +772,115 @@ const DemoBgForm = () => {
             }
 
             const result = await response.json();
-            // Update progress for form submission
-            setProgress(dataToSubmitting);
 
-            // Success handling based on file count
-            if (fileCount === 0) {
-                Swal.fire({
-                    title: "Success",
-                    text: `CEF Application Created Successfully.`,
-                    icon: "success",
-                    confirmButtonText: "Ok",
-                }).then(() => {
+            if (custombgv === 1) {
+                setProgress(dataToSubmitting); // Update progress
+            }
 
-                    fetchApplicationStatus();
-                });
-            } else {
-                // Handle file upload if files exist
-                await uploadCustomerLogo(result.cef_id, fileCount, TotalApiCalls); // Upload files
-                setProgress(100); // Set progress to 100% after file upload
-                Swal.fire({
-                    title: "Success",
-                    text: `CEF Application Created Successfully and files uploaded.`,
-                    icon: "success",
-                    confirmButtonText: "Ok",
-                }).then(() => {
+            // Handle the response based on custombgv
+            if (custombgv === 0) {
+                // If custombgv is 0, show success or error messages only without progress or function calls
+                if (fileCount === 0) {
+                    Swal.fire({
+                        title: "Success",
+                        text: "Your Form is saved successfully. You can proceed to your next step!",
+                        icon: "success",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        fetchApplicationStatus(); // Call fetch status only for custombgv 0
+                    });
+                } else {
+                    // Handle file upload logic for custombgv 0, but without progress
+                    await uploadCustomerLogo(result.cef_id, fileCount, TotalApiCalls, custombgv); // Upload files
+                    Swal.fire({
+                        title: "Success",
+                        text: "Your Form is saved successfully. You can proceed to your next step!",
+                        icon: "success",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        fetchApplicationStatus(); // Call fetch status after success
+                    });
+                }
+            }
 
-                    fetchApplicationStatus();
+            if (custombgv === 1) {
+                // If custombgv is 1, show detailed success message and proceed with progress and file uploads
+                if (fileCount === 0) {
+                    Swal.fire({
+                        title: "Success",
+                        text: "CEF Application Created Successfully.",
+                        icon: "success",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        fetchApplicationStatus(); // Call fetch status after submission
+                    });
+                } else {
+                    // Handle file upload if files exist for custombgv 1
+                    await uploadCustomerLogo(result.cef_id, fileCount, TotalApiCalls, custombgv); // Upload files
+                    setProgress(100); // Set progress to 100% after file upload
+                    Swal.fire({
+                        title: "Success",
+                        text: "CEF Application Created Successfully and files uploaded.",
+                        icon: "success",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        fetchApplicationStatus(); // Call fetch status after successful file upload
+                    });
+                }
+
+                setFormData({
+                    personal_information: {
+                        full_name: '',
+                        former_name: '',
+                        mb_no: '',
+                        father_name: '',
+                        husband_name: '',
+                        dob: '',
+                        gender: '',
+                        full_address: '',
+                        pin_code: '',
+                        declaration_date: '',
+                        current_address: '',
+                        current_address_landline_number: '',
+                        current_address_state: '',
+                        current_prominent_landmark: '',
+                        current_address_stay_to: '',
+                        nearest_police_station: '',
+                        nationality: '',
+                        marital_status: '',
+                        name_declaration: '',
+                        blood_group: '',
+                        pan_card_name: '',
+                        aadhar_card_name: '',
+                        aadhar_card_number: '',
+                        emergency_details_name: '',
+                        emergency_details_relation: '',
+                        emergency_details_contact_number: '',
+                        icc_bank_acc: '',
+                        food_coupon: "",
+                        ssn_number: "",
+                    },
                 });
             }
-            setFormData({
-                personal_information: {
-                    full_name: '',
-                    former_name: '',
-                    mb_no: '',
-                    father_name: '',
-                    husband_name: '',
-                    dob: '',
-                    gender: '',
-                    full_address: '',
-                    pin_code: '',
-                    declaration_date: '',
-                    current_address: '',
-                    current_address_landline_number: '',
-                    current_address_state: '',
-                    current_prominent_landmark: '',
-                    current_address_stay_to: '',
-                    nearest_police_station: '',
-                    nationality: '',
-                    marital_status: '',
-                    name_declaration: '',
-                    blood_group: '',
-                    pan_card_name: '',
-                    aadhar_card_name: '',
-                    aadhar_card_number: '',
-                    emergency_details_name: '',
-                    emergency_details_relation: '',
-                    emergency_details_contact_number: '',
-                    icc_bank_acc: '',
-                    food_coupon: "",
-                    ssn_number: "",
-
-                },
-            });
 
         } catch (error) {
             console.error("Error:", error);
             Swal.fire("Error!", error.message, "error");
         } finally {
-            setLoading(false); // Stop loading indicator
-            setShowModal(false); // Close modal after processing
+            // Stop loading indicator and close modal after processing
+            setLoading(false);
+            setShowModal(false);
         }
     };
 
 
-    const uploadCustomerLogo = async (cef_id, fileCount) => {
-        setLoading(true); // Set loading to true when starting the upload
+
+
+    const uploadCustomerLogo = async (cef_id, fileCount, custombgv) => {
+        if (custombgv == 1) {
+            setLoading(false); // Stop loading after completion
+            return; // Exit the function early for custombgv == 0
+        } // Set loading to true when starting the upload
 
         let progressIncrement = 100 / fileCount; // Calculate progress increment per file
 
@@ -900,11 +936,6 @@ const DemoBgForm = () => {
     };
 
 
-    // Handles Save Button (can include further save logic)
-    const handleSave = () => {
-        handleSubmit();
-    };
-
     const isFormFilled = formData[`tab${activeTab + 1}`] !== "";
 
     return (
@@ -942,7 +973,7 @@ const DemoBgForm = () => {
                                         </div>
                                     </div>
 
-                                  
+
                                 </div>
                             </div>
                         )}
@@ -951,7 +982,7 @@ const DemoBgForm = () => {
                 ) : (
                     <div className='py-5'>
 
-                        <div className="w-10/12 mx-auto p-6" >
+                        <div className="md:w-10/12 mx-auto p-6" >
                             {status === 1 && (
                                 <div className='flex justify-center my-3'>
                                     <img src={LogoBgv} className='md:w-[12%] w-[50%] m-auto' alt="Logo" />
@@ -960,53 +991,66 @@ const DemoBgForm = () => {
 
                             <h4 className="text-Black md:text-3xl text-center text-xl md:mb-6 mb-3 font-bold mt-3">Background Verification Form</h4>
                             <div className="md:mb-6 mb-2 py-4 rounded-md">
-                                <h5 className="text-lg font-bold">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
+                                <h5 className="text-lg font-bold text-center md:text-start">Company name: <span className="text-lg font-normal">{companyName}</span></h5>
                             </div>
-                            <div className="mb-6 flex p-6 overflow-x-auto border rounded-md items-center flex-nowrap relative space-x-4">
-                                <div className="text-center flex items-center">
+                            <div className="mb-6 flex p-2 filter-menu overflow-x-auto border rounded-md items-center flex-nowrap relative space-x-4">
+                                {/* Personal Information Tab */}
+                                <div className="text-center flex items-end">
                                     <button
-                                        onClick={() => handleTabClick(0)}
-                                        className={`px-4 py-2 rounded-t-md whitespace-nowrap text-sm font-semibold flex items-center ${activeTab === 0 ? "text-green-500" : "text-gray-700"}`}
+                                        onClick={() => handleTabClick(0)} // Navigate to tab 0 (Personal Information)
+                                        className={`px-0 py-2 pb-0 flex flex-wrap justify-center rounded-t-md whitespace-nowrap text-sm font-semibold items-center ${activeTab === 0 ? "text-green-500" : "text-gray-700"}`}
                                     >
-                                        <FaUser className="mr-2" />
+                                        <FaUser
+                                            className={`mr-2 text-center w-12 h-12 flex justify-center mb-3 border p-3 rounded-full ${activeTab === 0 ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"}`}
+                                        />
                                         Personal Information
                                     </button>
-                                    <hr className="border-2 w-20" />
+                                    <hr className="border-[1px] w-20" />
                                 </div>
 
+                                {/* Service Tabs */}
+                                {serviceData.filter(service => service).map((service, index) => {
+                                    // Check if the current tab is filled (this is a flag to check if the tab is filled)
+                                    const isTabFilled = formData[`tab${index + 1}`]; // Check if the tab is filled based on formData (you may adjust this depending on your logic)
 
-                                {
-                                    serviceData.filter(service => service).map((service, index) => (
-                                        <div key={index} className="text-center flex items-center">
+                                    // Allow navigation to this tab if it's filled, or if it's the previous tab
+                                    const isTabEnabled = (activeTab > index) || (isTabFilled && activeTab === index);
+
+                                    return (
+                                        <div key={index} className="text-center flex items-end">
                                             <button
-                                                disabled={activeTab <= index} // Disable current tab and tabs after the active tab
-                                                className={`px-4 py-2 rounded-t-md whitespace-nowrap text-sm font-semibold flex items-center ${activeTab === index + 1 ? "text-green-500" : "text-gray-700"}`}
-                                                onClick={() => handleTabClick(index + 1)} // Pass index as parameter to switch tabs
+                                                disabled={!isTabEnabled} // Disable tab if not filled or if it's not the current tab
+                                                className={`px-0 py-2 pb-0 flex flex-wrap justify-center rounded-t-md whitespace-nowrap text-sm font-semibold items-center 
+                    ${activeTab === index + 1 ? "text-green-500" : (isTabEnabled ? "text-gray-700" : "text-gray-400")}`}
+                                                onClick={() => handleTabClick(index + 1)} // Switch to this tab if clicked
                                             >
-                                                <FaCog className="mr-2" />
+                                                <FaCog
+                                                    className={`mr-2 text-center w-12 h-12 flex justify-center mb-3 border p-3 rounded-full 
+                        ${activeTab === index + 1 ? "bg-green-500 text-white" : (isTabEnabled ? "bg-gray-300 text-gray-700" : "bg-gray-100 text-gray-400")}`}
+                                                />
                                                 {service.heading}
                                             </button>
-                                            <hr className="border-2 w-20" />
+                                            <hr className="border-[1px] w-20" />
                                         </div>
-                                    ))
-                                }
+                                    );
+                                })}
 
-                                <hr className="border-2 w-40" />
-
+                                {/* Declaration and Authorization Tab */}
                                 <div className="text-center">
                                     <button
                                         onClick={() => handleTabClick(serviceData.length + 1)} // Set tab to the last one (declaration)
-                                        className={`px-4 py-2 rounded-t-md whitespace-nowrap text-sm font-semibold flex items-center ${activeTab === serviceData.length + 1 ? "text-green-500" : "text-gray-700"}`}
-                                        disabled={!formData[`tab${serviceData.length}`]} // Disable tab if the last form is not filled
+                                        className={`px-0 py-2 pb-0 flex flex-wrap justify-center rounded-t-md whitespace-nowrap text-sm font-semibold items-center ${activeTab === serviceData.length + 1 ? "text-green-500" : "text-gray-700"}`}
+                                        disabled={!formData[`tab${serviceData.length}`]} // Disable the tab if the last form is not filled
                                     >
-                                        <FaCheckCircle className="mr-2" />
+                                        <FaCheckCircle
+                                            className={`mr-2 text-center w-12 h-12 flex justify-center mb-3 border p-3 rounded-full ${activeTab === serviceData.length + 1 ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"}`}
+                                        />
                                         Declaration and Authorization
                                     </button>
                                 </div>
                             </div>
 
 
-                            {/* Tab Content */}
                             <div className="border p-4 rounded-md shadow-md" >
                                 {activeTab === 0 && (
                                     <div>
@@ -1929,15 +1973,21 @@ const DemoBgForm = () => {
                             </div>
 
                             {/* Buttons */}
-                            <div className="flex space-x-4 mt-6" >
+                            <div className="flex space-x-4 mt-6">
                                 <button
-                                    onClick={handleSave}
+                                    onClick={(e) => handleSubmit(0, e)} // Pass 0 when Save is clicked
                                     className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
                                 >
                                     Save
                                 </button>
-                                < button
-                                    onClick={activeTab === serviceData.length + 1 ? handleSubmit : handleNext} // If on tab 2, call handleSubmit; otherwise, call handleNext
+                                <button
+                                    onClick={(e) => {
+                                        if (activeTab === serviceData.length + 1) {
+                                            handleSubmit(1, e); // Pass 1 when Submit is clicked (on the last tab)
+                                        } else {
+                                            handleNext(); // Otherwise, move to the next tab
+                                        }
+                                    }}
                                     className={`px-6 py-2 rounded-md ${isFormFilled
                                         ? "text-white bg-blue-500 hover:bg-blue-600"
                                         : "text-gray-500 bg-blue-400 cursor-not-allowed"
@@ -1947,6 +1997,7 @@ const DemoBgForm = () => {
                                     {activeTab === serviceData.length + 1 ? 'Submit' : 'Next'} {/* Change button text based on the active tab */}
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 )
