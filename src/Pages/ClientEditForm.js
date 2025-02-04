@@ -34,7 +34,7 @@ export const ClientEditForm = () => {
     };
 
 
-
+console.log('clientData',clientData)
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
@@ -345,7 +345,7 @@ export const ClientEditForm = () => {
                                         name="agreement_date"
                                         id="agreement_date"
                                         className="border w-full rounded-md p-2 mt-2 outline-none"
-                                        value={clientData.agreement_date ? clientData.agreement_date.split('T')[0] : ''} // Format the date to yyyy-MM-dd
+                                        value={clientData.agreement_date ? new Date(clientData.agreement_date).toISOString().split('T')[0] : ''}
                                         onChange={handleClientChange}
                                         ref={(el) => (refs.current["agreement_date"] = el)}
                                     />

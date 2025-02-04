@@ -151,127 +151,135 @@ export const ClientEditProvider = ({ children }) => {
     };
 
     const handleClientSubmit = async (e) => {
-        e.preventDefault();
-        const fileCount = Object.keys(files).length;
-      
-        let newErrors = {};
-      
-        const validationError = validate();
-      
-        // Collect all validation errors
-        Object.keys(validationError).forEach((key) => {
+      e.preventDefault();
+      const fileCount = Object.keys(files).length;
+  
+      let newErrors = {};
+  
+      const validationError = validate();
+  
+      // Collect all validation errors
+      Object.keys(validationError).forEach((key) => {
           if (validationError[key]) {
-            newErrors[key] = validationError[key];
+              newErrors[key] = validationError[key];
           }
-        });
-      
-        // If there are validation errors, focus on the first error field and return
-        if (Object.keys(newErrors).length > 0) {
+      });
+  
+      // If there are validation errors, focus on the first error field and return
+      if (Object.keys(newErrors).length > 0) {
           setErrors(newErrors);
-      
+  
           const errorField = Object.keys(newErrors)[0];
           if (refs.current[errorField]) {
-            refs.current[errorField].focus();
+              refs.current[errorField].focus();
           }
-      
+  
           setLoading(false);
           return;
-        } else {
+      } else {
           setErrors({});
-        }
-      
-        const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-        const storedToken = localStorage.getItem("_token");
-      
-        if (!admin_id || !storedToken) {
+      }
+  
+      const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+      const storedToken = localStorage.getItem("_token");
+  
+      if (!admin_id || !storedToken) {
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
           setLoading(false);
           return;
-        }
-      
-        setLoading(true);
-      
-        // Validate clientData fields
-        if (!clientData.name || !clientData.client_unique_id) {
+      }
+  
+      setLoading(true);
+  
+      // Validate clientData fields
+      if (!clientData.name || !clientData.client_unique_id) {
           Swal.fire('Error!', 'Missing required fields: Name or Client Unique ID', 'error');
           setLoading(false);
           return;
-        }
-      
-        const raw = JSON.stringify({
+      }
+  
+      // Convert agreement_date to locale date string if it exists
+      if (clientData.agreement_date) {
+          const date = new Date(clientData.agreement_date);
+          clientData.agreement_date = date.toLocaleDateString('en-CA'); // 'en-CA' ensures 'YYYY-MM-DD' format
+      }
+  
+      const raw = JSON.stringify({
           ...clientData,
           admin_id,
           custom_bgv: custom_bgv || clientData.is_custom_bgv,
           _token: storedToken,
-        });
-      
-        const requestOptions = {
+      });
+  
+      const requestOptions = {
           method: "PUT",
           headers: { 'Content-Type': 'application/json' },
           body: raw,
           redirect: "follow"
-        };
-      
-        try {
+      };
+  
+      try {
           const response = await fetch(`${API_URL}/customer/update`, requestOptions);
           const contentType = response.headers.get("content-type");
-      
+  
           const data = contentType && contentType.includes("application/json") ? await response.json() : {};
           const newToken = data._token || data.token;
-      
+  
           if (newToken) {
-            localStorage.setItem("_token", newToken);
+              localStorage.setItem("_token", newToken);
           }
-      
+  
           // Check for session expiry in response
           if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              window.location.href = "/admin-login"; // Redirect to admin login page
-            });
-            return;
+              Swal.fire({
+                  title: "Session Expired",
+                  text: "Your session has expired. Please log in again.",
+                  icon: "warning",
+                  confirmButtonText: "Ok",
+              }).then(() => {
+                  window.location.href = "/admin-login"; // Redirect to admin login page
+              });
+              return;
           }
-      
+  
           if (!response.ok) {
-            const errorMessage = data.message || 'An error occurred'; // Show API message if present
-            Swal.fire('Error!', errorMessage, 'error');
-            return;
+              const errorMessage = data.message || 'An error occurred'; // Show API message if present
+              Swal.fire('Error!', errorMessage, 'error');
+              return;
           }
-      
+  
           const customerInsertId = clientData.customer_id;
-      
+  
           // Show the success message from API (if available)
           const successMessage = data.message || 'Client Updated Successfully.'; // API response message if any
-      
+  
           if (fileCount === 0) {
-            Swal.fire({
-              title: "Success",
-              text: successMessage,
-              icon: "success",
-              confirmButtonText: "Ok",
-            });
+              Swal.fire({
+                  title: "Success",
+                  text: successMessage,
+                  icon: "success",
+                  confirmButtonText: "Ok",
+              });
+              
           } else {
-            // Proceed to upload files if files exist
-            await uploadCustomerLogo(admin_id, storedToken, customerInsertId);
-            Swal.fire({
-              title: "Success",
-              text: successMessage,
-              icon: "success",
-              confirmButtonText: "Ok",
-            });
+              // Proceed to upload files if files exist
+              await uploadCustomerLogo(admin_id, storedToken, customerInsertId);
+              Swal.fire({
+                  title: "Success",
+                  text: successMessage,
+                  icon: "success",
+                  confirmButtonText: "Ok",
+              });
           }
-      
-        } catch (error) {
+  
+      } catch (error) {
           Swal.fire('Error!', 'There was a problem with the fetch operation.', 'error');
           console.error('Fetch error:', error);
-        } finally {
+      } finally {
           setLoading(false);
-        }
-      };
+      }
+  };
+  
       
 
 

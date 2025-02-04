@@ -458,3 +458,19 @@ input,select{
 .filter-menu::-webkit-scrollbar-thumb:hover {
   background: #22c55e;
 }
+@media(min-width:992px) and (max-width:1600px){
+  div#menuitem ul li {
+    font-size: 12px;
+    padding: 7px;
+}
+div#menuitem ul li {
+    font-size: 12px;
+    padding: 7px;
+}
+
+div#menuitem ul li svg {
+    height: 16px;
+    width: 16px;
+    margin-right: 9px;
+}
+}

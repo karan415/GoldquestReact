@@ -110,7 +110,7 @@ const App = () => {
 
                                       {/* Other Routes */}
                                       <Route path="/background-form" element={<BackgroundForm />} />
-                                      <Route path="/background-form-demo" element={<DemoBgForm />} />
+                                      <Route path="/background-form-c" element={<DemoBgForm />} />
                                       <Route path="/digital-form" element={<DigitalAddressVerification />} />
 
                                       {/* Client Bulk Upload */}

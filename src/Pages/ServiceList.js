@@ -21,7 +21,7 @@ const ServiceList = () => {
     return (
       item?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item?.group.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item?.short_code.toLowerCase().includes(searchTerm.toLowerCase()) 
+      item?.short_code.toLowerCase().includes(searchTerm.toLowerCase())
 
 
     );
@@ -116,19 +116,19 @@ const ServiceList = () => {
       if (result.isConfirmed) {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-  
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           return;
         }
-  
+
         const requestOptions = {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
         };
-  
+
         // Make the DELETE request
         fetch(`${API_URL}/service/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json()) // Parse the response as JSON
@@ -138,7 +138,7 @@ const ServiceList = () => {
               'Your service has been deleted successfully.',
               'success'
             );
-  
+            fetchData();
             // Handle token expiration (if the message contains "invalid token")
             if (result.message && result.message.toLowerCase().includes("invalid token")) {
               Swal.fire({
@@ -152,7 +152,7 @@ const ServiceList = () => {
               });
               return; // Stop further execution if session has expired
             }
-  
+
             // If not OK or there's an error, handle it
             if (!result.ok) {
               return result.text().then(text => {
@@ -165,21 +165,21 @@ const ServiceList = () => {
                 throw new Error(errorData.message); // Handle the error
               });
             }
-  
+
             // If the deletion is successful, show success message
-            
+
             // Refresh the data
             fetchData();
           })
           .catch((error) => {
             console.error('Fetch error:', error);
-            
+
           });
       }
     });
   };
-  
-  
+
+
 
   return (
     <div className='overflow-auto'>
