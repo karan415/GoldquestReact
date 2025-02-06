@@ -3,7 +3,11 @@ import { useLocation } from 'react-router-dom';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import LogoBgv from '../Images/LogoBgv.jpg';
 import Swal from 'sweetalert2';
+import { useApiCall } from '../ApiCallContext';
+
 const CandidateBGV = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const [error, setError] = useState(null);
     const [customBgv, setCustomBgv] = useState('');
     const [cefData, setCefData] = useState([]);
@@ -20,27 +24,28 @@ const CandidateBGV = () => {
     // Extract the branch_id and applicationId
     const branchId = queryParams.get('branch_id');
     const applicationId = queryParams.get('applicationId');
- 
+
 
 
     const fetchData = useCallback(() => {
+        setIsApiLoading(true);
         setLoading(true); // Start loading
-    
+
         const MyToken = localStorage.getItem('_token');
         const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
         const admin_id = adminData?.id;
-    
+
         if (!MyToken || !admin_id || !applicationId || !branchId) {
             setError('Missing required parameters or authentication token.');
             setLoading(false); // Stop loading if required params are missing
             return;
         }
-    
+
         const requestOptions = {
             method: "GET",
             redirect: "follow",
         };
-    
+
         fetch(
             `https://api.goldquestglobal.in/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
@@ -59,24 +64,24 @@ const CandidateBGV = () => {
                         });
                         return; // Stop further execution after session expiry
                     }
-    
+
                     // Handle non-OK responses
                     if (!res.ok) {
                         throw new Error(`Error fetching data: ${res.statusText}`);
                     }
-    
+
                     // Process the data if the response is OK
                     setCompanyName(data.application?.customer_name || 'N/A');
                     setCefData(data.CEFData || {});
-    
+
                     // Handle service data safely
                     const serviceDataa = data.serviceData || {};
                     const jsonDataArray = Object.values(serviceDataa)?.map(item => item.jsonData) || [];
                     const serviceValueDataArray = Object.values(serviceDataa)?.map(item => item.data) || [];
-    
+
                     setServiceData(jsonDataArray);
                     setServiceValueData(serviceValueDataArray);
-    
+
                     setCustomBgv(data.customerInfo?.is_custom_bgv || '');
                 });
             })
@@ -84,16 +89,19 @@ const CandidateBGV = () => {
                 setError(err.message || 'An unexpected error occurred.');
             })
             .finally(() => {
-                setLoading(false); // End loading
+                setLoading(false);
+                setIsApiLoading(false); // End loading
             });
     }, [applicationId, branchId]);
-    
-    
+
+
 
 
     useEffect(() => {
+        if (!isApiLoading) {
+            fetchData();
+        }
 
-        fetchData();
     }, [fetchData]);
     const getFileExtension = (url) => {
         const ext = url.split('.').pop().toLowerCase();

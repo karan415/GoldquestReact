@@ -5,8 +5,11 @@ import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import Swal from 'sweetalert2'; // Make sure to import SweetAlert2
+import { useApiCall } from '../ApiCallContext';
 
 const CandidateMasterTrackerList = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const [searchTerm, setSearchTerm] = useState('');
     const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
@@ -23,6 +26,7 @@ const CandidateMasterTrackerList = () => {
     const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
+        setIsApiLoading(true);
         setLoading(true);
         setError(null);
         let queryParams;
@@ -90,12 +94,16 @@ const CandidateMasterTrackerList = () => {
                 // Show error message if there's any issue with the fetch
                 setError(error.message || 'Failed to load data');
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                setLoading(false);
+                setIsApiLoading(false);
+            });
     }, [setData, API_URL]);
 
 
 
     const handleBranches = useCallback((id) => {
+        setIsApiLoading(true);
         setBranchLoading(true);
         setError(null);
         setExpandedClient(prev => (prev === id ? null : id)); // Toggle branches visibility
@@ -152,7 +160,11 @@ const CandidateMasterTrackerList = () => {
                 // Handle error fetching branches
                 setError('Failed to load data');
             })
-            .finally(() => setBranchLoading(false));
+            .finally(() => {
+                setBranchLoading(false);
+                setIsApiLoading(false);
+
+            });
     }, []);
 
 
@@ -174,7 +186,9 @@ const CandidateMasterTrackerList = () => {
     }, []);
 
     useEffect(() => {
-        fetchClient();
+        if (!isApiLoading) {
+            fetchClient();
+        }
     }, [fetchClient]);
 
 
@@ -350,7 +364,8 @@ const CandidateMasterTrackerList = () => {
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center cursor-pointer">{item.application_count}</td>
                                             <td className="py-3 px-4 border-b border-r text-center whitespace-nowrap">
                                                 <button
-                                                    className='bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 me-2 text-white'
+                                                    disabled={branchLoading || isApiLoading}
+                                                    className={`rounded-md p-3 text-white ${branchLoading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
                                                     onClick={() => handleBranches(item.main_id)}>
                                                     {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                                 </button>

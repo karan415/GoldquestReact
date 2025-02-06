@@ -1,12 +1,14 @@
-
 import React, { createContext, useState, useCallback, useContext } from 'react';
 import Swal from 'sweetalert2';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 import { useApi } from '../ApiContext';
+
 const DataContext = createContext();
 
 export const useData = () => useContext(DataContext);
 
 export const DataProvider = ({ children }) => {
+    const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
     const API_URL = useApi();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -17,17 +19,20 @@ export const DataProvider = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const fetchData = useCallback(() => {
+        if (isApiLoading) return;  // Don't make the API call if it's already loading
+
+        setIsApiLoading(true);
         setLoading(true);
         setError(null);
-    
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-    
+
         const queryParams = new URLSearchParams({
             admin_id: admin_id || '',
             _token: storedToken || ''
         }).toString();
-    
+
         fetch(`${API_URL}/customer/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -35,7 +40,6 @@ export const DataProvider = ({ children }) => {
             }
         })
         .then((response) => {
-            // Check for invalid token directly after the response
             if (!response.ok) {
                 return response.json().then((result) => {
                     if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
@@ -45,38 +49,33 @@ export const DataProvider = ({ children }) => {
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            // Redirect to admin login page after SweetAlert is dismissed
                             setTimeout(() => {
-                                window.location.href = "/admin-login"; // Replace with your login route
-                            }, 100); // Short delay to ensure SweetAlert finishes
+                                window.location.href = "/admin-login";
+                            }, 100);
                         });
-                        return; // Exit early to prevent further processing
+                        return;
                     }
-    
-                    // If it's not related to invalid token, show the normal error message
+
                     Swal.fire({
                         title: 'Error!',
                         text: result.message || `An error occurred: ${response.statusText}`,
                         icon: 'error',
                         confirmButtonText: 'Ok'
                     });
-                    throw new Error(result.message || response.statusText); // Throw error to handle in catch
+                    throw new Error(result.message || response.statusText);
                 });
             }
             return response.json();
         })
         .then((result) => {
-            // Process the result if token is valid
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken);
             }
-    
-            // Extract customers
+
             const customers = result?.customers || [];
             setListData(customers);
-    
-            // Create a mapping of customer ID to their services
+
             const customerServices = customers.map((customer) => {
                 let services = [];
                 try {
@@ -86,25 +85,25 @@ export const DataProvider = ({ children }) => {
                 }
                 return { customerId: customer.main_id, services };
             });
-    
-            setServices(customerServices); // Update services state
+
+            setServices(customerServices);
             setTotalResults(result?.totalResults || 0);
         })
         .catch((error) => {
             console.error('Fetch error:', error);
             setError('Failed to load data');
         })
-        .finally(() => setLoading(false));
-    }, []);
-    
-    
-    
-    
-    
-
+        .finally(() => {
+            setLoading(false);
+            setIsApiLoading(false); // Reset loading state after request
+        });
+    }, []);  // Watch isApiLoading as a dependency
 
     return (
-        <DataContext.Provider value={{ loading, error,setError, listData,services, setBranches,totalResults, setLoading, setError, isOpen, setIsOpen, fetchData, branches }}>
+        <DataContext.Provider value={{
+            loading, error, setError, listData, services, setBranches, totalResults, 
+            setLoading, setError, isOpen, setIsOpen, fetchData, branches, isApiLoading
+        }}>
             {children}
         </DataContext.Provider>
     );

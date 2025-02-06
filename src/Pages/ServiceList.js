@@ -4,19 +4,23 @@ import { useService } from './ServiceContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const ServiceList = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
   const API_URL = useApi();
   const { editService, fetchData, loading, data } = useService();
   const [itemsPerPage, setItemPerPage] = useState(10);
   useEffect(() => {
-    fetchData();
+    if (!isApiLoading) {
+      fetchData();
+    }
+
   }, [fetchData]);
 
   const [currentPage, setCurrentPage] = useState(1);
-
   const [searchTerm, setSearchTerm] = useState('');
-
   const filteredItems = data.filter(item => {
     return (
       item?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,6 +109,7 @@ const ServiceList = () => {
   };
 
   const handleDelete = (serviceId) => {
+    
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -114,6 +119,7 @@ const ServiceList = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsApiLoading(true);
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
 
@@ -174,6 +180,8 @@ const ServiceList = () => {
           .catch((error) => {
             console.error('Fetch error:', error);
 
+          }).finally(() => {
+            setIsApiLoading(false);
           });
       }
     });
@@ -253,12 +261,13 @@ const ServiceList = () => {
                       Edit
                     </button>
                     <button
-                      disabled={loading}
-                      className='bg-red-600 rounded-md p-2 text-sm text-white ms-2'
+                      disabled={loading || isApiLoading}
+                      className={`rounded-md p-2 text-sm text-white ms-2 ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-200'}`}
                       onClick={() => handleDelete(item.id)}
                     >
                       Delete
                     </button>
+
                   </td>
                 </tr>
               ))}

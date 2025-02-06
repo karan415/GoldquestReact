@@ -9,7 +9,10 @@ import { useSidebar } from '../Sidebar/SidebarContext';
 import { BranchContextExel } from './BranchContextExel';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import { useApiCall } from '../ApiCallContext';
+
 const AdminChekin = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
 
     const { handleTabChange } = useSidebar();
     const [options, setOptions] = useState([]);
@@ -40,6 +43,7 @@ const AdminChekin = () => {
         } else {
             setLoading(true); // Show loading indicator
         }
+        setIsApiLoading(true);
 
         const requestOptions = {
             method: "GET",
@@ -95,7 +99,6 @@ const AdminChekin = () => {
                 // Handle potential new token in the response and update localStorage
                 const newToken = result._token || result.token;
                 if (newToken) {
-                    console.log("New token received:", newToken); // Log the new token (optional)
                     localStorage.setItem("_token", newToken); // Update token in localStorage
                 }
 
@@ -108,7 +111,8 @@ const AdminChekin = () => {
                 console.error("Error fetching data:", error); // Log error in case of failure
             })
             .finally(() => {
-                setLoading(false); // Stop loading after fetch is done
+                setLoading(false);
+                setIsApiLoading(false); // Stop loading after fetch is done
                 console.log("Fetch completed, stopping loading..."); // Log when fetch is done
             });
 
@@ -118,7 +122,7 @@ const AdminChekin = () => {
 
     const fetchAdminList = useCallback(() => {
         console.log("Fetching admin list...");
-
+        setIsApiLoading(true);
         setLoading(true); // Start loading before fetching data
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem('_token');
@@ -147,7 +151,6 @@ const AdminChekin = () => {
             redirect: "follow"
         };
 
-        console.log(`Making request to: ${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`);
 
         fetch(`${API_URL}/client-master-tracker/list?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
@@ -161,7 +164,6 @@ const AdminChekin = () => {
                 return response.json(); // Parse the response JSON if the status is OK
             })
             .then((result) => {
-                console.log("Response JSON:", result);
 
                 // Check for invalid or expired token in the response message
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
@@ -183,13 +185,11 @@ const AdminChekin = () => {
                 // If a new token is received, update it in localStorage
                 const newToken = result._token || result.token;
                 if (newToken) {
-                    console.log("New token received:", newToken);
                     localStorage.setItem("_token", newToken);
                 }
 
                 // Process the list of customers and extract `tat_days`
                 const tat_days = result.customers.map(spoc => spoc.tat_days);
-                console.log("TAT days extracted:", tat_days);
 
                 setAdminTAT(tat_days); // Store the `tat_days` in state
             })
@@ -198,8 +198,8 @@ const AdminChekin = () => {
 
             })
             .finally(() => {
-                console.log("Fetch completed, stopping loading...");
-                setLoading(false); // Stop loading once the fetch is complete
+                setLoading(false);
+                setIsApiLoading(false); // Stop loading once the fetch is complete
             });
 
     }, []); // Empty dependency array to run on mount
@@ -209,7 +209,7 @@ const AdminChekin = () => {
     }
 
     useEffect(() => {
-        fetchAdminList();
+        if (!isApiLoading) { fetchAdminList(); }
     }, [fetchAdminList]);
 
     const handleStatusChange = (event) => {
@@ -316,7 +316,11 @@ const AdminChekin = () => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
 
+        setIsApiLoading(true); // Start loading state
+
+        // Return early if servicesList is empty
         if (!servicesList || servicesList.length === 0) {
+            setIsApiLoading(false); // Stop loading if no services
             return [];
         }
 
@@ -332,9 +336,9 @@ const AdminChekin = () => {
                 if (newToken) {
                     localStorage.setItem("_token", newToken);
                 }
+
                 const message = result.message?.message?.toLowerCase() || '';
                 if (message.includes("invalid") || message.includes("expired") || message.includes("token")) {
-                    console.log("Invalid or expired token detected. Redirecting to login...");
 
                     Swal.fire({
                         title: "Session Expired",
@@ -349,7 +353,7 @@ const AdminChekin = () => {
 
                 // If no invalid token message, proceed with result filtering
                 const filteredResults = result.results.filter((item) => item != null);
-                console.log("Filtered results:", filteredResults);
+
                 return filteredResults;
             } else {
                 const result = await response.json(); // Get the result to show the error message from API
@@ -386,6 +390,8 @@ const AdminChekin = () => {
             });
 
             return [];
+        } finally {
+            setIsApiLoading(false); // Stop loading state
         }
     };
 
@@ -427,33 +433,45 @@ const AdminChekin = () => {
 
 
     const fetchImageToBase = async (imageUrls) => {
+        setIsApiLoading(true); // Set loading state to true before making the request
         try {
-
+            // Define headers for the POST request
             const headers = {
                 "Content-Type": "application/json",
             };
 
+            // Prepare the body payload for the POST request
             const raw = {
                 image_urls: imageUrls,
             };
 
-            // Send the POST request to the API
+            // Send the POST request to the API and wait for the response
             const response = await axios.post(
                 "https://api.goldquestglobal.in/test/image-to-base",
                 raw,
                 { headers }
             );
 
-            // Return the images from the response
-            return response.data.images;
+            // Assuming the response data contains an array of images
+            return response.data.images || [];  // Return images or an empty array if no images are found
         } catch (error) {
             console.error("Error fetching images:", error);
+
+            // If the error contains a response, log the detailed response error
             if (error.response) {
                 console.error("Response error:", error.response.data);
+            } else {
+                // If no response, it means the error occurred before the server could respond
+                console.error("Request error:", error.message);
             }
+
+            return null; // Return null if an error occurs
+        } finally {
+            // Reset the loading state after the API request finishes (success or failure)
+            setIsApiLoading(false);
         }
-        return null; // Return null in case of an error
     };
+
 
 
 
@@ -1154,29 +1172,29 @@ const AdminChekin = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        if (!isApiLoading) { fetchData(); }
     }, [clientId, branch_id]);
     useEffect(() => {
-        fetchAdminList();
+        if (!isApiLoading) {
+            fetchAdminList();
+        }
     }, [fetchAdminList]);
 
 
     const handleViewMore = async (index) => {
         const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
-        console.log('Current Page Index:', index);
-        console.log('Global Index:', globalIndex);
 
-        // Set loading for this row
+        setIsApiLoading(true);
+
         setServicesLoading((prev) => ({ ...prev, [globalIndex]: true }));
 
-        // Check if the row is already expanded
         if (expandedRow && expandedRow.index === globalIndex) {
             setExpandedRow(null); // Collapse the row
-            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false })); // Stop row loading
+            setIsApiLoading(false); // End loading state when collapsing
             return;
         }
 
-        // Fetch service data for the globalIndex
         try {
             const applicationInfo = currentItems[index]; // Data for the current page
             const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
@@ -1202,21 +1220,19 @@ const AdminChekin = () => {
                 setExpandedRow(null); // Collapse if no valid heading found
             }
 
-            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false })); // Stop row loading
 
             const expandedRowElement = document.getElementById(`expanded-row-${globalIndex}`);
             if (expandedRowElement) {
                 expandedRowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         } catch (error) {
-            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+            setServicesLoading((prev) => ({ ...prev, [globalIndex]: false })); // Stop row loading on error
+            console.error('Error fetching service data:', error);
+        } finally {
+            setIsApiLoading(false); // Stop global loading state
         }
     };
-
-
-
-
-
 
     const handleSelectChange = (e) => {
 
@@ -1333,7 +1349,7 @@ const AdminChekin = () => {
                                                             <img
                                                                 src={`${data.photo}`}
                                                                 alt="Image"
-                                                                className="md:h-20 h-10 w-20 rounded-full"
+                                                                className=" h-[70px] w-[70px]"
                                                             />
                                                         ) : (
                                                             <a
@@ -1369,7 +1385,9 @@ const AdminChekin = () => {
 
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                                                     <button
-                                                        className="bg-white border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
+                                                        disabled={isApiLoading}
+                                                        className={`w-full rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+
                                                         onClick={() => handleUpload(data.id, data.branch_id)}
                                                     >
                                                         Generate Report
@@ -1396,21 +1414,32 @@ const AdminChekin = () => {
                                                                 }));
                                                             });
                                                         }}
-                                                        className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== 'completed' || data.is_verify !== 'yes' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        disabled={data.overall_status !== 'completed' || data.is_verify !== 'yes' || loadingStates[index]} // Disable button while loading
+                                                        className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 
+    ${data.overall_status !== 'completed' || data.is_verify !== 'yes' ? 'opacity-50 cursor-not-allowed' : ''} 
+    ${loadingStates[index] ? 'cursor-wait' : ''}`} // Add cursor-wait to indicate loading
+                                                        disabled={data.overall_status !== 'completed' || data.is_verify !== 'yes' || loadingStates[index] || isApiLoading} // Disable button while loading
                                                     >
-                                                        {loadingStates[index] ? 'Please Wait, Your PDF is Generating' : data.overall_status === 'completed' ? (
-                                                            data.is_verify === 'yes' ? 'DOWNLOAD' : data.is_verify === 'no' ? 'QC PENDING' : 'NOT READY'
-                                                        ) : data.overall_status === 'wip' ? 'WIP' : data.overall_status === 'insuff' ? 'INSUFF' : 'NOT READY'}
+                                                        {loadingStates[index] ? 'Please Wait, Your PDF is Generating' :
+                                                            data.overall_status === 'completed' ? (
+                                                                data.is_verify === 'yes' ? 'DOWNLOAD' :
+                                                                    data.is_verify === 'no' ? 'QC PENDING' : 'NOT READY'
+                                                            ) :
+                                                                data.overall_status === 'wip' ? 'WIP' :
+                                                                    data.overall_status === 'insuff' ? 'INSUFF' : 'NOT READY'
+                                                        }
                                                     </button>
+
                                                 </td>
                                                 <td className="border px-4 py-2">
                                                     <button
-                                                        className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
+                                                        disabled={isApiLoading}
+                                                        className={`bg-orange-500 uppercase border border-white text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500 
+  ${isApiLoading ? 'cursor-not-allowed bg-gray-400 border-gray-400' : ''}`} // Apply styles when loading
                                                         onClick={() => handleViewMore(index)} // Pass page-relative index here
                                                     >
                                                         {expandedRow && expandedRow.index === globalIndex ? 'Less' : 'View'}
                                                     </button>
+
                                                 </td>
                                                 <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">{data.overall_status || 'WIP'}</td>
                                             </tr>

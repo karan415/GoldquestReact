@@ -8,9 +8,13 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { useApi } from '../ApiContext'; // use the custom hook
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Modal from 'react-modal';
+import { useApiCall } from '../ApiCallContext';
 
 Modal.setAppElement('#root');
+
 const ClientManagementList = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
+
   const [showPopup, setShowPopup] = useState(false);
 
   const { handleTabChange } = useSidebar();
@@ -33,10 +37,9 @@ const ClientManagementList = () => {
 
   const handleEditBranch = async (e) => {
     e.preventDefault();
-  
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
     // Validate required fields
     if (!editData.id || !editData.name || !editData.email) {
       Swal.fire(
@@ -46,7 +49,8 @@ const ClientManagementList = () => {
       );
       return;
     }
-  
+    setIsApiLoading(true);
+
     // Prepare the request payload
     const raw = JSON.stringify({
       id: editData.id,
@@ -55,22 +59,22 @@ const ClientManagementList = () => {
       admin_id,
       _token: storedToken,
     });
-  
+
     const requestOptions = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: raw,
     };
-  
+
     try {
       const response = await fetch(`${API_URL}/branch/update`, requestOptions);
       const result = await response.json();
       const newToken = result._token || result.token; // Update token if provided
-  
+
       if (newToken) {
         localStorage.setItem("_token", newToken);
       }
-  
+
       // Check for session expiration in the response
       if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
         Swal.fire({
@@ -83,42 +87,44 @@ const ClientManagementList = () => {
         });
         return; // Stop further processing after session expiration
       }
-  
+
       if (!response.ok) {
         // Handle server errors gracefully
         Swal.fire('Error!', `An error occurred: ${result.message || response.statusText}`, 'error');
         return;
       }
-  
+
       // Success case
       Swal.fire('Success!', 'Branch updated successfully.', 'success');
       toggleAccordion(); // Refresh UI or reload data
       setIsPopupOpen(false); // Close the popup
       closePopup();
-  
+      setIsApiLoading(false);
+
     } catch (error) {
       Swal.fire('Error!', 'There was a problem with the update operation.', 'error');
       console.error('Fetch error:', error);
     }
   };
-  
+
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const toggleAccordion = useCallback((id) => {
     const tdElement = document.getElementById('Branches');
     if (tdElement) {
       tdElement.focus();
     }
-  
+
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
     setIsOpen(null);
     setError(null);
-  
+    setIsApiLoading(true);
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
     fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -129,7 +135,7 @@ const ClientManagementList = () => {
           if (newToken) {
             localStorage.setItem("_token", newToken);
           }
-  
+
           if (!response.ok) {
             // If the response status isn't ok, check for session expiry or other errors
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
@@ -144,7 +150,7 @@ const ClientManagementList = () => {
               });
               return; // Exit the function to prevent further execution
             }
-  
+
             // Show a general error if no specific session issue is found
             Swal.fire({
               title: 'Error!',
@@ -154,7 +160,7 @@ const ClientManagementList = () => {
             });
             throw new Error('Network response was not ok');
           }
-  
+
           // Only handle success when the response is ok
           return result;
         });
@@ -167,10 +173,13 @@ const ClientManagementList = () => {
         console.error('Fetch error:', error);
         setError('Failed to load data'); // Set a more general error state if something goes wrong
       })
-      .finally(() => setBranchLoading(false)); // Always stop loading
+      .finally(() => {
+        setBranchLoading(false)
+        setIsApiLoading(false)
+      }); // Always stop loading
   }, [API_URL]);
-  
-  
+
+
   const closePopup = () => {
     setIsPopupOpen(false);
     setEditData({ id: null, name: '', email: '' });
@@ -267,12 +276,16 @@ const ClientManagementList = () => {
 
 
   useEffect(() => {
-    fetchData();
+    if (!isApiLoading) {
+      fetchData();
+    }
+
   }, [fetchData]);
 
 
 
   const handleDelete = (id, type) => {
+
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -282,23 +295,29 @@ const ClientManagementList = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsApiLoading(true); // Indicate the loading state
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
+          Swal.fire('Error', 'Admin ID or token is missing.', 'error');
+          setIsApiLoading(false);
           return;
         }
-  
+
         const requestOptions = {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
         };
-  
+
         let url;
         let successMessage;
-  
+
+        // Set the URL and success message based on the type of delete
         if (type === 'client') {
           url = `${API_URL}/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`;
           successMessage = 'Your client has been deleted.';
@@ -307,18 +326,21 @@ const ClientManagementList = () => {
           successMessage = 'Your branch has been deleted.';
         } else {
           console.error("Unknown delete type.");
+          Swal.fire('Error', 'Unknown delete type.', 'error');
+          setIsApiLoading(false);
           return;
         }
-  
+
+        // Send the DELETE request
         fetch(url, requestOptions)
           .then((response) => {
-            // Parse the response as JSON
             return response.json().then((result) => {
               const newToken = result._token || result.token;
               if (newToken) {
                 localStorage.setItem("_token", newToken);
               }
-  
+
+              // Handle errors in the response
               if (!response.ok) {
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                   Swal.fire({
@@ -327,33 +349,33 @@ const ClientManagementList = () => {
                     icon: "warning",
                     confirmButtonText: "Ok",
                   }).then(() => {
-                    window.location.href = "/admin-login"; // Replace with your login route
+                    window.location.href = "/admin-login"; // Redirect to login
                   });
                 } else {
-                  Swal.fire(
-                    'Error!',
-                    `An error occurred: ${result.message || 'Unknown error'}`,
-                    'error'
-                  );
+                  Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
                 }
                 throw new Error(result.message || 'Unknown error');
               }
-  
+
+              // Fetch updated data after successful delete
               fetchData();
-              Swal.fire(
-                'Deleted!',
-                successMessage,
-                'success'
-              );
+
+              // Show success message
+              Swal.fire('Deleted!', successMessage, 'success');
             });
           })
           .catch((error) => {
             console.error('Fetch error:', error);
+            Swal.fire('Error', 'An error occurred while deleting the item.', 'error');
+          })
+          .finally(() => {
+            setIsApiLoading(false); // Reset the loading state
           });
       }
     });
   };
-  
+
+
 
   const blockBranch = (id) => {
     Swal.fire({
@@ -365,15 +387,18 @@ const ClientManagementList = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsApiLoading(true); // Set loading to true when the API request starts
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-  
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
+          setIsApiLoading(false); // Ensure loading is reset in case of error
           return;
         }
-  
+
         fetch(`https://api.goldquestglobal.in/branch/inactive-list?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
@@ -386,7 +411,7 @@ const ClientManagementList = () => {
             if (newToken) {
               localStorage.setItem("_token", newToken);
             }
-  
+
             // Handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
@@ -399,13 +424,13 @@ const ClientManagementList = () => {
               });
               throw new Error("Session Expired");
             }
-  
+
             // Only show error message if there was a problem with the response
             if (result.status !== true) {
               Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
               throw new Error(result.message || 'Unknown error');
             }
-  
+
             // Success case: Show success message only if the operation was successful
             Swal.fire('Blocked!', 'Your Branch has been Blocked.', 'success');
             toggleAccordion(); // Optionally reload or refresh the UI after blocking
@@ -415,14 +440,19 @@ const ClientManagementList = () => {
             // Prevent further execution if the session expired or any other error occurs
             if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Block the Branch: ${error.message}`, 'error');
+          })
+          .finally(() => {
+            setIsApiLoading(false); // Ensure loading is reset once the request completes (either success or failure)
           });
       }
     });
   };
-  
-  
+
+
+
 
   const unblockBranch = (id) => {
+
     Swal.fire({
       title: 'Are you sure?',
       text: "You want to unblock this branch!",
@@ -432,15 +462,19 @@ const ClientManagementList = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsApiLoading(true); // Set loading state to true when the request starts
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-  
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
+          setIsApiLoading(false); // Reset loading state immediately
           return;
         }
-  
+
+        // Make the API request to unblock the branch
         fetch(`https://api.goldquestglobal.in/branch/active?branch_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
@@ -449,13 +483,13 @@ const ClientManagementList = () => {
         })
           .then((response) => response.json()) // Parse the response as JSON
           .then((result) => {
-            // Handle token expiration and update the local token if needed
+            // Handle session expiration and token update
             const newToken = result._token || result.token;
             if (newToken) {
-              localStorage.setItem("_token", newToken);
+              localStorage.setItem("_token", newToken); // Update token in localStorage
             }
-  
-            // Check for session expiration
+
+            // Check if the session has expired
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
@@ -463,33 +497,38 @@ const ClientManagementList = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                window.location.href = "/admin-login"; // Redirect to admin login page
+                window.location.href = "/admin-login"; // Redirect to the admin login page
               });
               throw new Error("Session Expired");
             }
-  
-            // Only show error message if the response indicates failure
+
+            // Handle other errors from the response
             if (result.status !== true) {
               Swal.fire('Error!', `An error occurred: ${result.message || 'Unknown error'}`, 'error');
               throw new Error(result.message || 'Unknown error');
             }
-  
-            // Success case: Show success message only if the operation was successful
+
+            // Success case: Notify the user that the branch has been unblocked
             Swal.fire('Unblocked!', 'Your Branch has been Unblocked.', 'success');
-            toggleAccordion(); // Optionally reload or refresh the UI after unblocking
+            toggleAccordion(); // Optionally refresh the UI after unblocking the branch
           })
           .catch((error) => {
             console.error('Fetch error:', error);
-            // Prevent further execution if the session expired or any other error occurs
+            // Prevent further execution if session expired or any other error occurs
             if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Unblock the Branch: ${error.message}`, 'error');
+          })
+          .finally(() => {
+            setIsApiLoading(false); // Reset the loading state once the request is completed
           });
       }
     });
   };
-  
+
+
 
   const blockClient = (main_id) => {
+
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -499,30 +538,34 @@ const ClientManagementList = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
+        setIsApiLoading(true); // Set the loading state to true when the request starts
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-  
+
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
+          setIsApiLoading(false); // Reset loading state
           return;
         }
-  
+
+        // Make the API request to block the client
         fetch(`${API_URL}/customer/inactive?customer_id=${main_id}&admin_id=${admin_id}&_token=${storedToken}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         })
-          .then((response) => response.json()) // Ensure we parse the response as JSON
+          .then((response) => response.json()) // Parse the response as JSON
           .then((result) => {
-            // Handle token expiration and update the local token if needed
+            // Handle token expiration and update local token
             const newToken = result._token || result.token;
             if (newToken) {
-              localStorage.setItem("_token", newToken);
+              localStorage.setItem("_token", newToken); // Store the new token in localStorage
             }
-  
-            // Check for session expiration
+
+            // Handle session expiration
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
               Swal.fire({
                 title: "Session Expired",
@@ -530,38 +573,36 @@ const ClientManagementList = () => {
                 icon: "warning",
                 confirmButtonText: "Ok",
               }).then(() => {
-                window.location.href = "/admin-login"; // Redirect to admin login page
+                window.location.href = "/admin-login"; // Redirect to the login page
               });
               throw new Error("Session Expired");
             }
-  
-            // Check for success status
+
+            // Check the result status for success or failure
             if (result.status === true) {
               Swal.fire('Blocked!', 'Your Client has been Blocked.', 'success');
-              fetchData();  // Fetch updated data after the block operation
+              fetchData(); // Fetch updated data after blocking the client
             } else {
-              // Handle error based on response message
+              // Handle failure based on response message
               Swal.fire('Error!', result.message || 'Unknown error', 'error');
               throw new Error(result.message || 'Unknown error');
             }
           })
           .catch((error) => {
             console.error('Fetch error:', error);
-            // Prevent further execution if the session expired or any other error occurs
+            // Prevent further execution if the session expired or another error occurred
             if (error.message === "Session Expired") return;
             Swal.fire('Error!', `Could not Block the Client: ${error.message}`, 'error');
+          })
+          .finally(() => {
+            setIsApiLoading(false); // Set loading state to false when the request finishes
           });
       }
     });
   };
-  
-  
-  
-  
-  
+
 
   const handleEditForm = (item) => {
-    // Change the tab to 'edit'
     setClientData(item)
     handleTabChange('edit');
   };
@@ -651,36 +692,36 @@ const ClientManagementList = () => {
                       <td className=" p-3 border-b border-r text-center text-sm cursor-pointer">{item.mobile || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-center text-sm whitespace-nowrap md:whitespace-normal cursor-pointer">{item.client_standard || 'NIL'}</td>
                       <td className="py-3 px-4 border-b border-r whitespace-nowrap text-center">
-                    {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services?.length > 0 ? (
-                      <>
-                        {/* Find the services for this particular client */}
-                       <div className='flex gap-2'> {services
-                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
-                          ?.services?.slice(0, 1)
-                          .map((service) => (
-                            <div key={service.serviceId} className=" text-start flex">
-                              <div className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">
-                                {service.serviceTitle}
-                              </div>
-                            </div>
-                          ))}
+                        {services.find(serviceGroup => serviceGroup.customerId === item.main_id)?.services?.length > 0 ? (
+                          <>
+                            {/* Find the services for this particular client */}
+                            <div className='flex gap-2'> {services
+                              .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                              ?.services?.slice(0, 1)
+                              .map((service) => (
+                                <div key={service.serviceId} className=" text-start flex">
+                                  <div className="px-4 py-2 bg-green-100 border text-center border-green-500 rounded-lg text-sm">
+                                    {service.serviceTitle}
+                                  </div>
+                                </div>
+                              ))}
 
-                        {/* Check if there are multiple services */}
-                        {services
-                          .find(serviceGroup => serviceGroup.customerId === item.main_id)
-                          ?.services?.length > 1 && (
-                            <button
-                              className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                              onClick={() => setShowPopup(item.main_id)} // Open the popup
-                            >
-                              View More
-                            </button>
-                          )}</div>
-                      </>
-                    ) : (
-                      "No services available"
-                    )}
-                  </td>
+                              {/* Check if there are multiple services */}
+                              {services
+                                .find(serviceGroup => serviceGroup.customerId === item.main_id)
+                                ?.services?.length > 1 && (
+                                  <button
+                                    className="view-more-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                                    onClick={() => setShowPopup(item.main_id)} // Open the popup
+                                  >
+                                    View More
+                                  </button>
+                                )}</div>
+                          </>
+                        ) : (
+                          "No services available"
+                        )}
+                      </td>
 
                       {/* Popup */}
                       {showPopup === item.main_id && (
@@ -718,17 +759,19 @@ const ClientManagementList = () => {
 
                       <td className=" p-3 border-b border-r whitespace-wrap capitalize  text-sm  whitespace-nowrap md:whitespace-normal">{item.address || 'NIL'}</td>
                       <td className=" p-3 border-b border-r text-left whitespace-nowrap text-sm fullwidth">
-                        <button className="bg-red-600 hover:bg-red-200 rounded-md p-2 md:p-3 text-white mx-2" onClick={() => blockClient(item.main_id)}>Block</button>
+                        <button className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+                          disabled={isApiLoading} onClick={() => blockClient(item.main_id)}>Block</button>
                         <button
-                          className="bg-green-600 hover:bg-green-200  text-sm rounded-md p-2 md:p-3 px-5 text-white"
+                          className="bg-green-600 hover:bg-green-200  text-sm rounded-md p-2 md:p-3 px-5 text-white ms-2"
                           onClick={() => handleEditForm(item)}
                         >
                           Edit
                         </button>
-                        <button className="bg-red-600 hover:bg-red-200  text-sm rounded-md p-2 md:p-3 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        <button className={`rounded-md p-3 mx-2 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`} disabled={isApiLoading} onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
                         {item.branch_count > 1 && (
                           <button
-                            className="bg-green-600 hover:bg-green-200   text-sm rounded-md p-2 md:p-3 px-5 text-white"
+                            disabled={isApiLoading}
+                            className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
                             onClick={() => toggleAccordion(item.main_id)}
                           >
                             View Branches
@@ -784,14 +827,17 @@ const ClientManagementList = () => {
                                               Edit
                                             </button>
                                             <button
-                                              className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2"
+                                              disabled={isApiLoading}
+                                              className={` rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
                                               onClick={() => handleDelete(branch.id, 'branch')}
                                             >
                                               Delete
                                             </button>
                                             {isActive && (
                                               <button
-                                                className="bg-red-600 hover:bg-red-200 rounded-md p-3 text-white mx-2"
+                                                disabled={isApiLoading}
+                                                className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+
                                                 onClick={() => blockBranch(branch.id)}
                                               >
                                                 Block
@@ -799,7 +845,9 @@ const ClientManagementList = () => {
                                             )}
                                             {isBlocked && (
                                               <button
-                                                className="bg-green-600 hover:bg-green-200 rounded-md p-3 text-white mx-2"
+                                                disabled={isApiLoading}
+                                                className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+
                                                 onClick={() => unblockBranch(branch.id)}
                                               >
                                                 Unblock

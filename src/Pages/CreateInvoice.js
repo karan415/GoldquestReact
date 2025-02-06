@@ -6,8 +6,11 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import Swal from 'sweetalert2';
 import { useCustomFunction } from '../CustomFunctionsContext';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const CreateInvoice = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
   const wordify = useCustomFunction();
   const { listData, fetchData } = useData();
   const [clientCode, setClientCode] = useState('');
@@ -34,16 +37,19 @@ const CreateInvoice = () => {
   }));
 
   useEffect(() => {
-    fetchData();
+    if (!isApiLoading) {
+      fetchData();
+    }
+
   }, [fetchData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true); // Show loader
-    
+    setIsApiLoading(true);
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-    
+
     const queryString = new URLSearchParams({
       customer_id: clientCode,
       admin_id: admin_id,
@@ -51,12 +57,12 @@ const CreateInvoice = () => {
       month: formData.month,
       year: formData.year,
     }).toString();
-    
+
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
-  
+
     const swalInstance = Swal.fire({
       title: 'Processing...',
       text: 'Please wait while we generate your invoice',
@@ -66,7 +72,7 @@ const CreateInvoice = () => {
       allowOutsideClick: false, // Prevent closing Swal while processing
       showConfirmButton: false, // Hide the confirm button
     });
-  
+
     // Make the fetch call to generate the invoice
     fetch(`https://api.goldquestglobal.in/generate-invoice?${queryString}`, requestOptions)
       .then((response) => {
@@ -74,7 +80,7 @@ const CreateInvoice = () => {
           // If response is not OK, handle the error
           return response.json().then((result) => {
             const errorMessage = result?.message || "An unknown error occurred";
-  
+
             // Check if the error message contains "invalid token" (case-insensitive)
             if (result?.message && result.message.toLowerCase().includes("invalid token")) {
               Swal.fire({
@@ -88,12 +94,12 @@ const CreateInvoice = () => {
               });
               return; // Prevent further execution if session has expired
             }
-  
-        
+
+
             throw new Error(errorMessage); // Throw error to skip further code execution
           });
         }
-  
+
         // If response is OK, parse the JSON body and proceed
         return response.json();
       })
@@ -111,18 +117,18 @@ const CreateInvoice = () => {
           });
           return; // Stop further execution if session has expired
         }
-  
+
         // Handle new token if it exists in the response
         const newToken = data._token || data.token;
         if (newToken) {
           localStorage.setItem("_token", newToken); // Update the token in localStorage
         }
-  
+
         let applications = [];
         if (Array.isArray(data.applications)) {
           applications = data.applications; // Set applications from response if valid
         }
-  
+
         const serviceNames = data?.serviceNames || [];
         const customer = data?.customer || [];
         const companyInfo = data?.companyInfo || [];
@@ -130,7 +136,7 @@ const CreateInvoice = () => {
           costInfo: { overallServiceAmount, cgst, sgst, totalTax, totalAmount } = {},
           serviceInfo = [],
         } = data?.finalArr || {}; // Destructure costInfo and serviceInfo from finalArr
-  
+
         // If there are applications, generate the PDF
         if (applications.length > 0) {
           generatePdf(
@@ -145,7 +151,7 @@ const CreateInvoice = () => {
             serviceInfo,
             sgst
           );
-  
+
           Swal.fire({
             title: "Success!",
             text: "PDF generated successfully.",
@@ -163,16 +169,18 @@ const CreateInvoice = () => {
         }
       })
       .catch((error) => {
-       
+
       })
       .finally(() => {
         swalInstance.close(); // Close the processing Swal
-        setIsLoading(false); // Hide loader after process is complete
+        setIsLoading(false);
+        setIsApiLoading(false);
+        // Hide loader after process is complete
       });
   };
-  
-  
-  
+
+
+
   function getTotalAdditionalFeeByService(serviceId, applications) {
     let totalFee = 0;
 
@@ -516,7 +524,7 @@ const CreateInvoice = () => {
     // Add label with padding (4 units) to avoid overlap with the border
     doc.text("Invoice Amount in Words:" + words + ' Rupees Only', leftX + 2, invoiceYPosition + 5); // 4 units padding from the left
 
-    
+
 
     // Application Details Table
     doc.addPage();
@@ -744,7 +752,7 @@ Make all your payment Cheques, RTGS/NEFT Payable to: "GOLDQUEST GLOBAL HR SERVIC
             <button
               type="submit"
               className="p-6 py-3 bg-green-600 text-white font-bold rounded-md hover:bg-blue-400 disabled:bg-gray-400"
-              disabled={isLoading} // Button is disabled while loading
+              disabled={isLoading || isApiLoading} // Button is disabled while loading
             >
               {isLoading ? "Please Wait Your PDF is Generating..." : "Submit"}
             </button>

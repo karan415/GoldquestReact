@@ -5,13 +5,18 @@ import { useApi } from '../ApiContext';
 import HolidayManagementForm from './HolidayManagementForm';
 import { useHoliday } from './HolidayManagementContext';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import { useApiCall } from '../ApiCallContext';
 
 const HolidayManagement = () => {
     const API_URL = useApi();
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const { editService, fetchData, loading, data } = useHoliday();
     const [itemsPerPage, setItemPerPage] = useState(10);
     useEffect(() => {
-        fetchData();
+        if (!isApiLoading) {
+            fetchData();
+        }
     }, [fetchData]);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -103,6 +108,7 @@ const HolidayManagement = () => {
     };
 
     const handleDelete = (serviceId) => {
+
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -112,21 +118,29 @@ const HolidayManagement = () => {
             cancelButtonText: 'No, cancel!',
         }).then((result) => {
             if (result.isConfirmed) {
+                setIsApiLoading(true);
+
                 const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
                 const storedToken = localStorage.getItem("_token");
-    
+
                 if (!admin_id || !storedToken) {
                     console.error("Admin ID or token is missing.");
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Admin ID or token is missing. Please log in again.',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
                     return;
                 }
-    
+
                 const requestOptions = {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
                     }
                 };
-    
+
                 fetch(`${API_URL}/holiday/delete?id=${serviceId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then(response => response.json())
                     .then(result => {
@@ -135,9 +149,10 @@ const HolidayManagement = () => {
                         if (newToken) {
                             localStorage.setItem("_token", newToken);
                         }
-    
+
                         // Check for session expiration due to an invalid token
-                        if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        const message = result.message?.toLowerCase();
+                        if (message && message.includes("invalid") && message.includes("token")) {
                             Swal.fire({
                                 title: "Session Expired",
                                 text: "Your session has expired. Please log in again.",
@@ -148,12 +163,12 @@ const HolidayManagement = () => {
                             });
                             return;
                         }
-    
+
                         // Check if deletion was successful
                         if (result.status) {
                             // Refresh data
                             fetchData();
-    
+
                             // Show success message with the response message
                             Swal.fire({
                                 title: 'Deleted!',
@@ -179,14 +194,13 @@ const HolidayManagement = () => {
                             icon: 'error',
                             confirmButtonText: 'Ok'
                         });
+                    }).finally(() => {
+                        setIsApiLoading(false);
                     });
             }
         });
     };
-    
-    
-    
-    
+
 
     return (
         <>
@@ -265,8 +279,9 @@ const HolidayManagement = () => {
                                                         Edit
                                                     </button>
                                                     <button
-                                                        disabled={loading}
-                                                        className='bg-red-600 rounded-md p-2 text-white ms-2'
+                                                        className={`rounded-md p-2 ms-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+                                                        disabled={isApiLoading}
+
                                                         onClick={() => handleDelete(item.id)}
                                                     >
                                                         Delete

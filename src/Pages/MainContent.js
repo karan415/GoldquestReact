@@ -67,7 +67,7 @@ const MainContent = () => {
   const { activeTab } = useSidebar();
 
   return (
-    <div className="w-full xl:w-10/12 md:w-9/12 mt-16 md:mt-0 flex flex-col items-stretch ">
+    <div className="w-full md:w-[80%] mt-16 md:mt-0 flex flex-col items-stretch ">
       {tabComponents[activeTab] || <DashBoard />}
     </div>
   );

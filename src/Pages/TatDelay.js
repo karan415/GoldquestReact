@@ -3,7 +3,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Swal from 'sweetalert2';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
+
 const TatDelay = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
+
   const [itemsPerPage, setItemPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,6 +82,7 @@ const TatDelay = () => {
 
 
   const fetchTat = useCallback(() => {
+    setIsApiLoading(true);
     setLoading(true);
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
@@ -159,12 +164,15 @@ const TatDelay = () => {
       })
       .finally(() => {
         setLoading(false); // Stop loading once the fetch is completed
+        setIsApiLoading(false); // Stop loading once the fetch is completed
       });
   }, []);
 
 
   useEffect(() => {
-    fetchTat();
+    if (!isApiLoading) {
+      fetchTat();
+    }
   }, [fetchTat]);
 
   const handleSelectChange = (e) => {

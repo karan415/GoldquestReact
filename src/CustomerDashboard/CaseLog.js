@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader';
-
+import { useApiCall } from '../ApiCallContext';
 import Swal from 'sweetalert2';
 const CaseLog = () => {
     const [conversationMsg, setConversationMsg] = useState([]);
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
 
     const [showPopup, setShowPopup] = useState(false);
     const [data, setData] = useState([]);
@@ -31,6 +32,7 @@ const CaseLog = () => {
     const replyTickets = (ticket_number, msg) => {
         setTicket(ticket_number);
         setShowPopup(true); // Show the popup
+        setIsBranchApiLoading(true); // Start loading state
         setViewLoading(true); // Start loading state
         setConversationMsg(msg);
 
@@ -81,6 +83,12 @@ const CaseLog = () => {
                 return response.json(); // Return the successful response
             })
             .then((result) => {
+                // Save new token if available
+                const newToken = result.token || result._token || "";
+                if (newToken) {
+                    localStorage.setItem("branch_token", newToken); // Save new token
+                }
+
                 if (result.error) {
                     // Show API-level error message
                     Swal.fire({
@@ -120,6 +128,7 @@ const CaseLog = () => {
             })
             .finally(() => {
                 setViewLoading(false); // Stop loading state once the request is done
+                setIsBranchApiLoading(false); // Stop loading state once the request is done
             });
     };
 
@@ -130,6 +139,7 @@ const CaseLog = () => {
         const branch_token = localStorage.getItem("branch_token");
 
         // Set loading state to true when starting the request
+        setIsBranchApiLoading(true);
         setFormLoading(true);
 
         if (userInput.trim()) {
@@ -191,10 +201,10 @@ const CaseLog = () => {
                             icon: 'error',
                             confirmButtonText: 'OK',
                         });
-                        throw new Error(errorMessage);
+                        throw new Error(errorMessage);  // Stop further processing
                     });
                 }
-                return response.json();
+                return response.json();  // Successful response, process it
             })
             .then((result) => {
                 if (result.error) {
@@ -206,10 +216,10 @@ const CaseLog = () => {
                         confirmButtonText: 'OK',
                     });
                 } else {
-                    // Refresh the conversation
+                    // Refresh the conversation with updated messages
                     replyTickets(ticket);
 
-                    // Update token if needed
+                    // Optionally, update token if received in response
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken);
@@ -217,7 +227,7 @@ const CaseLog = () => {
                 }
             })
             .catch((error) => {
-                console.error(error);
+                console.error("Error occurred:", error);
                 // Show a generic error message
                 Swal.fire({
                     title: 'Error',
@@ -227,15 +237,11 @@ const CaseLog = () => {
                 });
             })
             .finally(() => {
-                // Stop loading state once the process is done
+                // Stop loading states once the process is complete
                 setFormLoading(false);
+                setIsBranchApiLoading(false);
             });
     };
-
-
-
-
-
 
 
     const handleChange = (event) => {
@@ -341,8 +347,6 @@ const CaseLog = () => {
     };
 
 
-
-
     const handleClose = () => {
         setShowPopup(false); // Close the popup
     };
@@ -352,6 +356,7 @@ const CaseLog = () => {
         const branch_id = branchData?.id;
         const branch_token = localStorage.getItem("branch_token");
 
+        // Check if branch_id or branch_token are missing
         if (!branch_id || !branch_token) {
             console.error("Branch ID or token is missing.");
             return;
@@ -362,14 +367,16 @@ const CaseLog = () => {
             redirect: "follow"
         };
 
+        setIsBranchApiLoading(true); // Set loading state to true
         setLoading(true); // Set loading state to true
 
+        // Make the API request to fetch tickets
         fetch(`https://api.goldquestglobal.in/branch/ticket/list?branch_id=${branch_id}&_token=${branch_token}`, requestOptions)
             .then((response) => response.json())  // Always parse response as JSON
             .then((result) => {
-                // Check if the result has a message indicating session expiry or error
                 const errorMessage = result.message || "An unexpected error occurred.";
 
+                // Check for session expiry or invalid token
                 if (result.status === false && errorMessage.toLowerCase().includes("invalid") && errorMessage.toLowerCase().includes("token")) {
                     Swal.fire({
                         title: "Session Expired",
@@ -377,23 +384,23 @@ const CaseLog = () => {
                         icon: "warning",
                         confirmButtonText: "OK",
                     }).then(() => {
-                        // Redirect to the login page in the current tab
+                        // Redirect to the login page with branch email
                         window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`;
                     });
                     return;  // Exit if token is invalid
                 }
 
-                // Handle success scenario
+                // If the result is successful (status is true)
                 if (result.status === true) {
-                    setData(result.branches || []); // Set the data to the state if the request was successful
+                    setData(result.branches || []); // Set the tickets data to state
 
-                    // Handle token refresh if a new token is provided in the response
+                    // Check if a new token is provided in the response
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("branch_token", newToken); // Update the token in localStorage
                     }
                 } else {
-                    // Handle other errors
+                    // Handle errors or failure status in response
                     Swal.fire({
                         title: 'Error',
                         text: errorMessage,
@@ -404,7 +411,7 @@ const CaseLog = () => {
             })
             .catch((error) => {
                 console.error(error);
-                // Handle network errors
+                // Handle network errors or unexpected issues
                 Swal.fire({
                     title: 'Error',
                     text: 'An error occurred while fetching the tickets. Please try again.',
@@ -413,52 +420,57 @@ const CaseLog = () => {
                 });
             })
             .finally(() => {
-                setLoading(false); // Reset loading state after the operation
+                // Reset loading states after the operation
+                setLoading(false);
+                setIsBranchApiLoading(false);
             });
     };
 
 
+
     useEffect(() => {
-
-
-        fetchTickets();
+        if (!isBranchApiLoading) {
+            fetchTickets();
+        }
     }, []); // Make sure branch_id and branch_token are available
 
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('passerror', passError);
-    
+        e.preventDefault(); // Prevent form submission from reloading the page
+
         const branchData = JSON.parse(localStorage.getItem("branch"));
         const branch_id = branchData?.id;
         const branch_token = localStorage.getItem("branch_token");
-    
-        // Validate form data
+
+
+        // Validate the form data
         const formError = validate();
         if (Object.keys(formError).length > 0) {
-            setPassError(formError); // Set the validation errors
-            return; // Prevent the form submission if there are validation errors
+            setPassError(formError); // Set validation errors
+            return; // Prevent submission if validation fails
         }
-    
-        console.log('start');
-    
+        setIsBranchApiLoading(true);
+
+
         const requestBody = {
             "title": formData.title,
             "description": formData.description,
             "branch_id": branch_id,
             "_token": branch_token,
         };
-    
+
+        // Show loading spinner using Swal
         const swalInstance = Swal.fire({
             title: 'Processing...',
             text: 'Please wait while we create your Ticket',
             didOpen: () => {
-                Swal.showLoading(); // This starts the loading spinner
+                Swal.showLoading(); // Start the loading spinner
             },
             allowOutsideClick: false, // Prevent closing Swal while processing
             showConfirmButton: false, // Hide the confirm button
         });
-    
+
+        // Make API request to create ticket
         fetch("https://api.goldquestglobal.in/branch/ticket/create", {
             method: "POST",
             headers: {
@@ -466,82 +478,87 @@ const CaseLog = () => {
             },
             body: JSON.stringify(requestBody),
         })
-        .then((response) => response.json()) // Convert response to JSON
-        .then((data) => {
-            console.log('Response:', data); // Log the API response
-    
-            // Check if the response indicates invalid token
-            if (data.status === false && data.message === "Invalid token provided") {
-                Swal.fire({
-                    title: "Session Expired",
-                    text: "Your session has expired. Please log in again.",
-                    icon: "warning",
-                    confirmButtonText: "OK",
-                }).then(() => {
-                    console.log("Redirecting to login...");
-                    window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email)}`;
-                });
-                return; // Stop further execution after redirecting
-            }
-    
-            // Handle API-specific errors (if any)
-            if (data.errors) {
-                // Show error message from API in SweetAlert
-                Swal.fire({
-                    title: "Error",
-                    text: data.errors.join(", "), // Assuming `errors` is an array of messages
-                    icon: "error",
-                    confirmButtonText: "OK",
-                });
-            } else if (data.status === false) {
-                // If status is false, show the error message from API
-                Swal.fire({
-                    title: "Error",
-                    text: data.message || "An unexpected error occurred.",
-                    icon: "error",
-                    confirmButtonText: "OK",
-                });
-            } else {
-                // Show success message
-                Swal.fire({
-                    title: "Success",
-                    text: "Ticket created successfully!",
-                    icon: "success",
-                    confirmButtonText: "OK",
-                });
-    
-                const newToken = data._token || data.token;
-    
-                if (newToken) {
-                    localStorage.setItem("branch_token", newToken); // Update token
+            .then((response) => response.json()) // Convert response to JSON
+            .then((data) => {
+                console.log('Response:', data); // Log the API response
+
+                // Handle session expiry if token is invalid
+                if (data.status === false && data.message === "Invalid token provided") {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                    }).then(() => {
+                        console.log("Redirecting to login...");
+                        window.location.href = `/customer-login?email=${encodeURIComponent(branchData?.email || "")}`;
+                    });
+                    return; // Stop further execution after redirecting
                 }
-    
-                // Clear form data after successful creation
-                setFormData({
-                    title: '',
-                    description: '',
+
+                // Handle validation errors from API (if any)
+                if (data.errors) {
+                    // Show errors from API using Swal
+                    Swal.fire({
+                        title: "Error",
+                        text: data.errors.join(", "), // Assuming `errors` is an array of messages
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                } else if (data.status === false) {
+                    // Handle failure status from the API
+                    Swal.fire({
+                        title: "Error",
+                        text: data.message || "An unexpected error occurred.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                } else {
+                    // Successfully created the ticket
+                    Swal.fire({
+                        title: "Success",
+                        text: "Ticket created successfully!",
+                        icon: "success",
+                        confirmButtonText: "OK",
+                    });
+
+                    const newToken = data._token || data.token;
+
+                    // Update token if provided in response
+                    if (newToken) {
+                        localStorage.setItem("branch_token", newToken);
+                    }
+
+                    // Clear form data after successful submission
+                    setFormData({
+                        title: '',
+                        description: '',
+                    });
+
+                    // Reload tickets list
+                    fetchTickets();
+                }
+            })
+            .catch((error) => {
+                console.error(error); // Handle the error
+
+                // Show a generic error message if the API request fails
+                Swal.fire({
+                    title: "Error",
+                    text: error.message || "An error occurred while creating the ticket. Please try again.",
+                    icon: "error",
+                    confirmButtonText: "OK",
                 });
-    
-                fetchTickets(); // Reload tickets
-            }
-        })
-        .catch((error) => {
-            console.error(error); // Handle the error
-    
-            // Show a generic error message if an error occurs in the API request
-            Swal.fire({
-                title: "Error",
-                text: error.message || "An error occurred while creating the ticket. Please try again.",
-                icon: "error",
-                confirmButtonText: "OK",
+            })
+            .finally(() => {
+                // Close the Swal loading spinner after processing is done
+                swalInstance.close();
+                setIsBranchApiLoading(false);
             });
-        })
-        .finally(() => {
-            swalInstance.close(); // Close the Swal loading spinner
-        });
     };
-    
-    
+
+
+
 
 
     const deleteTicket = async (ticket_number) => {
@@ -549,7 +566,6 @@ const CaseLog = () => {
         const branch_id = branchData?.id;
         const branch_token = localStorage.getItem("branch_token");
         const formdata = new FormData();
-
         const requestOptions = {
             method: "DELETE",
             body: formdata,
@@ -567,7 +583,21 @@ const CaseLog = () => {
             reverseButtons: true,
         }).then((result) => {
             if (result.isConfirmed) {
-                // If user confirms, proceed with the deletion
+                setIsBranchApiLoading(true);
+
+                // Show loading spinner while deleting
+                Swal.fire({
+                    title: "Deleting...",
+                    text: "Please wait while the ticket is being deleted.",
+                    icon: "info",
+                    allowOutsideClick: false, // Prevent closing Swal while processing
+                    showConfirmButton: false, // Hide confirm button
+                    didOpen: () => {
+                        Swal.showLoading(); // Start loading spinner
+                    }
+                });
+
+                // Proceed with the deletion request
                 fetch(
                     `https://api.goldquestglobal.in/branch/ticket/delete?ticket_number=${ticket_number}&branch_id=${branch_id}&_token=${branch_token}`,
                     requestOptions
@@ -622,11 +652,22 @@ const CaseLog = () => {
                     })
                     .catch((error) => {
                         console.error(error);
-
+                        // Show error message in case of failure
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error occurred while deleting the ticket. Please try again.",
+                            icon: "error",
+                            confirmButtonText: "OK",
+                        });
+                    })
+                    .finally(() => {
+                        setIsBranchApiLoading(false); // Reset loading state after the operation
+                        Swal.close(); // Close the loading spinner
                     });
             }
         });
     };
+
 
 
     return (
@@ -662,7 +703,7 @@ const CaseLog = () => {
                             />
                             {passError.description && <p className='text-red-500'>{passError.description}</p>}
                         </div>
-                        <button type="submit" className='bg-green-400 text-white p-3 rounded-md w-full mb-4 hover:bg-green-200'>Submit Case-Logs</button>
+                        <button type="submit" disabled={isBranchApiLoading} className='bg-green-400 text-white p-3 rounded-md w-full mb-4 hover:bg-green-200'>Submit Case-Logs</button>
                     </form>
                 </div>
             </div>
@@ -731,12 +772,14 @@ const CaseLog = () => {
                                             <td className="py-2 px-4 border-r border-b text-center whitespace-nowrap">{item.ticket_number}</td>
                                             <td className="py-2 px-4 border-r border-b text-center whitespace-nowrap">
                                                 <button
+                                                    disabled={isBranchApiLoading}
                                                     className="bg-green-500 rounded-md hover:bg-green-200 p-2 me-3 text-white"
                                                     onClick={() => replyTickets(item.ticket_number, item.description)}
                                                 >
                                                     View
                                                 </button>
                                                 <button
+                                                    disabled={isBranchApiLoading}
                                                     className="bg-red-500 rounded-md hover:bg-red-200 p-2 text-white"
                                                     onClick={() => deleteTicket(item.ticket_number)}
                                                 >

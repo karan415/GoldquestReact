@@ -1,10 +1,13 @@
 import React, { createContext, useEffect, useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import { useApiCall } from '../ApiCallContext';
 
 const DropBoxContext = createContext();
 
 export const DropBoxProvider = ({ children }) => {
+    const {setIsBranchApiLoading } = useApiCall();
+
     const [inputError, setInputError] = useState({});
     const API_URL = useApi();
     const [services, setServices] = useState([]);
@@ -17,10 +20,6 @@ export const DropBoxProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [isEditClient, setIsEditClient] = useState(false);
     const [isEditCandidate, setIsEditCandidate] = useState(false);
-    const branchData = localStorage.getItem("branch");
-
- 
-    
     const [clientInput, setClientInput] = useState({
         name: '',
         employee_id: '',
@@ -95,6 +94,7 @@ export const DropBoxProvider = ({ children }) => {
     };
 
     const fetchServices = useCallback(async () => {
+        setIsBranchApiLoading(true);
         setServicesLoading(true);
         const branchData = JSON.parse(localStorage.getItem("branch")) || {};
         const branch_id = branchData?.id;
@@ -105,6 +105,9 @@ export const DropBoxProvider = ({ children }) => {
         if (!branch_id || !_token) {
             console.error("Branch ID or token is missing.");
             setServicesLoading(false);
+            setIsBranchApiLoading(false);
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+
             return;
         }
 
@@ -180,37 +183,42 @@ export const DropBoxProvider = ({ children }) => {
             Swal.fire("Error!", "An unexpected error occurred.", "error");
         } finally {
             setServicesLoading(false);
+            setIsBranchApiLoading(false);
         }
     }, [API_URL]);
 
     const fetchClient = useCallback(async () => {
         const branchData = JSON.parse(localStorage.getItem("branch")) || {};
         const branchEmail = branchData?.email;
+        setIsBranchApiLoading(true);
         setCandidateLoading(true);
         const branchId = JSON.parse(localStorage.getItem("branch"))?.id;
         const customerId = JSON.parse(localStorage.getItem("branch"))?.customer_id;
         const token = localStorage.getItem("branch_token");
-    
+
         if (!branchId || !token) {
             setCandidateLoading(false);
+            setIsBranchApiLoading(false);
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+
             return;
         }
-    
+
         try {
             const response = await fetch(`${API_URL}/branch/candidate-application/list?customer_id=${customerId}&branch_id=${branchId}&_token=${token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             const result = await response.json();
-    
+
             // Update token if it's present in the response
             const newToken = result?._token || result?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
                 setToken(newToken);
             }
-    
+
             // Check if the session has expired (invalid token)
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
@@ -224,7 +232,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return;  // Exit the function after redirection
             }
-    
+
             // Handle unsuccessful response (non-OK response)
             if (!response.ok) {
                 const errorMessage = result?.message || 'Something went wrong. Please try again later.';
@@ -236,7 +244,7 @@ export const DropBoxProvider = ({ children }) => {
                 });
                 return;  // Exit the function if the response is not OK
             }
-    
+
             // Set data on success
             setCandidateListData(result.data?.candidateApplications || []);
             if (result.data?.customerInfo) {
@@ -245,7 +253,7 @@ export const DropBoxProvider = ({ children }) => {
                 localStorage.setItem('customer_code', customerCode);
                 const services = customer.services && customer.services !== '""' ? JSON.parse(customer.services) : [];
                 setServices(services);
-    
+
                 const uniquePackages = [];
                 const packageSet = new Set();
                 services.forEach(service => {
@@ -265,12 +273,14 @@ export const DropBoxProvider = ({ children }) => {
             Swal.fire('Error!', 'An unexpected error occurred.', 'error');
         } finally {
             setCandidateLoading(false);
+            setIsBranchApiLoading(false);
         }
     }, [API_URL, setCandidateLoading, setToken, setCandidateListData, setServices, setUniquePackages]);
-    
+
 
 
     const fetchClientDrop = useCallback(async () => {
+        setIsBranchApiLoading(true);
         setLoading(true);
         const branchData = JSON.parse(localStorage.getItem("branch")) || {};
         const branchEmail = branchData?.email;
@@ -280,6 +290,9 @@ export const DropBoxProvider = ({ children }) => {
 
         if (!branch_id || !_token) {
             setLoading(false);
+            setIsBranchApiLoading(false);
+            window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+
             return;
         }
 
@@ -326,8 +339,6 @@ export const DropBoxProvider = ({ children }) => {
             // Process and set data if response is successful
             const FinalData = result.data.clientApplications;
             setListData(FinalData || []);
-  
-
             if (result.data.customerInfo) {
                 const customer = result.data.customerInfo;
                 const customer_code = customer.client_unique_id;
@@ -356,6 +367,7 @@ export const DropBoxProvider = ({ children }) => {
             Swal.fire('Error!', 'An unexpected error occurred. Please try again later.', 'error');
         } finally {
             setLoading(false);
+            setIsBranchApiLoading(false);
         }
     }, [API_URL]);
 
@@ -366,7 +378,6 @@ export const DropBoxProvider = ({ children }) => {
             setClientInput,
             fetchClient,
             fetchClientDrop,
-
             uniquePackages,
             handleEditDrop,
             handleEditCandidate,

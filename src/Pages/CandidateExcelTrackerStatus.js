@@ -9,8 +9,11 @@ import { BranchContextExel } from './BranchContextExel';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Modal from 'react-modal';
+import { useApiCall } from '../ApiCallContext';
 
 const CandidateExcelTrackerStatus = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const [loadingRow, setLoadingRow] = useState(null);
     const [selectedAttachments, setSelectedAttachments] = useState([]);
 
@@ -34,17 +37,18 @@ const CandidateExcelTrackerStatus = () => {
 
     // Fetch data from the main API
     const fetchData = useCallback(() => {
+        setIsApiLoading(true);
+
         if (!branch_id || !adminId || !token) {
             return;
         } else {
             setLoading(true);
         }
-    
         const requestOptions = {
             method: "GET",
             redirect: "follow"
         };
-    
+
         fetch(`${API_URL}/candidate-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
                 return response.json().then(result => {
@@ -61,13 +65,13 @@ const CandidateExcelTrackerStatus = () => {
                         });
                         return; // Stop further execution if token is invalid
                     }
-    
+
                     // Handle new token if available
                     const newToken = result._token || result.token;
                     if (newToken) {
                         localStorage.setItem("_token", newToken); // Update the token in localStorage
                     }
-    
+
                     // If response is not OK, show error message
                     if (!response.ok) {
                         Swal.fire({
@@ -77,7 +81,7 @@ const CandidateExcelTrackerStatus = () => {
                         });
                         throw new Error(result.message || 'Failed to load data');
                     }
-    
+
                     return result;
                 });
             })
@@ -88,29 +92,31 @@ const CandidateExcelTrackerStatus = () => {
             .catch((error) => {
                 console.error('Fetch error:', error);
                 // Optionally, show a generic error message
-              
+
             })
             .finally(() => {
-                setLoading(false); // Always stop loading when the request is complete
+                setLoading(false);
+                setIsApiLoading(false);
+                // Always stop loading when the request is complete
             });
-    
+
     }, [branch_id, adminId, token, setData]);
-    
+
 
     const goBack = () => {
         handleTabChange('candidate_master');
     }
 
- 
-     const handleViewDocuments = (attachments) => {
-         setSelectedAttachments(attachments);
-         setIsModalOpenDoc(true);
-     };
- 
-     const handleCloseModalDoc = () => {
-         setIsModalOpenDoc(false);
-         setSelectedAttachments([]);
-     };
+
+    const handleViewDocuments = (attachments) => {
+        setSelectedAttachments(attachments);
+        setIsModalOpenDoc(true);
+    };
+
+    const handleCloseModalDoc = () => {
+        setIsModalOpenDoc(false);
+        setSelectedAttachments([]);
+    };
 
     const filteredItems = data.filter(item => {
         return (
@@ -122,7 +128,7 @@ const CandidateExcelTrackerStatus = () => {
 
     const tableRef = useRef(null); // Ref for the table container
 
-    
+
 
 
     const filteredOptions = filteredItems.filter(item =>
@@ -196,15 +202,16 @@ const CandidateExcelTrackerStatus = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        if (!isApiLoading) {
+            fetchData();
+        }
     }, [clientId, branch_id]);
 
 
- 
+
 
 
     const handleSelectChange = (e) => {
-
         const selectedValue = e.target.value;
         setItemPerPage(selectedValue)
     }
@@ -221,10 +228,12 @@ const CandidateExcelTrackerStatus = () => {
 
 
     const handleSendLink = (applicationID, branch_id, customer_id, rowId) => {
+        setIsApiLoading(true);
+
         // Retrieve admin ID and token from localStorage
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem("_token");
-    
+
         // Check if adminId or token is missing
         if (!adminId || !token) {
             Swal.fire({
@@ -234,48 +243,48 @@ const CandidateExcelTrackerStatus = () => {
             });
             return;
         }
-    
-    
+
+
         // Construct the URL dynamically with query parameters
         const url = `${API_URL}/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
-    
+
         const requestOptions = {
             method: "GET",
             redirect: "follow", // No body required for GET requests
         };
-    
+
         fetch(url, requestOptions)
-          .then((response) => response.json().then(result => {
-                 // Handle token expiration check
-                 const newToken = result._token || result.token;
-                 if (newToken) {
-                   localStorage.setItem("_token", newToken); // Update token in localStorage
-                 }
-         
-                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                   Swal.fire({
-                     title: "Session Expired",
-                     text: "Your session has expired. Please log in again.",
-                     icon: "warning",
-                     confirmButtonText: "Ok",
-                   }).then(() => {
-                     window.location.href = "/admin-login"; // Redirect to login page on token expiration
-                   });
-                   return; // Stop further processing if token expired
-                 }
-         
-                 if (!response.ok) {
-                   Swal.fire({
-                     title: 'Error!',
-                     text: `An error occurred: ${result.message}`,
-                     icon: 'error',
-                     confirmButtonText: 'Ok'
-                   });
-                   throw new Error('Network response was not ok');
-                 }
-         
-                 return result; // Return the successful result if no errors
-               })) // Assuming the response is JSON
+            .then((response) => response.json().then(result => {
+                // Handle token expiration check
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem("_token", newToken); // Update token in localStorage
+                }
+
+                if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    Swal.fire({
+                        title: "Session Expired",
+                        text: "Your session has expired. Please log in again.",
+                        icon: "warning",
+                        confirmButtonText: "Ok",
+                    }).then(() => {
+                        window.location.href = "/admin-login"; // Redirect to login page on token expiration
+                    });
+                    return; // Stop further processing if token expired
+                }
+
+                if (!response.ok) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: `An error occurred: ${result.message}`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                    throw new Error('Network response was not ok');
+                }
+
+                return result; // Return the successful result if no errors
+            })) // Assuming the response is JSON
             .then((result) => {
                 // Check for invalid token
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
@@ -290,7 +299,7 @@ const CandidateExcelTrackerStatus = () => {
                     });
                     return; // Exit the function after session expiry handling
                 }
-    
+
                 // Handle successful response
                 if (result.status) {
                     Swal.fire({
@@ -312,11 +321,12 @@ const CandidateExcelTrackerStatus = () => {
             .catch((error) => {
                 // Handle errors that occur during the fetch
                 console.error(error);
-               
-            })
-    };
-    
 
+            }).finally(() => {
+                setIsApiLoading(false);
+
+            });
+    };
 
     return (
         <div className="bg-[#c1dff2]">
@@ -448,7 +458,7 @@ const CandidateExcelTrackerStatus = () => {
                                                 )}
                                             </td>
 
-                                          
+
 
                                             {data.cef_id ? (
                                                 <td className="border px-4 py-2">

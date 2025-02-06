@@ -5,7 +5,11 @@ import { useClient } from './ClientManagementContext';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import Swal from 'sweetalert2';
+import { useApiCall } from '../ApiCallContext';
+
 const ClientManagementData = () => {
+      const { isApiLoading, setIsApiLoading } = useApiCall();
+    
     const [selectedServices, setSelectedServices] = useState({});
     const [, setSelectedData] = useState([]);
     const API_URL = useApi();
@@ -95,6 +99,7 @@ const ClientManagementData = () => {
 
     const fetchServicesAndPackages = useCallback(async () => {
         setLoading(true);
+        setIsApiLoading(true);
         setError(null);
     
         try {
@@ -197,6 +202,7 @@ const ClientManagementData = () => {
             setError(error.message); // Set the error state with the message
         } finally {
             setLoading(false);
+            setIsApiLoading(false)
         }
     }, [API_URL]);
     
@@ -205,7 +211,10 @@ const ClientManagementData = () => {
 
 
     useEffect(() => {
-        fetchServicesAndPackages();
+        if(!isApiLoading){
+            fetchServicesAndPackages();
+        }
+ 
     }, [fetchServicesAndPackages]);
 
     const validateServices = () => {

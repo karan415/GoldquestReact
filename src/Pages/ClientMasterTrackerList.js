@@ -5,8 +5,11 @@ import { BranchContextExel } from './BranchContextExel';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import Swal from 'sweetalert2'; // Make sure to import SweetAlert2
+import { useApiCall } from '../ApiCallContext';
 
 const ClientMasterTrackerList = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const [searchTerm, setSearchTerm] = useState('');
     const { setBranchId } = useContext(BranchContextExel);
     const API_URL = useApi();
@@ -24,85 +27,90 @@ const ClientMasterTrackerList = () => {
     const fetchClient = useCallback((selected) => {
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
+        setIsApiLoading(true);
         setLoading(true);
         setError(null);
-      
-        let queryParams;
-      
-        if (selected) {
-          queryParams = new URLSearchParams({
-            admin_id: admin_id || '',
-            _token: storedToken || '',
-            filter_status: selected || '',
-          }).toString();
-        } else {
-          queryParams = new URLSearchParams({
-            admin_id: admin_id || '',
-            _token: storedToken || ''
-          }).toString();
-        }
-      
-        fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-          .then(response => {
-            return response.json().then(result => {
-              // Check for invalid or expired token
-              if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-                Swal.fire({
-                  title: "Session Expired",
-                  text: "Your session has expired. Please log in again.",
-                  icon: "warning",
-                  confirmButtonText: "Ok",
-                }).then(() => {
-                  // Redirect to admin login page
-                  window.location.href = "/admin-login"; // Replace with your login route
-                });
-                throw new Error("Session expired"); // Exit early to prevent further execution
-              }
-      
-              // Handle non-OK response
-              if (!response.ok) {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: result.message || 'Failed to load data',
-                });
-                throw new Error(result.message || 'Failed to load data');
-              }
-      
-              // Optionally update token if available
-              const newToken = result._token || result.token;
-              if (newToken) {
-                localStorage.setItem("_token", newToken);
-              }
-              return result;
-            });
-          })
-          .then((result) => {
-            // Set data after successful response
-            setData(result.data.customers || []);
-            setOptions(result.data.filterOptions);
-          })
-          .catch((error) => {
-            // Handle any errors during the fetch
-            setError(error.message || 'Failed to load data');
-          })
-          .finally(() => setLoading(false)); // Ensure loading is stopped
-      }, [setData, API_URL]);
-      
 
-      const handleBranches = useCallback((id) => {
+        let queryParams;
+
+        if (selected) {
+            queryParams = new URLSearchParams({
+                admin_id: admin_id || '',
+                _token: storedToken || '',
+                filter_status: selected || '',
+            }).toString();
+        } else {
+            queryParams = new URLSearchParams({
+                admin_id: admin_id || '',
+                _token: storedToken || ''
+            }).toString();
+        }
+
+        fetch(`${API_URL}/client-master-tracker/list?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                return response.json().then(result => {
+                    // Check for invalid or expired token
+                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                        Swal.fire({
+                            title: "Session Expired",
+                            text: "Your session has expired. Please log in again.",
+                            icon: "warning",
+                            confirmButtonText: "Ok",
+                        }).then(() => {
+                            // Redirect to admin login page
+                            window.location.href = "/admin-login"; // Replace with your login route
+                        });
+                        throw new Error("Session expired"); // Exit early to prevent further execution
+                    }
+
+                    // Handle non-OK response
+                    if (!response.ok) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to load data',
+                        });
+                        throw new Error(result.message || 'Failed to load data');
+                    }
+
+                    // Optionally update token if available
+                    const newToken = result._token || result.token;
+                    if (newToken) {
+                        localStorage.setItem("_token", newToken);
+                    }
+                    return result;
+                });
+            })
+            .then((result) => {
+                // Set data after successful response
+                setData(result.data.customers || []);
+                setOptions(result.data.filterOptions);
+            })
+            .catch((error) => {
+                // Handle any errors during the fetch
+                setError(error.message || 'Failed to load data');
+            })
+            .finally(() => {
+                setLoading(false);
+                setIsApiLoading(false);
+            }); // Ensure loading is stopped
+    }, [setData, API_URL]);
+
+
+    const handleBranches = useCallback((id) => {
+        setIsApiLoading(true);
         setBranchLoading(true);
         setError(null);
         setExpandedClient(prev => (prev === id ? null : id)); // Toggle branches visibility
-    
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-    
+
         fetch(`${API_URL}/client-master-tracker/branch-list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
             method: 'GET',
             headers: {
@@ -116,7 +124,7 @@ const ClientMasterTrackerList = () => {
                     if (newToken) {
                         localStorage.setItem("_token", newToken);
                     }
-    
+
                     // Check for session expiration
                     if (result.message) {
                         const message = result.message.toLowerCase();
@@ -138,7 +146,7 @@ const ClientMasterTrackerList = () => {
                             throw new Error("Session expired"); // Stop further processing
                         }
                     }
-    
+
                     // Check if response is not OK and show error message
                     if (!response.ok) {
                         Swal.fire({
@@ -148,7 +156,7 @@ const ClientMasterTrackerList = () => {
                         });
                         throw new Error(result.message || 'Failed to load data');
                     }
-    
+
                     return result; // Return result if response is okay
                 });
             })
@@ -163,9 +171,14 @@ const ClientMasterTrackerList = () => {
             .catch((error) => {
                 setError('Failed to load data');
             })
-            .finally(() => setBranchLoading(false)); // Stop loading after the operation
+            .finally(() => {
+                {
+                    setBranchLoading(false);
+                    setIsApiLoading(false);
+                }
+            }); // Stop loading after the operation
     }, []);
-    
+
 
     const tableRef = useRef(null); // Ref for the table container
 
@@ -185,7 +198,10 @@ const ClientMasterTrackerList = () => {
     }, []);
 
     useEffect(() => {
-        fetchClient();
+        if (!isApiLoading) {
+            fetchClient();
+        }
+
     }, [fetchClient]);
 
 
@@ -372,17 +388,15 @@ const ClientMasterTrackerList = () => {
                                             <td className="md:py-3 p-2 px-4 border-b border-r whitespace-nowrap text-center cursor-pointer">{item.application_count}</td>
                                             <td className="md:py-3 p-2 px-4 border-b border-r text-center whitespace-nowrap">
                                                 <button
-                                                    className='bg-green-600 hover:bg-green-200 rounded-md p-2 px-5 me-2 text-white'
-                                                    onClick={() => handleBranches(item.main_id)}>
+                                                disabled={branchLoading || isApiLoading}
+                                                className={`rounded-md p-3 text-white ${branchLoading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+                                                onClick={() => handleBranches(item.main_id)}>
                                                     {expandedClient === item.main_id ? 'Hide Branches' : 'View Branches'}
                                                 </button>
 
 
                                             </td>
                                         </tr>
-
-
-
 
                                         {expandedClient === item.main_id && (
                                             branchLoading ? (

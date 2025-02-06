@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useHoliday } from './HolidayManagementContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import { useApiCall } from '../ApiCallContext';
 
 const HolidayManagementForm = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const API_URL = useApi();
     const { selectedService, updateServiceList, fetchData } = useHoliday();
     const [adminId, setAdminId] = useState(null);
@@ -62,7 +65,9 @@ const HolidayManagementForm = () => {
         const validateError = validate();
 
         if (Object.keys(validateError).length === 0) {
-            setLoading(true); // Start loading
+            setIsApiLoading(true); // Set loading state at the start
+
+            setLoading(true); // Start loading spinner
 
             Swal.fire({
                 title: 'Processing...',
@@ -91,31 +96,29 @@ const HolidayManagementForm = () => {
                 : `${API_URL}/holiday/create`;
 
             fetch(url, requestOptions)
-                .then(response => {
-                    return response.json();  // Parse the JSON response
-                })
+                .then(response => response.json())  // Parse the JSON response
                 .then((result) => {
+                    // Check for token renewal and session expiration
                     const newToken = result._token || result.token;
                     if (newToken) {
-                        localStorage.setItem("_token", newToken); // Store the new token if available
+                        localStorage.setItem("_token", newToken); // Update token if available
                     }
 
-                    // Check for session expiration (invalid token)
-                    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+                    // Handle session expiration
+                    if (result.message?.toLowerCase().includes("invalid") && result.message?.toLowerCase().includes("token")) {
                         Swal.fire({
                             title: "Session Expired",
                             text: "Your session has expired. Please log in again.",
                             icon: "warning",
                             confirmButtonText: "Ok",
                         }).then(() => {
-                            // Redirect to admin login page
-                            window.location.href = "/admin-login"; // Replace with your login route
+                            window.location.href = "/admin-login"; // Redirect to login page
                         });
-                        return; // Exit further processing if session expired
+                        return;  // Exit further processing if session expired
                     }
 
-                    // Success handling: clear errors and show success message
-                    setError({});
+                    // Success handling
+                    setError({});  // Clear previous errors
                     Swal.fire({
                         title: "Success",
                         text: isEdit ? 'Holiday updated successfully' : 'Holiday added successfully',
@@ -123,7 +126,7 @@ const HolidayManagementForm = () => {
                         confirmButtonText: "Ok"
                     });
 
-                    // Update the service list based on the edit or create action
+                    // Update the service list based on whether it's an edit or create
                     if (isEdit) {
                         updateServiceList(prevList => prevList.map(service => service.id === result.id ? result : service));
                     } else {
@@ -131,11 +134,11 @@ const HolidayManagementForm = () => {
                     }
 
                     fetchData();  // Refresh data after success
-                    setDateInput({ name: "", date: "" });
-                    setIsEdit(false); // Reset the edit flag
+                    setDateInput({ name: "", date: "" });  // Clear form inputs
+                    setIsEdit(false);  // Reset the edit flag
                 })
                 .catch((error) => {
-                    // Catch and log the error
+                    // Handle errors during the fetch operation
                     console.error(error);
                     Swal.fire({
                         title: 'Error!',
@@ -145,15 +148,13 @@ const HolidayManagementForm = () => {
                     });
                 })
                 .finally(() => {
-                    setLoading(false); // Stop loading
+                    setLoading(false);  // Stop loading spinner
+                    setIsApiLoading(false);  // Stop the API loading state
                 });
         } else {
-            setError(validateError); // Set validation errors if validation fails
+            setError(validateError);  // Set validation errors if validation fails
         }
     };
-
-
-
 
 
 
@@ -181,7 +182,9 @@ const HolidayManagementForm = () => {
                     className='outline-none pe-4 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
                 {error.date && <p className='text-red-500'>{error.date}</p>}
             </div>
-            <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit' disabled={loading}>
+            <button
+                className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+                type='submit' disabled={loading || isApiLoading}>
                 {loading ? 'Processing...' : isEdit ? 'Update' : 'Add'}
             </button>
         </form>

@@ -461,11 +461,11 @@ input,select{
 @media(min-width:992px) and (max-width:1600px){
   div#menuitem ul li {
     font-size: 12px;
-    padding: 7px;
+    padding: 9px;
 }
 div#menuitem ul li {
-    font-size: 12px;
-    padding: 7px;
+    font-size: 15px;
+    padding: 9px;
 }
 
 div#menuitem ul li svg {

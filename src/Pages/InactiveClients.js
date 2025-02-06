@@ -2,8 +2,11 @@ import React, { useEffect, useCallback, useState } from 'react';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const InactiveClients = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState([]);
@@ -86,6 +89,7 @@ const InactiveClients = () => {
   const fetchClients = useCallback(async () => {
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
+    setIsApiLoading(true);
     setLoading(true);
 
     try {
@@ -135,14 +139,17 @@ const InactiveClients = () => {
     } catch (error) {
       console.error('Fetch error:', error);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
+      setIsApiLoading(false) // Stop loading
     }
   }, []);
 
 
 
   useEffect(() => {
-    fetchClients();
+    if (!isApiLoading) {
+      fetchClients();
+    }
   }, [fetchClients]);
 
   const inActive = async (name, id) => {
@@ -156,6 +163,7 @@ const InactiveClients = () => {
     });
 
     if (confirm.isConfirmed) {
+      setIsApiLoading(true);
       const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
       const storedToken = localStorage.getItem("_token");
 
@@ -205,6 +213,9 @@ const InactiveClients = () => {
       } catch (error) {
         console.error('Fetch error:', error);
         Swal.fire('Error', `Failed to unblock the client ${name}: ${error.message}`, 'error');
+      }
+      finally{
+        setIsApiLoading(false);
       }
     }
   };

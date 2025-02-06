@@ -2,8 +2,11 @@ import React, { useEffect, useCallback, useState } from 'react';
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import { useApiCall } from '../ApiCallContext';
 
 const CallbackAdmin = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [data, setData] = useState([]);
@@ -83,6 +86,7 @@ const CallbackAdmin = () => {
   const fetchClients = useCallback(async () => {
     const admin_id = JSON.parse(localStorage.getItem('admin'))?.id;
     const storedToken = localStorage.getItem('_token');
+    setIsApiLoading(true);
     setLoading(true);
 
     try {
@@ -124,17 +128,20 @@ const CallbackAdmin = () => {
       Swal.fire('Error!', 'An unexpected error occurred while fetching data.', 'error');
     } finally {
       setLoading(false); // Stop loading regardless of success or error
+      setIsApiLoading(false); // Stop loading regardless of success or error
     }
-}, []);
+  }, []);
 
 
 
 
   useEffect(() => {
-    fetchClients();
+    if (!isApiLoading) {
+      fetchClients();
+    }
   }, [fetchClients]);
 
- 
+
   const handleSelectChange = (e) => {
     const selectedValue = parseInt(e.target.value, 10);
     setItemsPerPage(selectedValue);
@@ -206,7 +213,7 @@ const CallbackAdmin = () => {
                     {new Date(item.requested_at).getMonth() + 1}-
                     {new Date(item.requested_at).getFullYear()}
                   </td>
-                  
+
                 </tr>
               ))}
             </tbody>

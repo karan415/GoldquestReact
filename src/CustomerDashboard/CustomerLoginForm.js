@@ -4,10 +4,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 import axios from 'axios';
+import { useApiCall } from '../ApiCallContext';
 
 const CustomerLoginForm = () => {
     const [loading, setLoading] = useState(false);
     const [loadingPassword, setLoadingPassword] = useState(false);
+    const { isApiLoading, setIsApiLoading } = useApiCall();
 
     const API_URL = useApi();
     const [showPassword, setShowPassword] = useState(false);
@@ -48,25 +50,27 @@ const CustomerLoginForm = () => {
     const getPassword = async (email) => {
         const adminData = localStorage.getItem('admin');
         const storedToken = localStorage.getItem('_token');
-    
+
         if (!adminData || !storedToken) {
             console.error('Missing admin data or token');
             window.location.href = "/admin-login"; // Replace with your actual login route
 
             return;
         }
-    
+
         const admin_id = JSON.parse(adminData)?.id;
-    
+
+        setIsApiLoading(true);
         setLoadingPassword(true);
-    
+
+
         try {
             const response = await fetch(
                 `${API_URL}/customer/fetch-branch-password?branch_email=${encodeURIComponent(email)}&admin_id=${admin_id}&_token=${storedToken}`
             );
-    
+
             const result = await response.json();
-    
+
             // Check for session expiration or invalid token in the response
             if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                 Swal.fire({
@@ -80,13 +84,13 @@ const CustomerLoginForm = () => {
                 });
                 return; // Exit further processing after showing session expired message
             }
-    
+
             // Handle new token if present in the response
             const newToken = result._token || result.token;
             if (newToken) {
                 localStorage.setItem("_token", newToken); // Update token
             }
-    
+
             // Handle errors if the response is not okay (non-200 status)
             if (!response.ok) {
                 Swal.fire(
@@ -96,7 +100,7 @@ const CustomerLoginForm = () => {
                 );
                 throw new Error(result.message || 'Unknown error');
             }
-    
+
             // Proceed if password is found in the result
             if (result?.password) {
                 setInput((prev) => ({
@@ -111,7 +115,7 @@ const CustomerLoginForm = () => {
                     confirmButtonText: "OK",
                 });
             }
-            
+
         } catch (error) {
             console.error('Error fetching password:', error);
             Swal.fire({
@@ -122,12 +126,13 @@ const CustomerLoginForm = () => {
             });
         } finally {
             setLoadingPassword(false);
+            setIsApiLoading(false);
         }
     };
-    
+
 
     useEffect(() => {
-        if (input.email) {
+        if (input.email || !isApiLoading) {
             getPassword(input.email);
         }
     }, [input.email]);
@@ -268,7 +273,7 @@ const CustomerLoginForm = () => {
                 confirmButtonText: 'Ok',
             }).then(() => {
                 setIsOtpLoading(true);
-        
+
                 axios
                     .post(`${API_URL}/branch/verify-two-factor`, {
                         username: input.email,
@@ -396,8 +401,8 @@ const CustomerLoginForm = () => {
                         />
                         <button
                             type="submit"
-                            className={ `cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''
-                                }` }
+                            className={`cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${isOtpLoading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                             onClick={handleOtpSubmit}
                             disabled={isOtpLoading}
                         >

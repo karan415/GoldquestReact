@@ -4,7 +4,11 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from "react-spinners/PulseLoader";
 import Swal from 'sweetalert2';
 import LoginContext from './InternalLoginContext';
+import { useApiCall } from '../ApiCallContext';
+
 const InternalLoginList = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const { data, loading, fetchData, handleEditAdmin, parsedServiceGroups } = useContext(LoginContext)
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemPerPage] = useState(10);
@@ -12,7 +16,9 @@ const InternalLoginList = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
     useEffect(() => {
-        fetchData();
+        if (!isApiLoading) {
+            fetchData();
+        }
     }, []);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,81 +114,86 @@ const InternalLoginList = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-     const deleteAdmin = (id) => {
+    const deleteAdmin = (id) => {
         Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, delete it!',
-          cancelButtonText: 'No, cancel!',
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
         }).then((result) => {
-          if (result.isConfirmed) {
-            const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
-            const storedToken = localStorage.getItem("_token");
-      
-            if (!admin_id || !storedToken) {
-              console.error("Admin ID or token is missing.");
-              return;
+            if (result.isConfirmed) {
+                setIsApiLoading(true);
+
+                const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
+                const storedToken = localStorage.getItem("_token");
+
+                if (!admin_id || !storedToken) {
+                    console.error("Admin ID or token is missing.");
+                    return;
+                }
+
+                const requestOptions = {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+
+                // Make the DELETE request
+                fetch(`https://api.goldquestglobal.in/admin/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+                    .then((response) => response.json()) // Parse the response as JSON
+                    .then((result) => {
+                        Swal.fire(
+                            'Deleted!',
+                            'Admin has been deleted successfully.',
+                            'success'
+                        );
+                        fetchData();
+                        // Handle token expiration (if the message contains "invalid token")
+                        if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                            Swal.fire({
+                                title: "Session Expired",
+                                text: "Your session has expired. Please log in again.",
+                                icon: "warning",
+                                confirmButtonText: "Ok",
+                            }).then(() => {
+                                // Redirect to the admin login page
+                                window.location.href = "/admin-login"; // Replace with your login route
+                            });
+                            return; // Stop further execution if session has expired
+                        }
+
+                        // If not OK or there's an error, handle it
+                        if (!result.ok) {
+                            return result.text().then(text => {
+                                const errorData = JSON.parse(text);
+                                Swal.fire(
+                                    'Error!',
+                                    `An error occurred: ${errorData.message}`,
+                                    'error'
+                                );
+                                throw new Error(errorData.message); // Handle the error
+                            });
+                        }
+
+                        // If the deletion is successful, show success message
+
+                        // Refresh the data
+
+                    })
+                    .catch((error) => {
+                        console.error('Fetch error:', error);
+
+                    }).finally(() => {
+                        setIsApiLoading(false);
+
+                    });
             }
-      
-            const requestOptions = {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            };
-      
-            // Make the DELETE request
-            fetch(`https://api.goldquestglobal.in/admin/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
-              .then((response) => response.json()) // Parse the response as JSON
-              .then((result) => {
-                Swal.fire(
-                  'Deleted!',
-                  'Admin has been deleted successfully.',
-                  'success'
-                );
-                fetchData();
-                // Handle token expiration (if the message contains "invalid token")
-                if (result.message && result.message.toLowerCase().includes("invalid token")) {
-                  Swal.fire({
-                    title: "Session Expired",
-                    text: "Your session has expired. Please log in again.",
-                    icon: "warning",
-                    confirmButtonText: "Ok",
-                  }).then(() => {
-                    // Redirect to the admin login page
-                    window.location.href = "/admin-login"; // Replace with your login route
-                  });
-                  return; // Stop further execution if session has expired
-                }
-      
-                // If not OK or there's an error, handle it
-                if (!result.ok) {
-                  return result.text().then(text => {
-                    const errorData = JSON.parse(text);
-                    Swal.fire(
-                      'Error!',
-                      `An error occurred: ${errorData.message}`,
-                      'error'
-                    );
-                    throw new Error(errorData.message); // Handle the error
-                  });
-                }
-      
-                // If the deletion is successful, show success message
-                
-                // Refresh the data
-               
-              })
-              .catch((error) => {
-                console.error('Fetch error:', error);
-                
-              });
-          }
         });
-      };
-  
+    };
+
     const editAdmin = (item) => {
         handleEditAdmin(item)
     }
@@ -288,7 +299,8 @@ const InternalLoginList = () => {
 
                                         <td className="py-2 px-4 border-b border-r text-center whitespace-nowrap">
                                             <button className='bg-green-500 hover:bg-green-200 rounded-md me-3 p-2 text-white' onClick={() => editAdmin(item)}>Edit</button>
-                                            <button className='bg-red-600 rounded-md p-2 text-white' onClick={() => deleteAdmin(item.id)}>Delete</button>
+                                            <button className={`rounded-md p-3 text-white ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+                                                disabled={isApiLoading || loading} onClick={() => deleteAdmin(item.id)}>Delete</button>
                                         </td>
                                     </tr>
                                 );

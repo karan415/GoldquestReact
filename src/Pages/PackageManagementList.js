@@ -4,15 +4,20 @@ import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const PackageManagementList = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
     const [itemsPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const { editPackage, data, loading, fetchData, setError } = usePackage();
     const [searchTerm, setSearchTerm] = useState('');
     const API_URL = useApi();
     useEffect(() => {
-        fetchData();
+        if (!isApiLoading) {
+            fetchData();
+        }
     }, [fetchData]);
     const filteredItems = data.filter(item => {
         return (
@@ -94,11 +99,8 @@ const PackageManagementList = () => {
         const checkedStatus = e.target.value;
         setItemPerPage(checkedStatus);
     }
-
-
-
-
     const handleDelete = (packageId) => {
+
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -106,29 +108,32 @@ const PackageManagementList = () => {
             showCancelButton: true,
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'No, cancel!',
-        }).then((result) => {
-            if (result.isConfirmed) {
+            showLoaderOnConfirm: true, // Show loading spinner while deleting
+            preConfirm: () => {
+                setIsApiLoading(true); // Set loading state to true when the request starts
+
                 const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
                 const storedToken = localStorage.getItem("_token");
-    
+
                 if (!admin_id || !storedToken) {
                     console.error("Admin ID or token is missing.");
                     Swal.fire('Error!', 'Admin ID or token is missing.', 'error');
-                    return;
+                    setIsApiLoading(false); // Reset the loading state if admin ID or token is missing
+                    return false;
                 }
-    
+
                 const requestOptions = {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 };
-    
-                fetch(`${API_URL}/package/delete?id=${packageId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+
+                return fetch(`${API_URL}/package/delete?id=${packageId}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => {
                         if (!response.ok) {
                             return response.json().then((errorData) => {
-                                // Handle the API error message for invalid token
+                                // Handle invalid token scenario
                                 if (errorData.message && errorData.message.toLowerCase().includes("invalid token")) {
                                     Swal.fire({
                                         title: "Session Expired",
@@ -150,21 +155,27 @@ const PackageManagementList = () => {
                         // Handle successful deletion
                         if (result.status === false) {
                             Swal.fire('Error!', result.message, 'error');
-                            return; // Exit early if status is false
+                            return false; // Exit early if the status is false
                         }
-    
-                        setError(null); // Reset error state
-                        // Refresh data after deletion
+
+                        setError(null); // Reset any error state
+                        // Show success message and fetch updated data
                         Swal.fire('Deleted!', 'Your package has been deleted.', 'success');
                         fetchData(); // Fetch the latest data
                     })
                     .catch((error) => {
                         console.error('Fetch error:', error);
+                        Swal.fire('Error!', `Could not delete the package: ${error.message}`, 'error');
+                        return false; // Return false in case of error
+                    })
+                    .finally(() => {
+                        setIsApiLoading(false); // Set loading state to false after the request completes
                     });
             }
         });
     };
-    
+
+
 
 
     return (
@@ -239,7 +250,8 @@ const PackageManagementList = () => {
                                                 Edit
                                             </button>
                                             <button
-                                                className='bg-red-600 rounded-md p-2 text-white'
+                                                disabled={isApiLoading || loading}
+                                                className={`rounded-md p-2 text-sm text-white ms-2 ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-200'}`}
                                                 onClick={() => handleDelete(item.id)}
                                             >
                                                 Delete

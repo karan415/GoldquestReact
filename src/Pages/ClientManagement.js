@@ -7,6 +7,7 @@ import { State } from 'country-state-city';
 import axios from "axios";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import { useSidebar } from '../Sidebar/SidebarContext';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const debounce = (func, delay) => {
   let timeoutId;
@@ -19,6 +20,8 @@ const debounce = (func, delay) => {
 
 
 const ClientManagement = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
   const [showModal, setShowModal] = useState(false); // State to handle modal visibility
   const states = State.getStatesOfCountry('IN');
 
@@ -271,6 +274,7 @@ const ClientManagement = () => {
 
 
   const handleFocusOut = useCallback(debounce((event) => {
+    setIsApiLoading(true);
     const value = event.target.value;
     const adminData = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem("_token");
@@ -301,6 +305,8 @@ const ClientManagement = () => {
         })
         .catch(error => {
           console.error('Error:', error);
+        }).finally(() => {
+          setIsApiLoading(false);
         });
     }
 
@@ -317,7 +323,6 @@ const ClientManagement = () => {
     e.preventDefault();
 
     let newErrors = {};
-
     const validationError = validate();
     const ServicesErrors = validationsErrors; // Validate nested fields
 
@@ -351,6 +356,7 @@ const ClientManagement = () => {
       setErrors({});
     }
     setErrors({});
+    setIsApiLoading(true);
 
     // Show the "Processing..." message and loading spinner
     const swalInstance = Swal.fire({
@@ -452,6 +458,7 @@ const ClientManagement = () => {
     } finally {
       swalInstance.close(); // Close the Swal loading spinner
       setIsLoading(false);
+      setIsApiLoading(false);
     }
   };
 
@@ -460,33 +467,35 @@ const ClientManagement = () => {
 
 
   const uploadCustomerLogo = async (adminId, token, customerInsertId, password) => {
-    for (const [key, value] of Object.entries(files)) {
-      const customerLogoFormData = new FormData();
-      customerLogoFormData.append("admin_id", adminId);
-      customerLogoFormData.append("_token", token);
-      customerLogoFormData.append("customer_code", input.client_code);
-      customerLogoFormData.append("customer_id", customerInsertId);
+    setIsApiLoading(true); // Start loading state
 
-      for (const file of value) {
-        customerLogoFormData.append("images", file);
-        customerLogoFormData.append("upload_category", key);
-      }
+    try {
+      // Loop through files
+      for (const [key, value] of Object.entries(files)) {
+        const customerLogoFormData = new FormData();
+        customerLogoFormData.append("admin_id", adminId);
+        customerLogoFormData.append("_token", token);
+        customerLogoFormData.append("customer_code", input.client_code);
+        customerLogoFormData.append("customer_id", customerInsertId);
 
-      customerLogoFormData.append("send_mail", 1); // Always send mail on file upload
-      customerLogoFormData.append("company_name", input.company_name);
-      customerLogoFormData.append("password", password);
+        // Append each file for upload
+        for (const file of value) {
+          customerLogoFormData.append("images", file);
+          customerLogoFormData.append("upload_category", key);
+        }
 
-      try {
+        // Add additional parameters
+        customerLogoFormData.append("send_mail", 1); // Always send mail
+        customerLogoFormData.append("company_name", input.company_name);
+        customerLogoFormData.append("password", password);
+
+        // Make the API request for file upload
         const response = await axios.post(`${API_URL}/customer/upload`, customerLogoFormData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        const newToken = response.data._token || response.data.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-          token = newToken; // Update for subsequent uploads
-        }
-        if (response.message && response.message.toLowerCase().includes("invalid") && response.message.toLowerCase().includes("token")) {
+        // Handle session expiration
+        if (response.data.message && response.data.message.toLowerCase().includes("invalid") && response.data.message.toLowerCase().includes("token")) {
           Swal.fire({
             title: "Session Expired",
             text: "Your session has expired. Please log in again.",
@@ -494,14 +503,33 @@ const ClientManagement = () => {
             confirmButtonText: "Ok",
           }).then(() => {
             // Redirect to admin login page
-            window.location.href = "/admin-login"; // Replace with your login route
+            window.location.href = "/admin-login"; // Redirect to your login page
           });
-          return;
+          return; // Exit if token is invalid
         }
-      } catch (err) {
-        Swal.fire("Error!", `Error uploading files: ${err.message}`, "error");
-        throw err; // Stop process if upload fails
+
+        // Update the token if it's available
+        const newToken = response.data._token || response.data.token;
+        if (newToken) {
+          localStorage.setItem("_token", newToken);
+          token = newToken; // Update for subsequent uploads
+        }
+
+        // Handle successful upload response (Optional, if required)
+        if (response.data.status === "success") {
+          // Optionally handle success scenario
+          console.log(`File uploaded successfully for category: ${key}`);
+        } else {
+          throw new Error(response.data.message || "Unexpected error occurred.");
+        }
       }
+
+    } catch (err) {
+      // Show error in case of failure
+      Swal.fire("Error!", `Error uploading files: ${err.message}`, "error");
+      console.error(err); // Log error to the console
+    } finally {
+      setIsApiLoading(false); // Reset loading state after all uploads
     }
   };
 
@@ -538,7 +566,6 @@ const ClientManagement = () => {
   };
 
 
-
   const addMoreFields = () => {
     setBranchForms([...branchForms, { branch_name: "", branch_email: "" }]);
   };
@@ -563,10 +590,7 @@ const ClientManagement = () => {
   } else {
     // Otherwise, assume the whole input is a raw code
     processedCode = clientCode.toUpperCase();
-  }
-
-  // Add the 'GQ-' prefix back
-  let value = `GQ-${processedCode}`;
+  };
 
 
 
@@ -678,58 +702,58 @@ const ClientManagement = () => {
                   />
                   {errors.contact_person && <p className="text-red-500">{errors.contact_person}</p>}
                 </div>
-                  <div className="mb-4 md:w-6/12">
-                    <label className="text-gray-500" htmlFor="state">
-                      State: <span className="text-red-600">*</span>
-                    </label>
-                    <select
-                      name="state"
-                      id="state"
-                      className="w-full border p-2 rounded-md mt-2"
-                      value={input.state}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select State</option>
-                      <option value="other">Other (Enter Custom State)</option>
-                      {options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                <div className="mb-4 md:w-6/12">
+                  <label className="text-gray-500" htmlFor="state">
+                    State: <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    name="state"
+                    id="state"
+                    className="w-full border p-2 rounded-md mt-2"
+                    value={input.state}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select State</option>
+                    <option value="other">Other (Enter Custom State)</option>
+                    {options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
 
-                    {input.state === 'other' && (
-                      <div>
-                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                          <div className="bg-white p-6 rounded-md shadow-md w-96">
-                            <h3 className="text-lg font-semibold mb-4">Enter Custom State</h3>
-                            <input
-                              type="text"
-                              name="customState"
-                              id="customState"
-                              className="w-full border p-2 rounded-md mt-2"
-                              value={input.customState}
-                              onChange={handleChange}
-                              placeholder="Enter custom state"
-                            />
-                            <div className="mt-4 flex justify-end">
-                              <button
-                                onClick={() => setInput((prevState) => ({ ...prevState, state: '' }))} // Close modal by clearing the state
-                                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2"
-                              >
-                                Close
-                              </button>
-                              <button
-                                onClick={handleSaveCustomState} // Save the custom state to the state field and add it to options
-                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                              >
-                                Save
-                              </button>
-                            </div>
+                  {input.state === 'other' && (
+                    <div>
+                      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-md shadow-md w-96">
+                          <h3 className="text-lg font-semibold mb-4">Enter Custom State</h3>
+                          <input
+                            type="text"
+                            name="customState"
+                            id="customState"
+                            className="w-full border p-2 rounded-md mt-2"
+                            value={input.customState}
+                            onChange={handleChange}
+                            placeholder="Enter custom state"
+                          />
+                          <div className="mt-4 flex justify-end">
+                            <button
+                              onClick={() => setInput((prevState) => ({ ...prevState, state: '' }))} // Close modal by clearing the state
+                              className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2"
+                            >
+                              Close
+                            </button>
+                            <button
+                              onClick={handleSaveCustomState} // Save the custom state to the state field and add it to options
+                              className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                            >
+                              Save
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1106,8 +1130,9 @@ const ClientManagement = () => {
               <div className="flex justify-center">
                 <button
                   type="submit"
-                  className="bg-green-500 w-full text-white p-3 mt-5 rounded-md hover:bg-green-500"
-                  disabled={isLoading}
+                  className={`w-full rounded-md p-3 text-white ${isLoading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+
+                  disabled={isLoading || isApiLoading}
                 >
                   {isLoading ? 'Processing...' : 'Send'}
 

@@ -3,15 +3,14 @@ import Swal from 'sweetalert2';
 import DropBoxContext from './DropBoxContext';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
 
 const CandidateForm = () => {
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
+
     const { services, uniquePackages, input, setInput, fetchClient, isEditCandidate, setIsEditCandidate, candidateLoading } = useContext(DropBoxContext);
     const [formLoading, setFormLoading] = useState(false);
     const API_URL = useApi();
-
-    const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
-
-
     const branch_name = JSON.parse(localStorage.getItem("branch"));
 
     const [error, setError] = useState({});
@@ -77,8 +76,6 @@ const CandidateForm = () => {
         }
     };
 
-
-
     const validate = () => {
         const NewErr = {};
 
@@ -90,14 +87,14 @@ const CandidateForm = () => {
         if (!name) {
             NewErr.name = 'Name is required';
         }
-        
+
 
         if (/\s/.test(employee_id)) {  // Check for spaces
             NewErr.employee_id = 'Employee ID cannot contain spaces';
         } else if (/[^a-zA-Z0-9-]/.test(employee_id)) {
             NewErr.employee_id = 'Employee ID should only contain letters, numbers, and hyphens';
         }
-        
+
 
 
         if (!mobile_number) {
@@ -124,11 +121,12 @@ const CandidateForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setFormLoading(true);
 
         const errors = validate();
         if (Object.keys(errors).length === 0) {
             setError({});
+            setIsBranchApiLoading(true);
+            setFormLoading(true);
             const branchData = JSON.parse(localStorage.getItem("branch"));
             const customer_id = branchData?.customer_id;
             const branch_id = branchData?.id;
@@ -175,6 +173,10 @@ const CandidateForm = () => {
             fetch(url, requestOptions)
                 .then(async (response) => {
                     if (!response.ok) {
+                        const newToken = response._token || response.token;
+                        if (newToken) {
+                            localStorage.setItem("branch_token", newToken);
+                        }
                         const errorResult = await response.json();
                         const errorMessage = errorResult.message || "An error occurred";
                         if (
@@ -234,10 +236,12 @@ const CandidateForm = () => {
                 .finally(() => {
                     swalInstance.close(); // Close the Swal loading spinner
                     setFormLoading(false);
+                    setIsBranchApiLoading(false);
                 });
         } else {
             setError(errors);
             setFormLoading(false);
+            setIsBranchApiLoading(false);
         }
     };
 
@@ -259,7 +263,7 @@ const CandidateForm = () => {
     return (
         <>
             {formLoading ? (
-                <div className='flex justify-center'>  <PulseLoader color="#36A2EB" loading={formLoading} size={15} /></div>
+                <div className='flex justify-center'><PulseLoader color="#36A2EB" loading={formLoading} size={15} /></div>
             ) : (
                 <form onSubmit={handleSubmit}>
                     <div className="md:grid gap-4 grid-cols-2 mb-4">
@@ -274,7 +278,7 @@ const CandidateForm = () => {
                                 {error.name && <p className='text-red-500'>{error.name}</p>}
                             </div>
                             <div className="mb-4">
-                                <label htmlFor="employee_id" className='text-sm'>Employee ID<span className='text-red-500'>*</span></label>
+                                <label htmlFor="employee_id" className='text-sm'>Employee ID</label>
                                 <input type="text" name="employee_id" disabled={isEditCandidate} className="border w-full rounded-md p-2 mt-2" onChange={handleChange} value={input.employee_id.toUpperCase()} />
                                 {error.employee_id && <p className='text-red-500'>{error.employee_id}</p>}
                             </div>
@@ -347,7 +351,7 @@ const CandidateForm = () => {
                         </div>
                     </div>
                     <div className='flex gap-4'>
-                        <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
+                        <button type="submit" disabled={isBranchApiLoading} className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md  md:w-2/12'>{isEditCandidate ? "Edit" : "Send"}</button>
                         <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 rounded-md '>Reset Form</button>
                     </div>
                 </form>

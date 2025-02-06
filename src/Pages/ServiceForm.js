@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useService } from './ServiceContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const ServiceForm = () => {
   const API_URL = useApi();
-  const { selectedService, updateServiceList, setSelectedService,fetchData } = useService();
+  const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
+  const { selectedService, updateServiceList, setSelectedService, fetchData } = useService();
   const [adminId, setAdminId] = useState(null);
   const [storedToken, setStoredToken] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -15,7 +18,7 @@ const ServiceForm = () => {
     d_name: "",
     short_code: "",
     sac_code: "",
-    group:""
+    group: ""
   });
   const [error, setError] = useState({});
 
@@ -75,11 +78,12 @@ const ServiceForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const validateError = validate();
-  
     if (Object.keys(validateError).length === 0) {
       setError({});
+      setIsApiLoading(true);
+
       setLoading(true); // Start loading
-  
+
       const requestOptions = {
         method: isEdit ? "PUT" : "POST",
         headers: {
@@ -96,18 +100,18 @@ const ServiceForm = () => {
           _token: storedToken,
         }),
       };
-  
+
       const url = isEdit
         ? `${API_URL}/service/update`
         : `${API_URL}/service/create`;
-  
+
       fetch(url, requestOptions)
         .then((response) => {
           if (!response.ok) {
             // If response is not OK, handle the error
             return response.json().then((result) => {
               const errorMessage = result?.message || "An unknown error occurred";
-  
+
               // Check if the error message contains "invalid token" (case-insensitive)
               if (result?.message && result.message.toLowerCase().includes("invalid token")) {
                 Swal.fire({
@@ -131,7 +135,7 @@ const ServiceForm = () => {
               throw new Error(errorMessage); // Throw error to skip further code execution
             });
           }
-  
+
           // If response is OK, parse the JSON body and proceed
           return response.json();
         })
@@ -144,7 +148,7 @@ const ServiceForm = () => {
             icon: "success",
             confirmButtonText: "Ok",
           });
-  
+
           // Now, handle the result (e.g., update the service list)
           setError({});
           if (isEdit) {
@@ -155,7 +159,7 @@ const ServiceForm = () => {
           } else {
             updateServiceList((prevList) => [...prevList, result]);
           }
-  
+
           fetchData(); // Refresh data
           setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "", group: "" });
           setIsEdit(false);
@@ -164,18 +168,19 @@ const ServiceForm = () => {
           console.error("API Error:", error.message);
         })
         .finally(() => {
-          setLoading(false); // Stop loading
+          setLoading(false);
+          setIsApiLoading(false); // Stop loading
         });
     } else {
       setError(validateError);
     }
   };
-  
-  
-  
 
-  const resetForm=()=>{
-    setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "" ,group:""});
+
+
+
+  const resetForm = () => {
+    setServiceInput({ name: "", d_name: "", sac_code: "", short_code: "", group: "" });
     setError({});
     setIsEdit(null)
 
@@ -238,9 +243,14 @@ const ServiceForm = () => {
           className='outline-none pe-14 ps-2 text-left rounded-md w-full border p-2 mt-2 capitalize' />
         {error.group && <p className='text-red-500'>{error.group}</p>}
       </div>
-      <button className="bg-green-500 hover:bg-green-200 text-white w-full rounded-md p-3" type='submit' disabled={loading}>
+      <button
+        className={`w-full rounded-md p-3 text-white ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+        type="submit"
+        disabled={loading || isApiLoading}
+      >
         {loading ? 'Processing...' : isEdit ? 'Update' : 'Add'}
       </button>
+
       <button onClick={resetForm} className="bg-blue-500 mt-5  hover:bg-blue-200 text-white w-full rounded-md p-3" type='button' >
         Refresh Form
       </button>

@@ -4,9 +4,13 @@ import Swal from 'sweetalert2';
 import LoginContext from './InternalLoginContext';
 import SelectSearch from 'react-select-search';
 import 'react-select-search/style.css';
+import { useApiCall } from '../ApiCallContext';
+import { useApi } from '../ApiContext';
+
 const InternalLoginForm = () => {
     const { formData, fetchData, setEditAdmin, setFormData, editAdmin, } = useContext(LoginContext)
-
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+    const API_URL = useApi();
     const [error, setError] = useState({});
     const [roles, setRoles] = useState([]);
     const [group, setGroup] = useState([]);
@@ -27,123 +31,107 @@ const InternalLoginForm = () => {
 
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-    useEffect(() => {
+
+    const fetchAdminOptions = async () => {
+        setIsApiLoading(true);
         setLoading(true);
-    
-        const fetchAdminOptions = async () => {
-            try {
-                const storedAdminData = localStorage.getItem("admin");
-                const storedToken = localStorage.getItem("_token");
-    
-                // Check if necessary data is available
-                if (!storedAdminData || !storedToken) {
+        try {
+            const storedAdminData = localStorage.getItem("admin");
+            const storedToken = localStorage.getItem("_token");
+
+            if (!storedAdminData || !storedToken) {
+                handleSessionExpiry();
+                return;
+            }
+
+            const adminData = JSON.parse(storedAdminData);
+            const admin_id = adminData?.id;
+
+            // Fetch admin roles and permissions
+            const response = await axios.get(`${API_URL}/admin/permission/roles`, {
+                params: { admin_id, _token: storedToken },
+            });
+
+            const message = response.data?.message?.toLowerCase() || '';
+            if (
+                message.includes("invalid token") ||
+                message.includes("expired") ||
+                message.includes("invalid token provided") ||
+                message.includes("invalid or expired token")
+            ) {
+                handleSessionExpiry();
+                return;
+            }
+
+            const adminRoles = response.data.data;
+            setRoles(adminRoles.roles || []);
+            setGroup(adminRoles.groups?.filter(Boolean) || []);
+
+            // Update token if provided
+            const newToken = response.data?._token || response.data?.token;
+            if (newToken) localStorage.setItem("_token", newToken);
+
+        } catch (error) {
+            console.error("Error fetching data:", error);
+
+            if (error.response) {
+                const errorMessage = error.response.data?.message?.toLowerCase() || "";
+                if (error.response.status === 401 || errorMessage.includes("token")) {
+                    handleSessionExpiry();
+                } else if (error.response.status === 500) {
                     Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
+                        title: "Server Error",
+                        text: "Something went wrong with the server. Please try again later.",
+                        icon: "error",
                         confirmButtonText: "Ok",
-                    }).then(() => {
-                        // Redirect to admin login page after closing the Swal alert
-                        window.location.href = "/admin-login"; // Replace with your login route
                     });
-                    return; // Exit if no valid data
-                }
-    
-                const adminData = JSON.parse(storedAdminData);
-                const admin_id = adminData?.id;
-    
-                // Fetch admin roles and permissions using axios
-                const response = await axios.get(
-                    `https://api.goldquestglobal.in/admin/permission/roles`,
-                    {
-                        params: {
-                            admin_id,
-                            _token: storedToken,
-                        },
-                    }
-                );
-    
-                // Check for invalid or expired token in the response
-                const message = response.data?.message?.toLowerCase() || '';
-                if (
-                    message.includes("invalid token") ||
-                    message.includes("expired") ||
-                    message.includes("invalid token provided") ||
-                    message.includes("invalid or expired token")
-                ) {
-                    Swal.fire({
-                        title: "Session Expired",
-                        text: "Your session has expired. Please log in again.",
-                        icon: "warning",
-                        confirmButtonText: "Ok",
-                    }).then(() => {
-                        // Redirect to admin login page after closing the Swal alert
-                        window.location.href = "/admin-login"; // Replace with your login route
-                    });
-                    return; // Stop further execution if token is invalid or expired
-                }
-    
-                // Handle valid response
-                const adminRoles = response.data.data;
-    
-                setRoles(adminRoles.roles || []); // Ensure roles is an array
-                setGroup(adminRoles.groups?.filter(Boolean) || []); // Remove any blank entries
-    
-                // Optionally, handle token refresh logic here
-                const newToken = response.data?._token || response.data?.token;
-                if (newToken) {
-                    localStorage.setItem("_token", newToken); // Replace the old token with the new one
-                }
-    
-            } catch (error) {
-                console.error("Error fetching data:", error);
-    
-                // Handle specific error responses, e.g., network failure or server error
-                if (error.response) {
-                    // Check if the error status code indicates session expiration or unauthorized access
-                    if (error.response.status === 401 || error.response.data.message?.toLowerCase().includes("token")) {
-                        Swal.fire({
-                            title: "Session Expired",
-                            text: "Your session has expired. Please log in again.",
-                            icon: "warning",
-                            confirmButtonText: "Ok",
-                        }).then(() => {
-                            window.location.href = "/admin-login"; // Replace with your login route
-                        });
-                    } else if (error.response.status === 500) {
-                        // Handle server errors
-                        Swal.fire({
-                            title: "Server Error",
-                            text: "Something went wrong with the server. Please try again later.",
-                            icon: "error",
-                            confirmButtonText: "Ok",
-                        });
-                    } else {
-                        // Handle other errors (e.g., 404, etc.)
-                        Swal.fire({
-                            title: "Error",
-                            text: error.response?.data?.message || "An error occurred. Please try again.",
-                            icon: "error",
-                            confirmButtonText: "Ok",
-                        });
-                    }
                 } else {
-                    // Handle network or other unknown errors
                     Swal.fire({
-                        title: "Network Error",
-                        text: "There was an issue with the network. Please check your connection and try again.",
+                        title: "Error",
+                        text: error.response?.data?.message || "An error occurred. Please try again.",
                         icon: "error",
                         confirmButtonText: "Ok",
                     });
                 }
-            } finally {
-                setLoading(false); // Always stop the loading indicator when done
+            } else {
+                Swal.fire({
+                    title: "Network Error",
+                    text: "There was an issue with the network. Please check your connection and try again.",
+                    icon: "error",
+                    confirmButtonText: "Ok",
+                });
             }
-        };
-    
-        fetchAdminOptions();
+        } finally {
+            setIsApiLoading(false);
+            setLoading(false);
+        }
+    };
+
+    // Function to handle session expiry
+    const handleSessionExpiry = () => {
+        Swal.fire({
+            title: "Session Expired",
+            text: "Your session has expired. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+        }).then(() => {
+            localStorage.removeItem("admin");
+            localStorage.removeItem("_token");
+            window.location.href = "/admin-login"; // Replace with navigate if using React Router
+        });
+    };
+
+
+
+
+    useEffect(() => {
+
+        if (isApiLoading == false) {
+            fetchAdminOptions();
+        }
     }, []); // Empty dependency array ensures this runs only once when the component is mounted
-    
+
+
     const Validate = () => {
         const errors = {};
 
@@ -184,115 +172,126 @@ const InternalLoginForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-      
-        // Perform validation
         let validateError = {};
+    
         if (!editAdmin) {
-          validateError = Validate(); // Only perform validation if not editing
+            validateError = Validate(); // Perform validation only if not editing
         }
-      
+    
         // Check if there are any validation errors
         if (Object.keys(validateError).length === 0) {
-          setError({}); // Reset errors
-      
-          const requestformData = {
-            admin_id: admin_id,
-            _token: storedToken,
-            ...formData,
-            send_mail: 1,
-            ...(editAdmin && { id: formData.id, status: formData.status }) // Add ID and status if editing
-          };
-      
-          // Show processing alert while making the request
-          Swal.fire({
-            title: 'Processing...',
-            text: 'Please wait while we create the admin.',
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
-      
-          try {
-            // Use fetch to make the request
-            const response = await fetch(editAdmin
-              ? 'https://api.goldquestglobal.in/admin/update'
-              : 'https://api.goldquestglobal.in/admin/create', {
-              method: editAdmin ? 'PUT' : 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(requestformData),
+            setIsApiLoading(true); // Start the loading state
+
+            setError({}); // Reset errors if no validation errors
+    
+            const requestformData = {
+                admin_id: admin_id,
+                _token: storedToken,
+                ...formData,
+                send_mail: 1,
+                ...(editAdmin && { id: formData.id, status: formData.status }) // Include ID and status if editing
+            };
+    
+            // Show processing alert while making the request
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we create the admin.',
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-      
-            const result = await response.json(); // Parse the response as JSON
-      
-            // Check if the API response contains 'Invalid token' message
-            if (result.message && result.message.toLowerCase().includes("invalid token")) {
-              // Show the session expired message
-              Swal.fire({
-                title: 'Session Expired',
-                text: 'Your session has expired. Please log in again.',
-                icon: 'warning',
-                confirmButtonText: 'Ok',
-              }).then(() => {
-                // Redirect to admin login page
-                window.location.href = '/admin-login'; // Replace with your login route
-              });
-              return; // Stop further code execution if token is invalid
+    
+            try {
+                // Make the request using fetch
+                const response = await fetch(editAdmin
+                    ? 'https://api.goldquestglobal.in/admin/update'
+                    : 'https://api.goldquestglobal.in/admin/create', {
+                    method: editAdmin ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestformData),
+                });
+    
+                const result = await response.json(); // Parse the response as JSON
+    
+                // Handle session expiration (invalid token)
+                if (result.message && result.message.toLowerCase().includes("invalid token")) {
+                    Swal.fire({
+                        title: 'Session Expired',
+                        text: 'Your session has expired. Please log in again.',
+                        icon: 'warning',
+                        confirmButtonText: 'Ok',
+                    }).then(() => {
+                        window.location.href = '/admin-login'; // Redirect to login
+                    });
+                    return; // Stop execution if session expired
+                }
+    
+                // Handle token refresh if the response contains a new token
+                const newToken = result._token || result.token;
+                if (newToken) {
+                    localStorage.setItem('branch_token', newToken); // Update the local storage token
+                }
+    
+                // Check the response status and handle success or failure
+                if (result.status) {
+                    // Success: Show success message
+                    Swal.fire({
+                        title: 'Success!',
+                        text: result.message || 'Admin created successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'Ok',
+                    });
+    
+                    // Reset form data after successful submission
+                    setFormData({
+                        employee_id: '',
+                        name: '',
+                        mobile: '',
+                        email: '',
+                        password: '',
+                        role: '',
+                        id: '',
+                        status: '',
+                        service_groups: [],
+                    });
+    
+                    fetchData(); // Fetch updated data after success
+                    setEditAdmin(false)
+                } else {
+                    // Failure: Show error message
+                    Swal.fire({
+                        title: 'Error!',
+                        text: result.message || 'Failed to create admin.',
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                // Optionally, handle the error with a general failure message
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred.',
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                });
+            } finally {
+                // Ensure loading state is turned off regardless of success or failure
+                setIsApiLoading(false);
             }
-      
-            // Handle token refresh if the response contains a new token
-            const newToken = result._token || result.token;
-            if (newToken) {
-              localStorage.setItem('branch_token', newToken);
-            }
-      
-            // Check if the result status is successful
-            if (result.status) {
-              // Success
-              Swal.fire({
-                title: 'Success!',
-                text: result.message || 'Admin created successfully.',
-                icon: 'success',
-                confirmButtonText: 'Ok',
-              });
-      
-              // Reset form data
-              setFormData({
-                employee_id: '',
-                name: '',
-                mobile: '',
-                email: '',
-                password: '',
-                role: '',
-                id: '',
-                status: '',
-                service_groups: [],
-              });
-      
-              fetchData(); // Call to fetch data after success
-            } else {
-              // Failure
-              Swal.fire({
-                title: 'Error!',
-                text: result.message || 'Failed to create admin.',
-                icon: 'error',
-                confirmButtonText: 'Ok',
-              });
-            }
-          } catch (error) {
-            
-          }
         } else {
-          // Show validation errors if any
-          setError(validateError);
+            // Show validation errors if any
+            setError(validateError);
+            setIsApiLoading(false); // Stop loading state on validation failure
         }
-      };
-      
+    };
     
-    
-    
-    
+
+
+
+
     const emptyForm = () => {
         setEditAdmin(false)
         setFormData({
@@ -485,7 +484,8 @@ const InternalLoginForm = () => {
                         )}
                     </div>
                 )}
-                <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md w-full'>Send</button>
+                <button type="submit" disabled={loading || isApiLoading} className={`w-full rounded-md p-3 text-white ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+                >Send</button>
                 <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 mt-5 rounded-md w-full'>Reset Form</button>
             </form>
         </>

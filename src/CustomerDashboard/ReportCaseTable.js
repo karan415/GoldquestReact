@@ -5,6 +5,7 @@ import React, {
   useState,
   useContext,
 } from "react";
+import { useApiCall } from '../ApiCallContext';
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "../ApiContext";
 import PulseLoader from "react-spinners/PulseLoader";
@@ -15,8 +16,7 @@ import "jspdf-autotable";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 const ReportCaseTable = () => {
   const [servicesLoading, setServicesLoading] = useState(false);
-
-  const [options, setOptions] = useState([]);
+  const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
   const [loadingStates, setLoadingStates] = useState({}); // To track loading state for each button
   const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
 
@@ -56,14 +56,19 @@ const ReportCaseTable = () => {
 
   // Fetch data from the main API
   const fetchData = useCallback(() => {
-    const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
+    const branchData = JSON.parse(localStorage.getItem("branch"));
+    const branch_id = branchData?.id;
+    const branchEmail = branchData?.email;
     const _token = localStorage.getItem("branch_token");
 
     if (!branch_id || !_token) {
-      return; // Exit if either branch_id or token is not available
+      window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
+      return;
+
     } else {
-      setLoading(true);
+      setLoading(true); // Start general loading state
     }
+    setIsBranchApiLoading(true); // Start branch API loading state
 
     const requestOptions = {
       method: "GET",
@@ -74,7 +79,7 @@ const ReportCaseTable = () => {
       `${API_URL}/branch/report-case-status/list?branch_id=${branch_id}&_token=${_token}`,
       requestOptions
     )
-      .then((response) => response.json()) // Use .json() and await the result
+      .then((response) => response.json())
       .then((result) => {
         // Handle token refresh if a new token is provided in the response
         const newToken = result._token || result.token;
@@ -115,7 +120,8 @@ const ReportCaseTable = () => {
         });
       })
       .finally(() => {
-        setLoading(false); // Always stop loading once the fetch is done
+        setLoading(false); // Stop general loading state once the fetch is done
+        setIsBranchApiLoading(false); // Stop branch API loading state once the fetch is done
       });
   }, [setData]);
 
@@ -200,19 +206,19 @@ const ReportCaseTable = () => {
   };
   const fetchServicesData = async (applicationId, servicesList) => {
     const branchData = localStorage.getItem("branch");
-    console.log("Branch data from localStorage:", branchData);
-    
+    setIsBranchApiLoading(true);  // Start loading
+
     const branchEmail = branchData ? JSON.parse(branchData)?.email : null;
     const branch_id = JSON.parse(branchData)?.id;
     const _token = localStorage.getItem("branch_token");
-    console.log("Branch Email:", branchEmail, "Branch ID:", branch_id, "Token:", _token);
-  
+
     // Return an empty array if servicesList is empty or undefined
     if (!servicesList || servicesList.length === 0) {
       console.log("Services list is empty or undefined. Returning empty array.");
+      setIsBranchApiLoading(false);  // Stop loading if servicesList is empty
       return [];
     }
-  
+
     try {
       const url = `${API_URL}/branch/report-case-status/services-annexure-data?service_ids=${encodeURIComponent(
         servicesList
@@ -221,47 +227,41 @@ const ReportCaseTable = () => {
       )}&branch_id=${encodeURIComponent(branch_id)}&_token=${encodeURIComponent(
         _token
       )}`;
-      console.log("Generated API URL:", url);
-  
+
       const response = await fetch(url, { method: "GET", redirect: "follow" });
-      console.log("API response received. Status:", response.status);
-  
+
       if (response.ok) {
         const result = await response.json();
-        console.log("API result:", result);
-  
+
+        // Ensure the token is available in the response
         const newToken = result.token || result._token || "";
         if (newToken) {
-          localStorage.setItem("_token", newToken);
-          console.log("Updated token in localStorage:", newToken);
+          console.log('New Token:', newToken);  // Check if newToken is correctly extracted
+          localStorage.setItem("branch_token", newToken); // Save new token to localStorage
         }
-  
+
         // Check if the response contains an invalid token message
         const message = result.message?.message?.toLowerCase() || '';
         if (message.includes("invalid") || message.includes("expired") || message.includes("token")) {
-          console.log("Invalid or expired token detected. Redirecting to login...");
-  
           Swal.fire({
             title: "Session Expired",
             text: "Your session has expired. Please log in again.",
             icon: "warning",
             confirmButtonText: "Ok",
           }).then(() => {
-            console.log("Redirecting to login...");
             window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
           });
           return; // Stop further execution if session expired
         }
-  
+
         // If no invalid token message, proceed with result filtering
         const filteredResults = result.results.filter((item) => item != null);
-        console.log("Filtered results:", filteredResults);
         return filteredResults;
       } else {
         const result = await response.json(); // Get the result to show the error message from API
         const errorMessage = result.message || response.statusText || 'Failed to fetch service data';
         console.error("API error:", errorMessage);
-  
+
         // Check if the error message contains 'invalid' or 'expired' and prompt the user to log in again
         if (errorMessage.toLowerCase().includes("invalid") || errorMessage.toLowerCase().includes("expired")) {
           Swal.fire({
@@ -280,41 +280,49 @@ const ReportCaseTable = () => {
             text: errorMessage,
           });
         }
-  
+
         return [];
       }
     } catch (error) {
       console.error("Error occurred:", error);
-  
+
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: error.message || 'Failed to fetch service data',
       });
-  
+
       return [];
+    } finally {
+      setIsBranchApiLoading(false);  // Stop loading after API call is completed
     }
   };
-  
-  
+
+
+
+
   useEffect(() => {
-    fetchData();
+    if (!isBranchApiLoading) {
+      fetchData();
+    }
   }, [clientId]);
 
   const handleViewMore = async (index) => {
     const globalIndex = index + (currentPage - 1) * itemsPerPage; // Calculate the global index
-    console.log('Current Page Index:', index);
-    console.log('Global Index:', globalIndex);
 
-    // Set loading for this row
+    setIsBranchApiLoading(true);
+
     setServicesLoading((prev) => ({ ...prev, [globalIndex]: true }));
 
+    // Check if the row is already expanded
     // Check if the row is already expanded
     if (expandedRow && expandedRow.index === globalIndex) {
       setExpandedRow(null); // Collapse the row
       setServicesLoading((prev) => ({ ...prev, [globalIndex]: false }));
+      setIsBranchApiLoading(false);
       return;
     }
+
 
     // Fetch service data for the globalIndex
     try {
@@ -366,9 +374,20 @@ const ReportCaseTable = () => {
       } else {
         // Handle other errors here (e.g., network issues)
         console.error("Error fetching service data:", error);
+
+        Swal.fire({
+          title: "Error",
+          text: "An error occurred while fetching the data. Please try again.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
       }
+    } finally {
+      setIsBranchApiLoading(false);
     }
   };
+
+
 
 
 
@@ -386,7 +405,6 @@ const ReportCaseTable = () => {
     const margin = 10; // Margins on the left and right
 
     // Space between sections (adjust dynamically based on page width)
-    const availableWidth = pageWidth - 2 * margin; // Usable width excluding margins
     const centerX = pageWidth / 2; // Center of the page
 
     // Insert text into the center column (centered)
@@ -418,69 +436,9 @@ const ReportCaseTable = () => {
     ); // Line above the footer
   }
 
-  async function checkImageExists(url) {
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      return response.ok; // Returns true if HTTP status is 200-299
-    } catch (error) {
-      console.error(`Error checking image existence at ${url}:`, error);
-      return false;
-    }
-  }
-
-  async function validateImage(url) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.warn(`Image fetch failed for URL: ${url}`);
-        return null;
-      }
-
-      const blob = await response.blob();
-      const img = new Image();
-      img.src = URL.createObjectURL(blob);
-
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-
-      return img; // Return the validated image
-    } catch (error) {
-      console.error(`Error validating image from ${url}:`, error);
-      return null;
-    }
-  }
-  const getImageFormat = (url) => {
-    const ext = url.split(".").pop().toLowerCase();
-    if (ext === "png") return "PNG";
-    if (ext === "jpg" || ext === "jpeg") return "JPEG";
-    if (ext === "webp") return "WEBP";
-    return "PNG"; // Default to PNG if not recognized
-  };
-
-  function scaleImage(img, maxWidth, maxHeight) {
-    const imgWidth = img.width;
-    const imgHeight = img.height;
-
-    let width = imgWidth;
-    let height = imgHeight;
-
-    // Scale image to fit within maxWidth and maxHeight
-    if (imgWidth > maxWidth) {
-      width = maxWidth;
-      height = (imgHeight * maxWidth) / imgWidth;
-    }
-
-    if (height > maxHeight) {
-      height = maxHeight;
-      width = (imgWidth * maxHeight) / imgHeight;
-    }
-
-    return { width, height };
-  }
 
   const fetchImageToBase = async (imageUrls) => {
+    setIsBranchApiLoading(true); // Start loading
     try {
       const headers = {
         "Content-Type": "application/json",
@@ -498,15 +456,26 @@ const ReportCaseTable = () => {
       );
 
       // Return the images from the response
-      return response.data.images;
+      if (response.data?.images) {
+        return response.data.images; // Ensure images exist before returning
+      } else {
+        console.error("No images returned in the response.");
+      }
     } catch (error) {
       console.error("Error fetching images:", error);
+
       if (error.response) {
-        console.error("Response error:", error.response.data);
+        console.error("Response error:", error.response.data); // Log the API error response
+      } else {
+        console.error("Network or other error:", error.message); // Handle network or other types of errors
       }
+    } finally {
+      setIsBranchApiLoading(false); // Stop loading once the request is finished
     }
-    return null; // Return null in case of an error
+
+    return null; // Return null in case of an error or if no images were returned
   };
+
   const generatePDF = async (index, reportDownloadFlag) => {
     const applicationInfo = data[index];
     const servicesData = await fetchServicesData(
@@ -1424,10 +1393,6 @@ const ReportCaseTable = () => {
     doc.save("report.pdf");
   };
 
-  const handleUpload = (applicationId, branchid) => {
-    navigate(`/candidate?applicationId=${applicationId}&branchid=${branchid}`);
-  };
-
   function sanitizeText(text) {
     if (!text) return text;
     return text.replace(/_[^\w\s]/gi, ""); // Removes all non-alphanumeric characters except spaces.
@@ -1566,6 +1531,7 @@ const ReportCaseTable = () => {
                             </td>
                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
                               <button
+
                                 onClick={() => {
                                   const reportDownloadFlag =
                                     data.overall_status === "completed" && data.is_verify === "yes" ? 1 : 0;
@@ -1586,7 +1552,7 @@ const ReportCaseTable = () => {
                                   });
                                 }}
                                 className={`bg-green-500 uppercase border border-white hover:border-green-500 text-white px-4 py-2 rounded hover:bg-white hover:text-green-500 ${data.overall_status !== "completed" || data.is_verify !== "yes" ? "opacity-50 cursor-not-allowed" : ""}`}
-                                disabled={data.overall_status !== "completed" || data.is_verify !== "yes" || loadingStates[globalIndex]}
+                                disabled={data.overall_status !== "completed" || data.is_verify !== "yes" || loadingStates[globalIndex] || isBranchApiLoading}
                               >
                                 {loadingStates[globalIndex] ? "Please Wait, Your PDF is Generating" : data.overall_status === "completed" ? data.is_verify === "yes" ? "DOWNLOAD" : "QC PENDING" : "NOT READY"}
                               </button>
@@ -1603,7 +1569,7 @@ const ReportCaseTable = () => {
                                   </a>
                                 )
                               ) : (
-                                "----"
+                                "No Image Found"
                               )}
                             </td>
                             <td className="py-3 px-4 border-b border-r-2 whitespace-nowrap capitalize">
@@ -1618,7 +1584,8 @@ const ReportCaseTable = () => {
 
                             <td className="border px-4  py-2">
                               <button
-                                className="bg-orange-500 uppercase border border-white hover:border-orange-500 text-white px-4 py-2 rounded hover:bg-white hover:text-orange-500"
+                                disabled={isBranchApiLoading}
+                                className={`rounded-md p-3 text-white ${isBranchApiLoading ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
                                 onClick={() => handleViewMore(index)} // Use globalIndex here
                               >
                                 {expandedRow && expandedRow.index === globalIndex ? 'Less' : 'View'}

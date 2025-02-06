@@ -1,11 +1,15 @@
 import React, { createContext, useState, useContext, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
+
 const PackageContext = createContext();
 
 export const usePackage = () => useContext(PackageContext);
 
 export const PackageProvider = ({ children }) => {
+    const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [packageList, setPackageList] = useState([]);
@@ -25,17 +29,18 @@ export const PackageProvider = ({ children }) => {
         setSelectedPackage(null);
     };
     const fetchData = useCallback(() => {
+        setIsApiLoading(true);
         setLoading(true);
         setError(null);
-    
+
         const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
         const storedToken = localStorage.getItem("_token");
-    
+
         const queryParams = new URLSearchParams({
             admin_id: admin_id || '',
             _token: storedToken || ''
         }).toString();
-    
+
         fetch(`${API_URL}/package/list?${queryParams}`, {
             method: 'GET',
             headers: {
@@ -44,7 +49,7 @@ export const PackageProvider = ({ children }) => {
         })
             .then(async (response) => {
                 const result = await response.json(); // Parse JSON from the response
-    
+
                 // Check for invalid token in the response
                 if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
                     Swal.fire({
@@ -58,12 +63,12 @@ export const PackageProvider = ({ children }) => {
                     });
                     return; // Exit early after redirect
                 }
-    
+
                 const newToken = result._token || result.token; // Use result.token if result._token is not available
                 if (newToken) {
                     localStorage.setItem("_token", newToken); // Replace the old token with the new one
                 }
-    
+
                 // Handle unsuccessful response status
                 if (!response.ok) {
                     Swal.fire({
@@ -74,7 +79,7 @@ export const PackageProvider = ({ children }) => {
                     });
                     throw new Error('Network response was not ok');
                 }
-    
+
                 return result; // Proceed with result
             })
             .then((data) => {
@@ -85,9 +90,13 @@ export const PackageProvider = ({ children }) => {
                 console.error('Fetch error:', error);
                 setError('Failed to load data');
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                setLoading(false);
+                setIsApiLoading(false);
+
+            });
     }, [API_URL]);
-    
+
 
     return (
         <PackageContext.Provider

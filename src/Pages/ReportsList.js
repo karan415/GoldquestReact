@@ -3,7 +3,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
+
 const ReportsList = () => {
+      const { isApiLoading, setIsApiLoading } = useApiCall();
+  
   const [expandedRows, setExpandedRows] = useState({}); // State to track expanded rows
   const [filters, setFilters] = useState({
     reportgenerateby: "", // Updated key for report generator
@@ -55,7 +59,7 @@ const ReportsList = () => {
       method: "GET",
       redirect: "follow",
     };
-
+    setIsApiLoading(true);
     setLoading(true); // Start loading before the fetch request
     console.log("Fetching data...");
 
@@ -166,7 +170,8 @@ const ReportsList = () => {
         
       })
       .finally(() => {
-        setLoading(false); // Stop loading after fetch completes
+        setLoading(false);
+        setIsApiLoading(false); // Stop loading after fetch completes
         console.log("Fetch complete, loading stopped."); // Log when loading is stopped
       });
   }, []);

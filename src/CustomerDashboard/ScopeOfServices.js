@@ -2,8 +2,11 @@ import { React, useCallback, useEffect, useState } from 'react';
 import { useApi } from '../ApiContext';
 import PulseLoader from 'react-spinners/PulseLoader';
 import Swal from 'sweetalert2';
+import { useApiCall } from '../ApiCallContext';
+
 const ScopeOfServices = () => {
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
 
     const storedBranchData = JSON.parse(localStorage.getItem("branch"));
     const branch_token = localStorage.getItem("branch_token");
@@ -27,18 +30,19 @@ const ScopeOfServices = () => {
             setLoading(false);
             return;
         }
-    
+
+        setIsBranchApiLoading(true);
         setLoading(true);
         try {
             const response = await fetch(`${API_URL}/branch/customer-info?customer_id=${customer_id}&branch_id=${branch.id}&branch_token=${branch_token}`, {
                 method: "GET",
                 redirect: "follow"
             });
-    
+
             // Check if response is not ok (non-2xx status code)
             if (!response.ok) {
                 const data = await response.json();
-                
+
                 // Check for session expiration (invalid token)
                 if (data.message && data.message.toLowerCase().includes("invalid") && data.message.toLowerCase().includes("token")) {
                     Swal.fire({
@@ -52,27 +56,27 @@ const ScopeOfServices = () => {
                     });
                     return; // Stop execution after redirect
                 }
-    
+
                 // Show error message from API response
                 const errorMessage = data?.message || 'Network response was not ok';
                 throw new Error(errorMessage);
             }
-    
+
             // If response is OK, parse the response JSON
             const data = await response.json();
-    
+
             // Store new token if available
             const newToken = data?._token || data?.token;
             if (newToken) {
                 localStorage.setItem("branch_token", newToken);
             }
-    
+
             if (data.customers) {
                 const customers = data.customers;
                 setCustomer(customers);
-    
+
                 const servicesData = data.customers.services;
-    
+
                 try {
                     const parsedServices = JSON.parse(servicesData);
                     setServices(parsedServices || []);
@@ -95,11 +99,14 @@ const ScopeOfServices = () => {
             setError('Failed to fetch services.');
         } finally {
             setLoading(false);
+            setIsBranchApiLoading(false);
         }
     }, [API_URL, customer_id, branch?.id, branch_token]);
-    
+
     useEffect(() => {
-        fetchServicePackage();
+        if (!isBranchApiLoading) {
+            fetchServicePackage();
+        }
     }, [fetchServicePackage]);
 
     return (

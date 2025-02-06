@@ -5,7 +5,10 @@ import { useApi } from '../ApiContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
+
 const ClientForm = () => {
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
 
     const [formLoading, setFormLoading] = useState(false);
     const branch_name = JSON.parse(localStorage.getItem("branch"));
@@ -20,8 +23,8 @@ const ClientForm = () => {
     const GotoBulk = () => {
         navigate('/ClientBulkUpload')
     }
-    const { isEditClient, setIsEditClient,inputError, setInputError, fetchClientDrop, setClientInput, services, uniquePackages, clientInput, loading } = useContext(DropBoxContext);
-   
+    const { isEditClient, setIsEditClient, inputError, setInputError, fetchClientDrop, setClientInput, services, uniquePackages, clientInput, loading } = useContext(DropBoxContext);
+
     const validate = () => {
         const newErrors = {};
         const maxSize = 2 * 1024 * 1024; // 2MB size limit
@@ -30,7 +33,7 @@ const ClientForm = () => {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ]; // Allowed file types
-    
+
         // Helper function to validate a file field
         const validateFile = (fileName) => {
             if (inputError[fileName] && inputError[fileName].length > 0) {
@@ -39,30 +42,30 @@ const ClientForm = () => {
             } else {
                 const selectedFiles = files[fileName]; // Get the files for this field
                 let fileErrors = [];
-    
+
                 // Check if it's a new submission or the field is required
                 if (fileName === 'attach_documents' && (!selectedFiles || selectedFiles.length === 0)) {
                     if (isEditClient !== true) { // If it's not an edit, file is required
                         fileErrors.push('Attach documents are required.');
                     }
                 }
-    
+
                 if (selectedFiles && selectedFiles.length > 0) {
                     selectedFiles.forEach((file) => {
                         if (file.size > maxSize) {
                             fileErrors.push(`${file.name}: File size must be less than 2MB.`);
                         }
-    
+
                         if (!allowedTypes.includes(file.type)) {
                             fileErrors.push(`${file.name}: Invalid file type. Only JPG, PNG, PDF, DOCX, and XLSX are allowed.`);
                         }
                     });
                 }
-    
+
                 return fileErrors;
             }
         };
-    
+
         // Validate file fields: photo and attach_documents
         ['photo', 'attach_documents'].forEach((fileField) => {
             const fileErrors = validateFile(fileField);
@@ -70,7 +73,7 @@ const ClientForm = () => {
                 newErrors[fileField] = fileErrors;
             }
         });
-    
+
         // Validate required text fields
         ['name', 'employee_id', 'spoc', 'location', 'batch_number', 'sub_client'].forEach((field) => {
             if (!clientInput[field] || clientInput[field].trim() === "") {
@@ -84,20 +87,10 @@ const ClientForm = () => {
                 }
             }
         });
-    
+
         return newErrors;
     };
-    
-    
-    
-    
-
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
-
-
-
-
-
 
     const handleFileChange = (fileName, e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -147,52 +140,62 @@ const ClientForm = () => {
     const uploadCustomerLogo = async (insertedId, new_application_id) => {
         const fileCount = Object.keys(files).length;
         const serviceData = JSON.stringify(services);
-        for (const [index, [key, value]] of Object.entries(files).entries()) {
-            const customerLogoFormData = new FormData();
-            customerLogoFormData.append('branch_id', storedBranchData?.id);
-            customerLogoFormData.append('_token', branch_token);
-            customerLogoFormData.append('customer_code', customer_code);
-            customerLogoFormData.append('client_application_id', insertedId);
-
-            for (const file of value) {
-                customerLogoFormData.append('images', file);
-            }
-            customerLogoFormData.append('upload_category', key);
-
-            if (fileCount === (index + 1)) {
-                if (isEditClient) {
-
-                    customerLogoFormData.append('send_mail', 0);
-                } else {
-                    customerLogoFormData.append('send_mail', 1);
+        setIsBranchApiLoading(true);  // Start loading
+    
+        try {
+            // Loop through the files to upload
+            for (const [index, [key, value]] of Object.entries(files).entries()) {
+                const customerLogoFormData = new FormData();
+                customerLogoFormData.append('branch_id', storedBranchData?.id);
+                customerLogoFormData.append('_token', branch_token);
+                customerLogoFormData.append('customer_code', customer_code);
+                customerLogoFormData.append('client_application_id', insertedId);
+    
+                // Append each file in the category to FormData
+                for (const file of value) {
+                    customerLogoFormData.append('images', file);
                 }
-                customerLogoFormData.append('services', serviceData);
-                customerLogoFormData.append('client_application_name', clientInput.name);
-                customerLogoFormData.append('client_application_generated_id', new_application_id);
-            }
-            try {
+                customerLogoFormData.append('upload_category', key);
+    
+                // Append additional data on the last iteration
+                if (fileCount === (index + 1)) {
+                    if (isEditClient) {
+                        customerLogoFormData.append('send_mail', 0);  // Don't send mail if editing
+                    } else {
+                        customerLogoFormData.append('send_mail', 1);  // Send mail for new client
+                    }
+                    customerLogoFormData.append('services', serviceData);
+                    customerLogoFormData.append('client_application_name', clientInput.name);
+                    customerLogoFormData.append('client_application_generated_id', new_application_id);
+                }
+    
+                // Perform the upload
                 await axios.post(`${API_URL}/branch/client-application/upload`, customerLogoFormData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
                 });
-            } catch (err) {
-                Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
             }
+        } catch (err) {
+            console.error('Error uploading logo:', err); // Log more details about the error
+            Swal.fire('Error!', `An error occurred while uploading logo: ${err.message}`, 'error');
+        } finally {
+            setIsBranchApiLoading(false);  // Stop loading once all files are processed
         }
     };
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         let requestBody;
         const errors = validate();
-    
+
         if (Object.keys(errors).length === 0) {
             setFormLoading(true);
-    
+
             const branch_id = storedBranchData?.id;
             const fileCount = Object.keys(files).length;
-    
+
             // Prepare the request body
             if (fileCount === 0) {
                 requestBody = {
@@ -211,8 +214,9 @@ const ClientForm = () => {
                     ...clientInput,
                 };
             }
-    
-            // Initialize swalInstance before making the API request
+
+            setIsBranchApiLoading(true);
+
             const swalInstance = Swal.fire({
                 title: 'Processing...',
                 text: 'Please wait while we create the Client Application.',
@@ -222,7 +226,7 @@ const ClientForm = () => {
                 allowOutsideClick: false, // Prevent closing Swal while processing
                 showConfirmButton: false, // Hide the confirm button
             });
-    
+
             try {
                 // Make the API request
                 const response = await fetch(
@@ -237,17 +241,17 @@ const ClientForm = () => {
                         body: JSON.stringify(requestBody),
                     }
                 );
-    
+
                 const result = await response.json();
                 console.log('API Response:', result); // Log the full response for debugging
-    
+
                 if (!response.ok) {
                     const errorMessage = result.message || "Unknown error occurred";
                     const apiError = result.errors || "An unexpected error occurred. Please try again later.";
-    
+
                     const messageToShow = result.message || `${apiError}`;
                     Swal.fire("Error!", messageToShow, "error");
-    
+
                     if (
                         errorMessage.toLowerCase().includes("invalid") &&
                         errorMessage.toLowerCase().includes("token")
@@ -261,19 +265,19 @@ const ClientForm = () => {
                             window.location.href = `/customer-login?email=${encodeURIComponent(branchEmail)}`;
                         });
                     }
-    
+
                     throw new Error(errorMessage);
                 }
-    
+
                 // Handle token update
                 const newToken = result._token || result.token;
                 if (newToken) {
                     localStorage.setItem("branch_token", newToken);
                 }
-    
+
                 let insertedId;
                 let new_application_id;
-    
+
                 if (isEditClient) {
                     // Only assign if available, otherwise continue
                     if (clientInput?.client_application_id && clientInput?.application_id) {
@@ -288,10 +292,10 @@ const ClientForm = () => {
                     insertedId = result?.result?.results?.insertId;
                     new_application_id = result?.result?.new_application_id;
                 }
-    
+
                 // Handle success message
                 let successMessage = `${isEditClient ? "Application Updated Successfully" : "Application Created Successfully"}`;
-    
+
                 if (fileCount > 0) {
                     // Handle file upload and call the upload function
                     if (insertedId && new_application_id) {
@@ -301,7 +305,7 @@ const ClientForm = () => {
                         console.warn("Inserted ID or Application ID not available, skipping upload.");
                     }
                 }
-    
+
                 // Show the success message
                 Swal.fire({
                     title: "Success",
@@ -321,26 +325,27 @@ const ClientForm = () => {
                         package: "",
                         client_application_id: "",
                     });
-    
+
                     setFiles({});
                     setInputError({});
                     fetchClientDrop(); // Fetch client dropdown data
-    
+
                     setIsEditClient(false); // Reset edit mode
                 });
-    
+
             } catch (error) {
                 console.error("There was an error!", error);
             } finally {
                 swalInstance.close(); // Close the Swal loading spinner
                 setFormLoading(false);
+                setIsBranchApiLoading(false);
             }
         } else {
             setInputError(errors); // Set the input errors if validation fails
         }
     };
-    
-    
+
+
 
     const handlePackageChange = (e) => {
         const selectedValue = e.target.value; // The selected package ID
@@ -417,8 +422,7 @@ const ClientForm = () => {
         });
         setInputError({});
         setIsEditClient(false);
-    }
-
+    };
     return (
         <>
             {formLoading ? (
@@ -545,7 +549,8 @@ const ClientForm = () => {
 
                     </div>
                     <div className='flex gap-4'>
-                        <button type="submit" className='bg-green-400 hover:bg-green-200 text-white p-3 rounded-md md:w-2/12' disabled={formLoading}>
+                        <button type="submit" className={`rounded-md p-3 text-white ${isBranchApiLoading || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+                            disabled={formLoading}>
                             Send
                         </button>
                         <button type="button" onClick={emptyForm} className='bg-blue-400 hover:bg-blue-800 text-white p-3 rounded-md '>Reset Form</button>

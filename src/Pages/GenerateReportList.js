@@ -3,7 +3,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import Swal from 'sweetalert2';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
+
 const GenerateReportList = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
+
   const [expandedRows, setExpandedRows] = useState({}); // State to track expanded rows
   const [loading, setLoading] = useState(false)
   const [itemsPerPage, setItemPerPage] = useState(10)
@@ -27,8 +31,7 @@ const GenerateReportList = () => {
       redirect: "follow",
     };
 
-    // Start loading
-    console.log("Loading data...");
+    setIsApiLoading(true);
     setLoading(true);
 
     fetch(
@@ -130,7 +133,8 @@ const GenerateReportList = () => {
       })
       .finally(() => {
         console.log("Fetch complete, loading stopped.");
-        setLoading(false); // Stop loading after fetch completes
+        setLoading(false);
+        setIsApiLoading(false); // Stop loading after fetch completes
       });
   }, []); // Empty dependency array to run this effect only once on mount
 

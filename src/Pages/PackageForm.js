@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { usePackage } from './PackageContext';
 import Swal from 'sweetalert2';
 import { useApi } from '../ApiContext';
+import { useApiCall } from '../ApiCallContext'; // Import the hook for ApiCallContext
 
 const PackageForm = ({ onSuccess }) => {
+      const { isApiLoading, setIsApiLoading } = useApiCall(); // Access isApiLoading from ApiCallContext
+    
     const API_URL = useApi();
     const { fetchData } = usePackage();
     const { selectedPackage, clearSelectedPackage, packageList, updatePackageList } = usePackage();
@@ -92,11 +95,12 @@ const PackageForm = ({ onSuccess }) => {
 
     const handlePackageFormSubmit = (e) => {
         e.preventDefault();
+        setIsApiLoading(true);
         setIsLoading(true); // Start loading
-    
+
         const adminData = JSON.parse(localStorage.getItem("admin"));
         const token = localStorage.getItem("_token");
-    
+
         if (!token) {
             // Handle the case where the token is missing
             Swal.fire({
@@ -109,17 +113,17 @@ const PackageForm = ({ onSuccess }) => {
             });
             return; // Exit early if no token
         }
-    
+
         if (adminData) setAdminId(adminData.id);
         setStoredToken(token);
-    
+
         const validationErrors = validateInputs();
         if (Object.keys(validationErrors).length === 0) {
             setError({}); // Clear previous errors
-    
+
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-    
+
             const raw = JSON.stringify({
                 id: selectedPackage?.id || "",
                 title: packageInput.name,
@@ -127,17 +131,17 @@ const PackageForm = ({ onSuccess }) => {
                 admin_id: adminId,
                 _token: token,
             });
-    
+
             const requestOptions = {
                 method: isEditMode ? "PUT" : "POST",
                 headers: myHeaders,
                 body: raw,
             };
-    
+
             const url = isEditMode
                 ? `${API_URL}/package/update`
                 : `${API_URL}/package/create`;
-    
+
             fetch(url, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
@@ -166,7 +170,7 @@ const PackageForm = ({ onSuccess }) => {
                         Swal.fire('Error!', result.message, 'error');
                         return; // Exit early if status is false
                     }
-    
+
                     // Display success message
                     Swal.fire({
                         title: "Success!",
@@ -174,7 +178,7 @@ const PackageForm = ({ onSuccess }) => {
                         icon: "success",
                         confirmButtonText: "Ok",
                     });
-    
+
                     // Update the package list
                     setError({});
                     if (isEditMode) {
@@ -185,12 +189,12 @@ const PackageForm = ({ onSuccess }) => {
                     } else {
                         updatePackageList([...packageList, result]);
                     }
-    
+
                     // Reset form fields
                     setPackageInput({ name: "", message: "" });
                     fetchData();
                     setIsEditMode(false);
-    
+
                     // Callbacks
                     if (typeof clearSelectedPackage === "function") {
                         clearSelectedPackage();
@@ -201,19 +205,23 @@ const PackageForm = ({ onSuccess }) => {
                 })
                 .catch((error) => {
                     console.error("API Error:", error.message);
-                   
+
                 })
                 .finally(() => {
-                    setIsLoading(false); // Stop loading after submission
+                    setIsLoading(false);
+                    setIsApiLoading(false);
+                    // Stop loading after submission
                 });
         } else {
             // Show validation errors
             setError(validationErrors);
-            setIsLoading(false); // Stop loading if there are validation errors
+            setIsLoading(false); 
+            setIsApiLoading(false);
+            // Stop loading if there are validation errors
         }
     };
-    
-    
+
+
 
     const resetForm = () => {
         setPackageInput({
@@ -255,13 +263,15 @@ const PackageForm = ({ onSuccess }) => {
                     ></textarea>
                     {error.message && <p className="text-red-500">{error.message}</p>}
                 </div>
+               
                 <button
+                    className={`w-full rounded-md p-3 text-white ${isLoading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
                     type="submit"
-                    className='bg-green-400 text-white p-3 rounded-md w-full'
-                    disabled={isLoading} // Disable button while loading
+                    disabled={isLoading || isApiLoading}
                 >
-                    {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Send'}
+                    {isLoading ? 'Processing...' : isEditMode ? 'Update' : 'Add'}
                 </button>
+
                 <button
                     onClick={resetForm}
                     type="button"

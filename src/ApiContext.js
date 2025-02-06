@@ -1,9 +1,10 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const ApiContext = createContext();
 
 export const ApiProvider = ({ children }) => {
   const API_URL = "https://api.goldquestglobal.in";
+  const [isApiLoading,setIsApiLoading] = useState(false);
 
 
   return (

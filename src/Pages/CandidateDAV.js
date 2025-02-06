@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
-import PulseLoader from 'react-spinners/PulseLoader'; 
+import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
+
 const CandidiateDav = () => {
+    const { isApiLoading, setIsApiLoading } = useApiCall();
+
     const [davData, setDAVData] = useState([]);
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -13,7 +17,7 @@ const CandidiateDav = () => {
 
 
     const [isValidApplication, setIsValidApplication] = useState(true);
- 
+
     const FileViewer = ({ fileUrl }) => {
         if (!fileUrl) {
             return <p>No file provided</p>; // Handle undefined fileUrl
@@ -44,64 +48,87 @@ const CandidiateDav = () => {
         return <p>Unsupported file type</p>;
     };
     const isApplicationExists = useCallback(() => {
+        setIsApiLoading(true);
         setLoading(true);  // Set loading to true before making the fetch request.
-
+    
         const applicationId = urlParams.get('applicationId');
         const branchId = urlParams.get('branch_id');
         const token = localStorage.getItem('_token');
         const adminData = JSON.parse(localStorage.getItem('admin'));
         const admin_id = adminData?.id;
-
+    
+        // Validate necessary parameters before proceeding
+        if (!applicationId || !branchId || !token || !admin_id) {
+            setIsApiLoading(false);
+            setLoading(false);
+            Swal.fire({
+                title: 'Error',
+                text: 'Missing required parameters.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+    
         fetch(`https://api.goldquestglobal.in/candidate-master-tracker/dav-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${token}`)
             .then(res => res.json())
             .then(result => {
-                setLoading(false);  // Set loading to false when the request is complete.
-
+                setLoading(false);  // Stop loading spinner when the request is complete.
+    
                 if (!result.status) {
                     setIsValidApplication(false);
+    
                     Swal.fire({
                         title: 'Error',
                         text: result.message,
                         icon: 'error',
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'OK',
                     });
-
+    
+                    // Ensure form is present before trying to remove it
                     const form = document.getElementById('bg-form');
                     if (form) {
                         form.remove();
                     }
-
-                    // Show the error message
+    
+                    // Create and show the error message div
                     const errorMessageDiv = document.createElement('div');
                     errorMessageDiv.classList.add(
                         'bg-red-100', 'text-red-800', 'border', 'border-red-400', 'p-6',
                         'rounded-lg', 'max-w-lg', 'mx-auto', 'shadow-lg', 'absolute',
                         'top-1/2', 'left-1/2', 'transform', '-translate-x-1/2', '-translate-y-1/2'
                     );
-
+    
                     errorMessageDiv.innerHTML = `
                         <h1 class="font-semibold text-2xl">Error</h1>
                         <p class="text-lg">${result.message}</p>
                     `;
-
                     document.body.appendChild(errorMessageDiv);
+                } else {
+                    setDAVData(result.DEFData);
                 }
-
-                setDAVData(result.DEFData);
             })
             .catch(err => {
                 setLoading(false);  // Ensure loading is false even if there's an error.
+                setIsApiLoading(false);  // Stop global loading spinner in case of error.
+    
                 Swal.fire({
                     title: 'Error',
-                    text: err.message,
+                    text: err.message || 'An error occurred while fetching application data.',
                     icon: 'error',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: 'OK',
                 });
+            })
+            .finally(() => {
+                setIsApiLoading(false); // Ensure global loading state is reset
             });
     }, []);
+    
 
     useEffect(() => {
-        isApplicationExists();
+        if (!isApiLoading) {
+            isApplicationExists();
+        }
     }, []);
 
 
@@ -126,7 +153,7 @@ const CandidiateDav = () => {
                         <div className='flex justify-center items-center py-6 ' >
                             <PulseLoader color="#36D7B7" loading={loading} size={15} aria-label="Loading Spinner" />
                         </div >
-                    ) :(
+                    ) : (
                         <>
                             <h3 className="text-center py-3 font-bold text-2xl">Digital Address Verification</h3>
                             <div className="border md:w-7/12 m-auto p-4 ">
@@ -327,7 +354,7 @@ const CandidiateDav = () => {
                                 </div>
                             </div>
                         </>
-                           )}
+                    )}
 
 
 

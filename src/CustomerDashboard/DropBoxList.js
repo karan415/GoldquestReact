@@ -5,8 +5,11 @@ import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import ClientForm from './ClientForm';
 import PulseLoader from 'react-spinners/PulseLoader';
+import { useApiCall } from '../ApiCallContext';
 
 const DropBoxList = () => {
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
+
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
     const branchEmail = JSON.parse(localStorage.getItem("branch"))?.email;
@@ -26,7 +29,9 @@ const DropBoxList = () => {
     const { handleEditDrop, fetchClientDrop, listData, loading } = useContext(DropBoxContext);
 
     useEffect(() => {
-        fetchClientDrop();
+        if (!isBranchApiLoading) {
+            fetchClientDrop();
+        }
     }, [fetchClientDrop]);
     const handleViewMore = (services) => {
         setModalServices(services);
@@ -119,9 +124,8 @@ const DropBoxList = () => {
 
     }
 
-
-
     const handleDelete = (id) => {
+
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -131,21 +135,22 @@ const DropBoxList = () => {
             cancelButtonText: 'No, cancel!',
         }).then((result) => {
             if (result.isConfirmed) {
+                setIsBranchApiLoading(true);
                 const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
                 const _token = localStorage.getItem("branch_token");
-    
+
                 if (!branch_id || !_token) {
                     console.error("Branch ID or token is missing.");
                     return;
                 }
-    
+
                 const requestOptions = {
                     method: "DELETE",
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 };
-    
+
                 fetch(`${API_URL}/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`, requestOptions)
                     .then(response => response.json()) // Parse the JSON response
                     .then(result => {
@@ -165,13 +170,13 @@ const DropBoxList = () => {
                             });
                             return; // Exit after showing the session expired message
                         }
-    
+
                         // Handle token update if provided in the response
                         const newToken = result._token || result.token;
                         if (newToken) {
                             localStorage.setItem("branch_token", newToken);
                         }
-    
+
                         // If there is a failure message in the result, show it
                         if (result.status === false) {
                             Swal.fire({
@@ -182,7 +187,7 @@ const DropBoxList = () => {
                             });
                             return; // Exit if an error occurs during the deletion
                         }
-    
+
                         // Successfully deleted, now show success and refresh the data
                         fetchClientDrop();
                         Swal.fire(
@@ -198,12 +203,14 @@ const DropBoxList = () => {
                             'An unexpected error occurred while deleting.',
                             'error'
                         );
+                    }).finally(() => {
+                        setIsBranchApiLoading(false);
                     });
             }
         });
     };
-    
-    
+
+
 
 
     return (
@@ -458,7 +465,10 @@ const DropBoxList = () => {
                                             <td className="py-3 px-4 border-b border-r whitespace-nowrap">{report.employee_id}</td>
                                             <td className="py-3 px-4 border-b whitespace-nowrap border-r">
                                                 <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
-                                                <button className="bg-red-600 text-white p-3 ms-2 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
+                                                <button disabled={loading || isBranchApiLoading}
+                                                    className={`rounded-md p-3 ms-2 text-white ${isBranchApiLoading || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+
+                                                    onClick={() => handleDelete(report.id)}>Delete</button>
                                             </td>
                                         </tr>
                                     ))}

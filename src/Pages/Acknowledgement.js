@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useApiCall } from '../ApiCallContext';
 
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Swal from 'sweetalert2';
@@ -8,6 +9,7 @@ const Acknowledgement = () => {
   const [itemsPerPage, setItemPerPage] = useState(10);
   const [emailsData, setEmailsData] = useState([]);
   const [loading, setLoading] = useState(false); // Loading state
+  const { isApiLoading, setIsApiLoading } = useApiCall();
 
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +17,7 @@ const Acknowledgement = () => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
 
+    setIsApiLoading(true); // Start loading
     setLoading(true); // Start loading
 
     fetch(`https://api.goldquestglobal.in/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`)
@@ -66,6 +69,7 @@ const Acknowledgement = () => {
       })
       .finally(() => {
         setLoading(false); // Stop loading after fetch completes
+        setIsApiLoading(false); // Stop loading after fetch completes
       });
   }, [setEmailsData]);
 
@@ -75,6 +79,7 @@ const Acknowledgement = () => {
   const sendApproval = (id) => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
+
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
@@ -91,55 +96,71 @@ const Acknowledgement = () => {
       redirect: "follow"
     };
 
+    setIsApiLoading(true); // Set loading state
+
     fetch("https://api.goldquestglobal.in/acknowledgement/send-notification", requestOptions)
       .then(response => {
-        return response.json().then(result => {
-          // Check for session expiration or invalid token
-          if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
-            Swal.fire({
-              title: "Session Expired",
-              text: "Your session has expired. Please log in again.",
-              icon: "warning",
-              confirmButtonText: "Ok",
-            }).then(() => {
-              // Redirect to admin login page
-              window.location.href = "/admin-login"; // Replace with your actual login route
-            });
-            return; // Exit further processing after showing session expired message
-          }
-
-          // Handle new token if present in the response
-          const newToken = result._token || result.token;
-          if (newToken) {
-            localStorage.setItem("_token", newToken);
-          }
-
-          // Handle errors if the response is not okay
-          if (!response.ok) {
-            Swal.fire(
-              'Error!',
-              `An error occurred: ${result.message || 'Unknown error'}`,
-              'error'
-            );
-            throw new Error(result.message || 'Unknown error');
-          }
-
-          return result; // Continue if response is okay
-        });
+        if (!response.ok) {
+          return response.json().then(result => {
+            // Handle session expiration or invalid token
+            return handleErrorResponse(result);
+          });
+        }
+        return response.json(); // Continue if the response is okay
       })
       .then((result) => {
+        // Handle new token if present in the response
+        updateToken(result);
+
         // After successful approval, refresh emails or perform any other action
-        const newToken = result._token || result.token;
-        if (newToken) {
-          localStorage.setItem("_token", newToken);
-        }
         fetchEmails(); // Fetch emails or take further action after approval
       })
       .catch((error) => {
-        // Catch and log any unexpected errors
-        console.error(error);
+        // Log unexpected errors
+        console.error("Error sending approval:", error);
+        Swal.fire({
+          title: 'Error',
+          text: 'An unexpected error occurred. Please try again later.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      })
+      .finally(() => {
+        setIsApiLoading(false); // Reset loading state
       });
   };
+
+  // Helper function to handle error responses
+  const handleErrorResponse = (result) => {
+    if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
+      Swal.fire({
+        title: "Session Expired",
+        text: "Your session has expired. Please log in again.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      }).then(() => {
+        window.location.href = "/admin-login"; // Redirect to admin login page
+      });
+      return; // Exit after showing session expired message
+    }
+
+    // Show error message if the response indicates a failure
+    Swal.fire(
+      'Error!',
+      `An error occurred: ${result.message || 'Unknown error'}`,
+      'error'
+    );
+    throw new Error(result.message || 'Unknown error');
+  };
+
+  // Helper function to update token if it's present in the response
+  const updateToken = (result) => {
+    const newToken = result._token || result.token;
+    if (newToken) {
+      localStorage.setItem("_token", newToken); // Update token if available
+    }
+  };
+
 
 
   const filteredItems = emailsData.filter(item => {
@@ -288,8 +309,10 @@ const Acknowledgement = () => {
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">{email.applicationCount}</td>
                   <td className="py-3 px-4 border-b-2 text-center border-r-2 whitespace-nowrap">
                     <button
-                      className="bg-green-600 text-white py-2 px-7 rounded-md capitalize hover:bg-green-200"
-                      type="button"
+                      disabled={isApiLoading}
+                        type="button"
+                        className={`rounded-md p-3 text-white ${isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`}
+
                       onClick={() => sendApproval(email.id)}
                     >
                       Send

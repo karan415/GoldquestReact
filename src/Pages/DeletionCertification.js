@@ -8,8 +8,11 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import Modal from 'react-modal';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useApiCall } from '../ApiCallContext';
 Modal.setAppElement('#root');
+
 const DeletionCertification = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
 
   const [searchTerm, setSearchTerm] = useState('');
   const { loading, listData, fetchData, } = useData();
@@ -104,7 +107,10 @@ const DeletionCertification = () => {
 
 
   useEffect(() => {
-    fetchData();
+    if (!isApiLoading) {
+      fetchData();
+    }
+
   }, [fetchData]);
   const generatePDF = (setBranchData) => {
     const doc = new jsPDF();
@@ -368,7 +374,6 @@ const DeletionCertification = () => {
 
   }
 
-
   const handleDelete = (id, type) => {
     Swal.fire({
       title: 'Are you sure?',
@@ -379,7 +384,7 @@ const DeletionCertification = () => {
       cancelButtonText: 'No, cancel!',
     }).then((result) => {
       if (result.isConfirmed) {
-        // Show the loading spinner while the request is being processed
+        setIsApiLoading(true); // Start loading spinner
         const loadingSwal = Swal.fire({
           title: 'Processing...',
           text: 'Deleting, please wait.',
@@ -397,6 +402,7 @@ const DeletionCertification = () => {
         if (!admin_id || !storedToken) {
           console.error("Admin ID or token is missing.");
           Swal.close();
+          setIsApiLoading(false); // Set loading state to false if missing token
           return;
         }
 
@@ -415,11 +421,12 @@ const DeletionCertification = () => {
           successMessage = 'Your client has been deleted.';
         } else {
           Swal.close();
+          setIsApiLoading(false); // Set loading state to false if type is not 'client'
           return;
         }
+
         fetch(url, requestOptions)
           .then((response) => {
-            // Parse the response as JSON
             return response.json().then((result) => {
               const newToken = result._token || result.token;
               if (newToken) {
@@ -445,12 +452,11 @@ const DeletionCertification = () => {
                 }
                 throw new Error(result.message || 'Unknown error');
               }
+
               const setBranchData = result.data.branches;
               generatePDF(setBranchData);
 
-              fetchData();
-
-              fetchData();
+              fetchData(); // This may be unnecessary to call twice
               Swal.fire(
                 'Deleted!',
                 successMessage,
@@ -462,16 +468,12 @@ const DeletionCertification = () => {
             console.error('Fetch error:', error);
           })
           .finally(() => {
-            loadingSwal.close(); // Close the loading spinner once the process is finished
+            loadingSwal.close(); // Close loading spinner
+            setIsApiLoading(false); // End loading spinner here
           });
-
       }
     });
   };
-
-
-
-
 
   return (
     <>
@@ -556,7 +558,10 @@ const DeletionCertification = () => {
 
                       <td className=" p-3 border-b border-r text-left whitespace-nowrap  fullwidth">
 
-                        <button className="bg-red-600 hover:bg-red-200   rounded-md p-3 text-white mx-2" onClick={() => handleDelete(item.main_id, 'client')}>Delete</button>
+                        <button disabled={isApiLoading || loading}
+                          className={`w-full rounded-md p-3 text-white ${loading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-200'}`}
+                          onClick={() => handleDelete(item.main_id, 'client')}
+                        >Delete</button>
 
                       </td>
                     </tr>

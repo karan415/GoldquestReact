@@ -3,8 +3,11 @@ import { useData } from './DataContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import PulseLoader from 'react-spinners/PulseLoader'; // Import the PulseLoader
 import { useApi } from '../ApiContext';
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
+import { useApiCall } from '../ApiCallContext';
+
 const ExternalLoginData = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
 
   const [branches, setBranches] = useState([]);
   const [openAccordionId, setOpenAccordionId] = useState(null);
@@ -16,17 +19,18 @@ const ExternalLoginData = () => {
   const API_URL = useApi();
   const [branchLoading, setBranchLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const toggleAccordion = useCallback((id) => {
     // Reset branches and prepare the state for loading
+    setIsApiLoading(true);
     setBranches([]);
     setOpenAccordionId((prevId) => (prevId === id ? null : id));
     setBranchLoading(true);
     setError(null);
-  
+
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
     const storedToken = localStorage.getItem("_token");
-  
+
     if (!admin_id || !storedToken) {
       Swal.fire({
         title: "Session Expired",
@@ -38,7 +42,7 @@ const ExternalLoginData = () => {
       });
       return;
     }
-  
+
     fetch(`${API_URL}/branch/list-by-customer?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -49,7 +53,7 @@ const ExternalLoginData = () => {
         if (newToken) {
           localStorage.setItem("_token", newToken); // Update token in localStorage
         }
-  
+
         if (result.message && result.message.toLowerCase().includes("invalid") && result.message.toLowerCase().includes("token")) {
           Swal.fire({
             title: "Session Expired",
@@ -61,7 +65,7 @@ const ExternalLoginData = () => {
           });
           return; // Stop further processing if token expired
         }
-  
+
         if (!response.ok) {
           Swal.fire({
             title: 'Error!',
@@ -71,7 +75,7 @@ const ExternalLoginData = () => {
           });
           throw new Error('Network response was not ok');
         }
-  
+
         return result; // Return the successful result if no errors
       }))
       .then((data) => {
@@ -84,10 +88,12 @@ const ExternalLoginData = () => {
         setError('Failed to load data'); // Set error state in case of failure
       })
       .finally(() => {
-        setBranchLoading(false); // Stop loading when fetch is done
+        setBranchLoading(false);
+        setIsApiLoading(false);
+        // Stop loading when fetch is done
       });
   }, [API_URL]);
-  
+
   const tableRef = useRef(null); // Ref for the table container
 
   // Function to reset expanded rows
@@ -108,7 +114,10 @@ const ExternalLoginData = () => {
 
 
   useEffect(() => {
-    fetchData();
+    if (!isApiLoading) {
+      fetchData();
+    }
+
   }, [fetchData]);
 
 
@@ -268,8 +277,8 @@ const ExternalLoginData = () => {
                     <td className="py-3 px-4 border-b border-l text-center cursor-pointer">
                       {item.branch_count > 1 ? (
                         <button
-                          className="bg-green-600 hover:bg-green-200 whitespace-nowrap rounded-md p-2 px-5 text-white"
-                          onClick={() => toggleAccordion(item.main_id)}
+                          disabled={branchLoading || isApiLoading}
+                          className={`w-full rounded-md p-3 text-white ${branchLoading || isApiLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-200'}`} onClick={() => toggleAccordion(item.main_id)}
                         >
                           View Branches
                         </button>

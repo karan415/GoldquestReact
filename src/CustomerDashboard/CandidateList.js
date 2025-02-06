@@ -5,11 +5,12 @@ import { useApi } from '../ApiContext';
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import CandidateForm from './CandidateForm';
 import PulseLoader from 'react-spinners/PulseLoader';
-import { useNavigate } from 'react-router-dom';
+import { useApiCall } from '../ApiCallContext';
 import Modal from 'react-modal';
 
 const CandidateList = () => {
-    const navigate = useNavigate();
+    const { isBranchApiLoading, setIsBranchApiLoading } = useApiCall();
+
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalServices, setModalServices] = React.useState([]);
     const [selectedAttachments, setSelectedAttachments] = useState([]);
@@ -31,7 +32,9 @@ const CandidateList = () => {
     const API_URL = useApi();
 
     useEffect(() => {
-        fetchClient();
+        if (!isBranchApiLoading) {
+            fetchClient();
+        }
     }, [fetchClient]);
 
 
@@ -152,6 +155,7 @@ const CandidateList = () => {
             cancelButtonText: 'No, cancel!',
         }).then((result) => {
             if (result.isConfirmed) {
+                setIsBranchApiLoading(true);
                 const branch_id = JSON.parse(localStorage.getItem("branch"))?.id;
                 const _token = localStorage.getItem("branch_token");
 
@@ -219,6 +223,8 @@ const CandidateList = () => {
                             'An unexpected error occurred while deleting.',
                             'error'
                         );
+                    }).finally(() => {
+                        setIsBranchApiLoading(false);
                     });
             }
         });
@@ -442,8 +448,8 @@ const CandidateList = () => {
 
 
                                             <td className="md:py-3 p-2 md:px-4 border-b border-r whitespace-nowrap capitalize text-center">
-                                                <button className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
-                                                <button className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
+                                                <button disabled={isBranchApiLoading} className="bg-green-600 text-white p-3 rounded-md hover:bg-green-200" onClick={() => handleEdit(report)}>Edit</button>
+                                                <button disabled={isBranchApiLoading} className="bg-red-600 text-white p-3 ms-3 rounded-md hover:bg-red-200" onClick={() => handleDelete(report.id)}>Delete</button>
                                             </td>
                                         </tr>
 

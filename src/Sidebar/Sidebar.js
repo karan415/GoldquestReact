@@ -15,6 +15,7 @@ import { GrServices } from "react-icons/gr";
 import classNames from 'classnames';
 import Logout from '../Dashboard/Logout';
 import { IoCall } from "react-icons/io5";
+import { useApiCall } from '../ApiCallContext';
 
 const tabNames = {
   dashboard: (<><HomeIcon className="h-6 w-6 mr-3 text-gray-600" />DashBoard</>),
@@ -50,6 +51,9 @@ const tabNames = {
 };
 
 const Sidebar = () => {
+  const { isApiLoading, setIsApiLoading } = useApiCall();
+  console.log('isApiLoading', isApiLoading)
+
   const [toggle, setToggle] = useState(false);
   const [expandedTab, setExpandedTab] = useState(null);
   const { activeTab, handleTabChange } = useSidebar();
@@ -65,7 +69,7 @@ const Sidebar = () => {
   const handleExpand = (tab) => setExpandedTab(expandedTab === tab ? null : tab);
 
   return (
-    <div className="flex flex-col md:flex-row  h-full md:w-3/12 xl:w-2/12">
+    <div className="flex flex-col md:flex-row  h-full md:w-[20%] ">
       <button
         className="md:hidden p-3 fixed top-0 left-0 z-50 bg-green-400 text-white w-full  focus:outline-none"
         onClick={handleToggle}
@@ -82,7 +86,7 @@ const Sidebar = () => {
         className={`w-full  bg-white border-e fixed md:relative top-0 left-0  z-40 transition-transform transform ${toggle ? 'translate-x-0' : '-translate-x-full'
           } md:translate-x-0`}
       >
-        <div className="px-3 py-4 mt-10 md:mt-0 overflow-auto h-[500px]"  id='menuitem'>
+        <div className="px-3 py-4 mt-10 md:mt-0 overflow-auto h-[500px]" id='menuitem'>
           <ul>
             {Object.keys(tabNames).map((tab) => {
               const tabContent = tabNames[tab];
@@ -91,13 +95,19 @@ const Sidebar = () => {
                   <li
                     className={classNames(
                       'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
-                      { 'bg-green-200': activeTab === tab, 'hover:bg-green-200': activeTab !== tab }
+                      {
+                        'bg-green-200': activeTab === tab,
+                        'hover:bg-green-200': activeTab !== tab && !isApiLoading,
+                        'opacity-50 cursor-not-allowed': isApiLoading,
+                      }
                     )}
                     onClick={() => {
-                      if (tabContent.subItems) {
-                        handleExpand(tab);
-                      } else {
-                        onTabChange(tab);
+                      if (!isApiLoading) {
+                        if (tabContent.subItems) {
+                          handleExpand(tab);
+                        } else {
+                          onTabChange(tab);
+                        }
                       }
                     }}
                   >
@@ -110,9 +120,17 @@ const Sidebar = () => {
                           key={subItem.id}
                           className={classNames(
                             'w-full flex items-center p-3 cursor-pointer rounded-md my-2 text-sm',
-                            { 'bg-green-100': activeTab === subItem.id, 'hover:bg-green-100': activeTab !== subItem.id }
+                            {
+                              'bg-green-100': activeTab === subItem.id,
+                              'hover:bg-green-100': activeTab !== subItem.id && !isApiLoading,
+                              'opacity-50 cursor-not-allowed': isApiLoading,
+                            }
                           )}
-                          onClick={() => onTabChange(subItem.id)}
+                          onClick={() => {
+                            if (!isApiLoading) {
+                              onTabChange(subItem.id);
+                            }
+                          }}
                         >
                           {subItem.icon}
                           {subItem.name}
@@ -124,6 +142,7 @@ const Sidebar = () => {
               );
             })}
           </ul>
+
           <Logout />
         </div>
 

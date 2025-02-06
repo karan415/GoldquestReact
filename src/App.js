@@ -27,11 +27,7 @@ import { BranchProviderExel } from './Pages/BranchContextExel';
 import CandidateMain from './Pages/Candidate/CandidateMain';
 import CandidateBGV from './Pages/CandidateBGV';
 import DemoBgForm from './Pages/DemoBgForm';
-
-
 import CandidateGenerateReport from './Pages/Candidate/CandidateGenerateReport';
-
-
 import BackgroundForm from './Pages/BackgroundForm';
 import DigitalAddressVerification from './Pages/DigitalAddressVerification';
 import 'react-select-search/style.css'
@@ -42,8 +38,7 @@ import ClientBulkUpload from './CustomerDashboard/ClientBulkUpload';
 import CandidiateDav from './Pages/CandidateDAV';
 import { LoginProvider } from './Pages/InternalLoginContext';
 import { AiOutlineArrowUp } from "react-icons/ai";
-
-
+import { ApiCallProvider } from './ApiCallContext';
 
 const App = () => {
   const [showGoToTop, setShowGoToTop] = useState(false);
@@ -72,6 +67,7 @@ const App = () => {
   }, []);
   return (
     <BranchProviderExel>
+     <ApiCallProvider>
       <TabProvider>
         <ApiProvider>
           <DataProvider>
@@ -86,6 +82,7 @@ const App = () => {
                             <HolidayManagementProvider>
                               <DashboardProvider>
                                 <LoginProvider>
+                                 
                                   {/* Setting the basename='/' globally */}
                                   <Router basename="/">
                                     <Routes>
@@ -140,6 +137,7 @@ const App = () => {
           </DataProvider>
         </ApiProvider>
       </TabProvider>
+      </ApiCallProvider>
     </BranchProviderExel>
 
   );
